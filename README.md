@@ -1,3 +1,4 @@
+[README.md](https://github.com/user-attachments/files/32604923/README.md)
 # Nuvora
 
 Nuvora is a real storefront + private admin system backed by Supabase. The existing storefront design is preserved; this build focuses on working data, product management, cart behavior, security, import tooling, SEO, and analytics.
