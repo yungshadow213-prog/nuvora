@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nuvora",
+  "main": "worker.js",
+  "compatibility_date": "2026-09-21",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": ".",
+    "exclude": [
+      "node_modules/**",
+      ".git/**",
+      ".env",
+      ".env.*",
+      "wrangler.jsonc",
+      "worker.js",
+      "package-lock.json",
+      "bun.lockb"
+    ]
+  }
+}

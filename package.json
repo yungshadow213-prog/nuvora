@@ -2,10 +2,15 @@
   "name": "nuvora-store",
   "private": true,
   "scripts": {
-    "start": "node api/server.js"
+    "start": "node api/server.js",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
   },
   "engines": {
     "node": ">=18"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "wrangler": "^4.137.0"
+  }
 }
