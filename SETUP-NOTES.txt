@@ -1,0 +1,11 @@
+Nuvora startup notes
+
+1. The included .env file is configured for the Supabase project used by this build.
+2. Keep .env private. Do not upload it to GitHub or share the ZIP publicly.
+3. Start Nuvora with START-NUVORA.bat.
+4. The server reads .env without requiring dotenv/npm dependencies.
+5. Shopify and Amazon fields may remain empty until those integrations are configured.
+6. Because the Supabase secret key was exposed during setup, rotate it in Supabase and replace SUPABASE_SERVICE_ROLE_KEY in .env before using this build in production.
+
+
+FIX: The launcher now detects ports 3000/3001 and opens the actual Nuvora server. It also supports /admin and /admin/.

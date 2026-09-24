@@ -1,0 +1,241 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nuvora — Admin</title><style>:root{--bg:#07111f;--surface:rgba(16,28,46,.78);--surface2:rgba(24,39,61,.88);--text:#f7fbff;--muted:#93a7bc;--line:rgba(255,255,255,.09);--accent:#9c7bff;--accent2:#6fd9ff}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 12% 4%,rgba(111,217,255,.08),transparent 27%),radial-gradient(circle at 88% 5%,rgba(156,123,255,.11),transparent 28%),var(--bg);color:var(--text);font-family:Inter,system-ui,sans-serif}.app{display:grid;grid-template-columns:245px 1fr;min-height:100vh}.side{padding:22px 16px;border-right:1px solid var(--line);background:rgba(5,14,25,.76);display:flex;flex-direction:column}.brand{font-size:20px;font-weight:800;padding:5px 8px 28px}.brand span{color:#9c8cff}.nav{display:grid;gap:6px}.nav button{background:none;border:1px solid transparent;color:#aebfd0;text-align:left;padding:12px;border-radius:13px;cursor:pointer}.nav button.active,.nav button:hover{background:rgba(255,255,255,.055);border-color:var(--line);color:#fff}.private{margin-top:auto;border:1px solid var(--line);padding:13px;border-radius:14px;color:var(--muted);font-size:12px}.main{padding:28px 32px;max-width:1500px;width:100%}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:30px}.eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:#8e98bf}.top h1{margin:6px 0;font-size:34px;letter-spacing:-1.5px}.top p{margin:0;color:var(--muted)}.btn{padding:10px 14px;border-radius:11px;border:1px solid var(--line);background:#111a2b;color:#fff;cursor:pointer}.btn:disabled{opacity:.5;cursor:not-allowed}.primary{background:linear-gradient(135deg,#6877ff,#9a65ff);border:0}.danger{border-color:rgba(255,100,120,.3);color:#ffb0ba}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.stat,.panel{border:1px solid var(--line);background:var(--surface);border-radius:18px;padding:18px}.stat b{font-size:28px;display:block;margin:7px 0}.muted{color:var(--muted);font-size:12px}.grid{display:grid;grid-template-columns:1.4fr .8fr;gap:16px;margin-top:16px}.panel h2{margin:0 0 16px;font-size:18px}.row{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--line);align-items:center}.row:first-of-type{border-top:0}.tag{font-size:10px;padding:5px 8px;border-radius:99px;background:rgba(255,255,255,.06);color:#aeb7d1}.view{display:none}.view.active{display:block}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:grid;gap:7px}.field.full{grid-column:1/-1}.field label{font-size:11px;color:var(--muted)}input,textarea,select{width:100%;border:1px solid var(--line);background:rgba(5,14,25,.65);color:#fff;border-radius:11px;padding:11px 12px;outline:none;font:inherit}textarea{min-height:110px;resize:vertical}.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(156,123,255,.6)}.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}.notice{padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.035);margin-bottom:14px;font-size:12px}.status{display:inline-flex;align-items:center;gap:6px}.dot{width:7px;height:7px;border-radius:50%;background:#6fe0a1}.dot.off{background:#ff9a9a}@media(max-width:850px){.app{grid-template-columns:1fr}.side{display:none}.main{padding:22px 18px}.stats{grid-template-columns:1fr 1fr}.grid,.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+
+/* Product workspace polish */
+.modal-backdrop{position:fixed;inset:0;background:rgba(1,6,14,.78);backdrop-filter:blur(10px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.open{display:flex}.modal{width:min(1040px,100%);max-height:calc(100vh - 40px);overflow:auto;background:#0b1728;border:1px solid var(--line);border-radius:22px;box-shadow:0 30px 100px rgba(0,0,0,.55)}
+.modal-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;padding:22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(11,23,40,.96);z-index:2}
+.modal-head h2{margin:0 0 5px}.modal-body{padding:22px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:grid;gap:7px}.field.full{grid-column:1/-1}.field label{font-size:12px;color:#b7c5d6}.field input,.field textarea,.field select{width:100%;background:#081321;border:1px solid var(--line);border-radius:11px;color:#fff;padding:11px 12px;outline:none}.field textarea{min-height:115px;resize:vertical}.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(156,123,255,.65);box-shadow:0 0 0 3px rgba(156,123,255,.08)}
+.importbar{display:flex;gap:9px;margin-bottom:18px}.importbar input{flex:1;background:#081321;border:1px solid var(--line);border-radius:12px;color:#fff;padding:12px}.importbar button{white-space:nowrap}.image-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-top:8px}.image-item{position:relative;aspect-ratio:1;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#07111f}.image-item img{width:100%;height:100%;object-fit:cover}.image-item button{position:absolute;right:5px;top:5px;width:25px;height:25px;border:0;border-radius:50%;background:rgba(0,0,0,.75);color:#fff}.workspace-note{padding:12px 14px;border:1px solid rgba(111,217,255,.16);background:rgba(111,217,255,.05);border-radius:12px;color:#b9cadc;font-size:12px;margin-bottom:16px}.modal-actions{display:flex;justify-content:flex-end;gap:9px;padding-top:18px;margin-top:18px;border-top:1px solid var(--line)}
+@media(max-width:700px){.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}.image-strip{grid-template-columns:repeat(3,1fr)}.modal-backdrop{padding:8px}.modal{max-height:calc(100vh - 16px)}}
+
+.auth-gate{position:fixed;inset:0;z-index:9999;display:none;place-items:center;padding:24px;background:radial-gradient(circle at 20% 10%,rgba(111,217,255,.09),transparent 30%),radial-gradient(circle at 80% 10%,rgba(156,123,255,.12),transparent 30%),#07111f}.auth-card{width:min(430px,100%);padding:32px;border:1px solid var(--line);border-radius:22px;background:rgba(16,28,46,.92);box-shadow:0 30px 100px rgba(0,0,0,.5);text-align:center}.auth-card h1{margin:0 0 8px;font-size:30px}.auth-card p{color:var(--muted);font-size:13px;line-height:1.6}.google-btn{width:100%;margin-top:18px;padding:13px 16px;border-radius:12px;border:1px solid var(--line);background:#fff;color:#111;font-weight:700;cursor:pointer;font-size:14px}.auth-error{display:none;margin-top:14px;padding:11px 12px;border-radius:10px;background:rgba(255,100,120,.08);border:1px solid rgba(255,100,120,.25);color:#ffb0ba;font-size:12px}.auth-gate small{display:block;margin-top:16px;color:#71849a;font-size:11px}
+</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav"><button class="active" onclick="show('overview',this)">⌂ Overview</button><button onclick="show('products',this)">▣ Products</button><button onclick="show('categories',this)">☷ Categories</button><button onclick="show('collections',this)">✦ Collections</button><button onclick="show('orders',this)">□ Orders</button><button onclick="show('social',this)">↗ Social</button><button onclick="show('analytics',this)">◌ Analytics</button><button onclick="show('settings',this)">⚙ Settings</button></nav><div class="private">Private control center.<br><button class="btn" style="width:100%;margin-top:10px" onclick="signOutAdmin()">Sign out</button></div></aside><main class="main"><header class="top"><div><div class="eyebrow">Nuvora / Admin</div><h1 id="title">Overview</h1><p id="sub">Control the store without exposing the admin to customers.</p></div><div style="display:flex;gap:8px"><button class="btn" onclick="healthCheck()">System status</button><button class="btn" onclick="window.open('/','_blank')">View store</button></div></header>
+<section id="overview" class="view active"><div class="stats"><div class="stat"><span class="muted">Shop products</span><b id="shopCount">0</b><span class="muted">Published Shop products</span></div><div class="stat"><span class="muted">Finds</span><b id="findCount">0</b><span class="muted">Published Finds</span></div><div class="stat"><span class="muted">Courses</span><b id="learnCount">0</b><span class="muted">Published courses</span></div><div class="stat"><span class="muted">Draft products</span><b id="draftCount">0</b><span class="muted">Awaiting review</span></div></div><div class="grid"><div class="panel"><h2>Store structure</h2><div class="row"><span>Shop</span><span class="tag">Commerce</span></div><div class="row"><span>Finds</span><span class="tag">Affiliate</span></div><div class="row"><span>Learn</span><span class="tag">Courses</span></div><div class="row"><span>Collections</span><span class="tag">Curated</span></div></div><div class="panel"><h2>System</h2><div id="systemStatus" class="muted">Checking connections…</div><div class="actions"><button class="btn primary" onclick="show('settings',document.querySelectorAll('.nav button')[7])">Open settings</button></div></div></div></section>
+<section id="products" class="view"><div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2>Products</h2><p class="muted">Create a draft, review it, then publish. No product is public until you publish it.</p></div><div style="display:flex;gap:8px"><button class="btn" onclick="openProductModal(true)">Import Amazon</button><button class="btn primary" onclick="openProductModal(false)">+ Add product</button></div></div><div id="productRows" style="margin-top:16px"></div></div><div class="panel" style="margin-top:16px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h2>Bulk CSV import</h2><p class="muted">Import up to 500 products at once. Every imported row becomes a draft for review.</p></div><input id="csvFile" type="file" accept=".csv,text/csv"></div><div id="csvPreview" class="notice" style="display:none;margin-top:14px"></div><div class="actions"><button class="btn" onclick="downloadCsvTemplate()">CSV template</button><button class="btn" onclick="previewCsv()">Preview CSV</button><button class="btn primary" onclick="importCsv()">Import as drafts</button></div></div></section>
+<section id="categories" class="view"><div class="panel"><h2>Categories</h2><p class="muted">Categories are stored in Supabase and can be used by products and storefront filters.</p><div class="formgrid"><div class="field"><label>Name</label><input id="catName" placeholder="Gaming Setup"></div><div class="field"><label>Slug</label><input id="catSlug" placeholder="gaming-setup"></div><div class="field full"><label>Description</label><textarea id="catDesc" placeholder="Optional category description"></textarea></div></div><div class="actions"><button class="btn primary" onclick="createCategory()">Create category</button></div><div id="categoryRows" style="margin-top:16px"></div></div></section>
+<section id="collections" class="view"><div class="panel"><h2>Collections</h2><p class="muted">Create curated groups that can later be attached to products.</p><div class="formgrid"><div class="field"><label>Name</label><input id="colName" placeholder="Gaming Setup"></div><div class="field"><label>Slug</label><input id="colSlug" placeholder="gaming-setup"></div><div class="field full"><label>Description</label><textarea id="colDesc"></textarea></div></div><div class="actions"><button class="btn primary" onclick="createCollection()">Create collection</button></div><div id="collectionRows" style="margin-top:16px"></div></div></section>
+<section id="orders" class="view"><div class="panel"><h2>Orders</h2><p class="muted">Shopify orders are not mirrored into Supabase yet. The storefront checkout can hand customers to Shopify once Shopify is configured.</p><button class="btn" onclick="show('settings',document.querySelectorAll('.nav button')[7])">Configure Shopify</button></div></section>
+<section id="social" class="view"><div class="panel"><h2>Social Publishing Center</h2><p class="muted">Create a real saved social-post draft from a product or from scratch. Platform API publishing requires the relevant platform credentials.</p><div class="formgrid"><div class="field"><label>Post title</label><input id="socialTitle" placeholder="New Nuvora drop"></div><div class="field"><label>Platform</label><select id="socialPlatform"><option value="pinterest">Pinterest</option><option value="instagram">Instagram</option><option value="facebook">Facebook</option><option value="tiktok">TikTok</option><option value="x">X</option></select></div><div class="field"><label>Product</label><select id="socialProduct"><option value="">No product</option></select></div><div class="field"><label>Destination URL</label><input id="socialUrl" placeholder="https://…"></div><div class="field full"><label>Caption</label><textarea id="socialCaption" placeholder="Write the post caption…"></textarea></div><div class="field full"><label>Image URL</label><input id="socialImage" placeholder="https://…"></div></div><div class="actions"><button class="btn primary" onclick="createSocialPost()">Save social post</button></div><div id="socialRows" style="margin-top:18px"></div></div></section>
+<section id="analytics" class="view"><div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><h2>Analytics</h2><p class="muted">Real Nuvora events collected from the storefront. No invented numbers.</p></div><button class="btn" onclick="loadAnalytics()">Refresh</button></div><div id="analyticsRows" style="margin-top:16px"></div></div></section>
+<section id="settings" class="view"><div class="panel"><h2>Store settings</h2><p class="muted">These settings are persisted in Supabase. Secrets remain server-side and are never shown here.</p><div class="formgrid"><div class="field"><label>Store name</label><input id="setName"></div><div class="field"><label>Support email</label><input id="setEmail" type="email"></div><div class="field"><label>Currency</label><select id="setCurrency"><option>NGN</option><option>USD</option><option>GBP</option><option>EUR</option></select></div><div class="field"><label>Timezone</label><input id="setTimezone"></div><div class="field"><label>Default region</label><input id="setRegion"></div><div class="field"><label>Maintenance mode</label><select id="setMaintenance"><option value="false">Off</option><option value="true">On</option></select></div><div class="field full"><label>Store description</label><textarea id="setDescription"></textarea></div><div class="field full"><label>Affiliate disclosure</label><textarea id="setDisclosure"></textarea></div><div class="field full"><label>Shipping policy</label><textarea id="setShipping"></textarea></div><div class="field full"><label>Returns policy</label><textarea id="setReturns"></textarea></div></div><div class="actions"><button class="btn primary" onclick="saveSettings()">Save settings</button></div></div><div class="panel" style="margin-top:16px"><h2>Connections</h2><div id="connectionRows" class="muted">Checking…</div><p class="muted" style="margin-top:14px">Supabase authentication is used for admin sign-in. Shopify and Amazon credentials must be configured in the server environment.</p></div><div class="panel" style="margin-top:16px"><h2>Account</h2><p id="adminEmail" class="muted"></p><button class="btn danger" onclick="signOutAdmin()">Sign out of Nuvora Admin</button></div></section>
+</main></div>
+
+<div id="productModal" class="modal-backdrop" onclick="if(event.target===this)closeProductModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="eyebrow">Product workspace</div><h2 id="productModalTitle">Add product</h2><div class="muted" id="productModalSub">Create a draft and review it before publishing.</div></div>
+      <button class="btn" onclick="closeProductModal()">Close</button>
+    </div>
+    <div class="modal-body">
+      <div class="workspace-note" id="importStatus">You can enter a product manually or fetch an Amazon product below. Imported data stays editable and nothing becomes public until you publish it.</div>
+      <div class="importbar">
+        <input id="amazonUrlInput" placeholder="Paste an Amazon product URL (optional)">
+        <button class="btn primary" onclick="fetchAmazonIntoForm()">Fetch from Amazon</button>
+      </div>
+      <div class="formgrid">
+        <div class="field full"><label>Product title</label><input id="pfName" placeholder="Product title"></div>
+        <div class="field"><label>Type</label><select id="pfKind"><option value="shop">Shop</option><option value="find">Find</option><option value="learn">Learn</option></select></div>
+        <div class="field"><label>Brand</label><input id="pfBrand" placeholder="Brand"></div>
+        <div class="field"><label>Price</label><input id="pfPrice" type="number" step="0.01" placeholder="0.00"></div>
+        <div class="field"><label>Currency</label><input id="pfCurrency" value="NGN" placeholder="USD"></div>
+        <div class="field"><label>Category ID (optional)</label><input id="pfCategory" placeholder="Supabase category UUID"></div>
+        <div class="field"><label>Collection ID (optional)</label><input id="pfCollection" placeholder="Supabase collection UUID"></div>
+        <div class="field full"><label>Description</label><textarea id="pfDescription" placeholder="Product description"></textarea></div>
+        <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div>
+        <div class="field full"><label>Destination / affiliate URL</label><input id="pfDestination" placeholder="https://..."></div>
+        <div class="field"><label>Amazon ASIN</label><input id="pfAsin" placeholder="B0XXXXXXXX"></div>
+        <div class="field"><label>Retailer</label><input id="pfRetailer" value="Amazon"></div>
+        <div class="field full"><label>Images — one URL per line</label><textarea id="pfImages" placeholder="https://..."></textarea></div><div class="field full"><label>Custom image upload</label><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="pfUpload" type="file" accept="image/*" multiple style="flex:1"><button type="button" class="btn" onclick="uploadProductImages()">Upload selected images</button></div><div class="muted" id="uploadStatus" style="margin-top:6px">JPG, PNG, WEBP or GIF · max 6 MB each.</div></div>
+        <div class="field full"><label>Image preview</label><div id="pfImageStrip" class="image-strip"></div></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeProductModal()">Cancel</button>
+        <button class="btn primary" onclick="saveProductDraft()">Save Draft</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
+const meta={overview:['Overview','Control the store without exposing the admin to customers.'],products:['Products','Manage Shop, Finds, and Learn listings.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['Settings','Connections and store configuration.']};
+let adminSB=null,adminSession=null,adminProducts=[],categories=[],collections=[],socialPosts=[];
+function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=meta[id][0];document.getElementById('sub').textContent=meta[id][1];if(id==='settings')loadSettings();if(id==='categories')loadCategories();if(id==='collections')loadCollections();if(id==='social')loadSocial();if(id==='analytics')loadAnalytics();}
+function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+async function api(path,options={}){if(!adminSession)throw new Error('Admin session required.');options.headers={...(options.headers||{}),Authorization:'Bearer '+adminSession.access_token};if(options.body&&typeof options.body!=='string'){options.headers['content-type']='application/json';options.body=JSON.stringify(options.body)}let r;try{r=await fetch(path,options)}catch(e){throw new Error('Cannot reach Nuvora server. Start the Node server and open Nuvora through http://localhost:3000 — do not open admin.html directly.')}let j={};try{j=await r.json()}catch{}if(!r.ok){const detail=j.detail?` ${j.detail}`:'';throw new Error((j.error||`Request failed (${r.status})`)+detail)}return j;}
+function renderProducts(){const el=document.getElementById('productRows');if(!adminProducts.length){el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet.</div>';}else{el.innerHTML=adminProducts.map(p=>`<div class="row"><div><b>${esc(p.name)}</b><div class="muted">${esc(p.kind)} · ${p.published?'Published':'Draft'}${p.amazon_asin?' · Amazon '+esc(p.amazon_asin):''}</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">${p.published?'Published':'Draft'}</span><button class="btn" onclick="editProduct('${p.id}')">Edit</button><button class="btn" onclick="togglePublish('${p.id}')">${p.published?'Unpublish':'Publish'}</button><button class="btn danger" onclick="removeProduct('${p.id}')">Delete</button></div></div>`).join('')}updateCounts();}
+function updateCounts(){document.getElementById('shopCount').textContent=adminProducts.filter(p=>p.kind==='shop'&&p.published).length;document.getElementById('findCount').textContent=adminProducts.filter(p=>p.kind==='find'&&p.published).length;document.getElementById('learnCount').textContent=adminProducts.filter(p=>p.kind==='learn'&&p.published).length;document.getElementById('draftCount').textContent=adminProducts.filter(p=>!p.published).length;}
+async function liveAdminProducts(){adminProducts=await api('/api/admin/products');renderProducts();fillSocialProducts();}
+function resetProductForm(){
+  ['pfName','pfBrand','pfPrice','pfCategory','pfCollection','pfDescription','pfFeatures','pfDestination','pfAsin','pfImages','amazonUrlInput'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('pfKind').value='shop'; document.getElementById('pfCurrency').value='NGN'; document.getElementById('pfRetailer').value='Amazon';
+  document.getElementById('pfImageStrip').innerHTML='';
+  document.getElementById('importStatus').textContent='You can enter a product manually or fetch an Amazon product below. Imported data stays editable and nothing becomes public until you publish it.';
+  window.editingProductId=null;
+}
+function openProductModal(importMode=false){
+  resetProductForm();
+  document.getElementById('productModalTitle').textContent=importMode?'Import Amazon product':'Add product';
+  document.getElementById('productModalSub').textContent=importMode?'Fetch the product, review every field, then save it as a draft.':'Create a product manually and save it as a draft.';
+  document.getElementById('productModal').classList.add('open');
+  document.getElementById('amazonUrlInput').focus();
+}
+function closeProductModal(){document.getElementById('productModal').classList.remove('open');}
+function setProductForm(p){
+  document.getElementById('pfName').value=p.name||'';
+  document.getElementById('pfKind').value=p.kind||'find';
+  document.getElementById('pfBrand').value=p.brand||'';
+  document.getElementById('pfPrice').value=p.display_price??'';
+  document.getElementById('pfCurrency').value=p.currency||'NGN';
+  document.getElementById('pfCategory').value=p.category_id||'';
+  document.getElementById('pfCollection').value=p.collection_id||'';
+  document.getElementById('pfDescription').value=p.description||'';
+  document.getElementById('pfFeatures').value=p.features||'';
+  document.getElementById('pfDestination').value=p.destination_url||'';
+  document.getElementById('pfAsin').value=p.amazon_asin||'';
+  document.getElementById('pfRetailer').value=p.retailer||'Amazon';
+  const imgs=p.image_urls||((p.image_url)?[p.image_url]:[]);
+  document.getElementById('pfImages').value=imgs.filter(Boolean).join('\\n');
+  renderProductImages();
+}
+function renderProductImages(){
+  const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  document.getElementById('pfImageStrip').innerHTML=urls.map((u,i)=>`<div class="image-item"><img src="${esc(u)}" onerror="this.style.opacity='.25'"><button type="button" onclick="removeProductImage(${i})">×</button></div>`).join('');
+}
+function removeProductImage(i){
+  const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean); urls.splice(i,1);
+  document.getElementById('pfImages').value=urls.join('\\n'); renderProductImages();
+}
+async function fetchAmazonIntoForm(){
+  const url=document.getElementById('amazonUrlInput').value.trim();
+  if(!url)return alert('Paste an Amazon product URL first.');
+  const btn=document.querySelector('#productModal .importbar .primary'); btn.disabled=true; btn.textContent='Fetching…';
+  try{
+    const j=await api('/api/amazon/import',{method:'POST',body:{url}});
+    setProductForm(j.draft);
+    document.getElementById('amazonUrlInput').value=url;
+    document.getElementById('importStatus').textContent='Amazon data fetched. Review and edit it below. It has not been saved or published yet.';
+    document.getElementById('productModalTitle').textContent='Review Amazon product';
+    document.getElementById('productModalSub').textContent='Preview → Edit → Save Draft. Publishing is a separate action.';
+  }catch(e){alert(e.message)}finally{btn.disabled=false;btn.textContent='Fetch from Amazon';}
+}
+async function saveProductDraft(){
+  const name=document.getElementById('pfName').value.trim(); if(!name)return alert('Product title is required.');
+  const images=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const product={
+    name,kind:document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
+    description:document.getElementById('pfDescription').value.trim()||null,features:document.getElementById('pfFeatures').value.trim()||null,
+    image_url:images[0]||null,image_urls:images,display_price:document.getElementById('pfPrice').value===''?null:Number(document.getElementById('pfPrice').value),
+    currency:document.getElementById('pfCurrency').value.trim()||'NGN',destination_url:document.getElementById('pfDestination').value.trim()||null,
+    retailer:document.getElementById('pfRetailer').value.trim()||null,category_id:document.getElementById('pfCategory').value.trim()||null,
+    collection_id:document.getElementById('pfCollection').value.trim()||null,amazon_asin:document.getElementById('pfAsin').value.trim()||null,
+    amazon_source_url:document.getElementById('amazonUrlInput').value.trim()||null,published:window.editingProductId?!!adminProducts.find(x=>x.id===window.editingProductId)?.published:false
+  };
+  try{
+    if(window.editingProductId){
+      await api('/api/admin/products/'+encodeURIComponent(window.editingProductId),{method:'PATCH',body:product});
+    }else{
+      const slug=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-'+Date.now();
+      await api('/api/admin/products',{method:'POST',body:{...product,slug}});
+    }
+    const wasEditing=!!window.editingProductId; closeProductModal(); await liveAdminProducts(); alert(wasEditing?'Product updated.':'Product saved as a draft.');
+  }catch(e){alert(e.message)}
+}
+async function editProduct(id){
+  const p=adminProducts.find(x=>x.id===id); if(!p)return;
+  resetProductForm(); window.editingProductId=id; setProductForm(p);
+  document.getElementById('productModalTitle').textContent='Edit product';
+  document.getElementById('productModalSub').textContent=p.published?'Edit a published product. Publishing state is unchanged until you toggle it.':'Edit draft before publishing.';
+  document.getElementById('productModal').classList.add('open');
+}
+function openProductForm(){openProductModal(false)}
+async function createProduct(product){openProductModal(false);setProductForm(product)}
+async function amazonImport(){openProductModal(true)}
+async function togglePublish(id){try{const p=adminProducts.find(x=>x.id===id);await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body:{published:!p.published,updated_at:new Date().toISOString()}});await liveAdminProducts();}catch(e){alert(e.message)}}
+async function removeProduct(id){if(!confirm('Delete this product?'))return;try{await api('/api/admin/products/'+encodeURIComponent(id),{method:'DELETE'});await liveAdminProducts();}catch(e){alert(e.message)}}
+async function healthCheck(){try{const j=await fetch('/api/health').then(r=>r.json());document.getElementById('systemStatus').innerHTML=Object.entries(j.configured).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Configured':'Not configured'}</span></div>`).join('')}catch(e){alert(e.message)}}
+async function uploadProductImages(){
+  const input=document.getElementById('pfUpload'); const files=[...(input?.files||[])]; if(!files.length)return alert('Select one or more image files first.');
+  if(!adminSB) return alert('Supabase is not connected.');
+  const status=document.getElementById('uploadStatus'); status.textContent='Uploading…';
+  const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  try{
+    for(const file of files){
+      if(!file.type.startsWith('image/'))throw new Error(`${file.name} is not an image.`);
+      if(file.size>6*1024*1024)throw new Error(`${file.name} is larger than 6 MB.`);
+      const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+      const path=`products/${crypto.randomUUID()}.${ext}`;
+      const {error}=await adminSB.storage.from('product-images').upload(path,file,{cacheControl:'31536000',contentType:file.type,upsert:false});
+      if(error)throw error;
+      const {data}=adminSB.storage.from('product-images').getPublicUrl(path); if(data?.publicUrl)urls.push(data.publicUrl);
+    }
+    document.getElementById('pfImages').value=[...new Set(urls)].join('\n'); renderProductImages(); input.value=''; status.textContent=`Uploaded ${files.length} image${files.length===1?'':'s'}.`;
+  }catch(e){status.textContent='Upload failed.';alert(e.message||'Image upload failed.');}
+}
+function parseCsvLine(line){const out=[];let cur='',quoted=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(quoted&&line[i+1]==='"'){cur+='"';i++;}else quoted=!quoted;}else if(ch===','&&!quoted){out.push(cur);cur='';}else cur+=ch;}out.push(cur);return out;}
+function parseCsvText(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());if(!lines.length)return [];const headers=parseCsvLine(lines[0]).map(x=>x.trim().toLowerCase());return lines.slice(1).map(line=>{const vals=parseCsvLine(line);const row={};headers.forEach((h,i)=>row[h]=(vals[i]??'').trim());return row;}).filter(r=>Object.values(r).some(Boolean));}
+let csvRows=[];
+function downloadCsvTemplate(){const csv='name,kind,description,features,brand,image_url,image_urls,display_price,currency,destination_url,retailer,provider,region,category_id,collection_id\nGaming Mouse,shop,Short description,Feature 1|Feature 2,Brand,https://example.com/mouse.jpg,,29999,NGN,https://example.com/product,Example Retailer,,,,';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='nuvora-products-template.csv';a.click();URL.revokeObjectURL(a.href);}
+async function previewCsv(){const f=document.getElementById('csvFile')?.files?.[0];if(!f)return alert('Choose a CSV file first.');if(f.size>2*1024*1024)return alert('CSV must be 2 MB or smaller.');try{csvRows=parseCsvText(await f.text());if(csvRows.length>500)return alert('CSV imports are limited to 500 rows.');const box=document.getElementById('csvPreview');box.style.display='block';box.innerHTML=`<b>${csvRows.length} row${csvRows.length===1?'':'s'} ready.</b><div class="muted" style="margin-top:5px">Columns found: ${esc(Object.keys(csvRows[0]||{}).join(', '))}. All rows will be imported as drafts.</div>`;}catch(e){alert('Could not read this CSV.');}}
+async function importCsv(){if(!csvRows.length){await previewCsv();if(!csvRows.length)return;}const items=csvRows.map(r=>({name:r.name||r.title||'',kind:(r.kind||r.type||'shop').toLowerCase(),description:r.description||null,features:r.features||r.key_points||null,brand:r.brand||null,image_url:r.image_url||r.image||null,image_urls:r.image_urls?r.image_urls.split('|').map(x=>x.trim()).filter(Boolean):undefined,display_price:r.display_price||r.price||null,currency:r.currency||'NGN',destination_url:r.destination_url||r.url||null,retailer:r.retailer||null,provider:r.provider||null,region:r.region||null,category_id:r.category_id||null,collection_id:r.collection_id||null}));try{const j=await api('/api/admin/products/bulk',{method:'POST',body:{items}});alert(`Import complete. ${j.imported} imported as drafts, ${j.failed} failed.`);csvRows=[];document.getElementById('csvFile').value='';document.getElementById('csvPreview').style.display='none';await liveAdminProducts();}catch(e){alert(e.message)}}
+async function loadAnalytics(){try{const j=await api('/api/admin/analytics');const rows=Object.entries(j.counts||{}).sort((a,b)=>b[1]-a[1]);document.getElementById('analyticsRows').innerHTML=rows.length?rows.map(([name,count])=>`<div class="row"><span>${esc(name)}</span><span class="tag">${count}</span></div>`).join(''):'<div class="empty" style="text-align:center">No events recorded yet.</div>';}catch(e){document.getElementById('analyticsRows').innerHTML=`<div class="muted">${esc(e.message)}</div>`;}}
+async function loadSettings(){try{const s=await api('/api/admin/settings');document.getElementById('setName').value=s.store_name||'Nuvora';document.getElementById('setEmail').value=s.support_email||'';document.getElementById('setCurrency').value=s.currency||'NGN';document.getElementById('setTimezone').value=s.timezone||'Africa/Lagos';document.getElementById('setRegion').value=s.default_region||'NG';document.getElementById('setMaintenance').value=String(!!s.maintenance_mode);document.getElementById('setDescription').value=s.store_description||'';document.getElementById('setDisclosure').value=s.affiliate_disclosure||'';document.getElementById('setShipping').value=s.shipping_policy||'';document.getElementById('setReturns').value=s.returns_policy||'';document.getElementById('adminEmail').textContent='Signed in as '+(adminSession.user?.email||'admin');const h=await fetch('/api/health').then(r=>r.json());document.getElementById('connectionRows').innerHTML=Object.entries(h.configured).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Connected':'Not configured'}</span></div>`).join('');}catch(e){alert(e.message)}}
+async function saveSettings(){try{await api('/api/admin/settings',{method:'PATCH',body:{store_name:document.getElementById('setName').value.trim()||'Nuvora',support_email:document.getElementById('setEmail').value.trim()||null,currency:document.getElementById('setCurrency').value,timezone:document.getElementById('setTimezone').value.trim()||'Africa/Lagos',default_region:document.getElementById('setRegion').value.trim()||'NG',maintenance_mode:document.getElementById('setMaintenance').value==='true',store_description:document.getElementById('setDescription').value,affiliate_disclosure:document.getElementById('setDisclosure').value,shipping_policy:document.getElementById('setShipping').value,returns_policy:document.getElementById('setReturns').value}});alert('Settings saved.');}catch(e){alert(e.message)}}
+async function loadCategories(){try{categories=await api('/api/admin/categories');document.getElementById('categoryRows').innerHTML=categories.length?categories.map(c=>`<div class="row"><span><b>${esc(c.name)}</b><div class="muted">${esc(c.slug)}</div></span><span class="tag">Category</span></div>`).join(''):'<div class="muted">No categories yet.</div>'}catch(e){alert(e.message)}}
+async function createCategory(){const name=document.getElementById('catName').value.trim();const slug=document.getElementById('catSlug').value.trim()||name.toLowerCase().replace(/[^a-z0-9]+/g,'-');if(!name)return alert('Category name required.');try{await api('/api/admin/categories',{method:'POST',body:{name,slug,description:document.getElementById('catDesc').value}});document.getElementById('catName').value='';document.getElementById('catSlug').value='';document.getElementById('catDesc').value='';await loadCategories();}catch(e){alert(e.message)}}
+async function loadCollections(){try{collections=await api('/api/admin/collections');document.getElementById('collectionRows').innerHTML=collections.length?collections.map(c=>`<div class="row"><span><b>${esc(c.name)}</b><div class="muted">${esc(c.slug)} · ${c.published?'Published':'Draft'}</div></span><span class="tag">${c.published?'Published':'Draft'}</span></div>`).join(''):'<div class="muted">No collections yet.</div>'}catch(e){alert(e.message)}}
+async function createCollection(){const name=document.getElementById('colName').value.trim();const slug=document.getElementById('colSlug').value.trim()||name.toLowerCase().replace(/[^a-z0-9]+/g,'-');if(!name)return alert('Collection name required.');try{await api('/api/admin/collections',{method:'POST',body:{name,slug,description:document.getElementById('colDesc').value,published:false}});document.getElementById('colName').value='';document.getElementById('colSlug').value='';document.getElementById('colDesc').value='';await loadCollections();}catch(e){alert(e.message)}}
+function fillSocialProducts(){const s=document.getElementById('socialProduct');if(!s)return;s.innerHTML='<option value="">No product</option>'+adminProducts.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}
+async function loadSocial(){try{socialPosts=await api('/api/admin/social-posts');fillSocialProducts();document.getElementById('socialRows').innerHTML=socialPosts.length?socialPosts.map(p=>`<div class="row"><div><b>${esc(p.title)}</b><div class="muted">${esc(p.platform)} · ${esc(p.status)}${p.destination_url?' · '+esc(p.destination_url):''}</div></div><div style="display:flex;gap:7px"><button class="btn" onclick="markSocialReady('${p.id}')">${p.status==='draft'?'Mark ready':'Ready'}</button><button class="btn danger" onclick="deleteSocial('${p.id}')">Delete</button></div></div>`).join(''):'<div class="muted">No social posts yet.</div>'}catch(e){alert(e.message)}}
+async function createSocialPost(){const title=document.getElementById('socialTitle').value.trim();const caption=document.getElementById('socialCaption').value.trim();const platform=document.getElementById('socialPlatform').value;if(!title||!caption)return alert('Post title and caption are required.');try{await api('/api/admin/social-posts',{method:'POST',body:{title,caption,platform,product_id:document.getElementById('socialProduct').value||null,destination_url:document.getElementById('socialUrl').value.trim()||null,image_url:document.getElementById('socialImage').value.trim()||null,status:'draft'}});document.getElementById('socialTitle').value='';document.getElementById('socialCaption').value='';document.getElementById('socialUrl').value='';document.getElementById('socialImage').value='';await loadSocial();alert('Social post saved as a draft.');}catch(e){alert(e.message)}}
+async function markSocialReady(id){try{await api('/api/admin/social-posts/'+encodeURIComponent(id),{method:'PATCH',body:{status:'ready'}});await loadSocial();}catch(e){alert(e.message)}}
+async function deleteSocial(id){if(!confirm('Delete this social post?'))return;try{await api('/api/admin/social-posts/'+encodeURIComponent(id),{method:'DELETE'});await loadSocial();}catch(e){alert(e.message)}}
+document.addEventListener('input',e=>{if(e.target&&e.target.id==='pfImages')renderProductImages();});
+async function signOutAdmin(){try{if(adminSB)await adminSB.auth.signOut()}finally{location.href='/'}}
+function showAuthError(message){const e=document.getElementById('authError');e.textContent=message;e.style.display='block';}
+function showAuthGate(){document.getElementById('authGate').style.display='grid';}
+function hideAuthGate(){document.getElementById('authGate').style.display='none';}
+async function signInWithGoogle(){
+  try{
+    document.getElementById('googleSignIn').disabled=true;
+    document.getElementById('googleSignIn').textContent='Opening Google…';
+    const redirectTo=new URL('/admin.html',window.location.origin).href;
+    const {error}=await adminSB.auth.signInWithOAuth({provider:'google',options:{redirectTo}});
+    if(error)throw error;
+  }catch(e){
+    document.getElementById('googleSignIn').disabled=false;
+    document.getElementById('googleSignIn').textContent='Continue with Google';
+    showAuthError(e.message||'Google sign-in could not be started.');
+  }
+}
+async function adminBoot(){
+  try{
+    const cfg=await fetch('/api/config').then(r=>r.json());
+    if(!cfg.supabaseUrl||!cfg.supabaseAnonKey)throw new Error('Supabase is not configured. Add the server environment variables before using Admin.');
+    adminSB=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);
+    const {data,error}=await adminSB.auth.getSession();
+    if(error)throw error;
+    adminSession=data.session;
+    if(!adminSession){showAuthGate();return;}
+    hideAuthGate();
+    document.getElementById('adminEmail').textContent='Signed in as '+(adminSession.user?.email||'admin');
+    try{
+      await liveAdminProducts();
+      await healthCheck();
+    }catch(e){
+      const msg=e.message||'';
+      if(/Admin authentication required|Admin session required/i.test(msg)){
+        showAuthGate();
+        showAuthError('You are signed in as '+(adminSession.user?.email||'your Google account')+', but Nuvora did not find admin permission for that account. If you already promoted this account in Supabase, make sure it is the same Google account and that its public.profiles row has is_admin=true.');
+        return;
+      }
+      throw e;
+    }
+    adminSB.auth.onAuthStateChange((_event,session)=>{
+      adminSession=session;
+      if(!session)location.href='/';
+    });
+  }catch(e){
+    document.body.innerHTML='<div style="min-height:100vh;display:grid;place-items:center;background:#07111f;color:white;font-family:Inter,system-ui"><div style="text-align:center;max-width:520px;padding:24px"><h2>Nuvora Admin</h2><p style="color:#9aa8bd">'+esc(e.message)+'</p><button class="btn" onclick="location.href=\'/\'">Return to store</button></div></div>';
+  }
+}
+adminBoot();
+</script></body></html>

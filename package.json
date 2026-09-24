@@ -1,0 +1,11 @@
+{
+  "name": "nuvora-store",
+  "private": true,
+  "scripts": {
+    "start": "node api/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {}
+}
