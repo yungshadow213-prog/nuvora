@@ -8,3 +8,10 @@ node_modules/
 wrangler.jsonc
 package-lock.json
 bun.lockb
+backend/
+api/
+docs/
+README.md
+SETUP-NOTES.txt
+OPEN-ENV.bat
+START-NUVORA.bat
