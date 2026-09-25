@@ -110,7 +110,7 @@ function renderBrowse(){const q=(document.getElementById('searchInput')?.value||
 function renderSaved(){const list=products.filter(p=>saved.includes(p.id));document.getElementById('savedGrid').innerHTML=list.map(card).join('')||'<div class="empty" style="grid-column:1/-1">Nothing saved yet. Tap ♡ on something you want to keep.</div>'}
 function cartPrice(item,p){const v=(p.variants||[]).find(x=>String(x.id)===String(item.variantId));return Number(v?.price??p.rawPrice??0)||0}
 function changeCartQuantity(id,variantId,delta){const item=cart.find(x=>String(x.id||x)===String(id)&&String(x.variantId||'')===String(variantId||''));if(!item)return;item.quantity=Math.max(0,(Number(item.quantity)||1)+delta);if(item.quantity===0)cart=cart.filter(x=>!(String(x.id||x)===String(id)&&String(x.variantId||'')===String(variantId||'')));updateCart();renderCart();renderCartModal()}
-function renderCart(){const el=document.getElementById('cartContent');if(!cart.length){el.innerHTML='<div class="empty">Your cart is empty. Add direct Shop products and they will appear here.</div>';return}let total=0;const rows=cart.map(item=>{const x=typeof item==='string'?{id:item,quantity:1}:item;const p=products.find(y=>String(y.id)===String(x.id));if(!p)return '';const qty=Number(x.quantity)||1;total+=cartPrice(x,p)*qty;return '<div class="cart-row"><div style="min-width:0"><strong>'+htmlEsc(p.name)+'</strong><small>'+htmlEsc(x.variantTitle||'Default')+'</small><div class="qty-control cart-qty"><button type="button" onclick="changeCartQuantity('+jsId(x.id)+','+JSON.stringify(x.variantId||'')+',-1)">−</button><span class="qty-value">'+qty+'</span><button type="button" onclick="changeCartQuantity('+jsId(x.id)+','+JSON.stringify(x.variantId||'')+',1)">+</button></div></div><strong>'+htmlEsc(formatPrice(cartPrice(x,p)*qty,p.currency||''))+'</strong></div>'}).join('');el.innerHTML='<div class="cart-list">'+rows+'</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:15px;border-top:1px solid var(--line)"><span class="muted">Subtotal</span><strong>'+htmlEsc(formatPrice(total,products[0]?.currency||''))+'</strong></div><button class="btn primary" style="margin-top:16px;width:100%" onclick="checkout()">Continue to checkout</button>'}
+function renderCart(){const el=document.getElementById('cartContent');if(!cart.length){el.innerHTML='<div class="empty">Your cart is empty. Add direct Shop products and they will appear here.</div>';return}let total=0;const rows=cart.map(item=>{const x=typeof item==='string'?{id:item,quantity:1}:item;const p=products.find(y=>String(y.id)===String(x.id));if(!p)return '';const qty=Number(x.quantity)||1;total+=cartPrice(x,p)*qty;return '<div class="cart-row"><div style="min-width:0"><strong>'+htmlEsc(p.name)+'</strong><small>'+htmlEsc(x.variantTitle||'Default')+'</small><div class="qty-control cart-qty"><button type="button" onclick="changeCartQuantity('+jsId(x.id)+','+JSON.stringify(x.variantId||'')+',-1)">−</button><span class="qty-value">'+qty+'</span><button type="button" onclick="changeCartQuantity('+jsId(x.id)+','+JSON.stringify(x.variantId||'')+',1)">+</button></div></div><strong>'+htmlEsc(formatPrice(cartPrice(x,p)*qty,p.currency||''))+'</strong></div>'}).join('');el.innerHTML='<div class="cart-list">'+rows+'</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:15px;border-top:1px solid var(--line)"><span class="muted">Subtotal</span><strong>'+htmlEsc(formatPrice(total,products[0]?.currency||''))+'</strong></div><button class="btn primary" style="margin-top:16px;width:100%" onclick="checkout(this)">Checkout securely</button>'}
 function updateCart(){document.getElementById('cartCount').textContent=cart.reduce((n,x)=>n+(Number(x.quantity)||1),0);document.getElementById('cartCount').style.display=cart.length?'grid':'none';persist()}
 function cartKey(id,variantId){return String(id)+'|'+String(variantId||'')}
 async function addCartItem(id,variantId,variantTitle,quantity=1){const p=products.find(x=>String(x.id)===String(id));if(!p||p.type!=='Shop')return;const key=cartKey(id,variantId);const existing=cart.find(x=>cartKey(x.id||x,x.variantId)===key);if(existing)existing.quantity=(Number(existing.quantity)||1)+quantity;else cart.push({id:String(id),variantId:variantId||null,variantTitle:variantTitle||'',quantity});updateCart();renderCart();showToast('Added to cart');if(nuvoraSB){const {data:{user:su}}=await nuvoraSB.auth.getUser();if(su){await nuvoraSB.from('cart_items').upsert({user_id:su.id,product_id:id,variant_id:variantId||null,quantity:existing?Number(existing.quantity)||1:quantity,updated_at:new Date().toISOString()});}}}
@@ -167,7 +167,7 @@ function renderProductPage(p){
   document.getElementById('productSave')?.addEventListener('click',()=>toggleSave(p.id));
   const add=()=>{const v=refreshVariant();if(p.type==='Shop'){addCartItem(p.id,v.id,v.title||'',qty);trackEvent('add_to_cart',String(p.id),{variant_id:v.id,quantity:qty});}};
   document.getElementById('productAdd')?.addEventListener('click',add);
-  document.getElementById('productBuy')?.addEventListener('click',()=>{if(p.type==='Shop'){const v=refreshVariant();beginCheckout([{productId:p.id,variantId:v.id,quantity:qty}]);}else if(p.destination){trackEvent('retailer_click',String(p.id),{retailer:p.retailer||''});window.location.href=p.destination;}});
+  document.getElementById('productBuy')?.addEventListener('click',()=>{if(p.type==='Shop'){const v=refreshVariant();beginCheckout([{productId:p.id,variantId:v.id,shopifyProductId:p.shopifyProductId,variantTitle:v.title||'',selectedOptions:v.selectedOptions||[],quantity:qty}],document.getElementById('productBuy'));}else if(p.destination){trackEvent('retailer_click',String(p.id),{retailer:p.retailer||''});window.location.href=p.destination;}});
   loadProductReviews(p.id);
   const related=products.filter(x=>String(x.id)!==String(p.id)&&((p.cat&&x.cat===p.cat)||(p.brand&&x.brand===p.brand))).slice(0,4);
   document.getElementById('relatedProducts').innerHTML=related.map(card).join('')||'<div class="empty" style="grid-column:1/-1">More products will appear here as the catalog grows.</div>';
@@ -299,45 +299,60 @@ async function toggleSave(id){
   saved=exists?saved.filter(x=>x!==id):[...saved,id];persist();renderBrowse();renderSaved();renderList('shopGrid','Shop');renderList('findGrid','Find');if(document.getElementById('detailModal').classList.contains('open'))updateDetailButtons(id);
 }
 function removeCart(id){const before=cart.length;cart=cart.filter(x=>String(x.id||x)!==String(id));if(cart.length!==before){updateCart();renderCart();}if(nuvoraSB){nuvoraSB.auth.getUser().then(({data:{user:su}})=>{if(!su)return;nuvoraSB.from('cart_items').delete().eq('user_id',su.id).eq('product_id',id);});}}
-let pendingCheckoutLines=null;
-function closeCheckoutModal(){document.getElementById('checkoutModal').classList.remove('open');pendingCheckoutLines=null;}
-function showCheckoutPreview(lines){
-  const items=(lines||[]).map(line=>{const p=products.find(x=>String(x.id)===String(line.productId));const v=(p?.variants||[]).find(x=>String(x.id)===String(line.variantId));return {p,v,quantity:Number(line.quantity)||1};}).filter(x=>x.p);
-  const total=items.reduce((sum,x)=>sum+(Number(x.v?.price??x.p.rawPrice)||0)*x.quantity,0);
-  const currency=items[0]?.p?.currency||'';
-  const el=document.getElementById('checkoutContent');
-  if(!el)return;
-  el.innerHTML='<div style="display:grid;gap:16px"><div class="confidence-card"><div class="eyebrow"><i></i> Nuvora checkout</div><h3 style="margin:6px 0 4px">You are checking out from Nuvora.</h3><p class="muted" style="margin:0">Your order will be securely completed through our connected commerce checkout.</p></div><div style="display:grid;gap:10px">'+items.map(x=>'<div style="display:flex;gap:12px;align-items:center"><div class="detail-thumb" style="width:58px;height:58px;flex:0 0 58px">'+(x.p.image?'<img src="'+htmlEsc(x.p.image)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px">':'✦')+'</div><div style="min-width:0;flex:1"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+htmlEsc(x.p.name)+'</strong><span class="muted">'+(x.v?.title&&x.v.title!=='Default Title'?htmlEsc(x.v.title)+' · ':'')+'Qty '+x.quantity+'</span></div><strong>'+htmlEsc(formatPrice((Number(x.v?.price??x.p.rawPrice)||0)*x.quantity,x.p.currency||''))+'</strong></div>').join('')+'</div><div style="display:flex;justify-content:space-between;padding-top:14px;border-top:1px solid var(--line)"><span class="muted">Total</span><strong>'+htmlEsc(formatPrice(total,currency))+'</strong></div><button class="btn primary" id="continueNuvoraCheckout" style="width:100%">Continue to secure payment</button><p class="muted" style="font-size:12px;text-align:center;margin:0">Nuvora remains your shopping experience; payment is completed securely by the connected checkout.</p></div>';
-  document.getElementById('continueNuvoraCheckout')?.addEventListener('click',continueToShopifyCheckout);
-  document.getElementById('checkoutModal').classList.add('open');
-}
-function beginCheckout(lines){
-  const ready=(lines||[]).filter(x=>x?.variantId);
-  if(!ready.length){showToast('This product is not ready for checkout yet.');return}
-  pendingCheckoutLines=ready.map(x=>({productId:x.productId,variantId:x.variantId,quantity:Math.max(1,Number(x.quantity)||1)}));
-  showCheckoutPreview(pendingCheckoutLines);
-}
-async function continueToShopifyCheckout(){
-  const lines=(pendingCheckoutLines||[]).map(x=>({merchandiseId:x.variantId,quantity:x.quantity}));
-  if(!lines.length){showToast('Your checkout is empty');return;}
-  const btn=document.getElementById('continueNuvoraCheckout');
-  if(btn){btn.disabled=true;btn.textContent='Preparing secure checkout…';}
-  try{
-    const r=await fetch('/api/shopify/cart',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({lines})});
-    const j=await r.json().catch(()=>({}));
-    if(!r.ok||!j.checkoutUrl)throw new Error(j.error||'Checkout is not available for this product yet.');
-    trackEvent('checkout_started',null,{items:lines.length});
-    window.location.href=j.checkoutUrl;
-  }catch(e){
-    if(btn){btn.disabled=false;btn.textContent='Continue to secure payment';}
-    alert(e.message);
+let checkoutInFlight=false;
+function setCheckoutButtonState(btn,loading){
+  if(!btn)return;
+  if(loading){
+    btn.dataset.originalText=btn.textContent||'Buy now';
+    btn.disabled=true;
+    btn.textContent='Opening secure checkout…';
+  }else{
+    btn.disabled=false;
+    btn.textContent=btn.dataset.originalText||'Buy now';
+    delete btn.dataset.originalText;
   }
 }
-function checkout(){
-  if(!cart.length){showToast('Your cart is empty');return}
-  const lines=cart.map(raw=>{const x=typeof raw==='string'?{id:raw,variantId:null,quantity:1}:raw;return {productId:x.id,variantId:x.variantId,quantity:Number(x.quantity)||1};});
-  beginCheckout(lines);
+async function beginCheckout(lines,trigger){
+  if(checkoutInFlight)return;
+  const ready=(lines||[]).filter(x=>x?.variantId);
+  if(!ready.length){showToast('This product is not ready for checkout yet.');return}
+  checkoutInFlight=true;
+  setCheckoutButtonState(trigger,true);
+  try{
+    const payload={lines:ready.map(x=>({
+      merchandiseId:x.variantId,
+      shopifyProductId:x.shopifyProductId||null,
+      variantTitle:x.variantTitle||'',
+      selectedOptions:Array.isArray(x.selectedOptions)?x.selectedOptions:[],
+      quantity:Math.max(1,Math.min(250,Number(x.quantity)||1))
+    }))};
+    const r=await fetch('/api/shopify/cart',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.checkoutUrl)throw new Error(j.error||'Checkout is not available for this product yet.');
+    trackEvent('checkout_started',null,{items:payload.lines.length});
+    window.location.href=j.checkoutUrl;
+  }catch(e){
+    checkoutInFlight=false;
+    setCheckoutButtonState(trigger,false);
+    alert(e.message||'Checkout could not be started.');
+  }
 }
-
+function checkout(trigger){
+  if(!cart.length){showToast('Your cart is empty');return}
+  const lines=cart.map(raw=>{
+    const x=typeof raw==='string'?{id:raw,variantId:null,quantity:1}:raw;
+    const p=products.find(y=>String(y.id)===String(x.id));
+    const v=(p?.variants||[]).find(y=>String(y.id)===String(x.variantId));
+    return {
+      productId:x.id,
+      variantId:x.variantId||p?.variantId||v?.id||null,
+      shopifyProductId:p?.shopifyProductId||null,
+      variantTitle:x.variantTitle||v?.title||'',
+      selectedOptions:v?.selectedOptions||[],
+      quantity:Number(x.quantity)||1
+    };
+  });
+  beginCheckout(lines,trigger);
+}
 bootNuvora();
 </script></body></html>
