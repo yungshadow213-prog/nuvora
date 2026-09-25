@@ -229,7 +229,6 @@ window.addEventListener('popstate',()=>{const p=findProductFromPath();if(p)rende
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* LIVE INTEGRATION LAYER — sits under the existing Little Films-style UI. */
-let nuvoraSB=null;
 async function bootNuvora(){
   try{
     // The public catalog must not depend on the Supabase browser SDK/CDN.
