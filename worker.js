@@ -27,7 +27,7 @@ export default {
       }
 
       if(url.pathname==='/api/admin/diagnostics'&&request.method==='GET'){
-        const cfg=configured(env); const checks={environment:cfg.supabase,auth:false,admin:false,products:false,settings:false,social:false,openai:cfg.openai,workersAI:cfg.workersAI,shopifyStorefront:cfg.shopifyStorefront,shopifyEnvironment:cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
+        const cfg=configured(env); const checks={environment:cfg.supabase,auth:false,admin:false,products:false,settings:false,social:false,workersAI:cfg.workersAI,shopifyStorefront:cfg.shopifyStorefront,shopifyEnvironment:cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
         let shopifyError='';
         const shopifyMissing=[]; const aiMissing=[]; if(!env.AI)aiMissing.push('Workers AI binding');
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))shopifyMissing.push('SHOPIFY_SHOP');
@@ -367,76 +367,57 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const size=String(form.get('size')||'1024x1024');
         const source=form.get('image');
         if(!prompt)return json({error:'An image prompt is required.'},400);
-        const dimensions={ '1024x1024':[1024,1024], '1536x1024':[1536,1024], '1024x1536':[1024,1536] };
+        if(!env.AI)return json({error:'Nuvora AI is unavailable because the Cloudflare Workers AI binding is not active on this deployment. Deploy the current Nuvora Worker.'},503);
+        const dimensions={'1024x1024':[1024,1024],'1536x1024':[1536,1024],'1024x1536':[1024,1536]};
         const [width,height]=dimensions[size]||dimensions['1024x1024'];
-        if(env.AI){
-          try{
-            let imageB64=null;
-            if(source&&typeof source.arrayBuffer==='function'){
-              const bytes=new Uint8Array(await source.arrayBuffer());
-              if(bytes.byteLength>6*1024*1024)return json({error:'Reference image must be 6 MB or smaller for Nuvora AI.'},400);
-              imageB64=bytesToBase64(bytes);
-            }
-            const input={
-              prompt,
-              negative_prompt:'fake logos, watermarks, misleading text, extra products, distorted product, duplicate product, low quality',
-              width,height,num_steps:20,guidance:7.5
-            };
-            if(imageB64)input.image_b64=imageB64;
-            const result=await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0',input);
-            const bytes=await aiResultBytes(result);
-            return json({ok:true,provider:'cloudflare',image:'data:image/png;base64,'+bytesToBase64(bytes)});
-          }catch(e){
-            if(!env.OPENAI_API_KEY)return json({error:'Nuvora AI could not generate the image right now. Cloudflare AI may be at capacity or the AI binding is not available yet.'},502);
+        try{
+          let imageB64=null;
+          if(source&&typeof source.arrayBuffer==='function'){
+            const bytes=new Uint8Array(await source.arrayBuffer());
+            if(bytes.byteLength>6*1024*1024)return json({error:'Reference image must be 6 MB or smaller for Nuvora AI.'},400);
+            imageB64=bytesToBase64(bytes);
           }
+          const input={
+            prompt,
+            negative_prompt:'fake logos, watermarks, misleading text, extra products, distorted product, duplicate product, low quality',
+            width,height,num_steps:20,guidance:7.5
+          };
+          if(imageB64){input.image_b64=imageB64;input.strength=0.72;}
+          const result=await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0',input);
+          const bytes=await aiResultBytes(result);
+          return json({ok:true,provider:'cloudflare',image:'data:image/png;base64,'+bytesToBase64(bytes)});
+        }catch(e){
+          return json({error:'Nuvora AI image generation is temporarily unavailable. Cloudflare Workers AI may be at capacity or its daily free allocation may have been reached. Try again later.'},503);
         }
-        if(!env.OPENAI_API_KEY)return json({error:'Nuvora AI is not configured. Deploy the current Cloudflare Worker with the Workers AI binding enabled.'},503);
-        if(source&&typeof source.arrayBuffer==='function'){
-          const bytes=new Uint8Array(await source.arrayBuffer());
-          if(bytes.byteLength>10*1024*1024)return json({error:'Reference image must be 10 MB or smaller.'},400);
-          const fd=new FormData();
-          fd.append('model','gpt-image-2'); fd.append('prompt',prompt);
-          fd.append('size',['1024x1024','1536x1024','1024x1536'].includes(size)?size:'1024x1024');
-          fd.append('image',new Blob([bytes],{type:source.type||'image/png'}),source.name||'product-reference.png');
-          const r=await fetch('https://api.openai.com/v1/images/edits',{method:'POST',headers:{Authorization:'Bearer '+env.OPENAI_API_KEY},body:fd});
-          const j=await r.json().catch(()=>({}));
-          if(!r.ok)return json({error:j.error?.message||'AI image generation failed.'},502);
-          const item=j.data?.[0]; if(!item?.b64_json)return json({error:'AI returned no image.'},502);
-          return json({ok:true,provider:'openai',image:'data:image/png;base64,'+item.b64_json});
-        }
-        const r=await fetch('https://api.openai.com/v1/images/generations',{method:'POST',headers:{Authorization:'Bearer '+env.OPENAI_API_KEY,'content-type':'application/json'},body:JSON.stringify({model:'gpt-image-2',prompt,size:['1024x1024','1536x1024','1024x1536'].includes(size)?size:'1024x1024',output_format:'png'})});
-        const j=await r.json().catch(()=>({}));
-        if(!r.ok)return json({error:j.error?.message||'AI image generation failed.'},502);
-        const item=j.data?.[0]; if(!item?.b64_json)return json({error:'AI returned no image.'},502);
-        return json({ok:true,provider:'openai',image:'data:image/png;base64,'+item.b64_json});
       }
+
       if(url.pathname==='/api/admin/ai/copy'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const input=await body(request,64*1024);
         const product=input.product||{};
+        if(!env.AI)return json({error:'Nuvora AI is unavailable because the Cloudflare Workers AI binding is not active on this deployment. Deploy the current Nuvora Worker.'},503);
         const prompt=`Create polished ecommerce copy for Nuvora. Return ONLY valid JSON with keys: title, description, features, seo_title, seo_description, social_caption. Keep claims factual and do not invent specifications, certifications, guarantees, discounts, or performance claims. Product data: ${JSON.stringify(product)}`;
-        if(env.AI){
-          try{
-            const response=await env.AI.run('@cf/google/gemma-4-26b-a4b-it',{
-              messages:[
-                {role:'system',content:'You write accurate ecommerce listings. Output only valid JSON with the requested keys. Never invent product facts.'},
-                {role:'user',content:prompt}
-              ],
-              chat_template_kwargs:{enable_thinking:false}
-            },{rejectIfBusy:true});
-            const raw=response?.response||response?.choices?.[0]?.message?.content||'';
-            let result; try{result=JSON.parse(raw)}catch{result={title:raw}};
-            return json({ok:true,provider:'cloudflare',...result});
-          }catch(e){}
+        try{
+          const response=await env.AI.run('@cf/google/gemma-4-26b-a4b-it',{
+            messages:[
+              {role:'system',content:'You write accurate ecommerce listings. Output only valid JSON with the requested keys. Never invent product facts.'},
+              {role:'user',content:prompt}
+            ],
+            chat_template_kwargs:{enable_thinking:false}
+          });
+          const raw=String(response?.response||response?.choices?.[0]?.message?.content||'').trim();
+          const clean=raw.replace(/^\`\`\`(?:json)?\s*/i,'').replace(/\s*\`\`\`$/,'').trim();
+          let result;
+          try{result=JSON.parse(clean)}catch{
+            const match=clean.match(/\{[\s\S]*\}/);
+            result=match?JSON.parse(match[0]):{title:clean};
+          }
+          return json({ok:true,provider:'cloudflare',...result});
+        }catch(e){
+          return json({error:'Nuvora AI listing polish is temporarily unavailable. Cloudflare Workers AI may be at capacity or its daily free allocation may have been reached. Try again later.'},503);
         }
-        if(!env.OPENAI_API_KEY)return json({error:'Nuvora AI is not configured. Deploy the current Cloudflare Worker with the Workers AI binding enabled.'},503);
-        const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:'Bearer '+env.OPENAI_API_KEY,'content-type':'application/json'},body:JSON.stringify({model:'gpt-5.6-luna',input:prompt,text:{format:{type:'json_object'}}})});
-        const j=await r.json().catch(()=>({}));
-        if(!r.ok)return json({error:j.error?.message||'AI copy generation failed.'},502);
-        const raw=j.output_text||j.output?.flatMap(x=>x.content||[]).find(x=>x.type==='output_text')?.text||'';
-        let result; try{result=JSON.parse(raw)}catch{result={title:raw}};
-        return json({ok:true,provider:'openai',...result});
       }
+
       // Unknown API routes must stay JSON 404s; only browser routes use the SPA shell.
       if(url.pathname.startsWith('/api/')) return json({error:'API route not found.'},404);
       // Let Cloudflare Assets serve the SPA shell for every non-API route.
@@ -474,7 +455,7 @@ async function aiResultBytes(result){
   throw new Error('Cloudflare AI returned no image bytes.');
 }
 function bytesToBase64(bytes){let out='';const step=0x8000;for(let i=0;i<bytes.length;i+=step)out+=String.fromCharCode(...bytes.subarray(i,i+step));return btoa(out);}
-function configured(env){const shopifyAdmin=!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET;return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:shopifyAdmin,shopifyStorefront:shopifyAdmin,shopifyAdmin,openai:!!env.OPENAI_API_KEY,workersAI:!!env.AI,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
+function configured(env){const shopifyAdmin=!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET;return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:shopifyAdmin,shopifyStorefront:shopifyAdmin,shopifyAdmin,openaiOptional:!!env.OPENAI_API_KEY,workersAI:!!env.AI,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
 async function shopifyGraphql(env,query,variables={},admin=false){
   const domain=env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN;
   let token;
