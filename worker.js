@@ -73,11 +73,41 @@ export default {
         if(!configured(env).shopify)return json({error:'Shopify checkout is not configured'},503);
         const {lines}=await body(request);
         if(!Array.isArray(lines)||!lines.length)return json({error:'Cart lines required'},400);
-        const normalized=lines.map(x=>({
-          id:String(x?.merchandiseId||'').split('/').pop(),
-          quantity:Math.max(1,Math.min(250,Number(x?.quantity)||1))
-        })).filter(x=>/^\d+$/.test(x.id));
-        if(!normalized.length)return json({error:'No valid Shopify variant IDs were supplied'},400);
+        const isNumericId=value=>{const s=String(value||'');return !!s&&s.split('').every(ch=>ch>='0'&&ch<='9')};
+        const normalized=[];
+        for(const line of lines.slice(0,50)){
+          const rawVariant=String(line?.merchandiseId||'').trim();
+          const rawProduct=String(line?.shopifyProductId||'').trim();
+          const variantId=rawVariant.startsWith('gid://shopify/ProductVariant/')?rawVariant:(isNumericId(rawVariant)?'gid://shopify/ProductVariant/'+rawVariant:'');
+          const productId=rawProduct.startsWith('gid://shopify/Product/')?rawProduct:(isNumericId(rawProduct)?'gid://shopify/Product/'+rawProduct:'');
+          if(!variantId&&!productId)continue;
+          let variant=null; let product=null;
+          if(variantId){
+            const data=await shopifyGraphql(env,'query CheckoutVariant($id:ID!){ productVariant(id:$id){ id title availableForSale unpublishedPublications(first:30){nodes{name}} resourcePublicationsV2(first:30){nodes{publication{name} isPublished}} product{ id title handle status resourcePublicationsV2(first:30){nodes{publication{name} isPublished}} } } }',{id:variantId},true);
+            variant=data?.productVariant||null; product=variant?.product||null;
+          }
+          if(!variant&&productId){
+            const data=await shopifyGraphql(env,'query CheckoutProduct($id:ID!){ product(id:$id){ id title handle status resourcePublicationsV2(first:30){nodes{publication{name} isPublished}} variants(first:100){nodes{ id title availableForSale unpublishedPublications(first:30){nodes{name}} resourcePublicationsV2(first:30){nodes{publication{name} isPublished}} selectedOptions{name value} }} } }',{id:productId},true);
+            product=data?.product||null;
+            const candidates=product?.variants?.nodes||[];
+            const wanted=Array.isArray(line?.selectedOptions)?line.selectedOptions.filter(x=>x&&x.name&&x.value):[];
+            variant=candidates.find(v=>{const opts=Array.isArray(v.selectedOptions)?v.selectedOptions:[];return wanted.length&&wanted.length===opts.length&&wanted.every(w=>opts.some(o=>String(o.name)===String(w.name)&&String(o.value)===String(w.value)))})||candidates.find(v=>String(v.title||'')===String(line?.variantTitle||''))||null;
+          }
+          if(!variant)return json({error:'This Nuvora product is linked to a Shopify variant that no longer exists. Open Admin → Import Shopify and sync this product again.'},409);
+          if(String(product?.status||'')!=='ACTIVE')return json({error:'This Shopify product is not active yet. In Shopify, set the product status to Active, then make it available to the Online Store.'},409);
+          const productPubs=product?.resourcePublicationsV2?.nodes||[];
+          const variantPubs=variant?.resourcePublicationsV2?.nodes||[];
+          const productOnline=productPubs.find(x=>/online store/i.test(String(x?.publication?.name||'')));
+          const variantOnline=variantPubs.find(x=>/online store/i.test(String(x?.publication?.name||'')));
+          const productUnpublished=productPubs.some(x=>/online store/i.test(String(x?.publication?.name||''))&&!x?.isPublished);
+          const variantUnpublished=(variant?.unpublishedPublications?.nodes||[]).some(x=>/online store/i.test(String(x?.name||'')))||!!(variantOnline&&!variantOnline.isPublished);
+          if((productOnline&&!productOnline.isPublished)||productUnpublished||variantUnpublished)return json({error:'This Shopify product or variant is not published to the Online Store channel. In Shopify, publish the product and the selected variant to Online Store, then try Buy now again.'},409);
+          if(variant.availableForSale===false)return json({error:'This variant is currently unavailable for sale in Shopify. Choose another variant or update its inventory/selling settings.'},409);
+          const numeric=String(variant.id||'').split('/').pop();
+          if(!isNumericId(numeric))return json({error:'Shopify returned an invalid variant ID.'},502);
+          normalized.push({id:numeric,quantity:Math.max(1,Math.min(250,Number(line?.quantity)||1))});
+        }
+        if(!normalized.length)return json({error:'No valid Shopify checkout lines were supplied'},400);
         const checkoutUrl='https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/cart/'+normalized.map(x=>x.id+':'+x.quantity).join(',');
         return json({checkoutUrl});
       }
