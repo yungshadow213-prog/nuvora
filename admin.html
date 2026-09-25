@@ -129,7 +129,7 @@ async function importSelectedShopify(){
     const j=await api('/api/admin/shopify/import',{method:'POST',body:{ids}});
     await liveAdminProducts();
     const imported=Number(j.imported||0),skipped=Number(j.skipped||0),failed=Number(j.failed||0);
-    alert('Shopify sync complete. Imported: '+imported+' · Already in Nuvora: '+skipped+' · Failed: '+failed);
+    const detail=(j.results||[]).filter(x=>!x.ok).slice(0,3).map(x=>(x.title||'Product')+': '+(x.error||'Unknown error')).join('\n'); alert('Shopify sync complete. Imported: '+imported+' · Already in Nuvora: '+skipped+' · Failed: '+failed+(detail?'\n\nFirst errors:\n'+detail:''));
     closeShopifyImport();
   }catch(e){alert(e.message||'Shopify import failed.');}
   finally{btn.disabled=false;btn.textContent='Import selected';}
