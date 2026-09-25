@@ -83,11 +83,12 @@
       <button class="btn" onclick="closeProductModal()">Close</button>
     </div>
     <div class="modal-body">
-      <div class="workspace-note" id="importStatus">You can enter a product manually or fetch an Amazon product below. Imported data stays editable and nothing becomes public until you publish it.</div><div style="display:flex;justify-content:flex-end;margin:-4px 0 14px"><button type="button" class="btn primary" onclick="openAIStudio()">✦ Open AI Studio</button></div>
+      <div class="workspace-note" id="importStatus">You can enter a product manually or use the quick Amazon link workflow below. Nothing becomes public until you publish it.</div><div style="display:flex;justify-content:flex-end;margin:-4px 0 14px"><button type="button" class="btn primary" onclick="openAIStudio()">✦ Open AI Studio</button></div>
       <div class="importbar">
-        <input id="amazonUrlInput" placeholder="Paste an Amazon product URL (optional)">
-        <button class="btn primary" onclick="fetchAmazonIntoForm()">Fetch from Amazon</button>
+        <input id="amazonUrlInput" placeholder="Paste your Amazon affiliate/product link">
+        <button class="btn primary" onclick="useAmazonLink()">Use Amazon link</button>
       </div>
+      <div class="notice" style="margin-top:10px">Quick Amazon setup: paste your affiliate link, then add the product title, image, description and any other details you want. Nuvora sends customers to that Amazon link when they click Buy on Amazon. No Amazon API is required.</div>
       <div class="formgrid">
         <div class="field full"><label>Product title</label><input id="pfName" placeholder="Product title"></div>
         <div class="field"><label>Type</label><select id="pfKind"><option value="shop">Shop</option><option value="find">Find</option><option value="learn">Learn</option></select></div>
@@ -180,7 +181,7 @@ function resetProductForm(){
 function openProductModal(importMode=false){
   resetProductForm();
   document.getElementById('productModalTitle').textContent=importMode?'Import Amazon product':'Add product';
-  document.getElementById('productModalSub').textContent=importMode?'Fetch the product, review every field, then save it as a draft.':'Create a product manually and save it as a draft.';
+  document.getElementById('productModalSub').textContent=importMode?'Paste your affiliate link, add the essentials, then save it as a draft.':'Create a product manually and save it as a draft.';
   document.getElementById('productModal').classList.add('open');
   document.getElementById('amazonUrlInput').focus();
 }
@@ -260,18 +261,21 @@ async function generateAIProductCopy(){
   }catch(e){status.textContent='Copy generation failed.';alert(e.message)}finally{btn.disabled=false;btn.textContent='Polish product listing';}
 }
 
-async function fetchAmazonIntoForm(){
+function useAmazonLink(){
   const url=document.getElementById('amazonUrlInput').value.trim();
-  if(!url)return alert('Paste an Amazon product URL first.');
-  const btn=document.querySelector('#productModal .importbar .primary'); btn.disabled=true; btn.textContent='Fetching…';
-  try{
-    const j=await api('/api/amazon/import',{method:'POST',body:{url}});
-    setProductForm(j.draft);
-    document.getElementById('amazonUrlInput').value=url;
-    document.getElementById('importStatus').textContent='Amazon data fetched. Review and edit it below. It has not been saved or published yet.';
-    document.getElementById('productModalTitle').textContent='Review Amazon product';
-    document.getElementById('productModalSub').textContent='Preview → Edit → Save Draft. Publishing is a separate action.';
-  }catch(e){alert(e.message)}finally{btn.disabled=false;btn.textContent='Fetch from Amazon';}
+  if(!url)return alert('Paste your Amazon affiliate link first.');
+  let asin='';
+  const m=url.match(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/)([A-Z0-9]{10})/i);
+  if(m)asin=m[1].toUpperCase();
+  document.getElementById('pfDestination').value=url;
+  document.getElementById('pfRetailer').value='Amazon';
+  if(asin)document.getElementById('pfAsin').value=asin;
+  document.getElementById('pfKind').value='find';
+  document.getElementById('importStatus').textContent=asin
+    ? 'Amazon link saved. ASIN detected. Add the product details and image, then save it as a draft.'
+    : 'Amazon link saved. Add the product details and image, then save it as a draft.';
+  document.getElementById('productModalTitle').textContent='Add Amazon product';
+  document.getElementById('productModalSub').textContent='Paste link → add details → save draft → publish when ready.';
 }
 async function saveProductDraft(){
   const name=document.getElementById('pfName').value.trim(); if(!name)return alert('Product title is required.');
