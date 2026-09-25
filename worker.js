@@ -76,10 +76,13 @@ export default {
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         if(!configured(env).shopifyAdmin)return json({error:'Shopify Admin API is not configured'},503);
         try{
-          const data=await shopifyGraphql(env,'query{products(first:100,sortKey:TITLE){nodes{id title handle descriptionHtml vendor productType status updatedAt featuredImage{url altText} images(first:20){nodes{url altText}} variants(first:100){nodes{id title price compareAtPrice selectedOptions{name value}}}}}}',{},true);
+          const data=await shopifyGraphql(env,'query{shop{currencyCode} products(first:100,sortKey:TITLE){nodes{id title handle descriptionHtml vendor productType status updatedAt featuredImage{url altText} images(first:20){nodes{url altText}} variants(first:100){nodes{id title price compareAtPrice selectedOptions{name value}}}}}}',{},true);
+        const shopCurrency=String(data?.shop?.currencyCode||'NGN').toUpperCase();
           return json({products:data?.products?.nodes||[]});
         }catch(e){return json({error:e?.message||'Shopify products could not be loaded'},502);}
       }
+
+function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]*>/gi,' ').replace(/<script[\s\S]*?<\/script>/gi,' ').replace(/<style[\s\S]*?<\/style>/gi,' ').replace(/<br\s*\/?\s*>/gi,'\n').replace(/<\/(p|div|li|tr|h[1-6])>/gi,'\n').replace(/<li\b[^>]*>/gi,'• ').replace(/<[^>]+>/g,' ').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'").replace(/[ \t]+/g,' ').replace(/\n[ \t]+/g,'\n').replace(/\n{3,}/g,'\n\n').trim();}
 
       if(url.pathname==='/api/admin/shopify/import'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
@@ -107,10 +110,10 @@ export default {
           products.push({
             source:p,
             product:{
-              name:p.title,slug:slugBase+'-'+randHex(5),kind:'shop',description:p.descriptionHtml||null,
+              name:p.title,slug:slugBase+'-'+randHex(5),kind:'shop',description:cleanShopifyDescription(p.descriptionHtml),
               brand:p.vendor||null,image_url:images[0]||null,image_urls:[...new Set(images)],
               availability:p.status==='ACTIVE'?'In stock':null,display_price:variant?.price?Number(variant.price):null,
-              currency:'NGN',destination_url:'https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/products/'+p.handle,
+              currency:shopCurrency,destination_url:'https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/products/'+p.handle,
               retailer:null,provider:'shopify',region:null,category_id:autoCategory(p.title,p.descriptionHtml,p.productType,categories),collection_id:null,
               why_we_picked_it:null,featured:false,trending:false,top_pick:false,published:false,
               shopify_product_id:p.id,shopify_variant_id:variant?.id||null
