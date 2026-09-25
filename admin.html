@@ -30,7 +30,7 @@
 <div id="aiStudioModal" class="modal-backdrop" onclick="if(event.target===this)closeAIStudio()">
   <div class="modal">
     <div class="modal-head">
-      <div><div class="eyebrow">Nuvora AI Studio</div><h2>Make this product publish-ready</h2><div class="muted">Generate a polished advertising image and refined listing copy without changing the original until you choose to apply it.</div></div>
+      <div><div class="eyebrow">Nuvora AI Studio</div><h2>Make this product publish-ready</h2><div class="muted">Generate a polished advertising image and refined listing copy with Nuvora AI. Your OpenAI balance is not required for the built-in AI.</div></div>
       <button class="btn" onclick="closeAIStudio()">Close</button>
     </div>
     <div class="modal-body">
@@ -339,7 +339,7 @@ async function runDiagnostics(){
   box.innerHTML='<div class="muted">Running diagnostics…</div>';
   try{
     const j=await api('/api/admin/diagnostics');
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',settings:'Store settings',social:'Social posts',openai:'OpenAI AI key',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
+    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',settings:'Store settings',social:'Social posts',workersAI:'Nuvora AI engine',openai:'OpenAI fallback (optional)',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
     box.innerHTML=Object.entries(labels).map(([k,label])=>`<div class="row"><span>${esc(label)}</span><span class="status"><i class="dot ${j.checks?.[k]?'':'off'}"></i>${j.checks?.[k]?'Passed':'Failed'}</span></div>`).join('')+`<div class="notice" style="margin-top:12px">${j.ok?'All diagnostics passed.':'One or more diagnostics failed. Check the failed item above.'}${j.shopifyMissing?.length?'<br><strong>Shopify configuration missing:</strong> '+esc(j.shopifyMissing.join(', ')):'' }${j.aiMissing?.length?'<br><strong>AI configuration missing:</strong> '+esc(j.aiMissing.join(', ')):''}${j.shopifyError?'<br><strong>Shopify:</strong> '+esc(j.shopifyError):''}</div>`;
   }catch(e){box.innerHTML=`<div class="notice">${esc(e.message||'Diagnostics failed.')}</div>`;}
 }
