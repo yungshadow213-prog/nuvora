@@ -132,47 +132,54 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const newItems=products.filter(x=>!existingMap.has(String(x.source.id)));
         const existingItems=products.filter(x=>existingMap.has(String(x.source.id)));
 
-        // Existing products are already in Nuvora. Keep this sync request cheap;
-        // they can be refreshed by a later sync without hitting one request per item.
-        for(const x of existingItems){
-          results.push({ok:true,skipped:true,synced:false,id:x.source.id,title:x.source.title});
-        }
+        // Sync existing Shopify-linked products as well as importing new ones.
+        // Existing rows keep their current publication state.
+        const syncRows=existingItems.map(x=>{
+          const row={...x.product,id:existingMap.get(String(x.source.id))};
+          delete row.published;
+          return row;
+        });
+        const newRows=newItems.map(x=>x.product);
+        const payloadRows=[...syncRows,...newRows];
+        const results=[];
 
-        if(newItems.length){
-          const payloadRows=newItems.map(x=>x.product);
-          let created=await supabaseRest(env,'POST','products',payloadRows);
+        if(payloadRows.length){
+          let created=await supabaseRest(env,'POST','products',payloadRows,'?on_conflict=id');
           if(!created.ok){
             const errText=(await created.text()).slice(0,2000);
-            // If the live database/cache does not yet expose the Shopify ID
-            // columns, retry the whole batch once without those two columns.
-            if(/PGRST204|schema cache|Could not find the '.*' column|shopify_product_id|shopify_variant_id/i.test(errText)){
+            if(/PGRST204|schema cache|Could not find the '.*' column|shopify_product_id|shopify_variant_id|shopify_variants/i.test(errText)){
               const legacyRows=payloadRows.map(row=>{
                 const copy={...row};
+                delete copy.id;
                 delete copy.shopify_product_id;
                 delete copy.shopify_variant_id;
                 delete copy.shopify_variants;
+                delete copy.published;
                 return copy;
               });
               created=await supabaseRest(env,'POST','products',legacyRows);
               if(!created.ok){
                 const legacyErr=(await created.text()).slice(0,2000);
-                for(const x of newItems)results.push({ok:false,skipped:false,id:x.source.id,title:x.source.title,error:legacyErr,initialError:errText});
+                for(const x of payloadRows)results.push({ok:false,id:x.id||null,title:x.name||'',error:legacyErr,initialError:errText});
               }else{
-                for(const x of newItems)results.push({ok:true,skipped:false,id:x.source.id,title:x.source.title,syncedWithoutShopifyIds:true});
+                for(const x of newItems)results.push({ok:true,imported:true,synced:false,id:x.source.id,title:x.source.title,syncedWithoutShopifyIds:true});
+                for(const x of existingItems)results.push({ok:true,imported:false,synced:true,id:x.source.id,title:x.source.title,syncedWithoutShopifyIds:true});
               }
             }else{
-              for(const x of newItems)results.push({ok:false,skipped:false,id:x.source.id,title:x.source.title,error:errText});
+              for(const x of payloadRows)results.push({ok:false,id:x.id||null,title:x.name||'',error:errText});
             }
           }else{
-            for(const x of newItems)results.push({ok:true,skipped:false,id:x.source.id,title:x.source.title});
+            for(const x of newItems)results.push({ok:true,imported:true,synced:false,id:x.source.id,title:x.source.title});
+            for(const x of existingItems)results.push({ok:true,imported:false,synced:true,id:x.source.id,title:x.source.title});
           }
         }
 
         return json({
           ok:results.every(x=>x.ok),
           results,
-          imported:results.filter(x=>x.ok&&!x.skipped).length,
-          skipped:results.filter(x=>x.skipped).length,
+          imported:results.filter(x=>x.ok&&x.imported).length,
+          synced:results.filter(x=>x.ok&&x.synced).length,
+          skipped:0,
           failed:results.filter(x=>!x.ok).length
         });
       }
@@ -306,10 +313,10 @@ function json(payload,status=200,extra={}){return new Response(JSON.stringify(pa
 async function body(request,limit=1024*1024){const len=Number(request.headers.get('content-length')||0);if(len>limit)throw new Error('Request body is too large.');const text=await request.text();if(text.length>limit)throw new Error('Request body is too large.');return text?JSON.parse(text):{};}
 function env(name){return globalThis.__ENV?.[name]||'';}
 function configured(env){return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_STOREFRONT_ACCESS_TOKEN,shopifyAdmin:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
-function sbHeaders(env,service=true){const key=service?env.SUPABASE_SERVICE_ROLE_KEY:env.SUPABASE_ANON_KEY;return {apikey:key,authorization:'Bearer '+key,'content-type':'application/json','prefer':'return=representation'};}
+function sbHeaders(env,service=true,upsert=false){const key=service?env.SUPABASE_SERVICE_ROLE_KEY:env.SUPABASE_ANON_KEY;return {apikey:key,authorization:'Bearer '+key,'content-type':'application/json','prefer':upsert?'return=representation,resolution=merge-duplicates':'return=representation'};}
 async function supabaseUser(request,env){const token=(request.headers.get('authorization')||'').replace(/^Bearer\s+/i,'');if(!token||!env.SUPABASE_URL)return null;const r=await fetch(env.SUPABASE_URL+'/auth/v1/user',{headers:{apikey:env.SUPABASE_ANON_KEY,authorization:'Bearer '+token}});return r.ok?await r.json():null;}
 async function adminUser(request,env){const u=await supabaseUser(request,env);if(!u||!env.SUPABASE_SERVICE_ROLE_KEY)return null;const r=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});if(!r.ok)return null;const rows=await r.json(),profile=rows[0];return profile&&(profile.is_admin===true||profile.role==='admin')?u:null;}
-async function supabaseRest(env,method,table,data,query=''){const r=await fetch(`${env.SUPABASE_URL}/rest/v1/${table}${query||''}`,{method,headers:sbHeaders(env,true),body:data===undefined?undefined:JSON.stringify(data)});return r;}
+async function supabaseRest(env,method,table,data,query=''){const upsert=/[?&]on_conflict=/.test(query);const r=await fetch(`${env.SUPABASE_URL}/rest/v1/${table}${query||''}`,{method,headers:sbHeaders(env,true,upsert),body:data===undefined?undefined:JSON.stringify(data)});return r;}
 function validUrl(v){if(!v)return true;try{const u=new URL(v);return ['http:','https:'].includes(u.protocol)}catch{return false}}
 function cleanText(v,max=5000){return v==null?null:String(v).trim().slice(0,max)||null}
 function validateProduct(p){if(!p||!cleanText(p.name,180))return 'Product name is required.';if(!cleanText(p.slug,180))return 'Product slug is required.';if(!['shop','find','learn'].includes(p.kind))return 'Product type must be shop, find, or learn.';if(p.display_price!==null&&p.display_price!==undefined&&p.display_price!==''&&(Number.isNaN(Number(p.display_price))||Number(p.display_price)<0))return 'Price must be a non-negative number.';for(const k of ['destination_url','amazon_source_url','image_url'])if(p[k]&&!validUrl(p[k]))return `${k} must be a valid http(s) URL.`;if(p.image_urls!==undefined&&!Array.isArray(p.image_urls))return 'image_urls must be an array.';if(Array.isArray(p.image_urls)&&p.image_urls.length>30)return 'A product can have at most 30 images.';return null}
