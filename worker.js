@@ -72,6 +72,39 @@ export default {
         return json(p.cart);
       }
 
+      if(url.pathname==='/api/admin/shopify/products'&&request.method==='GET'){
+        const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        if(!configured(env).shopifyAdmin)return json({error:'Shopify Admin API is not configured'},503);
+        try{
+          const data=await shopifyGraphql(env,'query{products(first:100,sortKey:TITLE){nodes{id title handle descriptionHtml vendor productType status updatedAt featuredImage{url altText} images(first:20){nodes{url altText}} variants(first:100){nodes{id title price compareAtPrice selectedOptions{name value}}}}}}',{},true);
+          return json({products:data?.products?.nodes||[]});
+        }catch(e){return json({error:e?.message||'Shopify products could not be loaded'},502);}
+      }
+
+      if(url.pathname==='/api/admin/shopify/import'&&request.method==='POST'){
+        const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        if(!configured(env).shopifyAdmin)return json({error:'Shopify Admin API is not configured'},503);
+        const payload=await body(request);
+        const ids=Array.isArray(payload.ids)?payload.ids.map(String).filter(Boolean):[];
+        if(!ids.length)return json({error:'Select at least one Shopify product.'},400);
+        if(ids.length>100)return json({error:'You can import up to 100 Shopify products at once.'},400);
+        const data=await shopifyGraphql(env,'query{products(first:100,sortKey:TITLE){nodes{id title handle descriptionHtml vendor productType status updatedAt featuredImage{url altText} images(first:20){nodes{url altText}} variants(first:100){nodes{id title price compareAtPrice selectedOptions{name value}}}}}}',{},true);
+        const selected=(data?.products?.nodes||[]).filter(p=>ids.includes(String(p.id)));
+        const results=[];
+        for(const p of selected){
+          const images=[p.featuredImage?.url,...(p.images?.nodes||[]).map(x=>x.url)].filter(Boolean);
+          const variant=p.variants?.nodes?.[0];
+          const existing=await supabaseRest(env,'GET','products',undefined,'?select=id,shopify_product_id&shopify_product_id=eq.'+encodeURIComponent(p.id)+'&limit=1');
+          if(existing.ok&&(await existing.json()).length){results.push({ok:true,skipped:true,id:p.id,title:p.title});continue;}
+          const slugBase=String(p.handle||p.title||'product').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,140);
+          const product={name:p.title,slug:slugBase+'-'+randHex(5),kind:'shop',description:p.descriptionHtml||null,brand:p.vendor||null,image_url:images[0]||null,image_urls:[...new Set(images)],availability:p.status==='ACTIVE'?'In stock':null,display_price:variant?.price?Number(variant.price):null,currency:'NGN',destination_url:'https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/products/'+p.handle,retailer:null,provider:'shopify',region:null,category_id:null,collection_id:null,why_we_picked_it:null,featured:false,trending:false,top_pick:false,published:false,shopify_product_id:p.id,shopify_variant_id:variant?.id||null};
+          const created=await supabaseRest(env,'POST','products',product);
+          if(!created.ok){results.push({ok:false,skipped:false,id:p.id,title:p.title,error:(await created.text()).slice(0,500)});continue;}
+          results.push({ok:true,skipped:false,id:p.id,title:p.title});
+        }
+        return json({ok:results.every(x=>x.ok),results,imported:results.filter(x=>x.ok&&!x.skipped).length,skipped:results.filter(x=>x.skipped).length,failed:results.filter(x=>!x.ok).length});
+      }
+
       if(url.pathname==='/api/shopify/product'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         if(!configured(env).shopifyAdmin)return json({error:'Shopify Admin API is not configured'},503);
