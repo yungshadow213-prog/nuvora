@@ -309,6 +309,51 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         return json({ok:true});
       }
 
+      if(url.pathname==='/api/admin/ai/image'&&request.method==='POST'){
+        const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        if(!env.OPENAI_API_KEY)return json({error:'AI image generation is not configured. Add the OPENAI_API_KEY secret in Cloudflare.'},503);
+        const form=await request.formData();
+        const prompt=cleanText(form.get('prompt'),5000);
+        const size=String(form.get('size')||'1024x1024');
+        const source=form.get('image');
+        if(!prompt)return json({error:'An image prompt is required.'},400);
+        if(source && typeof source.arrayBuffer==='function'){
+          const bytes=new Uint8Array(await source.arrayBuffer());
+          if(bytes.byteLength>10*1024*1024)return json({error:'Reference image must be 10 MB or smaller.'},400);
+          const fd=new FormData();
+          fd.append('model','gpt-image-2');
+          fd.append('prompt',prompt);
+          fd.append('size',['1024x1024','1536x1024','1024x1536'].includes(size)?size:'1024x1024');
+          fd.append('image',new Blob([bytes],{type:source.type||'image/png'}),source.name||'product-reference.png');
+          const r=await fetch('https://api.openai.com/v1/images/edits',{method:'POST',headers:{Authorization:'Bearer '+env.OPENAI_API_KEY},body:fd});
+          const j=await r.json().catch(()=>({}));
+          if(!r.ok)return json({error:j.error?.message||'AI image generation failed.'},502);
+          const item=j.data?.[0];
+          if(!item?.b64_json)return json({error:'AI returned no image.'},502);
+          return json({ok:true,image:'data:image/png;base64,'+item.b64_json});
+        }
+        const r=await fetch('https://api.openai.com/v1/images/generations',{method:'POST',headers:{Authorization:'Bearer '+env.OPENAI_API_KEY,'content-type':'application/json'},body:JSON.stringify({model:'gpt-image-2',prompt,size:['1024x1024','1536x1024','1024x1536'].includes(size)?size:'1024x1024',output_format:'png'})});
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok)return json({error:j.error?.message||'AI image generation failed.'},502);
+        const item=j.data?.[0];
+        if(!item?.b64_json)return json({error:'AI returned no image.'},502);
+        return json({ok:true,image:'data:image/png;base64,'+item.b64_json});
+      }
+
+      if(url.pathname==='/api/admin/ai/copy'&&request.method==='POST'){
+        const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        if(!env.OPENAI_API_KEY)return json({error:'AI copy generation is not configured. Add the OPENAI_API_KEY secret in Cloudflare.'},503);
+        const input=await body(request,64*1024);
+        const product=input.product||{};
+        const prompt=`Create polished ecommerce copy for Nuvora. Return ONLY valid JSON with keys: title, description, features, seo_title, seo_description, social_caption. Keep claims factual and do not invent specifications, certifications, guarantees, discounts, or performance claims. Product data: ${JSON.stringify(product)}`;
+        const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:'Bearer '+env.OPENAI_API_KEY,'content-type':'application/json'},body:JSON.stringify({model:'gpt-5.6-luna',input:prompt,text:{format:{type:'json_object'}}})});
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok)return json({error:j.error?.message||'AI copy generation failed.'},502);
+        const raw=j.output_text||j.output?.flatMap(x=>x.content||[]).find(x=>x.type==='output_text')?.text||'';
+        let result; try{result=JSON.parse(raw)}catch{result={title:raw}};
+        return json({ok:true,...result});
+      }
+
       // Unknown API routes must stay JSON 404s; only browser routes use the SPA shell.
       if(url.pathname.startsWith('/api/')) return json({error:'API route not found.'},404);
       // Let Cloudflare Assets serve the SPA shell for every non-API route.
