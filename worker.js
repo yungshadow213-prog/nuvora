@@ -149,11 +149,9 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             if(/PGRST204|schema cache|Could not find the '.*' column|shopify_product_id|shopify_variant_id|shopify_variants/i.test(errText)){
               const legacyRows=payloadRows.map(row=>{
                 const copy={...row};
-                delete copy.id;
                 delete copy.shopify_product_id;
                 delete copy.shopify_variant_id;
                 delete copy.shopify_variants;
-                delete copy.published;
                 return copy;
               });
               created=await supabaseRest(env,'POST','products',legacyRows);
@@ -311,9 +309,10 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         return json({ok:true});
       }
 
+      // Unknown API routes must stay JSON 404s; only browser routes use the SPA shell.
+      if(url.pathname.startsWith('/api/')) return json({error:'API route not found.'},404);
       // Let Cloudflare Assets serve the SPA shell for every non-API route.
       // This is required for client-side routes such as /shop, /finds, /cart, etc.
-      // and also gives unknown paths the same SPA fallback instead of a JSON 404.
       return serveAsset(env,request);
     } catch(e) {
       return json({error:e?.message||'Server error'},500);
