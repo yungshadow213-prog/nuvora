@@ -117,7 +117,7 @@ function openProductPage(id,push=true){
   showView('product');
 }
 function findProductFromPath(){
-  const m=location.pathname.match(/^\\/product\\/(.+)$/);
+  const m=location.pathname.match(/^\/product\/(.+)$/);
   if(!m)return null;
   const key=decodeURIComponent(m[1]);
   return products.find(p=>String(p.slug||'')===key)||products.find(p=>String(p.id)===key)||null;
