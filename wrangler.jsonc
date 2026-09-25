@@ -9,9 +9,11 @@
   "observability": {
     "enabled": true
   },
+  "keep_vars": true,
   "vars": {
     "SHOPIFY_CLIENT_ID": "fef6dbefd0002e86415309a329c54635",
-    "SHOPIFY_SHOP": "hjrcnd-rs.myshopify.com"
+    "SHOPIFY_SHOP": "hjrcnd-rs.myshopify.com",
+    "SHOPIFY_API_VERSION": "2026-07"
   },
   "assets": {
     "directory": ".",
@@ -22,6 +24,5 @@
       "/admin",
       "/admin/"
     ]
-  },
-  "keep_vars": true
+  }
 }
