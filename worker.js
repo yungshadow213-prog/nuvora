@@ -117,7 +117,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
               currency:shopCurrency,destination_url:'https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/products/'+p.handle,
               retailer:null,provider:'shopify',region:null,category_id:autoCategory(p.title,p.descriptionHtml,p.productType,categories),collection_id:null,
               why_we_picked_it:null,featured:false,trending:false,top_pick:false,published:false,
-              shopify_product_id:p.id,shopify_variant_id:variant?.id||null
+              shopify_product_id:p.id,shopify_variant_id:variant?.id||null,shopify_variants:(p.variants?.nodes||[]).map(v=>({id:v.id,title:v.title||'',price:v.price!=null?Number(v.price):null,compareAtPrice:v.compareAtPrice!=null?Number(v.compareAtPrice):null,selectedOptions:Array.isArray(v.selectedOptions)?v.selectedOptions:[]}))
             }
           });
         }
