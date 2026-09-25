@@ -189,6 +189,8 @@ async function bootNuvora(){
       user=session?.user?.email||'';
       updateAccountUI();
       await loadLiveProducts();
+      const routeProduct=findProductFromPath();
+      if(routeProduct){renderProductPage(routeProduct);showView('product');}
       if(session) await syncUserData(session.user.id);
       nuvoraSB.auth.onAuthStateChange(async (_event,session)=>{
         user=session?.user?.email||''; updateAccountUI();
