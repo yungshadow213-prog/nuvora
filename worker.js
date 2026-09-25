@@ -387,7 +387,16 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const bytes=await aiResultBytes(result);
           return json({ok:true,provider:'cloudflare',image:'data:image/png;base64,'+bytesToBase64(bytes)});
         }catch(e){
-          return json({error:'Nuvora AI image generation is temporarily unavailable. Cloudflare Workers AI may be at capacity or its daily free allocation may have been reached. Try again later.'},503);
+          const code=String(e?.code||e?.error?.code||'');
+          const status=Number(e?.status||e?.error?.status||0);
+          const message=String(e?.message||e?.error?.message||'');
+          if(code==='3036'||status===429&&/daily|allocation|neurons/i.test(message)){
+            return json({error:'Nuvora AI has reached Cloudflare’s free daily AI allocation. The free allowance resets daily; no OpenAI credits are required for this feature.'},429);
+          }
+          if(code==='3040'||status===429){
+            return json({error:'Cloudflare Workers AI is temporarily at capacity. Please try the image again later.'},429);
+          }
+          return json({error:'Nuvora AI image generation failed: '+(message||'Cloudflare Workers AI returned an unknown error.')},502);
         }
       }
 
@@ -414,7 +423,16 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           }
           return json({ok:true,provider:'cloudflare',...result});
         }catch(e){
-          return json({error:'Nuvora AI listing polish is temporarily unavailable. Cloudflare Workers AI may be at capacity or its daily free allocation may have been reached. Try again later.'},503);
+          const code=String(e?.code||e?.error?.code||'');
+          const status=Number(e?.status||e?.error?.status||0);
+          const message=String(e?.message||e?.error?.message||'');
+          if(code==='3036'||status===429&&/daily|allocation|neurons/i.test(message)){
+            return json({error:'Nuvora AI has reached Cloudflare’s free daily AI allocation. The free allowance resets daily; no OpenAI credits are required for this feature.'},429);
+          }
+          if(code==='3040'||status===429){
+            return json({error:'Cloudflare Workers AI is temporarily at capacity. Please try the AI again later.'},429);
+          }
+          return json({error:'Nuvora AI listing polish failed: '+(message||'Cloudflare Workers AI returned an unknown error.')},502);
         }
       }
 
