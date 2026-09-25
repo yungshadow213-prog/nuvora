@@ -39,7 +39,7 @@
         <div class="ai-grid">
           <div class="field"><label>Creative style</label><select id="aiStyle"><option value="premium ecommerce">Premium ecommerce</option><option value="clean studio">Clean studio</option><option value="luxury editorial">Luxury editorial</option><option value="modern lifestyle">Modern lifestyle</option><option value="social media ad">Social media ad</option><option value="minimal catalog">Minimal catalog</option></select></div>
           <div class="field"><label>Format</label><select id="aiSize"><option value="1024x1024">Square · 1:1</option><option value="1536x1024">Landscape · 3:2</option><option value="1024x1536">Portrait · 2:3</option></select></div>
-          <div class="field full"><label>Reference image</label><input id="aiReference" type="file" accept="image/*"><div class="muted">Use the original product image. Max 10 MB.</div></div>
+          <div class="field full"><label>Reference image <span class="muted">(optional)</span></label><input id="aiReference" type="file" accept="image/*"><div class="muted">If you leave this empty, Nuvora AI automatically uses the first image already attached to the product. Upload one only when you want a different reference. Max 10 MB.</div></div>
           <div class="field full"><label>Creative direction</label><textarea id="aiPrompt" placeholder="Optional: soft neutral background, subtle shadows, premium lighting…"></textarea></div>
         </div>
         <div class="ai-actions"><button class="btn primary" id="aiGenerateBtn" onclick="generateAIProductImage()">Generate advertising image</button></div>
@@ -213,11 +213,22 @@ function removeProductImage(i){
 function openAIStudio(){document.getElementById('aiStudioModal').classList.add('open');document.getElementById('aiPrompt').value='';document.getElementById('aiImageStatus').textContent='';document.getElementById('aiCopyStatus').textContent='';document.getElementById('aiPreview').style.display='none';document.getElementById('aiReference').value='';}
 function closeAIStudio(){document.getElementById('aiStudioModal').classList.remove('open');}
 function aiProductData(){return {name:document.getElementById('pfName').value.trim(),brand:document.getElementById('pfBrand').value.trim(),description:document.getElementById('pfDescription').value.trim(),features:document.getElementById('pfFeatures').value.trim(),category:document.getElementById('pfCategory').value.trim(),price:document.getElementById('pfPrice').value,currency:document.getElementById('pfCurrency').value};}
+async function getAIReferenceFile(){
+  const manual=document.getElementById('aiReference').files?.[0];
+  if(manual)return manual;
+  const first=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)[0];
+  if(!first)throw new Error('Add at least one product image first, or upload a reference image.');
+  const res=await fetch(first,{mode:'cors'});if(!res.ok)throw new Error('The first product image could not be read. Upload it manually as the reference image.');
+  const blob=await res.blob();if(blob.size>10*1024*1024)throw new Error('Reference image must be 10 MB or smaller.');
+  return new File([blob],'nuvora-product-reference.'+((blob.type.split('/')[1]||'png').replace(/[^a-z0-9]/gi,'')),{type:blob.type||'image/png'});
+}
 async function generateAIProductImage(){
-  const btn=document.getElementById('aiGenerateBtn'),file=document.getElementById('aiReference').files?.[0],status=document.getElementById('aiImageStatus');
+  const btn=document.getElementById('aiGenerateBtn'),status=document.getElementById('aiImageStatus');
   const p=aiProductData(); if(!p.name)return alert('Add the product title first.');
-  if(!file)return alert('Upload the product image you want AI to use as a reference.');
-  if(file.size>10*1024*1024)return alert('Reference image must be 10 MB or smaller.');
+  btn.disabled=true;btn.textContent='Preparing…';status.textContent='Using the product image as the reference…';
+  try{
+    const file=await getAIReferenceFile();
+    if(file.size>10*1024*1024)throw new Error('Reference image must be 10 MB or smaller.');
   btn.disabled=true;btn.textContent='Generating…';status.textContent='Creating your advertising image…';
   try{
     const fd=new FormData();
