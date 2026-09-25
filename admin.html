@@ -30,12 +30,12 @@
 <div id="aiStudioModal" class="modal-backdrop" onclick="if(event.target===this)closeAIStudio()">
   <div class="modal">
     <div class="modal-head">
-      <div><div class="eyebrow">Nuvora AI Studio</div><h2>Make this product publish-ready</h2><div class="muted">Generate a polished advertising image and refined listing copy with Nuvora AI. AI generation uses the OpenAI API and requires available API credits.</div></div>
+      <div><div class="eyebrow">Nuvora AI Studio</div><h2>Make this product publish-ready</h2><div class="muted">Generate a polished advertising image and refined listing copy with Nuvora AI. Nuvora AI runs through Cloudflare Workers AI and does not require OpenAI API credits.</div></div>
       <button class="btn" onclick="closeAIStudio()">Close</button>
     </div>
     <div class="modal-body">
       <div class="ai-studio">
-        <div class="ai-studio-head"><div><h3>AI advertising image</h3><div class="muted">Use the product image as a reference for the strongest result. AI generation requires an available OpenAI API balance.</div></div></div>
+        <div class="ai-studio-head"><div><h3>AI advertising image</h3><div class="muted">Use the product image as a reference for the strongest result. Nuvora AI runs through Cloudflare Workers AI.</div></div></div>
         <div class="ai-grid">
           <div class="field"><label>Creative style</label><select id="aiStyle"><option value="premium ecommerce">Premium ecommerce</option><option value="clean studio">Clean studio</option><option value="luxury editorial">Luxury editorial</option><option value="modern lifestyle">Modern lifestyle</option><option value="social media ad">Social media ad</option><option value="minimal catalog">Minimal catalog</option></select></div>
           <div class="field"><label>Format</label><select id="aiSize"><option value="1024x1024">Square · 1:1</option><option value="1536x1024">Landscape · 3:2</option><option value="1024x1536">Portrait · 2:3</option></select></div>
@@ -339,7 +339,7 @@ async function runDiagnostics(){
   box.innerHTML='<div class="muted">Running diagnostics…</div>';
   try{
     const j=await api('/api/admin/diagnostics');
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',settings:'Store settings',social:'Social posts',workersAI:'Nuvora AI engine',openai:'OpenAI fallback (optional)',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
+    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',settings:'Store settings',social:'Social posts',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
     box.innerHTML=Object.entries(labels).map(([k,label])=>`<div class="row"><span>${esc(label)}</span><span class="status"><i class="dot ${j.checks?.[k]?'':'off'}"></i>${j.checks?.[k]?'Passed':'Failed'}</span></div>`).join('')+`<div class="notice" style="margin-top:12px">${j.ok?'All diagnostics passed.':'One or more diagnostics failed. Check the failed item above.'}${j.shopifyMissing?.length?'<br><strong>Shopify configuration missing:</strong> '+esc(j.shopifyMissing.join(', ')):'' }${j.aiMissing?.length?'<br><strong>AI configuration missing:</strong> '+esc(j.aiMissing.join(', ')):''}${j.shopifyError?'<br><strong>Shopify:</strong> '+esc(j.shopifyError):''}</div>`;
   }catch(e){box.innerHTML=`<div class="notice">${esc(e.message||'Diagnostics failed.')}</div>`;}
 }
