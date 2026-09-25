@@ -260,6 +260,11 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         return json({ok:results.every(x=>x.ok),results,imported:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length});
       }
 
+      if(url.pathname==='/api/products'&&request.method==='GET'){
+        const r=await supabaseRest(env,'GET','products',undefined,'?select=*,category:categories(name),collection:collections(name)&published=eq.true&order=created_at.desc');
+        if(!r.ok)return json({error:'Products could not be loaded.'},502);
+        return json(await r.json());
+      }
       if(url.pathname==='/api/admin/products'&&request.method==='GET'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const r=await supabaseRest(env,'GET','products',undefined,'?select=*&order=created_at.desc'); if(!r.ok)return json({error:await r.text()},500); return json(await r.json());
