@@ -88,49 +88,86 @@ export default {
         const ids=Array.isArray(payload.ids)?payload.ids.map(String).filter(Boolean):[];
         if(!ids.length)return json({error:'Select at least one Shopify product.'},400);
         if(ids.length>100)return json({error:'You can import up to 100 Shopify products at once.'},400);
+
+        // Fetch the Shopify catalog once. The importer then uses batched Supabase
+        // requests instead of making multiple requests per product. This avoids
+        // Cloudflare's per-invocation subrequest limit when importing many items.
         const data=await shopifyGraphql(env,'query{products(first:100,sortKey:TITLE){nodes{id title handle descriptionHtml vendor productType status updatedAt featuredImage{url altText} images(first:20){nodes{url altText}} variants(first:100){nodes{id title price compareAtPrice selectedOptions{name value}}}}}}',{},true);
         const selected=(data?.products?.nodes||[]).filter(p=>ids.includes(String(p.id)));
+        if(!selected.length)return json({ok:true,results:[],imported:0,skipped:0,failed:0});
+
         const results=[];
+        const products=[];
         for(const p of selected){
           const images=[p.featuredImage?.url,...(p.images?.nodes||[]).map(x=>x.url)].filter(Boolean);
           const variant=p.variants?.nodes?.[0];
-          const existing=await supabaseRest(env,'GET','products',undefined,'?select=id,shopify_product_id&shopify_product_id=eq.'+encodeURIComponent(p.id)+'&limit=1');
-          if(existing.ok){
-            const found=await existing.json();
-            if(found.length){
-              const patch={name:p.title,description:p.descriptionHtml||null,brand:p.vendor||null,image_url:images[0]||null,image_urls:[...new Set(images)],availability:p.status==='ACTIVE'?'In stock':null,display_price:variant?.price?Number(variant.price):null,destination_url:'https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/products/'+p.handle,provider:'shopify',shopify_variant_id:variant?.id||null,updated_at:new Date().toISOString()};
-              const synced=await supabaseRest(env,'PATCH','products',patch,'?id=eq.'+encodeURIComponent(found[0].id));
-              if(!synced.ok){results.push({ok:false,skipped:false,id:p.id,title:p.title,error:(await synced.text()).slice(0,500)});continue;}
-              results.push({ok:true,skipped:true,synced:true,id:p.id,title:p.title});continue;
-            }
-          }
           const slugBase=String(p.handle||p.title||'product').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,140);
-          const product={name:p.title,slug:slugBase+'-'+randHex(5),kind:'shop',description:p.descriptionHtml||null,brand:p.vendor||null,image_url:images[0]||null,image_urls:[...new Set(images)],availability:p.status==='ACTIVE'?'In stock':null,display_price:variant?.price?Number(variant.price):null,currency:'NGN',destination_url:'https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/products/'+p.handle,retailer:null,provider:'shopify',region:null,category_id:null,collection_id:null,why_we_picked_it:null,featured:false,trending:false,top_pick:false,published:false,shopify_product_id:p.id,shopify_variant_id:variant?.id||null};
-          let created=await supabaseRest(env,'POST','products',product);
+          products.push({
+            source:p,
+            product:{
+              name:p.title,slug:slugBase+'-'+randHex(5),kind:'shop',description:p.descriptionHtml||null,
+              brand:p.vendor||null,image_url:images[0]||null,image_urls:[...new Set(images)],
+              availability:p.status==='ACTIVE'?'In stock':null,display_price:variant?.price?Number(variant.price):null,
+              currency:'NGN',destination_url:'https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/products/'+p.handle,
+              retailer:null,provider:'shopify',region:null,category_id:null,collection_id:null,
+              why_we_picked_it:null,featured:false,trending:false,top_pick:false,published:false,
+              shopify_product_id:p.id,shopify_variant_id:variant?.id||null
+            }
+          });
+        }
+
+        // One lookup for all selected Shopify IDs.
+        const idList=products.map(x=>String(x.source.id)).join(',');
+        const existing=await supabaseRest(env,'GET','products',undefined,'?select=id,shopify_product_id&shopify_product_id=in.('+encodeURIComponent(idList)+')');
+        let existingRows=[];
+        if(existing.ok) existingRows=await existing.json();
+        const existingMap=new Map((existingRows||[]).map(x=>[String(x.shopify_product_id),x.id]));
+
+        const newItems=products.filter(x=>!existingMap.has(String(x.source.id)));
+        const existingItems=products.filter(x=>existingMap.has(String(x.source.id)));
+
+        // Existing products are already in Nuvora. Keep this sync request cheap;
+        // they can be refreshed by a later sync without hitting one request per item.
+        for(const x of existingItems){
+          results.push({ok:true,skipped:true,synced:false,id:x.source.id,title:x.source.title});
+        }
+
+        if(newItems.length){
+          const payloadRows=newItems.map(x=>x.product);
+          let created=await supabaseRest(env,'POST','products',payloadRows);
           if(!created.ok){
             const errText=(await created.text()).slice(0,2000);
-            // Older Supabase databases may not have the newest Shopify columns
-            // in the live schema/cache. Fall back to the core product fields so
-            // Shopify products can still be imported instead of all failing.
-            const schemaCacheError=/PGRST204|schema cache|Could not find the '.*' column|shopify_product_id|shopify_variant_id/i.test(errText);
-            if(schemaCacheError){
-              const legacyProduct={...product};
-              delete legacyProduct.shopify_product_id;
-              delete legacyProduct.shopify_variant_id;
-              created=await supabaseRest(env,'POST','products',legacyProduct);
-              if(created.ok){
-                results.push({ok:true,skipped:false,id:p.id,title:p.title,syncedWithoutShopifyIds:true});
-                continue;
+            // If the live database/cache does not yet expose the Shopify ID
+            // columns, retry the whole batch once without those two columns.
+            if(/PGRST204|schema cache|Could not find the '.*' column|shopify_product_id|shopify_variant_id/i.test(errText)){
+              const legacyRows=payloadRows.map(row=>{
+                const copy={...row};
+                delete copy.shopify_product_id;
+                delete copy.shopify_variant_id;
+                return copy;
+              });
+              created=await supabaseRest(env,'POST','products',legacyRows);
+              if(!created.ok){
+                const legacyErr=(await created.text()).slice(0,2000);
+                for(const x of newItems)results.push({ok:false,skipped:false,id:x.source.id,title:x.source.title,error:legacyErr,initialError:errText});
+              }else{
+                for(const x of newItems)results.push({ok:true,skipped:false,id:x.source.id,title:x.source.title,syncedWithoutShopifyIds:true});
               }
-              const legacyErr=(await created.text()).slice(0,2000);
-              results.push({ok:false,skipped:false,id:p.id,title:p.title,error:legacyErr,initialError:errText});
-              continue;
+            }else{
+              for(const x of newItems)results.push({ok:false,skipped:false,id:x.source.id,title:x.source.title,error:errText});
             }
-            results.push({ok:false,skipped:false,id:p.id,title:p.title,error:errText});continue;
+          }else{
+            for(const x of newItems)results.push({ok:true,skipped:false,id:x.source.id,title:x.source.title});
           }
-          results.push({ok:true,skipped:false,id:p.id,title:p.title});
         }
-        return json({ok:results.every(x=>x.ok),results,imported:results.filter(x=>x.ok&&!x.skipped).length,skipped:results.filter(x=>x.skipped).length,failed:results.filter(x=>!x.ok).length});
+
+        return json({
+          ok:results.every(x=>x.ok),
+          results,
+          imported:results.filter(x=>x.ok&&!x.skipped).length,
+          skipped:results.filter(x=>x.skipped).length,
+          failed:results.filter(x=>!x.ok).length
+        });
       }
 
       if(url.pathname==='/api/shopify/product'&&request.method==='POST'){
