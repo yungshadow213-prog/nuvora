@@ -150,6 +150,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
                 const copy={...row};
                 delete copy.shopify_product_id;
                 delete copy.shopify_variant_id;
+                delete copy.shopify_variants;
                 return copy;
               });
               created=await supabaseRest(env,'POST','products',legacyRows);
