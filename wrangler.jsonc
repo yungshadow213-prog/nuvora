@@ -10,16 +10,6 @@
     "enabled": true
   },
   "assets": {
-    "directory": ".",
-    "exclude": [
-      "node_modules/**",
-      ".git/**",
-      ".env",
-      ".env.*",
-      "wrangler.jsonc",
-      "worker.js",
-      "package-lock.json",
-      "bun.lockb"
-    ]
+    "directory": "."
   }
 }
