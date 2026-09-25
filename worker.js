@@ -27,12 +27,12 @@ export default {
       }
 
       if(url.pathname==='/api/admin/diagnostics'&&request.method==='GET'){
-        const cfg=configured(env); const checks={environment:cfg.supabase,auth:false,admin:false,products:false,settings:false,social:false,openai:cfg.openai,shopifyStorefront:cfg.shopifyStorefront,shopifyEnvironment:cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
+        const cfg=configured(env); const checks={environment:cfg.supabase,auth:false,admin:false,products:false,settings:false,social:false,openai:cfg.openai,workersAI:cfg.workersAI,shopifyStorefront:cfg.shopifyStorefront,shopifyEnvironment:cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
         let shopifyError='';
         const shopifyMissing=[]; const aiMissing=[]; if(!env.AI)aiMissing.push('Workers AI binding');
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))shopifyMissing.push('SHOPIFY_SHOP');
         if(!env.SHOPIFY_CLIENT_ID)shopifyMissing.push('SHOPIFY_CLIENT_ID');
-        if(!env.SHOPIFY_CLIENT_SECRET)shopifyMissing.push('SHOPIFY_CLIENT_SECRET'); if(!env.OPENAI_API_KEY)aiMissing.push('OPENAI_API_KEY');
+        if(!env.SHOPIFY_CLIENT_SECRET)shopifyMissing.push('SHOPIFY_CLIENT_SECRET');
         const u=await supabaseUser(request,env); checks.auth=!!u;
         if(u&&env.SUPABASE_SERVICE_ROLE_KEY){
           const pr=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});
@@ -49,7 +49,7 @@ export default {
             }catch(e){shopifyError=String(e?.message||'Shopify authentication failed').slice(0,500);}
           }
         }
-        const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.settings&&checks.social&&checks.shopifyEnvironment&&checks.shopifyAuth&&checks.shopifyProducts;
+        const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.settings&&checks.social&&checks.shopifyEnvironment&&checks.shopifyAuth&&checks.shopifyProducts&&checks.workersAI;
         return json({ok,checks,shopifyError,shopifyMissing,aiMissing});
       }
 
