@@ -99,7 +99,7 @@ export default {
             const found=await existing.json();
             if(found.length){
               const patch={name:p.title,description:p.descriptionHtml||null,brand:p.vendor||null,image_url:images[0]||null,image_urls:[...new Set(images)],availability:p.status==='ACTIVE'?'In stock':null,display_price:variant?.price?Number(variant.price):null,destination_url:'https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/products/'+p.handle,provider:'shopify',shopify_variant_id:variant?.id||null,updated_at:new Date().toISOString()};
-              const synced=await supabaseRest(env,'PATCH','products',patch,undefined,'?id=eq.'+encodeURIComponent(found[0].id));
+              const synced=await supabaseRest(env,'PATCH','products',patch,'?id=eq.'+encodeURIComponent(found[0].id));
               if(!synced.ok){results.push({ok:false,skipped:false,id:p.id,title:p.title,error:(await synced.text()).slice(0,500)});continue;}
               results.push({ok:true,skipped:true,synced:true,id:p.id,title:p.title});continue;
             }
@@ -241,7 +241,7 @@ function rateLimit(request,key,limit=120,windowMs=60000){
 function json(payload,status=200,extra={}){return new Response(JSON.stringify(payload),{status,headers:{'content-type':'application/json','cache-control':'no-store',...extra}});}
 async function body(request,limit=1024*1024){const len=Number(request.headers.get('content-length')||0);if(len>limit)throw new Error('Request body is too large.');const text=await request.text();if(text.length>limit)throw new Error('Request body is too large.');return text?JSON.parse(text):{};}
 function env(name){return globalThis.__ENV?.[name]||'';}
-function configured(env){return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_STOREFRONT_ACCESS_TOKEN,shopifyAdmin:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
+function configured(env){return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN),shopifyAdmin:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
 function sbHeaders(env,service=true){const key=service?env.SUPABASE_SERVICE_ROLE_KEY:env.SUPABASE_ANON_KEY;return {apikey:key,authorization:'Bearer '+key,'content-type':'application/json','prefer':'return=representation'};}
 async function supabaseUser(request,env){const token=(request.headers.get('authorization')||'').replace(/^Bearer\s+/i,'');if(!token||!env.SUPABASE_URL)return null;const r=await fetch(env.SUPABASE_URL+'/auth/v1/user',{headers:{apikey:env.SUPABASE_ANON_KEY,authorization:'Bearer '+token}});return r.ok?await r.json():null;}
 async function adminUser(request,env){const u=await supabaseUser(request,env);if(!u||!env.SUPABASE_SERVICE_ROLE_KEY)return null;const r=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});if(!r.ok)return null;const rows=await r.json(),profile=rows[0];return profile&&(profile.is_admin===true||profile.role==='admin')?u:null;}
@@ -279,7 +279,7 @@ async function shopifyGraphql(env,query,variables={},admin=false){
   let token;
   if(admin)token=await getShopifyAdminToken(env);
   else token=env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
-  if(!domain||!token)throw new Error('Shopify is not configured');
+  if(!domain)throw new Error('Shopify is not configured');
   const version=env.SHOPIFY_API_VERSION||'2026-07';
   const base=admin?`https://${domain}/admin/api/${version}/graphql.json`:`https://${domain}/api/${version}/graphql.json`;
   const r=await fetch(base,{method:'POST',headers:{'content-type':'application/json',...(admin?{'X-Shopify-Access-Token':token}:{'X-Shopify-Storefront-Access-Token':token})},body:JSON.stringify({query,variables})});
