@@ -11,7 +11,7 @@
 .auth-gate{position:fixed;inset:0;z-index:9999;display:none;place-items:center;padding:24px;background:radial-gradient(circle at 20% 10%,rgba(111,217,255,.09),transparent 30%),radial-gradient(circle at 80% 10%,rgba(156,123,255,.12),transparent 30%),#07111f}.auth-card{width:min(430px,100%);padding:32px;border:1px solid var(--line);border-radius:22px;background:rgba(16,28,46,.92);box-shadow:0 30px 100px rgba(0,0,0,.5);text-align:center}.auth-card h1{margin:0 0 8px;font-size:30px}.auth-card p{color:var(--muted);font-size:13px;line-height:1.6}.google-btn{width:100%;margin-top:18px;padding:13px 16px;border-radius:12px;border:1px solid var(--line);background:#fff;color:#111;font-weight:700;cursor:pointer;font-size:14px}.auth-error{display:none;margin-top:14px;padding:11px 12px;border-radius:10px;background:rgba(255,100,120,.08);border:1px solid rgba(255,100,120,.25);color:#ffb0ba;font-size:12px}.auth-gate small{display:block;margin-top:16px;color:#71849a;font-size:11px}
 </style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav"><button class="active" onclick="show('overview',this)">⌂ Overview</button><button onclick="show('products',this)">▣ Products</button><button onclick="show('categories',this)">☷ Categories</button><button onclick="show('collections',this)">✦ Collections</button><button onclick="show('orders',this)">□ Orders</button><button onclick="show('social',this)">↗ Social</button><button onclick="show('analytics',this)">◌ Analytics</button><button onclick="show('settings',this)">⚙ Settings</button></nav><div class="private">Private control center.<br><button class="btn" style="width:100%;margin-top:10px" onclick="signOutAdmin()">Sign out</button></div></aside><main class="main"><header class="top"><div><div class="eyebrow">Nuvora / Admin</div><h1 id="title">Overview</h1><p id="sub">Control the store without exposing the admin to customers.</p></div><div style="display:flex;gap:8px"><button class="btn" onclick="healthCheck()">System status</button><button class="btn" onclick="window.open('/','_blank')">View store</button></div></header>
 <section id="overview" class="view active"><div class="stats"><div class="stat"><span class="muted">Shop products</span><b id="shopCount">0</b><span class="muted">Published Shop products</span></div><div class="stat"><span class="muted">Finds</span><b id="findCount">0</b><span class="muted">Published Finds</span></div><div class="stat"><span class="muted">Courses</span><b id="learnCount">0</b><span class="muted">Published courses</span></div><div class="stat"><span class="muted">Draft products</span><b id="draftCount">0</b><span class="muted">Awaiting review</span></div></div><div class="grid"><div class="panel"><h2>Store structure</h2><div class="row"><span>Shop</span><span class="tag">Commerce</span></div><div class="row"><span>Finds</span><span class="tag">Affiliate</span></div><div class="row"><span>Learn</span><span class="tag">Courses</span></div><div class="row"><span>Collections</span><span class="tag">Curated</span></div></div><div class="panel"><h2>System</h2><div id="systemStatus" class="muted">Checking connections…</div><div class="actions"><button class="btn primary" onclick="show('settings',document.querySelectorAll('.nav button')[7])">Open settings</button></div></div></div></section>
-<section id="products" class="view"><div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2>Products</h2><p class="muted">Create a draft, review it, then publish. No product is public until you publish it.</p></div><div style="display:flex;gap:8px"><button class="btn" onclick="openProductModal(true)">Import Amazon</button><button class="btn primary" onclick="openProductModal(false)">+ Add product</button></div></div><div id="productRows" style="margin-top:16px"></div></div><div class="panel" style="margin-top:16px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h2>Bulk CSV import</h2><p class="muted">Import up to 500 products at once. Every imported row becomes a draft for review.</p></div><input id="csvFile" type="file" accept=".csv,text/csv"></div><div id="csvPreview" class="notice" style="display:none;margin-top:14px"></div><div class="actions"><button class="btn" onclick="downloadCsvTemplate()">CSV template</button><button class="btn" onclick="previewCsv()">Preview CSV</button><button class="btn primary" onclick="importCsv()">Import as drafts</button></div></div></section>
+<section id="products" class="view"><div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2>Products</h2><p class="muted">Create a draft, review it, then publish. No product is public until you publish it.</p></div><div style="display:flex;gap:8px"><button class="btn" onclick="openShopifyImport()">Import Shopify</button><button class="btn" onclick="openProductModal(true)">Import Amazon</button><button class="btn primary" onclick="openProductModal(false)">+ Add product</button></div></div><div id="productRows" style="margin-top:16px"></div></div><div class="panel" style="margin-top:16px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h2>Bulk CSV import</h2><p class="muted">Import up to 500 products at once. Every imported row becomes a draft for review.</p></div><input id="csvFile" type="file" accept=".csv,text/csv"></div><div id="csvPreview" class="notice" style="display:none;margin-top:14px"></div><div class="actions"><button class="btn" onclick="downloadCsvTemplate()">CSV template</button><button class="btn" onclick="previewCsv()">Preview CSV</button><button class="btn primary" onclick="importCsv()">Import as drafts</button></div></div></section>
 <section id="categories" class="view"><div class="panel"><h2>Categories</h2><p class="muted">Categories are stored in Supabase and can be used by products and storefront filters.</p><div class="formgrid"><div class="field"><label>Name</label><input id="catName" placeholder="Gaming Setup"></div><div class="field"><label>Slug</label><input id="catSlug" placeholder="gaming-setup"></div><div class="field full"><label>Description</label><textarea id="catDesc" placeholder="Optional category description"></textarea></div></div><div class="actions"><button class="btn primary" onclick="createCategory()">Create category</button></div><div id="categoryRows" style="margin-top:16px"></div></div></section>
 <section id="collections" class="view"><div class="panel"><h2>Collections</h2><p class="muted">Create curated groups that can later be attached to products.</p><div class="formgrid"><div class="field"><label>Name</label><input id="colName" placeholder="Gaming Setup"></div><div class="field"><label>Slug</label><input id="colSlug" placeholder="gaming-setup"></div><div class="field full"><label>Description</label><textarea id="colDesc"></textarea></div></div><div class="actions"><button class="btn primary" onclick="createCollection()">Create collection</button></div><div id="collectionRows" style="margin-top:16px"></div></div></section>
 <section id="orders" class="view"><div class="panel"><h2>Orders</h2><p class="muted">Shopify orders are not mirrored into Supabase yet. The storefront checkout can hand customers to Shopify once Shopify is configured.</p><button class="btn" onclick="show('settings',document.querySelectorAll('.nav button')[7])">Configure Shopify</button></div></section>
@@ -19,6 +19,27 @@
 <section id="analytics" class="view"><div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><h2>Analytics</h2><p class="muted">Real Nuvora events collected from the storefront. No invented numbers.</p></div><button class="btn" onclick="loadAnalytics()">Refresh</button></div><div id="analyticsRows" style="margin-top:16px"></div></div></section>
 <section id="settings" class="view"><div class="panel"><h2>Store settings</h2><p class="muted">These settings are persisted in Supabase. Secrets remain server-side and are never shown here.</p><div class="formgrid"><div class="field"><label>Store name</label><input id="setName"></div><div class="field"><label>Support email</label><input id="setEmail" type="email"></div><div class="field"><label>Currency</label><select id="setCurrency"><option>NGN</option><option>USD</option><option>GBP</option><option>EUR</option></select></div><div class="field"><label>Timezone</label><input id="setTimezone"></div><div class="field"><label>Default region</label><input id="setRegion"></div><div class="field"><label>Maintenance mode</label><select id="setMaintenance"><option value="false">Off</option><option value="true">On</option></select></div><div class="field full"><label>Store description</label><textarea id="setDescription"></textarea></div><div class="field full"><label>Affiliate disclosure</label><textarea id="setDisclosure"></textarea></div><div class="field full"><label>Shipping policy</label><textarea id="setShipping"></textarea></div><div class="field full"><label>Returns policy</label><textarea id="setReturns"></textarea></div></div><div class="actions"><button class="btn primary" onclick="saveSettings()">Save settings</button></div></div><div class="panel" style="margin-top:16px"><h2>Connections</h2><div id="connectionRows" class="muted">Checking…</div><div class="actions"><button class="btn primary" onclick="runDiagnostics()">Run full diagnostics</button></div><div id="diagnosticRows" style="margin-top:12px"></div><p class="muted" style="margin-top:14px">Diagnostics checks the signed-in admin, Supabase tables, Shopify Admin authentication, and Shopify product API access. Secrets are never displayed.</p></div><div class="panel" style="margin-top:16px"><h2>Account</h2><p id="adminEmail" class="muted"></p><button class="btn danger" onclick="signOutAdmin()">Sign out of Nuvora Admin</button></div></section>
 </main></div>
+
+<div id="shopifyModal" class="modal-backdrop" onclick="if(event.target===this)closeShopifyImport()">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="eyebrow">Shopify workspace</div><h2>Import from Shopify</h2><div class="muted">Pull your real Shopify products into Nuvora. Imported products stay as drafts until you publish them.</div></div>
+      <button class="btn" onclick="closeShopifyImport()">Close</button>
+    </div>
+    <div class="modal-body">
+      <div id="shopifyImportStatus" class="workspace-note">Loading Shopify products…</div>
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:12px">
+        <label style="display:flex;gap:8px;align-items:center;font-size:13px"><input id="shopifySelectAll" type="checkbox" onchange="toggleAllShopify(this.checked)"> Select all</label>
+        <span id="shopifyCount" class="muted"></span>
+      </div>
+      <div id="shopifyProductRows"></div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeShopifyImport()">Cancel</button>
+        <button id="shopifyImportButton" class="btn primary" onclick="importSelectedShopify()">Import selected</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div id="productModal" class="modal-backdrop" onclick="if(event.target===this)closeProductModal()">
   <div class="modal">
@@ -64,6 +85,56 @@ async function api(path,options={}){if(!adminSession)throw new Error('Admin sess
 function renderProducts(){const el=document.getElementById('productRows');if(!adminProducts.length){el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet.</div>';}else{el.innerHTML=adminProducts.map(p=>`<div class="row"><div><b>${esc(p.name)}</b><div class="muted">${esc(p.kind)} · ${p.published?'Published':'Draft'}${p.amazon_asin?' · Amazon '+esc(p.amazon_asin):''}</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">${p.published?'Published':'Draft'}</span><button class="btn" onclick="editProduct('${p.id}')">Edit</button><button class="btn" onclick="togglePublish('${p.id}')">${p.published?'Unpublish':'Publish'}</button><button class="btn danger" onclick="removeProduct('${p.id}')">Delete</button></div></div>`).join('')}updateCounts();}
 function updateCounts(){document.getElementById('shopCount').textContent=adminProducts.filter(p=>p.kind==='shop'&&p.published).length;document.getElementById('findCount').textContent=adminProducts.filter(p=>p.kind==='find'&&p.published).length;document.getElementById('learnCount').textContent=adminProducts.filter(p=>p.kind==='learn'&&p.published).length;document.getElementById('draftCount').textContent=adminProducts.filter(p=>!p.published).length;}
 async function liveAdminProducts(){adminProducts=await api('/api/admin/products');renderProducts();fillSocialProducts();}
+let shopifyProducts=[];
+function openShopifyImport(){
+  document.getElementById('shopifyModal').classList.add('open');
+  document.getElementById('shopifyImportStatus').textContent='Loading your Shopify catalog…';
+  document.getElementById('shopifyProductRows').innerHTML='<div class="muted">Loading…</div>';
+  document.getElementById('shopifySelectAll').checked=false;
+  document.getElementById('shopifyCount').textContent='';
+  loadShopifyProducts();
+}
+function closeShopifyImport(){document.getElementById('shopifyModal').classList.remove('open');}
+async function loadShopifyProducts(){
+  try{
+    const j=await api('/api/admin/shopify/products');
+    shopifyProducts=j.products||[];
+    const rows=document.getElementById('shopifyProductRows');
+    if(!shopifyProducts.length){
+      rows.innerHTML='<div class="notice">No Shopify products found. Your Shopify catalog is empty.</div>';
+      document.getElementById('shopifyImportStatus').textContent='No products are available to import yet.';
+      return;
+    }
+    document.getElementById('shopifyImportStatus').textContent=shopifyProducts.length+' Shopify product'+(shopifyProducts.length===1?'':'s')+' found. Select the ones you want in Nuvora.';
+    document.getElementById('shopifyCount').textContent=shopifyProducts.length+' available';
+    rows.innerHTML=shopifyProducts.map((p,i)=>{
+      const v=p.variants?.nodes?.[0];
+      const img=p.featuredImage?.url||p.images?.nodes?.[0]?.url||'';
+      return '<label style="display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line);cursor:pointer">'+
+        '<input class="shopify-check" type="checkbox" value="'+esc(p.id)+'">'+
+        (img?'<img src="'+esc(img)+'" alt="" style="width:58px;height:58px;object-fit:cover;border-radius:10px;background:#07111f">':'<div style="width:58px;height:58px;border-radius:10px;background:#07111f"></div>')+
+        '<span style="min-width:0;flex:1"><b style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.title)+'</b><span class="muted">'+esc(p.vendor||p.productType||'Shop product')+(v?.price?' · '+esc(v.price):'')+'</span></span></label>';
+    }).join('');
+  }catch(e){
+    document.getElementById('shopifyImportStatus').textContent=e.message||'Could not load Shopify products.';
+    document.getElementById('shopifyProductRows').innerHTML='<div class="notice">Shopify products could not be loaded.</div>';
+  }
+}
+function toggleAllShopify(checked){document.querySelectorAll('.shopify-check').forEach(x=>x.checked=checked);}
+async function importSelectedShopify(){
+  const ids=[...document.querySelectorAll('.shopify-check:checked')].map(x=>x.value);
+  if(!ids.length)return alert('Select at least one Shopify product.');
+  const btn=document.getElementById('shopifyImportButton'); btn.disabled=true; btn.textContent='Importing…';
+  try{
+    const j=await api('/api/admin/shopify/import',{method:'POST',body:{ids}});
+    await liveAdminProducts();
+    const imported=Number(j.imported||0),skipped=Number(j.skipped||0),failed=Number(j.failed||0);
+    alert('Shopify sync complete. Imported: '+imported+' · Already in Nuvora: '+skipped+' · Failed: '+failed);
+    closeShopifyImport();
+  }catch(e){alert(e.message||'Shopify import failed.');}
+  finally{btn.disabled=false;btn.textContent='Import selected';}
+}
+
 function resetProductForm(){
   ['pfName','pfBrand','pfPrice','pfCategory','pfCollection','pfDescription','pfFeatures','pfDestination','pfAsin','pfImages','amazonUrlInput'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.getElementById('pfKind').value='shop'; document.getElementById('pfCurrency').value='NGN'; document.getElementById('pfRetailer').value='Amazon';
