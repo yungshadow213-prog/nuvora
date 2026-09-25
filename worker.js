@@ -29,6 +29,10 @@ export default {
       if(url.pathname==='/api/admin/diagnostics'&&request.method==='GET'){
         const checks={environment:configured(env).supabase,auth:false,admin:false,products:false,settings:false,social:false,shopifyEnvironment:configured(env).shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
         let shopifyError='';
+        const shopifyMissing=[];
+        if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))shopifyMissing.push('SHOPIFY_SHOP');
+        if(!env.SHOPIFY_CLIENT_ID)shopifyMissing.push('SHOPIFY_CLIENT_ID');
+        if(!env.SHOPIFY_CLIENT_SECRET)shopifyMissing.push('SHOPIFY_CLIENT_SECRET');
         const u=await supabaseUser(request,env); checks.auth=!!u;
         if(u&&env.SUPABASE_SERVICE_ROLE_KEY){
           const pr=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});
@@ -46,7 +50,7 @@ export default {
           }
         }
         const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.settings&&checks.social&&checks.shopifyEnvironment&&checks.shopifyAuth&&checks.shopifyProducts;
-        return json({ok,checks,shopifyError});
+        return json({ok,checks,shopifyError,shopifyMissing});
       }
 
       if(url.pathname==='/api/amazon/import'&&request.method==='POST'){
