@@ -113,7 +113,7 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 const meta={overview:['Overview','Control the store without exposing the admin to customers.'],products:['Products','Manage Shop, Finds, and Learn listings.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['Settings','Connections and store configuration.']};
-let adminSB=null,adminSession=null,adminProducts=[],categories=[],collections=[],socialPosts=[];
+let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[],collections=[],socialPosts=[];
 function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=meta[id][0];document.getElementById('sub').textContent=meta[id][1];if(id==='settings')loadSettings();if(id==='categories')loadCategories();if(id==='collections')loadCollections();if(id==='social')loadSocial();if(id==='analytics')loadAnalytics();}
 function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 async function api(path,options={}){if(!adminSession)throw new Error('Admin session required.');options.headers={...(options.headers||{}),Authorization:'Bearer '+adminSession.access_token};if(options.body&&typeof options.body!=='string'&&!(options.body instanceof FormData)){options.headers['content-type']='application/json';options.body=JSON.stringify(options.body)}let r;try{r=await fetch(path,options)}catch(e){throw new Error('Cannot reach Nuvora. Check the Cloudflare deployment and try again.')}let j={};try{j=await r.json()}catch{}if(!r.ok){const detail=j.detail?` ${j.detail}`:'';throw new Error((j.error||`Request failed (${r.status})`)+detail)}return j;}
@@ -379,6 +379,7 @@ async function adminBoot(){
     const {data,error}=await adminSB.auth.getSession();
     if(error)throw error;
     adminSession=data.session;
+    adminUser=adminSession?.user||null;
     if(!adminSession){showAuthGate();return;}
     hideAuthGate();
     document.getElementById('adminEmail').textContent='Signed in as '+(adminSession.user?.email||'admin');
@@ -396,6 +397,7 @@ async function adminBoot(){
     }
     adminSB.auth.onAuthStateChange((_event,session)=>{
       adminSession=session;
+      adminUser=session?.user||null;
       if(!session)location.href='/';
     });
   }catch(e){
