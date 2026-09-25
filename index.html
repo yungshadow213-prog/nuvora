@@ -211,8 +211,7 @@ function startDiscovery(){showToast('Nuvora Discovery is coming soon. Browse is 
 function openAuth(mode){authMode=mode;document.getElementById('authTitle').textContent=mode==='login'?'Sign in':'Create your account';document.getElementById('authSwitchText').textContent=mode==='login'?"Don't have an account?":'Already have an account?';document.getElementById('authToggle').textContent=mode==='login'?'Create one':'Sign in';document.getElementById('authModal').classList.add('open')}
 function closeAuth(){document.getElementById('authModal').classList.remove('open')}
 function toggleAuth(){openAuth(authMode==='login'?'signup':'login')}
-function submitAuth(){const email=document.getElementById('authEmail').value.trim();if(!email){alert('Enter your email.');return}user=email;localStorage.setItem('nuvoraUser',email);closeAuth();updateAccountUI();showView('account')}
-function signOut(){user='';localStorage.removeItem('nuvoraUser');updateAccountUI();showView('home');showToast('Signed out')}
+/* Authentication actions are provided by the Supabase-backed implementation above. */
 function handleAccountAction(){user?signOut():openAuth('login')}
 function updateAccountUI(){const initial=user?user[0].toUpperCase():'N';document.getElementById('accountBtn').textContent=initial;document.getElementById('menuAuthBtn').textContent=user?'Sign out':'Sign in';renderAccount()}
 function renderAccount(){const text=document.getElementById('accountText');const main=document.getElementById('accountMainBtn');if(user){text.textContent=`Signed in as ${user}. Your saved discoveries and cart stay with this account on this device.`;main.textContent='Sign out';main.className='btn';}else{text.textContent='Sign in to save discoveries and keep your Nuvora activity together.';main.textContent='Sign in';main.className='btn primary'}}
@@ -234,7 +233,10 @@ async function bootNuvora(){
     const routeProduct=findProductFromPath();
     if(routeProduct){renderProductPage(routeProduct);showView('product');}
   }catch(e){
-    console.warn('Nuvora catalog unavailable:',e.message);
+    console.error('Nuvora catalog unavailable:',e);
+    const message='<div class="empty" style="grid-column:1/-1"><strong>Products could not be loaded.</strong><br><span>Please try again shortly.</span></div>';
+    const a=document.getElementById('newProducts'),b=document.getElementById('randomPicks'),g=document.getElementById('browseGrid');
+    if(a)a.innerHTML=message;if(b)b.innerHTML=message;if(g)g.innerHTML=message;
   }
   try{
     if(!window.supabase)return;
