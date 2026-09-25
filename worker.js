@@ -106,8 +106,21 @@ export default {
           }
           const slugBase=String(p.handle||p.title||'product').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,140);
           const product={name:p.title,slug:slugBase+'-'+randHex(5),kind:'shop',description:p.descriptionHtml||null,brand:p.vendor||null,image_url:images[0]||null,image_urls:[...new Set(images)],availability:p.status==='ACTIVE'?'In stock':null,display_price:variant?.price?Number(variant.price):null,currency:'NGN',destination_url:'https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/products/'+p.handle,retailer:null,provider:'shopify',region:null,category_id:null,collection_id:null,why_we_picked_it:null,featured:false,trending:false,top_pick:false,published:false,shopify_product_id:p.id,shopify_variant_id:variant?.id||null};
-          const created=await supabaseRest(env,'POST','products',product);
-          if(!created.ok){results.push({ok:false,skipped:false,id:p.id,title:p.title,error:(await created.text()).slice(0,500)});continue;}
+          let created=await supabaseRest(env,'POST','products',product);
+          if(!created.ok){
+            const errText=(await created.text()).slice(0,500);
+            if(/shopify_product_id|shopify_variant_id/i.test(errText)){
+              const legacyProduct={...product};
+              delete legacyProduct.shopify_product_id;
+              delete legacyProduct.shopify_variant_id;
+              created=await supabaseRest(env,'POST','products',legacyProduct);
+              if(created.ok){
+                results.push({ok:true,skipped:false,id:p.id,title:p.title,syncedWithoutShopifyIds:true});
+                continue;
+              }
+            }
+            results.push({ok:false,skipped:false,id:p.id,title:p.title,error:errText});continue;
+          }
           results.push({ok:true,skipped:false,id:p.id,title:p.title});
         }
         return json({ok:results.every(x=>x.ok),results,imported:results.filter(x=>x.ok&&!x.skipped).length,skipped:results.filter(x=>x.skipped).length,failed:results.filter(x=>!x.ok).length});
