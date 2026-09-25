@@ -9,7 +9,7 @@ export default {
       }
       if (request.method === 'OPTIONS') return new Response(null,{status:204});
       if (url.pathname === '/admin' || url.pathname === '/admin/') {
-        return env.ASSETS.fetch(new Request(new URL('/admin.html',request.url), {method:'GET',headers:request.headers}));
+        return serveAsset(env,new Request(new URL('/admin.html',request.url), {method:'GET',headers:request.headers}));
       }
       if (url.pathname === '/api/health') return json({ok:true,configured:configured(env)});
       if (url.pathname === '/api/config') return json({supabaseUrl:env.SUPABASE_URL||'',supabaseAnonKey:env.SUPABASE_ANON_KEY||''});
@@ -315,13 +315,20 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
       // Let Cloudflare Assets serve the SPA shell for every non-API route.
       // This is required for client-side routes such as /shop, /finds, /cart, etc.
       // and also gives unknown paths the same SPA fallback instead of a JSON 404.
-      return env.ASSETS.fetch(request);
+      return serveAsset(env,request);
     } catch(e) {
       return json({error:e?.message||'Server error'},500);
     }
   }
 };
 
+async function serveAsset(env,request){
+  const response=await env.ASSETS.fetch(request);
+  const headers=new Headers(response.headers);
+  const type=headers.get('content-type')||'';
+  if(type.includes('text/html'))headers.set('cache-control','no-store, must-revalidate');
+  return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+}
 const buckets = new Map();
 function rateLimit(request,key,limit=120,windowMs=60000){
   const ip=(request.headers.get('cf-connecting-ip')||request.headers.get('x-forwarded-for')||'unknown').split(',')[0].trim();
