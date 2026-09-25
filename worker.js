@@ -93,6 +93,8 @@ export default {
         // requests instead of making multiple requests per product. This avoids
         // Cloudflare's per-invocation subrequest limit when importing many items.
         const data=await shopifyGraphql(env,'query{products(first:100,sortKey:TITLE){nodes{id title handle descriptionHtml vendor productType status updatedAt featuredImage{url altText} images(first:20){nodes{url altText}} variants(first:100){nodes{id title price compareAtPrice selectedOptions{name value}}}}}}',{},true);
+        const catRes=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');
+        const categories=catRes.ok?await catRes.json():[];
         const selected=(data?.products?.nodes||[]).filter(p=>ids.includes(String(p.id)));
         if(!selected.length)return json({ok:true,results:[],imported:0,skipped:0,failed:0});
 
@@ -109,7 +111,7 @@ export default {
               brand:p.vendor||null,image_url:images[0]||null,image_urls:[...new Set(images)],
               availability:p.status==='ACTIVE'?'In stock':null,display_price:variant?.price?Number(variant.price):null,
               currency:'NGN',destination_url:'https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/products/'+p.handle,
-              retailer:null,provider:'shopify',region:null,category_id:null,collection_id:null,
+              retailer:null,provider:'shopify',region:null,category_id:autoCategory(p.title,p.descriptionHtml,p.productType,categories),collection_id:null,
               why_we_picked_it:null,featured:false,trending:false,top_pick:false,published:false,
               shopify_product_id:p.id,shopify_variant_id:variant?.id||null
             }
@@ -343,6 +345,39 @@ async function shopifyGraphql(env,query,variables={},admin=false){
   const j=await r.json().catch(()=>({}));
   if(!r.ok||j.errors)throw new Error(j.errors?.[0]?.message||`Shopify API returned ${r.status}`);
   return j.data;
+}
+function autoCategory(title,description,productType,categories){
+  const t=(String(title||'')+' '+String(description||'')+' '+String(productType||'')).toLowerCase();
+  const rules=[
+    ['fashion-men',['men','mens','male','jogger','sweatpants','trousers','pants','shirt','hoodie','jacket','jeans']],
+    ['fashion-women',['women','womens','female','dress','skirt','blouse','leggings']],
+    ['fashion-kids',['kids','children','child','boy','girl']],
+    ['fashion-shoes',['shoe','sneaker','boots','sandal','footwear']],
+    ['fashion-bags',['bag','backpack','handbag','purse','wallet']],
+    ['fashion-accessories',['watch','belt','hat','cap','scarf','sunglasses','necklace','bracelet']],
+    ['electronics-phone',['iphone','android','phone case','phone charger','power bank','screen protector']],
+    ['electronics-computer',['keyboard','mouse','laptop','computer','webcam','usb hub','monitor']],
+    ['electronics-audio',['headphone','earbud','speaker','microphone','soundbar']],
+    ['electronics-gaming',['gaming','gamepad','controller','console']],
+    ['home-kitchen',['kitchen','cookware','utensil','pan ','pot ','knife','cutlery']],
+    ['home-bedroom',['bedroom','pillow','bedsheet','blanket','mattress']],
+    ['home-bathroom',['bathroom','shower','towel','toilet']],
+    ['home-storage',['storage','organizer','shelf','shelving','container']],
+    ['home-decor',['home decor','decoration','vase','wall art','curtain','lamp']],
+    ['beauty-skincare',['skincare','skin care','serum','moisturizer','cleanser','sunscreen']],
+    ['beauty-hair',['shampoo','conditioner','wig','hair dryer','hair brush']],
+    ['beauty-makeup',['makeup','foundation','lipstick','mascara','eyeshadow','concealer']],
+    ['sports-gym',['gym','fitness','workout','running','yoga','dumbbell']],
+    ['sports-outdoor',['camping','hiking','outdoor','tent','fishing']],
+    ['automotive',['car accessory','car accessories','automotive','vehicle']],
+    ['pets',['pet','dog','cat','leash','collar']],
+    ['gifts',['gift','birthday','present']]
+  ];
+  for(const [slug,words] of rules) if(words.some(w=>t.includes(w))){
+    const c=(categories||[]).find(x=>x.slug===slug);
+    if(c)return c.id;
+  }
+  return (categories||[]).find(x=>x.slug==='gifts-lifestyle')?.id||null;
 }
 function randHex(bytes){const a=new Uint8Array(bytes);crypto.getRandomValues(a);return Array.from(a,x=>x.toString(16).padStart(2,'0')).join('')}
 
