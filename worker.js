@@ -95,7 +95,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         // Fetch the Shopify catalog once. The importer then uses batched Supabase
         // requests instead of making multiple requests per product. This avoids
         // Cloudflare's per-invocation subrequest limit when importing many items.
-        const data=await shopifyGraphql(env,'query{products(first:100,sortKey:TITLE){nodes{id title handle descriptionHtml vendor productType status updatedAt featuredImage{url altText} images(first:20){nodes{url altText}} variants(first:100){nodes{id title price compareAtPrice selectedOptions{name value}}}}}}',{},true);
+        const data=await shopifyGraphql(env,'query{shop{currencyCode} products(first:100,sortKey:TITLE){nodes{id title handle descriptionHtml vendor productType status updatedAt featuredImage{url altText} images(first:20){nodes{url altText}} variants(first:100){nodes{id title price compareAtPrice selectedOptions{name value}}}}}}',{},true);
+        const shopCurrency=String(data?.shop?.currencyCode||'NGN').toUpperCase();
         const catRes=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');
         const categories=catRes.ok?await catRes.json():[];
         const selected=(data?.products?.nodes||[]).filter(p=>ids.includes(String(p.id)));
