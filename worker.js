@@ -141,7 +141,6 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         });
         const newRows=newItems.map(x=>x.product);
         const payloadRows=[...syncRows,...newRows];
-        const results=[];
 
         if(payloadRows.length){
           let created=await supabaseRest(env,'POST','products',payloadRows,'?on_conflict=id');
