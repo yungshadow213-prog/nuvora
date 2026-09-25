@@ -108,8 +108,12 @@ export default {
           const product={name:p.title,slug:slugBase+'-'+randHex(5),kind:'shop',description:p.descriptionHtml||null,brand:p.vendor||null,image_url:images[0]||null,image_urls:[...new Set(images)],availability:p.status==='ACTIVE'?'In stock':null,display_price:variant?.price?Number(variant.price):null,currency:'NGN',destination_url:'https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/products/'+p.handle,retailer:null,provider:'shopify',region:null,category_id:null,collection_id:null,why_we_picked_it:null,featured:false,trending:false,top_pick:false,published:false,shopify_product_id:p.id,shopify_variant_id:variant?.id||null};
           let created=await supabaseRest(env,'POST','products',product);
           if(!created.ok){
-            const errText=(await created.text()).slice(0,500);
-            if(/shopify_product_id|shopify_variant_id/i.test(errText)){
+            const errText=(await created.text()).slice(0,2000);
+            // Older Supabase databases may not have the newest Shopify columns
+            // in the live schema/cache. Fall back to the core product fields so
+            // Shopify products can still be imported instead of all failing.
+            const schemaCacheError=/PGRST204|schema cache|Could not find the '.*' column|shopify_product_id|shopify_variant_id/i.test(errText);
+            if(schemaCacheError){
               const legacyProduct={...product};
               delete legacyProduct.shopify_product_id;
               delete legacyProduct.shopify_variant_id;
@@ -118,6 +122,9 @@ export default {
                 results.push({ok:true,skipped:false,id:p.id,title:p.title,syncedWithoutShopifyIds:true});
                 continue;
               }
+              const legacyErr=(await created.text()).slice(0,2000);
+              results.push({ok:false,skipped:false,id:p.id,title:p.title,error:legacyErr,initialError:errText});
+              continue;
             }
             results.push({ok:false,skipped:false,id:p.id,title:p.title,error:errText});continue;
           }
