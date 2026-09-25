@@ -204,7 +204,7 @@ export default {
           return json((await r.json())[0]||{});
         }
         const patch=await body(request); delete patch.id; patch.updated_at=new Date().toISOString();
-        const r=await supabaseRest(env,'PATCH','store_settings',patch,undefined,'?id=eq.true'); if(!r.ok)return json({error:await r.text()},400);
+        const r=await supabaseRest(env,'PATCH','store_settings',patch,'?id=eq.true'); if(!r.ok)return json({error:await r.text()},400);
         return json((await r.json())[0]||null);
       }
 
@@ -225,9 +225,9 @@ export default {
         const id=decodeURIComponent(socialMatch[1]);
         if(request.method==='PATCH'){
           const patch=await body(request); patch.updated_at=new Date().toISOString(); if(patch.status==='published')patch.published_at=new Date().toISOString();
-          const r=await supabaseRest(env,'PATCH','social_posts',patch,undefined,`?id=eq.${encodeURIComponent(id)}`); if(!r.ok)return json({error:await r.text()},400); return json((await r.json())[0]||null);
+          const r=await supabaseRest(env,'PATCH','social_posts',patch,`?id=eq.${encodeURIComponent(id)}`); if(!r.ok)return json({error:await r.text()},400); return json((await r.json())[0]||null);
         }
-        const r=await supabaseRest(env,'DELETE','social_posts',undefined,undefined,`?id=eq.${encodeURIComponent(id)}`); if(!r.ok)return json({error:await r.text()},400); return json({ok:true});
+        const r=await supabaseRest(env,'DELETE','social_posts',undefined,`?id=eq.${encodeURIComponent(id)}`); if(!r.ok)return json({error:await r.text()},400); return json({ok:true});
       }
 
       if(url.pathname==='/api/admin/products/bulk'&&request.method==='POST'){
@@ -271,10 +271,10 @@ export default {
           if(validation && (patch.name||patch.slug||patch.kind||patch.display_price||patch.destination_url||patch.image_url||patch.image_urls))return json({error:validation},400);
           if(patch.name)patch.name=String(patch.name).trim().slice(0,180); if(patch.slug)patch.slug=String(patch.slug).trim().toLowerCase().slice(0,180);
           if(Array.isArray(patch.image_urls))patch.image_urls=patch.image_urls.filter(validUrl).slice(0,30);
-          const r=await supabaseRest(env,'PATCH','products',patch,undefined,`?id=eq.${encodeURIComponent(id)}`); if(!r.ok)return json({error:await r.text()},400);
+          const r=await supabaseRest(env,'PATCH','products',patch,`?id=eq.${encodeURIComponent(id)}`); if(!r.ok)return json({error:await r.text()},400);
           const rows=await r.json(); return json(rows[0]||null);
         }
-        const r=await supabaseRest(env,'DELETE','products',undefined,undefined,`?id=eq.${encodeURIComponent(id)}`); if(!r.ok)return json({error:await r.text()},400);
+        const r=await supabaseRest(env,'DELETE','products',undefined,`?id=eq.${encodeURIComponent(id)}`); if(!r.ok)return json({error:await r.text()},400);
         return json({ok:true});
       }
 
