@@ -90,6 +90,28 @@ const server=http.createServer(async(req,res)=>{
     if(u.pathname==='/admin'||u.pathname==='/admin/') u.pathname='/admin.html';
     if(u.pathname==='/api/health')return json(res,200,{ok:true,configured:configured()});
     if(u.pathname==='/api/config')return json(res,200,{supabaseUrl:env('SUPABASE_URL'),supabaseAnonKey:env('SUPABASE_ANON_KEY')});
+    if(u.pathname==='/api/products'&&req.method==='GET'){
+      // Public catalog endpoint: keep the production Node/Railway path identical
+      // to the Cloudflare Worker path so the storefront never depends on which
+      // deployment target is serving the domain.
+      const [productsRes,categoriesRes,collectionsRes]=await Promise.all([
+        supabaseRest('GET','products',undefined,'?select=*&published=eq.true&order=created_at.desc'),
+        supabaseRest('GET','categories',undefined,'?select=id,name'),
+        supabaseRest('GET','collections',undefined,'?select=id,name')
+      ]);
+      if(!productsRes.ok)return json(res,502,{error:'Products could not be loaded.'});
+      const products=await productsRes.json();
+      const categories=categoriesRes.ok?await categoriesRes.json():[];
+      const collections=collectionsRes.ok?await collectionsRes.json():[];
+      const categoryMap=new Map(categories.map(x=>[String(x.id),x]));
+      const collectionMap=new Map(collections.map(x=>[String(x.id),x]));
+      return json(res,200,products.map(p=>({
+        ...p,
+        category:p.category_id?categoryMap.get(String(p.category_id))||null:null,
+        collection:p.collection_id?collectionMap.get(String(p.collection_id))||null:null
+      })));
+    }
+
     if(u.pathname==='/api/analytics/events'&&req.method==='POST'){
       const wait=rateLimit(req,'analytics',180,60000); if(wait){res.setHeader('retry-after',String(wait));return json(res,429,{error:'Analytics rate limit reached.'});}
       const event=await body(req,128*1024); const name=String(event.event_name||'').trim().slice(0,80);
@@ -244,8 +266,23 @@ const server=http.createServer(async(req,res)=>{
       return json(res,200,{ok:true});
     }
 
-    let file=u.pathname==='/'?'/index.html':u.pathname; const safe=path.normalize(file).replace(/^([.][.][\\/])+/, ''); const full=path.join(root,safe);
-    fs.readFile(full,(e,b)=>{if(e){res.writeHead(404);return res.end('Not found')};res.writeHead(200,{'content-type':mime[path.extname(full)]||'text/plain'});res.end(b)});
+    // Serve the static site and preserve client-side SPA routes such as
+    // /product/<slug>, /shop, /finds, /browse and /cart.
+    let file=u.pathname==='/'?'/index.html':u.pathname;
+    const safe=path.normalize(file).replace(/^([.][.][\\/])+/, '');
+    const full=path.join(root,safe);
+    fs.readFile(full,(e,b)=>{
+      if(!e){
+        res.writeHead(200,{'content-type':mime[path.extname(full)]||'text/plain','cache-control':path.extname(full)==='.html'?'no-store':'public,max-age=3600'});
+        return res.end(b);
+      }
+      const spa=path.join(root,'index.html');
+      fs.readFile(spa,(spaErr,html)=>{
+        if(spaErr){res.writeHead(404);return res.end('Not found');}
+        res.writeHead(200,{'content-type':'text/html; charset=utf-8','cache-control':'no-store'});
+        res.end(html);
+      });
+    });
   }catch(e){json(res,500,{error:e.message||'Server error'});}
 });
 server.listen(port,HOST,()=>console.log(`Nuvora listening on http://${HOST}:${port}`));
