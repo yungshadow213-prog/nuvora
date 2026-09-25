@@ -228,22 +228,29 @@ window.addEventListener('popstate',()=>{const p=findProductFromPath();if(p)rende
 let nuvoraSB=null;
 async function bootNuvora(){
   try{
+    // The public catalog must not depend on the Supabase browser SDK/CDN.
+    // Load published products first so a CDN/auth issue cannot blank the storefront.
+    await loadLiveProducts();
+    const routeProduct=findProductFromPath();
+    if(routeProduct){renderProductPage(routeProduct);showView('product');}
+  }catch(e){
+    console.warn('Nuvora catalog unavailable:',e.message);
+  }
+  try{
+    if(!window.supabase)return;
     const cfg=await fetch('/api/config').then(r=>r.json());
-    if(cfg.supabaseUrl&&cfg.supabaseAnonKey){
-      nuvoraSB=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);
-      const {data:{session}}=await nuvoraSB.auth.getSession();
+    if(!cfg.supabaseUrl||!cfg.supabaseAnonKey)return;
+    nuvoraSB=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);
+    const {data:{session}}=await nuvoraSB.auth.getSession();
+    user=session?.user?.email||'';
+    updateAccountUI();
+    if(session) await syncUserData(session.user.id);
+    nuvoraSB.auth.onAuthStateChange(async (_event,session)=>{
       user=session?.user?.email||'';
       updateAccountUI();
-      await loadLiveProducts();
-      const routeProduct=findProductFromPath();
-      if(routeProduct){renderProductPage(routeProduct);showView('product');}
       if(session) await syncUserData(session.user.id);
-      nuvoraSB.auth.onAuthStateChange(async (_event,session)=>{
-        user=session?.user?.email||''; updateAccountUI();
-        if(session) await syncUserData(session.user.id);
-      });
-    }
-  }catch(e){console.warn('Nuvora live backend unavailable:',e.message)}
+    });
+  }catch(e){console.warn('Nuvora account backend unavailable:',e.message)}
 }
 function mapProduct(p){let variants=[];try{variants=Array.isArray(p.shopify_variants)?p.shopify_variants:(typeof p.shopify_variants==='string'?JSON.parse(p.shopify_variants||'[]'):[])}catch(e){variants=[]}return {id:p.id,slug:p.slug||p.id,name:displayProductName(p.name),rawName:p.name,type:p.kind==='find'?'Find':p.kind==='learn'?'Learn':'Shop',cat:p.category?.name||'Uncategorized',collection:p.collection?.name||'',desc:p.description||'',brand:p.brand||'',price:formatPrice(p.display_price,p.currency),rawPrice:p.display_price,icon:'✦',image:p.image_url,image_urls:Array.isArray(p.image_urls)?p.image_urls:[],variants,trend:p.trending,top:p.top_pick,featured:p.featured,destination:p.destination_url,variantId:p.shopify_variant_id,shopifyProductId:p.shopify_product_id,retailer:p.retailer||''};}
 async function loadLiveProducts(){
