@@ -28,6 +28,7 @@ export default {
 
       if(url.pathname==='/api/admin/diagnostics'&&request.method==='GET'){
         const checks={environment:configured(env).supabase,auth:false,admin:false,products:false,settings:false,social:false,shopifyEnvironment:configured(env).shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
+        let shopifyError='';
         const u=await supabaseUser(request,env); checks.auth=!!u;
         if(u&&env.SUPABASE_SERVICE_ROLE_KEY){
           const pr=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});
@@ -41,11 +42,11 @@ export default {
               const data=await shopifyGraphql(env,'{ products(first: 1) { edges { node { id title } } } }',{},true);
               checks.shopifyAuth=true;
               checks.shopifyProducts=!!data?.products;
-            }catch(e){}
+            }catch(e){shopifyError=String(e?.message||'Shopify authentication failed').slice(0,500);}
           }
         }
         const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.settings&&checks.social&&checks.shopifyEnvironment&&checks.shopifyAuth&&checks.shopifyProducts;
-        return json({ok,checks});
+        return json({ok,checks,shopifyError});
       }
 
       if(url.pathname==='/api/amazon/import'&&request.method==='POST'){
