@@ -32,7 +32,7 @@ export default {
         const shopifyMissing=[]; const aiMissing=[];
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))shopifyMissing.push('SHOPIFY_SHOP');
         if(!env.SHOPIFY_CLIENT_ID)shopifyMissing.push('SHOPIFY_CLIENT_ID');
-        if(!env.SHOPIFY_CLIENT_SECRET)shopifyMissing.push('SHOPIFY_CLIENT_SECRET'); if(!env.SHOPIFY_STOREFRONT_ACCESS_TOKEN)shopifyMissing.push('SHOPIFY_STOREFRONT_ACCESS_TOKEN'); if(!env.OPENAI_API_KEY)aiMissing.push('OPENAI_API_KEY');
+        if(!env.SHOPIFY_CLIENT_SECRET)shopifyMissing.push('SHOPIFY_CLIENT_SECRET'); if(!env.OPENAI_API_KEY)aiMissing.push('OPENAI_API_KEY');
         const u=await supabaseUser(request,env); checks.auth=!!u;
         if(u&&env.SUPABASE_SERVICE_ROLE_KEY){
           const pr=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});
@@ -49,7 +49,7 @@ export default {
             }catch(e){shopifyError=String(e?.message||'Shopify authentication failed').slice(0,500);}
           }
         }
-        const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.settings&&checks.social&&checks.openai&&checks.shopifyStorefront&&checks.shopifyEnvironment&&checks.shopifyAuth&&checks.shopifyProducts;
+        const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.settings&&checks.social&&checks.shopifyEnvironment&&checks.shopifyAuth&&checks.shopifyProducts;
         return json({ok,checks,shopifyError,shopifyMissing,aiMissing});
       }
 
@@ -70,13 +70,17 @@ export default {
       }
 
       if(url.pathname==='/api/shopify/cart'&&request.method==='POST'){
-        if(!configured(env).shopify)return json({error:'Shopify Storefront API is not configured'},503);
-        const {lines}=await body(request); if(!Array.isArray(lines)||!lines.length)return json({error:'Cart lines required'},400);
-        const data=await shopifyGraphql(env,`mutation CartCreate($input: CartInput){cartCreate(input:$input){cart{id checkoutUrl totalQuantity}userErrors{field message}warnings{code message}}}`,{input:{lines}},false);
-        const p=data.cartCreate; if(p.userErrors?.length)return json({error:p.userErrors.map(x=>x.message).join('; ')},400);
-        return json(p.cart);
+        if(!configured(env).shopify)return json({error:'Shopify checkout is not configured'},503);
+        const {lines}=await body(request);
+        if(!Array.isArray(lines)||!lines.length)return json({error:'Cart lines required'},400);
+        const normalized=lines.map(x=>({
+          id:String(x?.merchandiseId||'').split('/').pop(),
+          quantity:Math.max(1,Math.min(250,Number(x?.quantity)||1))
+        })).filter(x=>/^\d+$/.test(x.id));
+        if(!normalized.length)return json({error:'No valid Shopify variant IDs were supplied'},400);
+        const checkoutUrl='https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/cart/'+normalized.map(x=>x.id+':'+x.quantity).join(',');
+        return json({checkoutUrl});
       }
-
       if(url.pathname==='/api/admin/shopify/products'&&request.method==='GET'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         if(!configured(env).shopifyAdmin)return json({error:'Shopify Admin API is not configured'},503);
@@ -387,7 +391,7 @@ function rateLimit(request,key,limit=120,windowMs=60000){
 function json(payload,status=200,extra={}){return new Response(JSON.stringify(payload),{status,headers:{'content-type':'application/json','cache-control':'no-store',...extra}});}
 async function body(request,limit=1024*1024){const len=Number(request.headers.get('content-length')||0);if(len>limit)throw new Error('Request body is too large.');const text=await request.text();if(text.length>limit)throw new Error('Request body is too large.');return text?JSON.parse(text):{};}
 function env(name){return globalThis.__ENV?.[name]||'';}
-function configured(env){return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_STOREFRONT_ACCESS_TOKEN,shopifyStorefront:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_STOREFRONT_ACCESS_TOKEN,shopifyAdmin:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET,openai:!!env.OPENAI_API_KEY,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
+function configured(env){const shopifyAdmin=!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET;return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:shopifyAdmin,shopifyStorefront:shopifyAdmin,shopifyAdmin,openai:!!env.OPENAI_API_KEY,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
 function sbHeaders(env,service=true,upsert=false){const key=service?env.SUPABASE_SERVICE_ROLE_KEY:env.SUPABASE_ANON_KEY;return {apikey:key,authorization:'Bearer '+key,'content-type':'application/json','prefer':upsert?'return=representation,resolution=merge-duplicates':'return=representation'};}
 async function supabaseUser(request,env){const token=(request.headers.get('authorization')||'').replace(/^Bearer\s+/i,'');if(!token||!env.SUPABASE_URL)return null;const r=await fetch(env.SUPABASE_URL+'/auth/v1/user',{headers:{apikey:env.SUPABASE_ANON_KEY,authorization:'Bearer '+token}});return r.ok?await r.json():null;}
 async function adminUser(request,env){const u=await supabaseUser(request,env);if(!u||!env.SUPABASE_SERVICE_ROLE_KEY)return null;const r=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});if(!r.ok)return null;const rows=await r.json(),profile=rows[0];return profile&&(profile.is_admin===true||profile.role==='admin')?u:null;}
