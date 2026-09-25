@@ -261,9 +261,24 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
       }
 
       if(url.pathname==='/api/products'&&request.method==='GET'){
-        const r=await supabaseRest(env,'GET','products',undefined,'?select=*,category:categories(name),collection:collections(name)&published=eq.true&order=created_at.desc');
-        if(!r.ok)return json({error:'Products could not be loaded.'},502);
-        return json(await r.json());
+        // Keep the public catalog independent of Supabase relationship embeds.
+        // A broken/missing category or collection relationship must not blank the store.
+        const [productsRes,categoriesRes,collectionsRes]=await Promise.all([
+          supabaseRest(env,'GET','products',undefined,'?select=*&published=eq.true&order=created_at.desc'),
+          supabaseRest(env,'GET','categories',undefined,'?select=id,name'),
+          supabaseRest(env,'GET','collections',undefined,'?select=id,name')
+        ]);
+        if(!productsRes.ok)return json({error:'Products could not be loaded.'},502);
+        const products=await productsRes.json();
+        const categories=categoriesRes.ok?await categoriesRes.json():[];
+        const collections=collectionsRes.ok?await collectionsRes.json():[];
+        const categoryMap=new Map(categories.map(x=>[String(x.id),x]));
+        const collectionMap=new Map(collections.map(x=>[String(x.id),x]));
+        return json(products.map(p=>({
+          ...p,
+          category:p.category_id?categoryMap.get(String(p.category_id))||null:null,
+          collection:p.collection_id?collectionMap.get(String(p.collection_id))||null:null
+        })));
       }
       if(url.pathname==='/api/admin/products'&&request.method==='GET'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
