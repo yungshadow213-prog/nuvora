@@ -73,59 +73,55 @@ export default {
         if(!configured(env).shopify)return json({error:'Shopify checkout is not configured'},503);
         const {lines}=await body(request);
         if(!Array.isArray(lines)||!lines.length)return json({error:'Cart lines required'},400);
-        const isNumericId=value=>{const s=String(value||'');return !!s&&s.split('').every(ch=>ch>='0'&&ch<='9')};
         const normalized=[];
         for(const line of lines.slice(0,50)){
           const rawVariant=String(line?.merchandiseId||'').trim();
           const rawProduct=String(line?.shopifyProductId||'').trim();
-          const variantId=rawVariant.startsWith('gid://shopify/ProductVariant/')?rawVariant:(isNumericId(rawVariant)?'gid://shopify/ProductVariant/'+rawVariant:'');
-          const productId=rawProduct.startsWith('gid://shopify/Product/')?rawProduct:(isNumericId(rawProduct)?'gid://shopify/Product/'+rawProduct:'');
+          const variantId=rawVariant.startsWith('gid://shopify/ProductVariant/')?rawVariant:(/^\d+$/.test(rawVariant)?'gid://shopify/ProductVariant/'+rawVariant:'');
+          const productId=rawProduct.startsWith('gid://shopify/Product/')?rawProduct:(/^\d+$/.test(rawProduct)?'gid://shopify/Product/'+rawProduct:'');
           if(!variantId&&!productId)continue;
-
-          let variant=null;
-          let product=null;
-
+          let variant=null; let product=null;
           if(variantId){
-            const data=await shopifyGraphql(
-              env,
-              'query CheckoutVariant($id:ID!){ productVariant(id:$id){ id title availableForSale product{ id title handle status onlineStoreUrl } } }',
-              {id:variantId},
-              true
-            );
-            variant=data?.productVariant||null;
-            product=variant?.product||null;
+            const data=await shopifyGraphql(env,'query CheckoutVariant($id:ID!){ productVariant(id:$id){ id title availableForSale product{ id title handle status onlineStoreUrl } } }',{id:variantId},true);
+            variant=data?.productVariant||null; product=variant?.product||null;
           }
-
-          // Recover automatically when Nuvora has an old/missing Shopify variant ID.
           if(!variant&&productId){
-            const data=await shopifyGraphql(
-              env,
-              'query CheckoutProduct($id:ID!){ product(id:$id){ id title handle status onlineStoreUrl variants(first:100){nodes{ id title availableForSale selectedOptions{name value} }} } }',
-              {id:productId},
-              true
-            );
+            const data=await shopifyGraphql(env,'query CheckoutProduct($id:ID!){ product(id:$id){ id title handle status onlineStoreUrl variants(first:100){nodes{ id title availableForSale selectedOptions{name value} }} } }',{id:productId},true);
             product=data?.product||null;
             const candidates=product?.variants?.nodes||[];
             const wanted=Array.isArray(line?.selectedOptions)?line.selectedOptions.filter(x=>x&&x.name&&x.value):[];
-            variant=candidates.find(v=>{
-              const opts=Array.isArray(v.selectedOptions)?v.selectedOptions:[];
-              return wanted.length&&wanted.length===opts.length&&wanted.every(item=>opts.some(o=>String(o.name)===String(item.name)&&String(o.value)===String(item.value)));
-            })||candidates.find(v=>String(v.title||'')===String(line?.variantTitle||''))||null;
+            variant=candidates.find(v=>{const opts=Array.isArray(v.selectedOptions)?v.selectedOptions:[];return wanted.length&&wanted.length===opts.length&&wanted.every(item=>opts.some(o=>String(o.name)===String(item.name)&&String(o.value)===String(item.value)))})||candidates.find(v=>String(v.title||'')===String(line?.variantTitle||''))||null;
           }
-
           if(!variant)return json({error:'This Nuvora product is linked to a Shopify variant that no longer exists. Open Admin → Import Shopify and sync this product again.'},409);
           if(String(product?.status||'')!=='ACTIVE')return json({error:'This Shopify product is not active yet. In Shopify, set the product status to Active, then make it available to the Online Store.'},409);
           if(!product?.onlineStoreUrl)return json({error:'This Shopify product is not published to the Online Store. In Shopify, publish the product to Online Store, then try Buy now again.'},409);
           if(variant.availableForSale===false)return json({error:'This variant is currently unavailable for sale in Shopify. Choose another variant or update its inventory/selling settings.'},409);
-
           const numeric=String(variant.id||'').split('/').pop();
-          if(!isNumericId(numeric))return json({error:'Shopify returned an invalid variant ID.'},502);
-          normalized.push({id:numeric,quantity:Math.max(1,Math.min(250,Number(line?.quantity)||1))});
+          if(!/^\d+$/.test(numeric))return json({error:'Shopify returned an invalid variant ID.'},502);
+          normalized.push({id:numeric,variantId:variant.id,quantity:Math.max(1,Math.min(250,Number(line?.quantity)||1))});
         }
-
         if(!normalized.length)return json({error:'No valid Shopify checkout lines were supplied'},400);
+        const storefrontLines=normalized.map(x=>({merchandiseId:x.variantId,quantity:x.quantity}));
+        try{
+          const domain=env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN;
+          const version=env.SHOPIFY_API_VERSION||'2026-07';
+          const headers={'content-type':'application/json'};
+          if(env.SHOPIFY_STOREFRONT_ACCESS_TOKEN)headers['X-Shopify-Storefront-Access-Token']=env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
+          const response=await fetch('https://'+domain+'/api/'+version+'/graphql.json',{
+            method:'POST',headers,body:JSON.stringify({
+              query:'mutation CreateNuvoraCart($input:CartInput!){ cartCreate(input:$input){ cart{ id checkoutUrl } userErrors{ field message code } warnings{ code message } } }',
+              variables:{input:{lines:storefrontLines}}
+            })
+          });
+          const payload=await response.json().catch(()=>({}));
+          const userErrors=payload?.data?.cartCreate?.userErrors||[];
+          const checkoutUrl=payload?.data?.cartCreate?.cart?.checkoutUrl;
+          if(response.ok&&checkoutUrl&&!userErrors.length)return json({checkoutUrl,method:'storefront_cart'});
+          const detail=userErrors.map(x=>x.message).filter(Boolean).join('; ');
+          if(detail)return json({error:'Shopify could not create the checkout: '+detail},409);
+        }catch(e){}
         const checkoutUrl='https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/cart/'+normalized.map(x=>x.id+':'+x.quantity).join(',');
-        return json({checkoutUrl});
+        return json({checkoutUrl,method:'cart_permalink'});
       }
       if(url.pathname==='/api/admin/shopify/products'&&request.method==='GET'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
@@ -382,7 +378,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           fd.append('image',new Blob([bytes],{type:source.type||'image/png'}),source.name||'product-reference.png');
           const r=await fetch('https://api.openai.com/v1/images/edits',{method:'POST',headers:{Authorization:'Bearer '+env.OPENAI_API_KEY},body:fd});
           const j=await r.json().catch(()=>({}));
-          if(!r.ok)return json({error:j.error?.message||'AI image generation failed.'},502);
+          if(!r.ok){const code=String(j.error?.code||'');if(r.status===429||code==='credit_balance_exhausted'||code==='insufficient_quota')return json({error:'OpenAI API credits are exhausted. Add API credits to the OpenAI API billing account used by Nuvora, then try again.'},402);if(r.status===401)return json({error:'The OpenAI API key configured in Cloudflare is invalid or expired.'},502);return json({error:j.error?.message||'AI image generation failed.'},502);}
           const item=j.data?.[0];
           if(!item?.b64_json)return json({error:'AI returned no image.'},502);
           return json({ok:true,image:'data:image/png;base64,'+item.b64_json});
@@ -403,7 +399,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const prompt=`Create polished ecommerce copy for Nuvora. Return ONLY valid JSON with keys: title, description, features, seo_title, seo_description, social_caption. Keep claims factual and do not invent specifications, certifications, guarantees, discounts, or performance claims. Product data: ${JSON.stringify(product)}`;
         const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:'Bearer '+env.OPENAI_API_KEY,'content-type':'application/json'},body:JSON.stringify({model:'gpt-5.6-luna',input:prompt,text:{format:{type:'json_object'}}})});
         const j=await r.json().catch(()=>({}));
-        if(!r.ok)return json({error:j.error?.message||'AI copy generation failed.'},502);
+        if(!r.ok){const code=String(j.error?.code||'');if(r.status===429||code==='credit_balance_exhausted'||code==='insufficient_quota')return json({error:'OpenAI API credits are exhausted. Add API credits to the OpenAI API billing account used by Nuvora, then try again.'},402);if(r.status===401)return json({error:'The OpenAI API key configured in Cloudflare is invalid or expired.'},502);return json({error:j.error?.message||'AI copy generation failed.'},502);}
         const raw=j.output_text||j.output?.flatMap(x=>x.content||[]).find(x=>x.type==='output_text')?.text||'';
         let result; try{result=JSON.parse(raw)}catch{result={title:raw}};
         return json({ok:true,...result});
