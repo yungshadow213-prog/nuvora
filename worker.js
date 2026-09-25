@@ -172,7 +172,10 @@ export default {
         return json({ok:true});
       }
 
-      return json({error:'Not found'},404);
+      // Let Cloudflare Assets serve the SPA shell for every non-API route.
+      // This is required for client-side routes such as /shop, /finds, /cart, etc.
+      // and also gives unknown paths the same SPA fallback instead of a JSON 404.
+      return env.ASSETS.fetch(request);
     } catch(e) {
       return json({error:e?.message||'Server error'},500);
     }
