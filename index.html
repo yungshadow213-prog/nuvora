@@ -167,7 +167,7 @@ function renderProductPage(p){
   document.getElementById('productSave')?.addEventListener('click',()=>toggleSave(p.id));
   const add=()=>{const v=refreshVariant();if(p.type==='Shop'){addCartItem(p.id,v.id,v.title||'',qty);trackEvent('add_to_cart',String(p.id),{variant_id:v.id,quantity:qty});}};
   document.getElementById('productAdd')?.addEventListener('click',add);
-  document.getElementById('productBuy')?.addEventListener('click',()=>{if(p.type==='Shop'){add();setTimeout(checkout,80)}else if(p.destination){trackEvent('retailer_click',String(p.id),{retailer:p.retailer||''});window.location.href=p.destination;}});
+  document.getElementById('productBuy')?.addEventListener('click',()=>{if(p.type==='Shop'){const v=refreshVariant();beginCheckout([{productId:p.id,variantId:v.id,quantity:qty}]);}else if(p.destination){trackEvent('retailer_click',String(p.id),{retailer:p.retailer||''});window.location.href=p.destination;}});
   loadProductReviews(p.id);
   const related=products.filter(x=>String(x.id)!==String(p.id)&&((p.cat&&x.cat===p.cat)||(p.brand&&x.brand===p.brand))).slice(0,4);
   document.getElementById('relatedProducts').innerHTML=related.map(card).join('')||'<div class="empty" style="grid-column:1/-1">More products will appear here as the catalog grows.</div>';
@@ -299,8 +299,45 @@ async function toggleSave(id){
   saved=exists?saved.filter(x=>x!==id):[...saved,id];persist();renderBrowse();renderSaved();renderList('shopGrid','Shop');renderList('findGrid','Find');if(document.getElementById('detailModal').classList.contains('open'))updateDetailButtons(id);
 }
 function removeCart(id){const before=cart.length;cart=cart.filter(x=>String(x.id||x)!==String(id));if(cart.length!==before){updateCart();renderCart();}if(nuvoraSB){nuvoraSB.auth.getUser().then(({data:{user:su}})=>{if(!su)return;nuvoraSB.from('cart_items').delete().eq('user_id',su.id).eq('product_id',id);});}}
-function closeCheckoutModal(){document.getElementById('checkoutModal').classList.remove('open');}
-async function checkout(){if(!cart.length){showToast('Your cart is empty');return}const lines=[];let notReady=0;for(const raw of cart){const x=typeof raw==='string'?{id:raw,variantId:null,quantity:1}:raw;if(x.variantId)lines.push({merchandiseId:x.variantId,quantity:Number(x.quantity)||1});else notReady+=(Number(x.quantity)||1)}if(!lines.length){showToast('No checkout-ready items in cart');return}try{const r=await fetch('/api/shopify/cart',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({lines})});const j=await r.json();if(!r.ok)throw new Error(j.error||'Shopify checkout failed');trackEvent('checkout_started',null,{items:cart.length});window.location.href=j.checkoutUrl}catch(e){alert(e.message)}}
+let pendingCheckoutLines=null;
+function closeCheckoutModal(){document.getElementById('checkoutModal').classList.remove('open');pendingCheckoutLines=null;}
+function showCheckoutPreview(lines){
+  const items=(lines||[]).map(line=>{const p=products.find(x=>String(x.id)===String(line.productId));const v=(p?.variants||[]).find(x=>String(x.id)===String(line.variantId));return {p,v,quantity:Number(line.quantity)||1};}).filter(x=>x.p);
+  const total=items.reduce((sum,x)=>sum+(Number(x.v?.price??x.p.rawPrice)||0)*x.quantity,0);
+  const currency=items[0]?.p?.currency||'';
+  const el=document.getElementById('checkoutContent');
+  if(!el)return;
+  el.innerHTML='<div style="display:grid;gap:16px"><div class="confidence-card"><div class="eyebrow"><i></i> Nuvora checkout</div><h3 style="margin:6px 0 4px">You are checking out from Nuvora.</h3><p class="muted" style="margin:0">Your order will be securely completed through our connected commerce checkout.</p></div><div style="display:grid;gap:10px">'+items.map(x=>'<div style="display:flex;gap:12px;align-items:center"><div class="detail-thumb" style="width:58px;height:58px;flex:0 0 58px">'+(x.p.image?'<img src="'+htmlEsc(x.p.image)+'" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px">':'✦')+'</div><div style="min-width:0;flex:1"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+htmlEsc(x.p.name)+'</strong><span class="muted">'+(x.v?.title&&x.v.title!=='Default Title'?htmlEsc(x.v.title)+' · ':'')+'Qty '+x.quantity+'</span></div><strong>'+htmlEsc(formatPrice((Number(x.v?.price??x.p.rawPrice)||0)*x.quantity,x.p.currency||''))+'</strong></div>').join('')+'</div><div style="display:flex;justify-content:space-between;padding-top:14px;border-top:1px solid var(--line)"><span class="muted">Total</span><strong>'+htmlEsc(formatPrice(total,currency))+'</strong></div><button class="btn primary" id="continueNuvoraCheckout" style="width:100%">Continue to secure payment</button><p class="muted" style="font-size:12px;text-align:center;margin:0">Nuvora remains your shopping experience; payment is completed securely by the connected checkout.</p></div>';
+  document.getElementById('continueNuvoraCheckout')?.addEventListener('click',continueToShopifyCheckout);
+  document.getElementById('checkoutModal').classList.add('open');
+}
+function beginCheckout(lines){
+  const ready=(lines||[]).filter(x=>x?.variantId);
+  if(!ready.length){showToast('This product is not ready for checkout yet.');return}
+  pendingCheckoutLines=ready.map(x=>({productId:x.productId,variantId:x.variantId,quantity:Math.max(1,Number(x.quantity)||1)}));
+  showCheckoutPreview(pendingCheckoutLines);
+}
+async function continueToShopifyCheckout(){
+  const lines=(pendingCheckoutLines||[]).map(x=>({merchandiseId:x.variantId,quantity:x.quantity}));
+  if(!lines.length){showToast('Your checkout is empty');return;}
+  const btn=document.getElementById('continueNuvoraCheckout');
+  if(btn){btn.disabled=true;btn.textContent='Preparing secure checkout…';}
+  try{
+    const r=await fetch('/api/shopify/cart',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({lines})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.checkoutUrl)throw new Error(j.error||'Checkout is not available for this product yet.');
+    trackEvent('checkout_started',null,{items:lines.length});
+    window.location.href=j.checkoutUrl;
+  }catch(e){
+    if(btn){btn.disabled=false;btn.textContent='Continue to secure payment';}
+    alert(e.message);
+  }
+}
+function checkout(){
+  if(!cart.length){showToast('Your cart is empty');return}
+  const lines=cart.map(raw=>{const x=typeof raw==='string'?{id:raw,variantId:null,quantity:1}:raw;return {productId:x.id,variantId:x.variantId,quantity:Number(x.quantity)||1};});
+  beginCheckout(lines);
+}
 
 bootNuvora();
 </script></body></html>
