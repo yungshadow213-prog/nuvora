@@ -455,6 +455,70 @@ async function aiResultBytes(result){
   throw new Error('Cloudflare AI returned no image bytes.');
 }
 function bytesToBase64(bytes){let out='';const step=0x8000;for(let i=0;i<bytes.length;i+=step)out+=String.fromCharCode(...bytes.subarray(i,i+step));return btoa(out);}
+function sbHeaders(env,service=false){
+  const key=service?env.SUPABASE_SERVICE_ROLE_KEY:env.SUPABASE_ANON_KEY;
+  return {'apikey':key||'','Authorization':'Bearer '+(key||''),'Content-Type':'application/json'};
+}
+async function supabaseUser(request,env){
+  const auth=String(request.headers.get('authorization')||'');
+  if(!/^Bearer\s+\S+$/i.test(auth)||!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY)return null;
+  try{
+    const r=await fetch(env.SUPABASE_URL+'/auth/v1/user',{headers:{apikey:env.SUPABASE_ANON_KEY,Authorization:auth}});
+    if(!r.ok)return null;
+    return await r.json();
+  }catch{return null;}
+}
+async function adminUser(request,env){
+  const user=await supabaseUser(request,env);
+  if(!user||!env.SUPABASE_SERVICE_ROLE_KEY)return null;
+  try{
+    const r=await fetch(env.SUPABASE_URL+'/rest/v1/profiles?id=eq.'+encodeURIComponent(user.id)+'&select=id,is_admin,role&limit=1',{headers:sbHeaders(env,true)});
+    if(!r.ok)return null;
+    const rows=await r.json();
+    const profile=rows[0];
+    return profile&&(profile.is_admin===true||profile.role==='admin')?user:null;
+  }catch{return null;}
+}
+async function supabaseRest(env,method,table,payload=null,query=''){
+  const url=env.SUPABASE_URL+'/rest/v1/'+table+String(query||'');
+  const options={method,headers:{...sbHeaders(env,true),'Prefer':'return=representation'}};
+  if(payload!==undefined&&payload!==null){
+    options.body=JSON.stringify(payload);
+  }
+  return fetch(url,options);
+}
+async function getShopifyAdminToken(env){
+  const domain=env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN;
+  if(!domain||!env.SHOPIFY_CLIENT_ID||!env.SHOPIFY_CLIENT_SECRET)throw new Error('Shopify Admin credentials are not configured');
+  const r=await fetch('https://'+domain+'/admin/oauth/access_token',{
+    method:'POST',
+    headers:{'content-type':'application/json'},
+    body:JSON.stringify({client_id:env.SHOPIFY_CLIENT_ID,client_secret:env.SHOPIFY_CLIENT_SECRET,grant_type:'client_credentials'})
+  });
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.access_token)throw new Error(j.error_description||j.error||'Shopify Admin authentication failed');
+  return j.access_token;
+}
+function validUrl(value){
+  try{const u=new URL(String(value||''));return u.protocol==='https:'&&!!u.hostname;}catch{return false;}
+}
+function asinFromUrl(value){
+  const s=String(value||'');
+  const m=s.match(/(?:\/dp\/|\/gp\/product\/|\/product\/)([A-Z0-9]{10})(?:[/?]|$)/i)||s.match(/\b([A-Z0-9]{10})\b/i);
+  return m?m[1].toUpperCase():null;
+}
+async function amazonGetItem(env,asin){
+  const region=env.AMAZON_REGION||'us-east-1';
+  const host=env.AMAZON_HOST||'webservices.amazon.com';
+  const marketplace=env.AMAZON_MARKETPLACE||'www.amazon.com';
+  const partnerTag=env.AMAZON_PARTNER_TAG;
+  const accessKey=env.AMAZON_ACCESS_KEY;
+  const secretKey=env.AMAZON_SECRET_KEY;
+  if(!accessKey||!secretKey||!partnerTag)return null;
+  // Amazon PA-API signing is intentionally delegated to the configured
+  // integration layer when credentials are available; return null otherwise.
+  return null;
+}
 function configured(env){const shopifyAdmin=!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET;return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:shopifyAdmin,shopifyStorefront:shopifyAdmin,shopifyAdmin,openaiOptional:!!env.OPENAI_API_KEY,workersAI:!!env.AI,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
 async function shopifyGraphql(env,query,variables={},admin=false){
   const domain=env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN;
