@@ -29,7 +29,7 @@ export default {
       if(url.pathname==='/api/admin/diagnostics'&&request.method==='GET'){
         const cfg=configured(env); const checks={environment:cfg.supabase,auth:false,admin:false,products:false,settings:false,social:false,openai:cfg.openai,shopifyStorefront:cfg.shopifyStorefront,shopifyEnvironment:cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
         let shopifyError='';
-        const shopifyMissing=[]; const aiMissing=[];
+        const shopifyMissing=[]; const aiMissing=[]; if(!env.AI)aiMissing.push('Workers AI binding');
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))shopifyMissing.push('SHOPIFY_SHOP');
         if(!env.SHOPIFY_CLIENT_ID)shopifyMissing.push('SHOPIFY_CLIENT_ID');
         if(!env.SHOPIFY_CLIENT_SECRET)shopifyMissing.push('SHOPIFY_CLIENT_SECRET'); if(!env.OPENAI_API_KEY)aiMissing.push('OPENAI_API_KEY');
@@ -362,49 +362,81 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
 
       if(url.pathname==='/api/admin/ai/image'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
-        if(!env.OPENAI_API_KEY)return json({error:'AI image generation is not configured. Add the OPENAI_API_KEY secret in Cloudflare.'},503);
         const form=await request.formData();
         const prompt=cleanText(form.get('prompt'),5000);
         const size=String(form.get('size')||'1024x1024');
         const source=form.get('image');
         if(!prompt)return json({error:'An image prompt is required.'},400);
-        if(source && typeof source.arrayBuffer==='function'){
+        const dimensions={ '1024x1024':[1024,1024], '1536x1024':[1536,1024], '1024x1536':[1024,1536] };
+        const [width,height]=dimensions[size]||dimensions['1024x1024'];
+        if(env.AI){
+          try{
+            let imageB64=null;
+            if(source&&typeof source.arrayBuffer==='function'){
+              const bytes=new Uint8Array(await source.arrayBuffer());
+              if(bytes.byteLength>6*1024*1024)return json({error:'Reference image must be 6 MB or smaller for Nuvora AI.'},400);
+              imageB64=bytesToBase64(bytes);
+            }
+            const input={
+              prompt,
+              negative_prompt:'fake logos, watermarks, misleading text, extra products, distorted product, duplicate product, low quality',
+              width,height,num_steps:20,guidance:7.5
+            };
+            if(imageB64)input.image_b64=imageB64;
+            const result=await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0',input);
+            const bytes=await aiResultBytes(result);
+            return json({ok:true,provider:'cloudflare',image:'data:image/png;base64,'+bytesToBase64(bytes)});
+          }catch(e){
+            if(!env.OPENAI_API_KEY)return json({error:'Nuvora AI could not generate the image right now. Cloudflare AI may be at capacity or the AI binding is not available yet.'},502);
+          }
+        }
+        if(!env.OPENAI_API_KEY)return json({error:'Nuvora AI is not configured. Deploy the current Cloudflare Worker with the Workers AI binding enabled.'},503);
+        if(source&&typeof source.arrayBuffer==='function'){
           const bytes=new Uint8Array(await source.arrayBuffer());
           if(bytes.byteLength>10*1024*1024)return json({error:'Reference image must be 10 MB or smaller.'},400);
           const fd=new FormData();
-          fd.append('model','gpt-image-2');
-          fd.append('prompt',prompt);
+          fd.append('model','gpt-image-2'); fd.append('prompt',prompt);
           fd.append('size',['1024x1024','1536x1024','1024x1536'].includes(size)?size:'1024x1024');
           fd.append('image',new Blob([bytes],{type:source.type||'image/png'}),source.name||'product-reference.png');
           const r=await fetch('https://api.openai.com/v1/images/edits',{method:'POST',headers:{Authorization:'Bearer '+env.OPENAI_API_KEY},body:fd});
           const j=await r.json().catch(()=>({}));
-          if(!r.ok){const code=String(j.error?.code||'');if(r.status===429||code==='credit_balance_exhausted'||code==='insufficient_quota')return json({error:'OpenAI API credits are exhausted. Add API credits to the OpenAI API billing account used by Nuvora, then try again.'},402);if(r.status===401)return json({error:'The OpenAI API key configured in Cloudflare is invalid or expired.'},502);return json({error:j.error?.message||'AI image generation failed.'},502);}
-          const item=j.data?.[0];
-          if(!item?.b64_json)return json({error:'AI returned no image.'},502);
-          return json({ok:true,image:'data:image/png;base64,'+item.b64_json});
+          if(!r.ok)return json({error:j.error?.message||'AI image generation failed.'},502);
+          const item=j.data?.[0]; if(!item?.b64_json)return json({error:'AI returned no image.'},502);
+          return json({ok:true,provider:'openai',image:'data:image/png;base64,'+item.b64_json});
         }
         const r=await fetch('https://api.openai.com/v1/images/generations',{method:'POST',headers:{Authorization:'Bearer '+env.OPENAI_API_KEY,'content-type':'application/json'},body:JSON.stringify({model:'gpt-image-2',prompt,size:['1024x1024','1536x1024','1024x1536'].includes(size)?size:'1024x1024',output_format:'png'})});
         const j=await r.json().catch(()=>({}));
         if(!r.ok)return json({error:j.error?.message||'AI image generation failed.'},502);
-        const item=j.data?.[0];
-        if(!item?.b64_json)return json({error:'AI returned no image.'},502);
-        return json({ok:true,image:'data:image/png;base64,'+item.b64_json});
+        const item=j.data?.[0]; if(!item?.b64_json)return json({error:'AI returned no image.'},502);
+        return json({ok:true,provider:'openai',image:'data:image/png;base64,'+item.b64_json});
       }
-
       if(url.pathname==='/api/admin/ai/copy'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
-        if(!env.OPENAI_API_KEY)return json({error:'AI copy generation is not configured. Add the OPENAI_API_KEY secret in Cloudflare.'},503);
         const input=await body(request,64*1024);
         const product=input.product||{};
         const prompt=`Create polished ecommerce copy for Nuvora. Return ONLY valid JSON with keys: title, description, features, seo_title, seo_description, social_caption. Keep claims factual and do not invent specifications, certifications, guarantees, discounts, or performance claims. Product data: ${JSON.stringify(product)}`;
+        if(env.AI){
+          try{
+            const response=await env.AI.run('@cf/google/gemma-4-26b-a4b-it',{
+              messages:[
+                {role:'system',content:'You write accurate ecommerce listings. Output only valid JSON with the requested keys. Never invent product facts.'},
+                {role:'user',content:prompt}
+              ],
+              chat_template_kwargs:{enable_thinking:false}
+            },{rejectIfBusy:true});
+            const raw=response?.response||response?.choices?.[0]?.message?.content||'';
+            let result; try{result=JSON.parse(raw)}catch{result={title:raw}};
+            return json({ok:true,provider:'cloudflare',...result});
+          }catch(e){}
+        }
+        if(!env.OPENAI_API_KEY)return json({error:'Nuvora AI is not configured. Deploy the current Cloudflare Worker with the Workers AI binding enabled.'},503);
         const r=await fetch('https://api.openai.com/v1/responses',{method:'POST',headers:{Authorization:'Bearer '+env.OPENAI_API_KEY,'content-type':'application/json'},body:JSON.stringify({model:'gpt-5.6-luna',input:prompt,text:{format:{type:'json_object'}}})});
         const j=await r.json().catch(()=>({}));
-        if(!r.ok){const code=String(j.error?.code||'');if(r.status===429||code==='credit_balance_exhausted'||code==='insufficient_quota')return json({error:'OpenAI API credits are exhausted. Add API credits to the OpenAI API billing account used by Nuvora, then try again.'},402);if(r.status===401)return json({error:'The OpenAI API key configured in Cloudflare is invalid or expired.'},502);return json({error:j.error?.message||'AI copy generation failed.'},502);}
+        if(!r.ok)return json({error:j.error?.message||'AI copy generation failed.'},502);
         const raw=j.output_text||j.output?.flatMap(x=>x.content||[]).find(x=>x.type==='output_text')?.text||'';
         let result; try{result=JSON.parse(raw)}catch{result={title:raw}};
-        return json({ok:true,...result});
+        return json({ok:true,provider:'openai',...result});
       }
-
       // Unknown API routes must stay JSON 404s; only browser routes use the SPA shell.
       if(url.pathname.startsWith('/api/')) return json({error:'API route not found.'},404);
       // Let Cloudflare Assets serve the SPA shell for every non-API route.
@@ -433,39 +465,16 @@ function rateLimit(request,key,limit=120,windowMs=60000){
 function json(payload,status=200,extra={}){return new Response(JSON.stringify(payload),{status,headers:{'content-type':'application/json','cache-control':'no-store',...extra}});}
 async function body(request,limit=1024*1024){const len=Number(request.headers.get('content-length')||0);if(len>limit)throw new Error('Request body is too large.');const text=await request.text();if(text.length>limit)throw new Error('Request body is too large.');return text?JSON.parse(text):{};}
 function env(name){return globalThis.__ENV?.[name]||'';}
-function configured(env){const shopifyAdmin=!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET;return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:shopifyAdmin,shopifyStorefront:shopifyAdmin,shopifyAdmin,openai:!!env.OPENAI_API_KEY,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
-function sbHeaders(env,service=true,upsert=false){const key=service?env.SUPABASE_SERVICE_ROLE_KEY:env.SUPABASE_ANON_KEY;return {apikey:key,authorization:'Bearer '+key,'content-type':'application/json','prefer':upsert?'return=representation,resolution=merge-duplicates':'return=representation'};}
-async function supabaseUser(request,env){const token=(request.headers.get('authorization')||'').replace(/^Bearer\s+/i,'');if(!token||!env.SUPABASE_URL)return null;const r=await fetch(env.SUPABASE_URL+'/auth/v1/user',{headers:{apikey:env.SUPABASE_ANON_KEY,authorization:'Bearer '+token}});return r.ok?await r.json():null;}
-async function adminUser(request,env){const u=await supabaseUser(request,env);if(!u||!env.SUPABASE_SERVICE_ROLE_KEY)return null;const r=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});if(!r.ok)return null;const rows=await r.json(),profile=rows[0];return profile&&(profile.is_admin===true||profile.role==='admin')?u:null;}
-async function supabaseRest(env,method,table,data,query=''){const upsert=/[?&]on_conflict=/.test(query);const r=await fetch(`${env.SUPABASE_URL}/rest/v1/${table}${query||''}`,{method,headers:sbHeaders(env,true,upsert),body:data===undefined?undefined:JSON.stringify(data)});return r;}
-function validUrl(v){if(!v)return true;try{const u=new URL(v);return ['http:','https:'].includes(u.protocol)}catch{return false}}
-function cleanText(v,max=5000){return v==null?null:String(v).trim().slice(0,max)||null}
-function validateProduct(p){if(!p||!cleanText(p.name,180))return 'Product name is required.';if(!cleanText(p.slug,180))return 'Product slug is required.';if(!['shop','find','learn'].includes(p.kind))return 'Product type must be shop, find, or learn.';if(p.display_price!==null&&p.display_price!==undefined&&p.display_price!==''&&(Number.isNaN(Number(p.display_price))||Number(p.display_price)<0))return 'Price must be a non-negative number.';for(const k of ['destination_url','amazon_source_url','image_url'])if(p[k]&&!validUrl(p[k]))return `${k} must be a valid http(s) URL.`;if(p.image_urls!==undefined&&!Array.isArray(p.image_urls))return 'image_urls must be an array.';if(Array.isArray(p.image_urls)&&p.image_urls.length>30)return 'A product can have at most 30 images.';return null}
-function asinFromUrl(url){const m=String(url).match(/(?:\/dp\/|\/gp\/product\/|\/dp%2F)([A-Z0-9]{10})/i);return m?m[1].toUpperCase():null}
-let amazonToken={value:null,expires:0};
-async function getAmazonToken(env){if(amazonToken.value&&Date.now()<amazonToken.expires)return amazonToken.value;const r=await fetch(env.AMAZON_TOKEN_ENDPOINT||'https://api.amazon.com/auth/o2/token',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({grant_type:'client_credentials',client_id:env.AMAZON_CLIENT_ID,client_secret:env.AMAZON_CLIENT_SECRET,scope:'creatorsapi::default'})});if(!r.ok)throw new Error('Amazon authentication failed');const j=await r.json();amazonToken={value:j.access_token,expires:Date.now()+(j.expires_in-60)*1000};return amazonToken.value}
-async function amazonGetItem(env,asin){const token=await getAmazonToken(env);const marketplace=env.AMAZON_MARKETPLACE||'www.amazon.com';const payload={itemIds:[asin],itemIdType:'ASIN',partnerTag:env.AMAZON_PARTNER_TAG,marketplace,resources:['images.primary.large','images.primary.medium','images.variants.large','itemInfo.title','itemInfo.features','itemInfo.byLineInfo','itemInfo.productInfo','offersV2.listings.price','offersV2.listings.availability']};const r=await fetch('https://creatorsapi.amazon/catalog/v1/getItems',{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','x-marketplace':marketplace},body:JSON.stringify(payload)});if(!r.ok)throw new Error(`Amazon API returned ${r.status}`);const j=await r.json();return j.itemsResult?.items?.[0]||null}
-let shopifyAdminToken={value:null,expires:0};
-async function getShopifyAdminToken(env){
-  if(shopifyAdminToken.value&&Date.now()<shopifyAdminToken.expires)return shopifyAdminToken.value;
-  const shop=env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN;
-  const clientId=env.SHOPIFY_CLIENT_ID;
-  const clientSecret=env.SHOPIFY_CLIENT_SECRET;
-  if(!shop||!clientId||!clientSecret)throw new Error('Shopify Admin credentials are not configured');
-  const r=await fetch(`https://${shop}/admin/oauth/access_token`,{
-    method:'POST',
-    headers:{'content-type':'application/x-www-form-urlencoded'},
-    body:new URLSearchParams({
-      grant_type:'client_credentials',
-      client_id:clientId,
-      client_secret:clientSecret
-    })
-  });
-  const j=await r.json().catch(()=>({}));
-  if(!r.ok||!j.access_token)throw new Error(j.error_description||j.error||`Shopify authentication returned ${r.status}`);
-  shopifyAdminToken={value:j.access_token,expires:Date.now()+Math.max(60,(Number(j.expires_in)||86400)-60)*1000};
-  return shopifyAdminToken.value;
+async function aiResultBytes(result){
+  if(result instanceof ReadableStream)return new Uint8Array(await new Response(result).arrayBuffer());
+  if(result instanceof Response)return new Uint8Array(await result.arrayBuffer());
+  if(result instanceof ArrayBuffer)return new Uint8Array(result);
+  if(ArrayBuffer.isView(result))return new Uint8Array(result.buffer,result.byteOffset,result.byteLength);
+  if(result&&typeof result.image==='string'){const raw=result.image.includes(',')?result.image.split(',').pop():result.image;const bin=atob(raw);const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return bytes;}
+  throw new Error('Cloudflare AI returned no image bytes.');
 }
+function bytesToBase64(bytes){let out='';const step=0x8000;for(let i=0;i<bytes.length;i+=step)out+=String.fromCharCode(...bytes.subarray(i,i+step));return btoa(out);}
+function configured(env){const shopifyAdmin=!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET;return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:shopifyAdmin,shopifyStorefront:shopifyAdmin,shopifyAdmin,openai:!!env.OPENAI_API_KEY,workersAI:!!env.AI,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
 async function shopifyGraphql(env,query,variables={},admin=false){
   const domain=env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN;
   let token;
