@@ -9,7 +9,7 @@ export default {
       }
       if (request.method === 'OPTIONS') return new Response(null,{status:204});
       if (url.pathname === '/admin' || url.pathname === '/admin/') {
-        return env.ASSETS.fetch(new Request(new URL('/admin.html',request.url), request));
+        return env.ASSETS.fetch(new Request(new URL('/admin.html',request.url), {method:'GET',headers:request.headers}));
       }
       if (url.pathname === '/api/health') return json({ok:true,configured:configured(env)});
       if (url.pathname === '/api/config') return json({supabaseUrl:env.SUPABASE_URL||'',supabaseAnonKey:env.SUPABASE_ANON_KEY||''});
