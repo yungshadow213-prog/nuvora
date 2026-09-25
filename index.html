@@ -205,7 +205,7 @@ async function loadProductReviews(productId){
   }catch(e){box.textContent='Reviews will appear here.'}
 }
 function openDetail(id){openProductPage(id);}
-function updateDetailButtons(id){document.getElementById('detailSave')?.textContent=saved.includes(id)?'♥ Saved':'♡ Save'}
+function updateDetailButtons(id){const el=document.getElementById('detailSave');if(el)el.textContent=saved.includes(id)?'♥ Saved':'♡ Save'}
 function closeDetail(){document.getElementById('detailModal').classList.remove('open')}
 function startDiscovery(){showToast('Nuvora Discovery is coming soon. Browse is available now.');showView('browse')}
 function openAuth(mode){authMode=mode;document.getElementById('authTitle').textContent=mode==='login'?'Sign in':'Create your account';document.getElementById('authSwitchText').textContent=mode==='login'?"Don't have an account?":'Already have an account?';document.getElementById('authToggle').textContent=mode==='login'?'Create one':'Sign in';document.getElementById('authModal').classList.add('open')}
