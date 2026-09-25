@@ -229,15 +229,15 @@ async function generateAIProductImage(){
   try{
     const file=await getAIReferenceFile();
     if(file.size>10*1024*1024)throw new Error('Reference image must be 10 MB or smaller.');
-  btn.disabled=true;btn.textContent='Generating…';status.textContent='Creating your advertising image…';
-  try{
+    btn.textContent='Generating…';status.textContent='Creating your advertising image…';
     const fd=new FormData();
     const style=document.getElementById('aiStyle').value,size=document.getElementById('aiSize').value,custom=document.getElementById('aiPrompt').value.trim();
     fd.append('image',file);fd.append('size',size);
     fd.append('prompt',`Create a professional ecommerce advertising image for the exact product shown in the reference image. Preserve the product's identity, shape, materials, colors, branding and important physical details. Do not invent extra product features or change the product. Style: ${style}. Product name: ${p.name}. Brand: ${p.brand||'unknown'}. Place it in a polished, uncluttered commercial composition suitable for Nuvora product publishing. No fake logos, no misleading claims, no random text, no watermark. ${custom}`);
     const j=await api('/api/admin/ai/image',{method:'POST',body:fd});
     window.lastAIImage=j.image;document.getElementById('aiPreviewImg').src=j.image;document.getElementById('aiPreview').style.display='flex';status.textContent='Image ready. Review it before applying.';
-  }catch(e){status.textContent='Generation failed.';alert(e.message)}finally{btn.disabled=false;btn.textContent='Generate advertising image';}
+  }catch(e){status.textContent='Generation failed.';alert(e.message)}
+  finally{btn.disabled=false;btn.textContent='Generate advertising image';}
 }
 function dataUrlBlob(dataUrl){const [head,data]=dataUrl.split(',');const mime=(head.match(/data:([^;]+)/)||[])[1]||'image/png';const bin=atob(data);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime});}
 async function useAIImage(){
