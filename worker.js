@@ -95,7 +95,15 @@ export default {
           const images=[p.featuredImage?.url,...(p.images?.nodes||[]).map(x=>x.url)].filter(Boolean);
           const variant=p.variants?.nodes?.[0];
           const existing=await supabaseRest(env,'GET','products',undefined,'?select=id,shopify_product_id&shopify_product_id=eq.'+encodeURIComponent(p.id)+'&limit=1');
-          if(existing.ok&&(await existing.json()).length){results.push({ok:true,skipped:true,id:p.id,title:p.title});continue;}
+          if(existing.ok){
+            const found=await existing.json();
+            if(found.length){
+              const patch={name:p.title,description:p.descriptionHtml||null,brand:p.vendor||null,image_url:images[0]||null,image_urls:[...new Set(images)],availability:p.status==='ACTIVE'?'In stock':null,display_price:variant?.price?Number(variant.price):null,destination_url:'https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/products/'+p.handle,provider:'shopify',shopify_variant_id:variant?.id||null,updated_at:new Date().toISOString()};
+              const synced=await supabaseRest(env,'PATCH','products',patch,undefined,'?id=eq.'+encodeURIComponent(found[0].id));
+              if(!synced.ok){results.push({ok:false,skipped:false,id:p.id,title:p.title,error:(await synced.text()).slice(0,500)});continue;}
+              results.push({ok:true,skipped:true,synced:true,id:p.id,title:p.title});continue;
+            }
+          }
           const slugBase=String(p.handle||p.title||'product').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,140);
           const product={name:p.title,slug:slugBase+'-'+randHex(5),kind:'shop',description:p.descriptionHtml||null,brand:p.vendor||null,image_url:images[0]||null,image_urls:[...new Set(images)],availability:p.status==='ACTIVE'?'In stock':null,display_price:variant?.price?Number(variant.price):null,currency:'NGN',destination_url:'https://'+(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)+'/products/'+p.handle,retailer:null,provider:'shopify',region:null,category_id:null,collection_id:null,why_we_picked_it:null,featured:false,trending:false,top_pick:false,published:false,shopify_product_id:p.id,shopify_variant_id:variant?.id||null};
           const created=await supabaseRest(env,'POST','products',product);
