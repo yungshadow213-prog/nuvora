@@ -192,7 +192,7 @@ function rateLimit(request,key,limit=120,windowMs=60000){
 function json(payload,status=200,extra={}){return new Response(JSON.stringify(payload),{status,headers:{'content-type':'application/json','cache-control':'no-store',...extra}});}
 async function body(request,limit=1024*1024){const len=Number(request.headers.get('content-length')||0);if(len>limit)throw new Error('Request body is too large.');const text=await request.text();if(text.length>limit)throw new Error('Request body is too large.');return text?JSON.parse(text):{};}
 function env(name){return globalThis.__ENV?.[name]||'';}
-function configured(env){return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:!!env.SHOPIFY_STORE_DOMAIN&&!!env.SHOPIFY_STOREFRONT_ACCESS_TOKEN,shopifyAdmin:!!env.SHOPIFY_STORE_DOMAIN&&!!env.SHOPIFY_ADMIN_ACCESS_TOKEN,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
+function configured(env){return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_STOREFRONT_ACCESS_TOKEN,shopifyAdmin:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
 function sbHeaders(env,service=true){const key=service?env.SUPABASE_SERVICE_ROLE_KEY:env.SUPABASE_ANON_KEY;return {apikey:key,authorization:'Bearer '+key,'content-type':'application/json','prefer':'return=representation'};}
 async function supabaseUser(request,env){const token=(request.headers.get('authorization')||'').replace(/^Bearer\s+/i,'');if(!token||!env.SUPABASE_URL)return null;const r=await fetch(env.SUPABASE_URL+'/auth/v1/user',{headers:{apikey:env.SUPABASE_ANON_KEY,authorization:'Bearer '+token}});return r.ok?await r.json():null;}
 async function adminUser(request,env){const u=await supabaseUser(request,env);if(!u||!env.SUPABASE_SERVICE_ROLE_KEY)return null;const r=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});if(!r.ok)return null;const rows=await r.json(),profile=rows[0];return profile&&(profile.is_admin===true||profile.role==='admin')?u:null;}
@@ -204,6 +204,39 @@ function asinFromUrl(url){const m=String(url).match(/(?:\/dp\/|\/gp\/product\/|\
 let amazonToken={value:null,expires:0};
 async function getAmazonToken(env){if(amazonToken.value&&Date.now()<amazonToken.expires)return amazonToken.value;const r=await fetch(env.AMAZON_TOKEN_ENDPOINT||'https://api.amazon.com/auth/o2/token',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({grant_type:'client_credentials',client_id:env.AMAZON_CLIENT_ID,client_secret:env.AMAZON_CLIENT_SECRET,scope:'creatorsapi::default'})});if(!r.ok)throw new Error('Amazon authentication failed');const j=await r.json();amazonToken={value:j.access_token,expires:Date.now()+(j.expires_in-60)*1000};return amazonToken.value}
 async function amazonGetItem(env,asin){const token=await getAmazonToken(env);const marketplace=env.AMAZON_MARKETPLACE||'www.amazon.com';const payload={itemIds:[asin],itemIdType:'ASIN',partnerTag:env.AMAZON_PARTNER_TAG,marketplace,resources:['images.primary.large','images.primary.medium','images.variants.large','itemInfo.title','itemInfo.features','itemInfo.byLineInfo','itemInfo.productInfo','offersV2.listings.price','offersV2.listings.availability']};const r=await fetch('https://creatorsapi.amazon/catalog/v1/getItems',{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','x-marketplace':marketplace},body:JSON.stringify(payload)});if(!r.ok)throw new Error(`Amazon API returned ${r.status}`);const j=await r.json();return j.itemsResult?.items?.[0]||null}
-async function shopifyGraphql(env,query,variables={},admin=false){const domain=env.SHOPIFY_STORE_DOMAIN,token=admin?env.SHOPIFY_ADMIN_ACCESS_TOKEN:env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;if(!domain||!token)throw new Error('Shopify is not configured');const version=env.SHOPIFY_API_VERSION||'2026-07';const base=admin?`https://${domain}/admin/api/${version}/graphql.json`:`https://${domain}/api/${version}/graphql.json`;const r=await fetch(base,{method:'POST',headers:{'content-type':'application/json',...(admin?{'X-Shopify-Access-Token':token}:{'X-Shopify-Storefront-Access-Token':token})},body:JSON.stringify({query,variables})});const j=await r.json();if(!r.ok||j.errors)throw new Error(j.errors?.[0]?.message||`Shopify API returned ${r.status}`);return j.data}
+let shopifyAdminToken={value:null,expires:0};
+async function getShopifyAdminToken(env){
+  if(shopifyAdminToken.value&&Date.now()<shopifyAdminToken.expires)return shopifyAdminToken.value;
+  const shop=env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN;
+  const clientId=env.SHOPIFY_CLIENT_ID;
+  const clientSecret=env.SHOPIFY_CLIENT_SECRET;
+  if(!shop||!clientId||!clientSecret)throw new Error('Shopify Admin credentials are not configured');
+  const r=await fetch(`https://${shop}/admin/oauth/access_token`,{
+    method:'POST',
+    headers:{'content-type':'application/x-www-form-urlencoded'},
+    body:new URLSearchParams({
+      grant_type:'client_credentials',
+      client_id:clientId,
+      client_secret:clientSecret
+    })
+  });
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.access_token)throw new Error(j.error_description||j.error||`Shopify authentication returned ${r.status}`);
+  shopifyAdminToken={value:j.access_token,expires:Date.now()+Math.max(60,(Number(j.expires_in)||86400)-60)*1000};
+  return shopifyAdminToken.value;
+}
+async function shopifyGraphql(env,query,variables={},admin=false){
+  const domain=env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN;
+  let token;
+  if(admin)token=await getShopifyAdminToken(env);
+  else token=env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
+  if(!domain||!token)throw new Error('Shopify is not configured');
+  const version=env.SHOPIFY_API_VERSION||'2026-07';
+  const base=admin?`https://${domain}/admin/api/${version}/graphql.json`:`https://${domain}/api/${version}/graphql.json`;
+  const r=await fetch(base,{method:'POST',headers:{'content-type':'application/json',...(admin?{'X-Shopify-Access-Token':token}:{'X-Shopify-Storefront-Access-Token':token})},body:JSON.stringify({query,variables})});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||j.errors)throw new Error(j.errors?.[0]?.message||`Shopify API returned ${r.status}`);
+  return j.data;
+}
 function randHex(bytes){const a=new Uint8Array(bytes);crypto.getRandomValues(a);return Array.from(a,x=>x.toString(16).padStart(2,'0')).join('')}
 
