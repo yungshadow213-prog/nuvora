@@ -73,6 +73,7 @@ main{min-height:calc(100vh - 76px)}.view{display:none}.view.active{display:block
 const products=[]; // Real catalog: populated only by published Supabase records.
 
 let activeCat='All',activeCollection='All',authMode='login';
+let nuvoraSB=null;
 let saved=JSON.parse(localStorage.getItem('nuvoraSaved')||'[]');
 let cart=JSON.parse(localStorage.getItem('nuvoraCart')||'[]');
 let sessionId=localStorage.getItem('nuvoraAnalyticsSession')||crypto.randomUUID(); localStorage.setItem('nuvoraAnalyticsSession',sessionId);
@@ -93,7 +94,16 @@ function closeMenu(){document.getElementById('menuPanel').classList.remove('open
 document.getElementById('menuBtn').onclick=()=>document.getElementById('menuPanel').classList.toggle('open');document.getElementById('menuClose').onclick=closeMenu;document.addEventListener('click',e=>{if(!e.target.closest('#menuPanel')&&!e.target.closest('#menuBtn'))closeMenu()});
 document.getElementById('accountBtn').onclick=()=>user?showView('account'):openAuth('login');document.getElementById('favBtn').onclick=()=>showView('saved');document.getElementById('cartBtn').onclick=showCart;document.getElementById('searchBtn').onclick=()=>showView('browse');
 function browseCategory(cat){activeCat=cat;activeCollection='All';showView('browse');closeMenu()}function browseCollection(cat){activeCat='All';activeCollection=cat;showView('browse');renderBrowse();closeMenu()}document.addEventListener('click',e=>{const el=e.target.closest('.product[data-product-id]');if(el)openProductPage(el.dataset.productId)});document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('.product[data-product-id]')){e.preventDefault();openProductPage(e.target.closest('.product[data-product-id]').dataset.productId)}});
-function card(p){const image=p.image||p.image_urls?.[0];const badge=p.type==='Shop'?'SHOP':p.type==='Find'?'FIND':'SOON';return '<article class="product" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button" aria-label="View '+htmlEsc(p.name)+'"><div class="prod-open"><div class="thumb">'+(image?'<img src="'+htmlEsc(image)+'" alt="'+htmlEsc(p.name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">':'✦')+'</div><div class="prodtext"><h4>'+htmlEsc(p.name)+'</h4><div class="prodprice">'+htmlEsc(p.price)+'</div></div></div></article>}
+function card(p){
+  const image=p.image||p.image_urls?.[0];
+  const badge=p.type==='Shop'?'SHOP':p.type==='Find'?'FIND':'SOON';
+  return `<article class="product" data-product-id="${htmlEsc(p.id)}" tabindex="0" role="button" aria-label="View ${htmlEsc(p.name)}">
+    <div class="prod-open">
+      <div class="thumb">${image?`<img src="${htmlEsc(image)}" alt="${htmlEsc(p.name)}" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block">`:'✦'}</div>
+      <div class="prodtext"><h4>${htmlEsc(p.name)}</h4><div class="prodprice">${htmlEsc(p.price)}</div></div>
+    </div>
+  </article>`;
+}
 function renderList(id,type){document.getElementById(id).innerHTML=products.filter(p=>p.type===type).map(card).join('')||'<div class="empty" style="grid-column:1/-1"><strong>No products yet.</strong><br><span>New Nuvora products will appear here after you add and publish them from Admin.</span></div>'}
 function renderLearn(){document.getElementById('learnGrid').innerHTML='<div class="notice" style="grid-column:1/-1"><strong>Learn is coming soon.</strong><span>We are preparing the learning side of Nuvora. No courses are being shown until it is actually available.</span></div>'}
 function renderBrowse(){const q=(document.getElementById('searchInput')?.value||'').trim().toLowerCase();const type=(document.getElementById('typeFilter')?.value||'All');const sort=document.getElementById('sortFilter')?.value||'newest';let list=uniqueProducts(products.filter(p=>(activeCat==='All'||p.cat===activeCat)&&(activeCollection==='All'||collectionMatches(p,activeCollection))&&(type==='All'||p.type===type)&&(!q||(`${p.name} ${p.desc} ${p.cat} ${p.collection||''} ${p.brand||''}`).toLowerCase().includes(q))));if(sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name));if(sort==='price-low')list.sort((a,b)=>(Number(a.rawPrice)||Infinity)-(Number(b.rawPrice)||Infinity));if(sort==='price-high')list.sort((a,b)=>(Number(b.rawPrice)||-1)-(Number(a.rawPrice)||-1));document.getElementById('browseGrid').innerHTML=list.map(card).join('')||'<div class="empty" style="grid-column:1/-1">Nothing found yet.</div>';const cats=['All','Tech','Gaming','Desk','Student','Lifestyle','Creator','Home'];document.getElementById('chips').innerHTML=cats.map(c=>'<button class="chip '+((activeCollection===c||activeCat===c)?'active':'')+'" onclick="'+(c==='All'?'activeCollection=\'All\';activeCat=\'All\'':'activeCollection=\''+c+'\';activeCat=\'All\'')+';renderBrowse()">'+c+'</button>').join('');}
