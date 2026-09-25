@@ -455,6 +455,20 @@ async function aiResultBytes(result){
   throw new Error('Cloudflare AI returned no image bytes.');
 }
 function bytesToBase64(bytes){let out='';const step=0x8000;for(let i=0;i<bytes.length;i+=step)out+=String.fromCharCode(...bytes.subarray(i,i+step));return btoa(out);}
+function cleanText(value,max=10000){
+  return String(value??'').replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]/g,'').trim().slice(0,max);
+}
+function validateProduct(product){
+  if(!product||typeof product!=='object')return 'Product data is required.';
+  const name=cleanText(product.name,180);
+  const slug=cleanText(product.slug,180);
+  const kind=cleanText(product.kind,40);
+  if(!name||name==='placeholder')return 'Product name is required.';
+  if(!slug||slug==='placeholder'||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))return 'A valid product slug is required.';
+  if(!['shop','find','learn'].includes(kind))return 'Product type must be shop, find, or learn.';
+  if(product.display_price!==undefined&&product.display_price!==null&&(!Number.isFinite(Number(product.display_price))||Number(product.display_price)<0))return 'Product price is invalid.';
+  return null;
+}
 function sbHeaders(env,service=false){
   const key=service?env.SUPABASE_SERVICE_ROLE_KEY:env.SUPABASE_ANON_KEY;
   return {'apikey':key||'','Authorization':'Bearer '+(key||''),'Content-Type':'application/json'};
