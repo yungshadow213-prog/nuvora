@@ -27,12 +27,12 @@ export default {
       }
 
       if(url.pathname==='/api/admin/diagnostics'&&request.method==='GET'){
-        const checks={environment:configured(env).supabase,auth:false,admin:false,products:false,settings:false,social:false,shopifyEnvironment:configured(env).shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
+        const cfg=configured(env); const checks={environment:cfg.supabase,auth:false,admin:false,products:false,settings:false,social:false,openai:cfg.openai,shopifyStorefront:cfg.shopifyStorefront,shopifyEnvironment:cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
         let shopifyError='';
-        const shopifyMissing=[];
+        const shopifyMissing=[]; const aiMissing=[];
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))shopifyMissing.push('SHOPIFY_SHOP');
         if(!env.SHOPIFY_CLIENT_ID)shopifyMissing.push('SHOPIFY_CLIENT_ID');
-        if(!env.SHOPIFY_CLIENT_SECRET)shopifyMissing.push('SHOPIFY_CLIENT_SECRET');
+        if(!env.SHOPIFY_CLIENT_SECRET)shopifyMissing.push('SHOPIFY_CLIENT_SECRET'); if(!env.SHOPIFY_STOREFRONT_ACCESS_TOKEN)shopifyMissing.push('SHOPIFY_STOREFRONT_ACCESS_TOKEN'); if(!env.OPENAI_API_KEY)aiMissing.push('OPENAI_API_KEY');
         const u=await supabaseUser(request,env); checks.auth=!!u;
         if(u&&env.SUPABASE_SERVICE_ROLE_KEY){
           const pr=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});
@@ -49,8 +49,8 @@ export default {
             }catch(e){shopifyError=String(e?.message||'Shopify authentication failed').slice(0,500);}
           }
         }
-        const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.settings&&checks.social&&checks.shopifyEnvironment&&checks.shopifyAuth&&checks.shopifyProducts;
-        return json({ok,checks,shopifyError,shopifyMissing});
+        const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.settings&&checks.social&&checks.openai&&checks.shopifyStorefront&&checks.shopifyEnvironment&&checks.shopifyAuth&&checks.shopifyProducts;
+        return json({ok,checks,shopifyError,shopifyMissing,aiMissing});
       }
 
       if(url.pathname==='/api/amazon/import'&&request.method==='POST'){
@@ -387,7 +387,7 @@ function rateLimit(request,key,limit=120,windowMs=60000){
 function json(payload,status=200,extra={}){return new Response(JSON.stringify(payload),{status,headers:{'content-type':'application/json','cache-control':'no-store',...extra}});}
 async function body(request,limit=1024*1024){const len=Number(request.headers.get('content-length')||0);if(len>limit)throw new Error('Request body is too large.');const text=await request.text();if(text.length>limit)throw new Error('Request body is too large.');return text?JSON.parse(text):{};}
 function env(name){return globalThis.__ENV?.[name]||'';}
-function configured(env){return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_STOREFRONT_ACCESS_TOKEN,shopifyAdmin:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
+function configured(env){return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_STOREFRONT_ACCESS_TOKEN,shopifyStorefront:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_STOREFRONT_ACCESS_TOKEN,shopifyAdmin:!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET,openai:!!env.OPENAI_API_KEY,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
 function sbHeaders(env,service=true,upsert=false){const key=service?env.SUPABASE_SERVICE_ROLE_KEY:env.SUPABASE_ANON_KEY;return {apikey:key,authorization:'Bearer '+key,'content-type':'application/json','prefer':upsert?'return=representation,resolution=merge-duplicates':'return=representation'};}
 async function supabaseUser(request,env){const token=(request.headers.get('authorization')||'').replace(/^Bearer\s+/i,'');if(!token||!env.SUPABASE_URL)return null;const r=await fetch(env.SUPABASE_URL+'/auth/v1/user',{headers:{apikey:env.SUPABASE_ANON_KEY,authorization:'Bearer '+token}});return r.ok?await r.json():null;}
 async function adminUser(request,env){const u=await supabaseUser(request,env);if(!u||!env.SUPABASE_SERVICE_ROLE_KEY)return null;const r=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});if(!r.ok)return null;const rows=await r.json(),profile=rows[0];return profile&&(profile.is_admin===true||profile.role==='admin')?u:null;}
