@@ -247,10 +247,10 @@ async function bootNuvora(){
 }
 function mapProduct(p){let variants=[];try{variants=Array.isArray(p.shopify_variants)?p.shopify_variants:(typeof p.shopify_variants==='string'?JSON.parse(p.shopify_variants||'[]'):[])}catch(e){variants=[]}return {id:p.id,slug:p.slug||p.id,name:displayProductName(p.name),rawName:p.name,type:p.kind==='find'?'Find':p.kind==='learn'?'Learn':'Shop',cat:p.category?.name||'Uncategorized',collection:p.collection?.name||'',desc:p.description||'',brand:p.brand||'',price:formatPrice(p.display_price,p.currency),rawPrice:p.display_price,icon:'✦',image:p.image_url,image_urls:Array.isArray(p.image_urls)?p.image_urls:[],variants,trend:p.trending,top:p.top_pick,featured:p.featured,destination:p.destination_url,variantId:p.shopify_variant_id,shopifyProductId:p.shopify_product_id,retailer:p.retailer||''};}
 async function loadLiveProducts(){
-  if(!nuvoraSB)return;
-  const {data,error}=await nuvoraSB.from('products').select('*,category:categories(name),collection:collections(name)').eq('published',true).order('created_at',{ascending:false});
-  if(error)throw error;
-  products.length=0; products.push(...(data||[]).map(mapProduct));
+  const r=await fetch('/api/products',{cache:'no-store'});
+  const data=await r.json().catch(()=>[]);
+  if(!r.ok)throw new Error(data?.error||'Products could not be loaded.');
+  products.length=0; products.push(...(Array.isArray(data)?data:[]).map(mapProduct));
   const cleanList=uniqueProducts(products); const shuffled=[...cleanList].sort(()=>Math.random()-0.5);
   document.getElementById('newProducts').innerHTML=cleanList.slice(0,8).map(card).join('')||'<div class="empty" style="grid-column:1/-1">No products yet.</div>';
   document.getElementById('randomPicks').innerHTML=shuffled.slice(0,8).map(card).join('')||'<div class="empty" style="grid-column:1/-1">No products yet.</div>';
