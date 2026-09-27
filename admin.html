@@ -261,21 +261,35 @@ async function generateAIProductCopy(){
   }catch(e){status.textContent='Copy generation failed.';alert(e.message)}finally{btn.disabled=false;btn.textContent='Polish product listing';}
 }
 
-function useAmazonLink(){
-  const url=document.getElementById('amazonUrlInput').value.trim();
+async function useAmazonLink(){
+  const input=document.getElementById('amazonUrlInput');
+  const url=input.value.trim();
   if(!url)return alert('Paste your Amazon affiliate link first.');
-  let asin='';
-  const m=url.match(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/)([A-Z0-9]{10})/i);
-  if(m)asin=m[1].toUpperCase();
-  document.getElementById('pfDestination').value=url;
-  document.getElementById('pfRetailer').value='Amazon';
-  if(asin)document.getElementById('pfAsin').value=asin;
-  document.getElementById('pfKind').value='find';
-  document.getElementById('importStatus').textContent=asin
-    ? 'Amazon link saved. ASIN detected. Add the product details and image, then save it as a draft.'
-    : 'Amazon link saved. Add the product details and image, then save it as a draft.';
-  document.getElementById('productModalTitle').textContent='Add Amazon product';
-  document.getElementById('productModalSub').textContent='Paste link → add details → save draft → publish when ready.';
+  const status=document.getElementById('importStatus');
+  const btn=document.querySelector('.importbar .btn.primary');
+  if(btn){btn.disabled=true;btn.textContent='Reading link…';}
+  status.textContent='Checking the Amazon link and preparing the product form…';
+  try{
+    const j=await api('/api/amazon/prepare',{method:'POST',body:{url}});
+    document.getElementById('pfDestination').value=j.destination_url||url;
+    document.getElementById('pfRetailer').value=j.retailer||'Amazon';
+    document.getElementById('pfAsin').value=j.asin||'';
+    document.getElementById('pfKind').value=j.kind||'find';
+    if(j.title_hint&&!document.getElementById('pfName').value.trim())document.getElementById('pfName').value=j.title_hint;
+    if(j.category_id&&!document.getElementById('pfCategory').value.trim())document.getElementById('pfCategory').value=j.category_id;
+    document.getElementById('productModalTitle').textContent='Review Amazon product';
+    document.getElementById('productModalSub').textContent='Link recognized → review details → save as draft → publish when ready.';
+    if(j.duplicate){
+      status.innerHTML='<strong>⚠️ This ASIN is already in Nuvora.</strong> '+esc(j.duplicate.name||'Existing product')+' — you can close this form and edit the existing product instead.';
+    }else{
+      status.textContent='Amazon link recognized. ASIN '+j.asin+' detected. Review the suggested title/category, add the product image and details, then save it as a draft.';
+    }
+  }catch(e){
+    status.textContent='Could not prepare this Amazon link.';
+    alert(e.message||'Amazon link could not be prepared.');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='Use Amazon link';}
+  }
 }
 async function saveProductDraft(){
   const name=document.getElementById('pfName').value.trim(); if(!name)return alert('Product title is required.');
