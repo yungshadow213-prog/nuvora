@@ -53,6 +53,42 @@ export default {
         return json({ok,checks,shopifyError,shopifyMissing,aiMissing});
       }
 
+      if(url.pathname==='/api/amazon/prepare'&&request.method==='POST'){
+        const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        const {url:amazonUrl}=await body(request,256*1024);
+        if(!amazonUrl||!validUrl(amazonUrl))return json({error:'A valid Amazon product URL is required'},400);
+        const parsed=new URL(amazonUrl);
+        if(!/(^|\\.)amazon\\./i.test(parsed.hostname))return json({error:'Please paste an Amazon product URL.'},400);
+        const asin=asinFromUrl(amazonUrl); if(!asin)return json({error:'Could not find an ASIN in that Amazon URL'},400);
+        const cleanPath=decodeURIComponent(parsed.pathname).replace(/^\\/+|\\/+$/g,'');
+        const dpIndex=cleanPath.toLowerCase().indexOf('/dp/');
+        const beforeDp=dpIndex>=0?cleanPath.slice(0,dpIndex):cleanPath;
+        const titleHint=beforeDp.split('/').pop().replace(/[-_+]+/g,' ').replace(/\\b(?:dp|gp|product)\\b/gi,'').replace(/\\s+/g,' ').trim().replace(/\\b\\w/g,c=>c.toUpperCase()).slice(0,180);
+        let duplicate=null;
+        try{
+          const dup=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published,amazon_asin&amazon_asin=eq.'+encodeURIComponent(asin)+'&limit=5');
+          if(dup.ok){const rows=await dup.json();duplicate=rows[0]||null;}
+        }catch(e){}
+        let category_id=null;
+        try{
+          const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');
+          if(cats.ok){
+            const categories=await cats.json();
+            category_id=autoCategory(titleHint,'','',categories);
+          }
+        }catch(e){}
+        return json({
+          ok:true,
+          asin,
+          destination_url:amazonUrl,
+          title_hint:titleHint||'Amazon product',
+          retailer:'Amazon',
+          kind:'find',
+          category_id,
+          duplicate
+        });
+      }
+
       if(url.pathname==='/api/amazon/import'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         if(!configured(env).amazon)return json({error:'Amazon Creators API is not configured'},503);
