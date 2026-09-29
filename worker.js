@@ -528,11 +528,23 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const collections=collectionsRes.ok?await collectionsRes.json():[];
         const categoryMap=new Map(categories.map(x=>[String(x.id),x]));
         const collectionMap=new Map(collections.map(x=>[String(x.id),x]));
-        return json(products.map(p=>({
-          ...p,
-          category:p.category_id?categoryMap.get(String(p.category_id))||null:null,
-          collection:p.collection_id?collectionMap.get(String(p.collection_id))||null:null
-        })));
+        return json(products.map(p=>{
+          const safeText=v=>cleanText(v,12000)||null;
+          return {
+            ...p,
+            name:cleanText(p.name,180),
+            brand:safeText(p.brand),
+            description:safeText(p.description),
+            features:safeText(p.features),
+            deal_text:safeText(p.deal_text),
+            amazon_deal_text:safeText(p.amazon_deal_text),
+            temu_deal_text:safeText(p.temu_deal_text),
+            amazon_shipping_text:safeText(p.amazon_shipping_text),
+            amazon_tax_text:safeText(p.amazon_tax_text),
+            category:p.category_id?categoryMap.get(String(p.category_id))||null:null,
+            collection:p.collection_id?collectionMap.get(String(p.collection_id))||null:null
+          };
+        }));
       }
       if(url.pathname==='/api/admin/products'&&request.method==='GET'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
@@ -684,7 +696,11 @@ async function aiResultBytes(result){
 }
 function bytesToBase64(bytes){let out='';const step=0x8000;for(let i=0;i<bytes.length;i+=step)out+=String.fromCharCode(...bytes.subarray(i,i+step));return btoa(out);}
 function cleanText(value,max=10000){
-  return String(value??'').replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]/g,'').trim().slice(0,max);
+  return String(value??'')
+    .replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]/g,'')
+    .replace(/(?:sale_list_token|order_receipt_token|refund_detail_token|bg_mail_token|payment_detail_token|email_token|[a-z0-9_]+_token)/gi,' ')
+    .replace(/\\s+/g,' ')
+    .trim().slice(0,max);
 }
 function makeProductSlug(value){
   const base=cleanText(value,180).toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-+/g,'-').slice(0,140);
