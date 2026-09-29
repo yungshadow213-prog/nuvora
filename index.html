@@ -160,6 +160,34 @@ h1{font-size:clamp(48px,6vw,76px);color:var(--text)}.script{color:var(--accent)}
 .detail-thumb{background:#eef1ee}.cart-row,.empty{background:#fff;border-color:var(--line)}.product-main-image,.product-thumb{background:#fff;border-color:var(--line)}.product-thumb.active{border-color:var(--accent);box-shadow:0 0 0 1px rgba(29,92,74,.12)}
 .product-info .eyebrow{color:var(--accent)}.product-submeta,.detail-meta{color:var(--muted)}.product-rating{color:#4d5a51}.product-trust div,.spec-item{background:#fff;border-color:var(--line)}.product-trust span,.spec-item b{color:#7b857d}.menu-divider{background:var(--line)}.close{background:var(--surface2);color:var(--text)}
 @media(max-width:850px){.category-grid{grid-template-columns:1fr 1fr}}@media(max-width:560px){.shell{width:calc(100% - 24px)}}
+</style><style id="nuvora-home-redesign">
+.nv-hero-clean{padding:92px 0 48px;background:linear-gradient(180deg,#fff 0%,#f6f7f5 100%);border-bottom:1px solid var(--line)}
+.nv-hero-copy{max-width:900px;margin:auto;text-align:center}
+.nv-hero-copy .eyebrow{justify-content:center}
+.nv-hero-copy h1{margin:18px 0 16px;font-size:clamp(54px,8vw,92px)}
+.nv-hero-copy .hero-copy{max-width:650px;margin:0 auto;color:var(--muted)}
+.home-search{width:min(650px,100%);margin:30px auto 0;display:flex;padding:5px;border:1px solid #d9dfda;border-radius:14px;background:#fff;box-shadow:0 8px 28px rgba(25,45,34,.06)}
+.home-search input{flex:1;min-width:0;border:0;outline:0;padding:12px 14px;background:transparent;color:var(--text)}
+.home-search button{border:0;border-radius:10px;padding:11px 18px;background:var(--accent);color:#fff;font-weight:750}
+.home-tools{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:16px}
+.home-tools button{border:0;background:transparent;color:#667168;font-size:12px;padding:5px 7px}
+.home-tools button:hover{color:var(--accent)}
+.nv-quick-nav{padding:18px 0 32px}
+.nv-quick-links{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.nv-quick-links button{border:0;border-right:1px solid var(--line);background:transparent;text-align:left;padding:18px 20px;color:var(--text)}
+.nv-quick-links button:last-child{border-right:0}
+.nv-quick-links button:hover{background:#fff}
+.nv-quick-links span{display:block;font-size:13px;font-weight:800}
+.nv-quick-links b{display:block;margin-top:3px;font-size:11px;color:var(--muted);font-weight:500}
+.nv-editorial-break{padding:54px 0}
+.nv-editorial-break .shell{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:42px 46px;background:#e8efeb;border-radius:20px}
+.nv-editorial-break span{font-size:9px;letter-spacing:.16em;font-weight:850;color:var(--accent)}
+.nv-editorial-break h2{margin:8px 0 0;font-size:clamp(30px,4vw,48px);line-height:1.02;letter-spacing:-.05em}
+@media(max-width:700px){
+ .nv-hero-clean{padding:58px 0 34px}.nv-hero-copy h1{font-size:54px}
+ .nv-quick-links{grid-template-columns:1fr 1fr}.nv-quick-links button{border-bottom:1px solid var(--line)}.nv-quick-links button:nth-child(2){border-right:0}.nv-quick-links button:nth-child(3),.nv-quick-links button:nth-child(4){border-bottom:0}
+ .nv-editorial-break .shell{padding:28px 24px;display:block}.nv-editorial-break .btn{margin-top:20px}
+}
 </style></head>
 <body>
 <div class="announcement"><div class="shell"><b>Nuvora picks, made simple.</b> Browse curated products, save your favorites, and discover something worth finding.</div></div><header class="topbar"><div class="shell nav">
@@ -176,12 +204,68 @@ h1{font-size:clamp(48px,6vw,76px);color:var(--text)}.script{color:var(--accent)}
 <div class="menu-divider"></div><div class="menu-list"><button id="menuAuthBtn" onclick="handleAccountAction();closeMenu()">Sign in</button></div></aside>
 
 <main>
-<section class="view active" id="view-home"><section class="hero"><div class="shell hero-grid"><div><div class="eyebrow"><i></i> Curated discovery</div><h1>Find things <span class="script">worth</span> finding.</h1><p class="hero-copy">Nuvora brings useful products, interesting finds and worthwhile discoveries into one place — without making you dig through everything.</p><div class="hero-actions"><button class="btn primary" onclick="showView('browse')">Explore Nuvora →</button><button class="btn" onclick="showView('collections')">View collections</button></div><form class="home-search" onsubmit="event.preventDefault();goHomeSearch(document.getElementById('homeSearchInput')?.value)"><input id="homeSearchInput" type="search" placeholder="What are you looking for?" autocomplete="off"><button type="submit">Search</button></form><div class="home-tools"><button onclick="browseCategory('Tech')">Tech</button><button onclick="browseCategory('Fashion')">Fashion</button><button onclick="browseCategory('Home & Living')">Home & Living</button><button onclick="browseCategory('Baby & Kids')">Baby & Kids</button><button onclick="showView('browse')">View all products →</button></div></div><div class="hero-art"><div class="frame back"><div class="art grad2"><div class="art-kicker">Nuvora / Finds</div><div class="art-title">Good things are easier to find when someone curates them.</div><div class="art-footer"><span>01</span><span>DISCOVER</span></div></div></div><div class="frame main"><div class="art grad1"><div class="art-kicker">Featured collection</div><div class="art-title">Useful things for everyday life.</div><div class="art-footer"><span>Nuvora</span><span>EXPLORE →</span></div></div></div></div></div></section>
+<section class="view active" id="view-home">
+  <section class="hero nv-hero-clean">
+    <div class="shell">
+      <div class="nv-hero-copy">
+        <div class="eyebrow"><i></i> Curated discovery</div>
+        <h1>Things worth <span class="script">finding.</span></h1>
+        <p class="hero-copy">A quieter way to discover useful products, unexpected finds, and everyday upgrades.</p>
+        <form class="home-search" onsubmit="event.preventDefault();goHomeSearch(document.getElementById('homeSearchInput')?.value)">
+          <input id="homeSearchInput" type="search" placeholder="Search products, brands, or categories…" autocomplete="off">
+          <button type="submit">Search</button>
+        </form>
+        <div class="home-tools">
+          <button onclick="browseCategory('Tech')">Tech</button>
+          <button onclick="browseCategory('Fashion')">Fashion</button>
+          <button onclick="browseCategory('Home & Living')">Home & Living</button>
+          <button onclick="browseCategory('Baby & Kids')">Baby & Kids</button>
+          <button onclick="showView('browse')">All products</button>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<section class="section"><div class="shell"><div class="commerce-strip"><div class="commerce-card" onclick="showView('browse')"><b>✨ Just added</b><span>See the latest products.</span><strong>Shop new</strong></div><div class="commerce-card" onclick="focusDeals()"><b>🏷️ Deals</b><span>Products with visible savings.</span><strong>View deals</strong></div><div class="commerce-card" onclick="focusTrending()"><b>🔥 Trending</b><span>Popular picks worth exploring.</span><strong>Explore</strong></div><div class="commerce-card" onclick="showView('saved')"><b>♡ Saved</b><span>Keep products for later.</span><strong>Open saved</strong></div></div></div></section><section class="section"><div class="shell"><div class="section-head"><div><h2>Just dropped</h2><p>Fresh finds, quietly curated.</p></div><button class="link-btn" onclick="showView('browse')">See all →</button></div><div class="product-grid curated-grid" id="newProducts"></div></div></section>
-<section class="section"><div class="shell"><div class="section-head"><div><h2>Worth a look</h2><p>A few unexpected finds.</p></div><button class="link-btn" onclick="showView('browse')">Browse all →</button></div><div class="product-grid discovery-grid" id="randomPicks"></div></div></section>
-<section class="confidence-strip"><div class="shell confidence-grid"><div class="confidence-card"><b>Curated, not cluttered</b><span>Products are selected to keep discovery focused and useful.</span></div><div class="confidence-card"><b>Save what you like</b><span>Keep interesting finds in your saved space for later.</span></div><div class="confidence-card"><b>Clear retailer links</b><span>When a product comes from a retailer, you can see where the click goes.</span></div></div></section><section class="section"><div class="shell"><div class="section-head"><div><h2>Explore Nuvora</h2><p>Three ways to discover something useful.</p></div></div><div class="category-grid"><div class="cat" onclick="showView('shop')"><div><span class="pill">SHOP · SOON</span><h3 style="margin-top:10px">Shop directly.</h3><p>Direct Nuvora shopping is coming soon.</p></div><span class="arrow">→</span></div><div class="cat" onclick="showView('finds')"><div><span class="pill">FINDS</span><h3 style="margin-top:10px">Discover finds.</h3><p>Interesting products from trusted retailers.</p></div><span class="arrow">→</span></div><div class="cat" onclick="showView('learn')"><div><span class="pill">LEARN · SOON</span><h3 style="margin-top:10px">Learn something.</h3><p>Learning resources are coming to Nuvora.</p></div><span class="arrow">→</span></div></div></div></section>
-<section class="section"><div class="shell"><div class="discover"><div><h2>Not sure what you need?</h2><p>Nuvora can help you narrow things down when Discovery is ready.</p></div><button class="btn primary" onclick="startDiscovery()">Discovery · Coming soon</button></div></div></section>
+  <section class="section nv-quick-nav">
+    <div class="shell">
+      <div class="nv-quick-links">
+        <button onclick="showView('browse')"><span>Just dropped</span><b>Latest additions</b></button>
+        <button onclick="focusDeals()"><span>Deals</span><b>Worth checking</b></button>
+        <button onclick="focusTrending()"><span>Trending</span><b>Popular finds</b></button>
+        <button onclick="showView('saved')"><span>Saved</span><b>Your shortlist</b></button>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <div><h2>Just dropped</h2><p>Fresh finds, quietly curated.</p></div>
+        <button class="link-btn" onclick="showView('browse')">See all →</button>
+      </div>
+      <div class="product-grid curated-grid" id="newProducts"></div>
+    </div>
+  </section>
+
+  <section class="section nv-editorial-break">
+    <div class="shell">
+      <div>
+        <span>DISCOVER DIFFERENTLY</span>
+        <h2>Less scrolling.<br>More finding.</h2>
+      </div>
+      <button class="btn" onclick="showView('collections')">Explore collections →</button>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell">
+      <div class="section-head">
+        <div><h2>Worth a look</h2><p>A few unexpected finds.</p></div>
+        <button class="link-btn" onclick="showView('browse')">Browse all →</button>
+      </div>
+      <div class="product-grid discovery-grid" id="randomPicks"></div>
+    </div>
+  </section>
 </section>
 
 <section class="view" id="view-browse"><div class="shell browse"><div class="eyebrow"><i></i> Explore</div><h1 style="font-size:52px">Browse Nuvora.</h1><p class="hero-copy">Choose a category or search through our curated discoveries.</p><div class="browse-tools"><input class="search" id="searchInput" placeholder="Search products or collections…"><select class="search" id="typeFilter" style="max-width:180px;flex:0 0 180px"><option value="All">All types</option><option value="Shop">Shop</option><option value="Find">Finds</option></select><select class="search" id="sortFilter" style="max-width:180px;flex:0 0 180px"><option value="newest">Newest</option><option value="name">Name A–Z</option><option value="price-low">Price low → high</option><option value="price-high">Price high → low</option></select></div><div class="chips" id="chips"></div><div class="product-grid" id="browseGrid" style="margin-top:20px"></div></div></section>
