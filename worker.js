@@ -201,46 +201,46 @@ async function scrapeTemuListing(temuUrl){
   ].filter(Boolean);
   const dealText=cleanRetailerText(dealCandidates[0]||extraDeals.join(' · ')||'')||null;
   const availability=String(offers.availability||'').split('/').pop()||null;
-  const productSection=(plain.match(/Product details([\\s\\S]{0,9000}?)(?:Explore your interests|Company info|Customer service)/i)||[])[1]||'';
+  const productSection=(plain.match(/Product details([\s\S]{0,9000}?)(?:Explore your interests|Company info|Customer service)/i)||[])[1]||'';
   const sectionClean=cleanRetailerText(productSection)
-    .replace(/Product details\\s*[0-9]+/gi,' ')
+    .replace(/Product details\s*[0-9]+/gi,' ')
     .replace(/open claw/gi,' ')
-    .replace(/Save\\s*Save/gi,' ')
+    .replace(/Save\s*Save/gi,' ')
     .replace(/Report this item/gi,' ')
     .replace(/common_arrows/gi,' ')
-    .replace(/\\bsvg\\b/gi,' ')
-    .replace(/\\s+/g,' ').trim();
+    .replace(/\bsvg\b/gi,' ')
+    .replace(/\s+/g,' ').trim();
   const specKeys=['Wireless Property','Battery Properties','Applicable Age Group','Brand','Major Material','Color','Power Mode','Operating Voltage','Item ID','Origin','Connectivity','Compatible Devices','Compatibility','Dimensions','Drawing Area','Interface','Material','Model','Style','Size'];
-  const escRe=s=>String(s).split('').map(ch=>['|','\\','{','}','(',')','[',']','^','$','+','*','?','.','-'].includes(ch)?'\\'+ch:ch).join('');
+  const escRe=s=>String(s).split('').map(ch=>['|','\','{','}','(',')','[',']','^','$','+','*','?','.','-'].includes(ch)?'\'+ch:ch).join('');
   const keyPart=specKeys.map(escRe).join('|');
   const specifications=[];
-  const specRe=new RegExp('('+keyPart+')\\s*[:：]\\s*(.*?)(?=\\s+(?:'+keyPart+')\\s*[:：]|$)','gi');
+  const specRe=new RegExp('('+keyPart+')\s*[:：]\s*(.*?)(?=\s+(?:'+keyPart+')\s*[:：]|$)','gi');
   let sm;
   while((sm=specRe.exec(sectionClean))&&specifications.length<30){
     const key=cleanRetailerText(sm[1]);
     const value=cleanRetailerText(sm[2]).replace(/See all details and dimensions/gi,'').trim();
     if(key&&value&&value.length<300&&!specifications.some(x=>x[0].toLowerCase()===key.toLowerCase()))specifications.push([key,value]);
   }
-  const highlightBlock=(plain.match(/Highlights([\\s\\S]{0,2500}?)(?:Explore your interests|Company info|Customer service)/i)||[])[1]||'';
-  const featureLines=[...new Set(highlightBlock.split(/[.!?]\\s+/).map(x=>cleanRetailerText(x)).filter(x=>x.length>25&&x.length<450))].slice(0,10);
-  const soldText=(plain.match(/\\b[0-9][0-9,.]*\\s+sold\\b/i)||[])[0]||null;
-  const scarcityText=(plain.match(/\\bONLY\\s+[0-9,]+\\s+LEFT\\b/i)||[])[0]||null;
-  const freeShipping=(plain.match(/Free shipping[^.\\n]*/i)||[])[0]||null;
-  const reviewSnapshot=(plain.match(/\\b[0-9][0-9,.]*\\s+reviews?\\b/i)||[])[0]||null;
+  const highlightBlock=(plain.match(/Highlights([\s\S]{0,2500}?)(?:Explore your interests|Company info|Customer service)/i)||[])[1]||'';
+  const featureLines=[...new Set(highlightBlock.split(/[.!?]\s+/).map(x=>cleanRetailerText(x)).filter(x=>x.length>25&&x.length<450))].slice(0,10);
+  const soldText=(plain.match(/\b[0-9][0-9,.]*\s+sold\b/i)||[])[0]||null;
+  const scarcityText=(plain.match(/\bONLY\s+[0-9,]+\s+LEFT\b/i)||[])[0]||null;
+  const freeShipping=(plain.match(/Free shipping[^.\n]*/i)||[])[0]||null;
+  const reviewSnapshot=(plain.match(/\b[0-9][0-9,.]*\s+reviews?\b/i)||[])[0]||null;
   const reviewVerified=/All reviews are from verified purchases/i.test(plain);
-  const detailSentences=[...new Set(sectionClean.split(/(?<=[.!?])\\s+/).map(x=>cleanRetailerText(x)).filter(x=>{
+  const detailSentences=[...new Set(sectionClean.split(/(?<=[.!?])\s+/).map(x=>cleanRetailerText(x)).filter(x=>{
     if(x.length<45||x.length>700)return false;
-    if(/Product details \\d|open claw|Company info|Customer service|Get the Temu App|Best-Selling Items|Price adjustment|Delivery guarantee/i.test(x))return false;
+    if(/Product details \d|open claw|Company info|Customer service|Get the Temu App|Best-Selling Items|Price adjustment|Delivery guarantee/i.test(x))return false;
     return true;
   }))].slice(0,8);
   const descriptionParts=[
-    detailSentences.length?'Product information\\n'+detailSentences.join(' '):'',
-    specifications.length?'Specifications\\n'+specifications.map(x=>x[0]+': '+x[1]).join('\\n'):'',
-    featureLines.length?'Highlights\\n'+featureLines.join('\\n'):'',
+    detailSentences.length?'Product information\n'+detailSentences.join(' '):'',
+    specifications.length?'Specifications\n'+specifications.map(x=>x[0]+': '+x[1]).join('\n'):'',
+    featureLines.length?'Highlights\n'+featureLines.join('\n'):'',
     reviewSnapshot?'Review snapshot: '+reviewSnapshot+(reviewVerified?' · verified purchases':''):'',
     soldText?'Sales activity: '+soldText:'',
     scarcityText?'Availability: '+scarcityText:''
-  ].filter(Boolean).join('\\n\\n');
+  ].filter(Boolean).join('\n\n');
 
 
   let productId=null;
