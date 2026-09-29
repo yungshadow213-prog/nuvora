@@ -164,16 +164,24 @@ async function scrapeTemuListing(temuUrl){
   }
 
   const plain=decode(html.replaceAll('<',' ').replaceAll('>',' '));
+  const cleanRetailerText=(value)=>{
+    return String(value||'')
+      .replace(/(?:sale_list_token|order_receipt_token|refund_detail_token|bg_mail_token|payment_detail_token|email_token|[a-z0-9_]+_token)/gi,' ')
+      .replace(/\\s+/g,' ')
+      .replace(/\\s+([.,;:])/g,'$1')
+      .trim();
+  };
   const money=(v)=>{
     const text=String(v||'');
-    const marker=text.match(/(?:US\$|\$|£|€|NGN)\s*[0-9][0-9,.]*/i);
+    const marker=text.match(/(?:US\\$|\\$|£|€|₦|NGN)\\s*[0-9][0-9,.]*/i);
     if(!marker)return null;
     const n=marker[0].replace(/[^0-9.]/g,'');
     return n?Number(n):null;
   };
-  const currentPrice=money(offers.price)||money(findMeta('product:price:amount'));
-  const currency=String(offers.priceCurrency||findMeta('product:price:currency')||'').toUpperCase()||null;
-  const originalText=(plain.match(/(?:original|was|list price)[^.]{0,80}(?:US\$|\$|£|€|NGN)\s*[0-9][0-9,.]*/i)||[])[0]||'';
+  const currentText=(plain.match(/(?:after applying promos to|now|current price|sale price|price)[^₦$€£0-9]{0,45}(?:₦|NGN|US\\$|\\$|£|€)\\s*[0-9][0-9,.]*/i)||[])[0]||'';
+  const currentPrice=money(offers.price)||money(findMeta('product:price:amount'))||money(currentText);
+  const currency=String(offers.priceCurrency||findMeta('product:price:currency')||(plain.includes('₦')?'NGN':'')).toUpperCase()||null;
+  const originalText=(plain.match(/(?:original|was|list price|from)[^₦$€£0-9]{0,45}(?:₦|NGN|US\\$|\\$|£|€)\\s*[0-9][0-9,.]*/i)||[])[0]||'';
   const originalPrice=money(originalText);
   const reviewText=(plain.match(/[0-9][0-9,]*\s+reviews?/i)||[])[0]||'';
   const reviewCount=aggregate.reviewCount?Number(aggregate.reviewCount):Number(reviewText.replace(/[^0-9]/g,''))||null;
@@ -186,7 +194,12 @@ async function scrapeTemuListing(temuUrl){
     plain.match(/flash deal/i)?.[0],
     plain.match(/today'?s deal/i)?.[0]
   ].filter(Boolean);
-  const dealText=dealCandidates[0]||null;
+  const extraDeals=[
+    plain.match(/\\b[0-9]{1,2}\\s*%\\s*OFF\\b/i)?.[0],
+    plain.match(/\\bONLY\\s+[0-9,]+\\s+LEFT\\b/i)?.[0],
+    plain.match(/\\bFREE\\s+SHIPPING\\b/i)?.[0]
+  ].filter(Boolean);
+  const dealText=cleanRetailerText(dealCandidates[0]||extraDeals.join(' · ')||'')||null;
   const availability=String(offers.availability||'').split('/').pop()||null;
 
   let productId=null;
@@ -209,7 +222,7 @@ async function scrapeTemuListing(temuUrl){
     id:productId,
     title:title.slice(0,180),
     brand:brand.slice(0,120),
-    description:description.slice(0,12000),
+    description:cleanRetailerText(description).slice(0,12000),
     current_price:currentPrice,
     list_price:originalPrice,
     discount_percent:currentPrice&&originalPrice&&originalPrice>currentPrice?Math.round((1-currentPrice/originalPrice)*100):null,
