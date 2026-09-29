@@ -611,15 +611,13 @@ async function scrapeAmazonListing(amazonUrl,asin){
   const html=await r.text();
   if(!r.ok||html.length<1000)return {error:'Amazon page could not be read right now.'};
   const plain=amazonDecode(html.replace(/<script[\s\S]*?<\/script>/gi,' ').replace(/<style[\s\S]*?<\/style>/gi,' ').replace(/<[^>]+>/g,' '));
-  const findTag=(id)=>{const re=new RegExp('id=["\\\']'+id+'["\\\'][^>]*>([\\s\\S]*?)<\\/','i');const m=html.match(re);return m?amazonDecode(m[1]):''};
-  const findMeta=(key)=>{const re=new RegExp('<meta[^>]+(?:name|property)=["\\\']'+key+'["\\\'][^>]+content=["\\\']([^"\\\']*)["\\\']','i');const m=html.match(re);return m?amazonDecode(m[1]):''};
+  const findTag=(id)=>{const re=new RegExp('id=[\\x22\\x27]'+id+'[\\x22\\x27][^>]*>([\\s\\S]*?)<','i');const m=html.match(re);return m?amazonDecode(m[1]):''};
+  const findMeta=(key)=>{const re=new RegExp('<meta[^>]+(?:name|property)=[\\x22\\x27]'+key+'[\\x22\\x27][^>]+content=[\\x22\\x27]([^\\x22\\x27]*)[\\x22\\x27]','i');const m=html.match(re);return m?amazonDecode(m[1]):''};
   const title=findTag('productTitle')||findMeta('og:title')||findMeta('twitter:title');
   const brand=findTag('bylineInfo').replace(/^Visit the /i,'').replace(/ Store$/i,'').trim();
   const deal=findTag('dealBadge')||(/limited time deal/i.test(plain)?'Limited time deal':'');
-  const priceRaw=findTag('priceblock_ourprice')||findTag('priceblock_dealprice')||findTag('corePriceDisplay_desktop_feature_div');
-  const current=amazonMoney(priceRaw);
-  const listRaw=findTag('priceblock_listprice')||findTag('listPrice');
-  const list=amazonMoney(listRaw);
+  const current=amazonMoney(findTag('priceblock_ourprice')||findTag('priceblock_dealprice')||findTag('corePriceDisplay_desktop_feature_div'));
+  const list=amazonMoney(findTag('priceblock_listprice')||findTag('listPrice'));
   const discountMatch=plain.match(/(?:([0-9]{1,3})%\s*(?:off|savings)|save\s+([0-9]{1,3})%)/i);
   const discount=discountMatch?Number(discountMatch[1]||discountMatch[2]):(current&&list?Math.round((1-current/list)*100):null);
   const ratingMatch=plain.match(/([0-5]\.[0-9])\s+out of 5 stars/i);
@@ -628,8 +626,8 @@ async function scrapeAmazonListing(amazonUrl,asin){
   const shippingMatch=plain.match(/Shipping & Import Charges[^.]{0,220}/i);
   const taxMatch=plain.match(/Sales taxes may apply[^.]{0,180}/i);
   const images=[];
-  const imageRe=/(?:\"(?:hiRes|large|medium|thumb)\"\s*:\s*\"(https?:\\/\\/[^"\\]+)\"|https?:\\/\\/[^"\\s]+\.(?:jpg|jpeg|png|webp)(?:\?[^"\\s]*)?)/gi;
-  for(const m of html.matchAll(imageRe)){const u=m[1]||m[0];if(!images.includes(u)&&images.length<30)images.push(u.replace(/\\u0026/g,'&'));}
+  const imageRe=/(https?:\/\/[^"\s]+?\.(?:jpg|jpeg|png|webp)(?:\?[^"\s]*)?)/gi;
+  for(const m of html.matchAll(imageRe)){const u=m[1];if(!images.includes(u)&&images.length<30)images.push(u.replace(/\\u0026/g,'&'));}
   const badge=/#\s*[0-9]+\s+Best Seller/i.test(plain)?'Best Seller':'';
   return {asin,title:title.slice(0,180),brand:brand.slice(0,120),current_price:current,list_price:list,discount_percent:discount,deal_text:deal||null,rating:ratingMatch?Number(ratingMatch[1]):null,review_count:reviewsMatch?Number(reviewsMatch[1].replace(/,/g,'')):null,bought_past_month:boughtMatch?boughtMatch[1]:null,badges:[badge].filter(Boolean),shipping_text:shippingMatch?shippingMatch[0].trim():null,tax_text:taxMatch?taxMatch[0].trim():null,features:cleanAmazonFeatures(plain),images};
 }
