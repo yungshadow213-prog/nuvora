@@ -807,25 +807,42 @@ function buildProductOptions(text){
   const groups=[];
   const add=(name,values)=>{
     const cleanValues=[...new Set((values||[]).map(v=>String(v||'').trim()).filter(v=>v&&v.length<=80))].slice(0,40);
-    if(cleanValues.length>=1)groups.push({name,values:cleanValues});
+    if(cleanValues.length)groups.push({name,values:cleanValues});
   };
-  const pick=(label,pattern)=>{const m=src.match(pattern);if(m)add(label,[m[1]]);};
-  const sizes=[...src.matchAll(/\b(?:XXS|XS|S|M|L|XL|XXL|XXXL|XX-Small|X-Small|Small|Medium|Large|X-Large|XX-Large|2X-Large|3X-Large|4X-Large)\b/gi)].map(m=>m[0]);
-  add('Size',sizes);
-  const colors=[...src.matchAll(/\b(?:Black|White|Grey|Gray|Red|Blue|Green|Pink|Purple|Orange|Yellow|Brown|Beige|Cream|Navy|Khaki|Burgundy|Camel|Chocolate Brown|Light Pink|Light Green|Dark Blue|Royal Blue|Hot Pink|Oatmeal|Apricot|Aqua|Leopard)\b/gi)].map(m=>m[0]);
-  add('Color',[...new Set(colors.map(v=>v.replace(/\bGray\b/i,'Grey')))]);
+  const afterLabel=(label)=>{
+    const m=src.match(new RegExp(label+'\\s*[:：]?\\s*([^\\n]{1,500})','i'));
+    return m?m[1]:'';
+  };
+
+  const sizeText=afterLabel('Size');
+  const sizeValues=[...sizeText.matchAll(/\b(?:XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|XX-Small|X-Small|Small|Medium|Large|X-Large|XX-Large|2X-Large|3X-Large|4X-Large)\b/gi)].map(m=>m[0]);
+  const numericSizes=[...src.matchAll(/\b(?:US|EU)?\s*(?:[3-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9])(?:\.5)?\b/g)].map(m=>m[0]);
+  add('Size',[...sizeValues,...numericSizes.slice(0,20)]);
+
+  const colorText=afterLabel('Color|Colour|Color Name');
+  const colorValues=[...colorText.matchAll(/\b(?:Black|White|Grey|Gray|Red|Blue|Green|Pink|Purple|Orange|Yellow|Brown|Beige|Cream|Navy|Khaki|Burgundy|Camel|Chocolate Brown|Light Pink|Light Green|Dark Blue|Royal Blue|Hot Pink|Oatmeal|Apricot|Aqua|Leopard|Silver|Gold|Rose Gold)\b/gi)].map(m=>m[0]);
+  add('Color',[...colorValues,...[...src.matchAll(/\b(?:Black|White|Grey|Gray|Red|Blue|Green|Pink|Purple|Orange|Yellow|Brown|Beige|Cream|Navy|Khaki|Burgundy|Silver|Gold|Rose Gold)\b/gi)].map(m=>m[0]).slice(0,10)]);
+
   const storage=[...src.matchAll(/\b(?:16|32|64|128|256|512)\s*(?:GB|G|TB)\b/gi)].map(m=>m[0].replace(/\s+/g,' '));
   add('Storage',storage);
-  const ram=[...src.matchAll(/\b(?:4|6|8|12|16|24|32)\s*GB\s*RAM\b/gi)].map(m=>m[0]);
+  const ram=[...src.matchAll(/\b(?:4|6|8|12|16|24|32)\s*GB\s*RAM\b/gi)].map(m=>m[0].replace(/\s+/g,' '));
   add('RAM',ram);
-  const packs=[...src.matchAll(/\b(?:Pack of|Set of|[0-9]+)[ \-]*(?:1|2|3|4|5|6|8|10|12|24)\b/gi)].map(m=>m[0]);
-  add('Pack',packs);
-  pick('Voltage',/(?:Voltage|Operating Voltage)\s*[:：]?\s*([^\n]{1,80})/i);
-  pick('Material',/(?:Material|Major Material|Fabric type)\s*[:：]?\s*([^\n]{1,120})/i);
-  pick('Model',/(?:Model Number|Model)\s*[:：]?\s*([^\n]{1,100})/i);
-  pick('Shade',/(?:Shade|Color Name)\s*[:：]?\s*([^\n]{1,100})/i);
-  pick('Pattern',/(?:Pattern)\s*[:：]?\s*([^\n]{1,100})/i);
-  return groups.filter(g=>g.values.length);
+
+  const commonLabels=[
+    ['Capacity','Capacity'],['Screen size','Screen size'],['Model','Model'],['Model number','Model Number'],
+    ['Version','Version'],['Configuration','Configuration'],['Style','Style'],['Pattern','Pattern'],
+    ['Finish','Finish'],['Shade','Shade'],['Scent','Scent'],['Flavor','Flavor'],
+    ['Pack','Pack(?: size)?'],['Plug type','Plug type'],['Voltage','(?:Operating )?Voltage'],
+    ['Shoe size','Shoe size'],['Waist','Waist'],['Length','Length'],['Width','Width'],['Height','Height']
+  ];
+  for(const [name,label] of commonLabels){
+    const value=afterLabel(label);
+    if(value){
+      const cleaned=value.split(/[·•|]/)[0].trim();
+      if(cleaned.length>0&&cleaned.length<=100)add(name,[cleaned]);
+    }
+  }
+  return groups.filter((g,i,a)=>a.findIndex(x=>x.name.toLowerCase()===g.name.toLowerCase())===i);
 }
 
 async function scrapeAmazonListing(amazonUrl,asin){
