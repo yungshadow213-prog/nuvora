@@ -24,6 +24,61 @@ main{min-height:calc(100vh - 76px)}.view{display:none}.view.active{display:block
 }
 @media(max-width:420px){.shell{width:calc(100% - 16px)}.nav-actions{gap:3px}.icon-btn,.avatar-btn{width:36px;height:36px;flex-basis:36px}.category-grid{grid-template-columns:1fr}.product-grid{grid-template-columns:1fr 1fr}.thumb{height:145px}.prodtext h4{font-size:12px}.hero h1{font-size:43px}.hero-actions{grid-template-columns:1fr}.product-trust{grid-template-columns:1fr}.detail-actions{grid-template-columns:1fr}.browse-tools{grid-template-columns:1fr}.search{grid-column:auto}}
 
+/* Nuvora storefront polish v2 — clear, explanatory commerce UI */
+.product-page{padding:26px 0 72px}
+.product-breadcrumb{margin-bottom:16px}
+.nv-product-shell{display:grid;gap:28px}
+.nv-product-top{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(360px,.98fr);gap:34px;align-items:start}
+.nv-gallery{min-width:0}
+.nv-image-card{height:min(58vw,590px);min-height:390px;border:1px solid var(--line);border-radius:26px;background:#0b1727;display:grid;place-items:center;overflow:hidden;position:relative}
+.nv-image-card img{width:100%;height:100%;object-fit:contain}
+.nv-image-empty{font-size:72px;color:#ffffff44}
+.nv-thumbs{display:flex;gap:9px;overflow:auto;margin-top:11px;padding:2px 2px 5px}
+.nv-thumb{width:70px;height:70px;flex:0 0 70px;padding:0;border:1px solid var(--line);border-radius:12px;background:#0d1b2e;overflow:hidden}
+.nv-thumb.active{border-color:rgba(111,217,255,.72);box-shadow:0 0 0 2px rgba(111,217,255,.10)}
+.nv-thumb img{width:100%;height:100%;object-fit:cover}
+.nv-info{min-width:0}
+.nv-kicker{display:flex;align-items:center;gap:8px;color:#9fb0c5;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.nv-kicker i{width:7px;height:7px;border-radius:50%;background:var(--accent2)}
+.nv-info h1{font-size:clamp(32px,4.3vw,52px);line-height:1.03;letter-spacing:-.045em;margin:10px 0 13px;overflow-wrap:anywhere}
+.nv-meta{display:flex;flex-wrap:wrap;gap:7px 14px;color:#9fb0c5;font-size:12px}
+.nv-rating{display:flex;align-items:center;gap:8px;margin-top:15px;font-size:14px}
+.nv-stars{color:#ffd76a;letter-spacing:1px}
+.nv-rating a{color:#bfeaff}
+.nv-bought{color:#aebed0}
+.nv-buy-card{margin-top:17px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025));padding:19px}
+.nv-deal{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:rgba(255,104,145,.12);border:1px solid rgba(255,104,145,.20);color:#ffb4ca;font-size:11px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}
+.nv-price-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:13px}
+.nv-current{font-size:32px;font-weight:950;letter-spacing:-.04em}
+.nv-list{font-size:14px;color:#8194aa;text-decoration:line-through}
+.nv-discount{font-size:12px;font-weight:900;color:#9ff0c5}
+.nv-price-note{margin-top:5px;color:#8799ad;font-size:11px}
+.nv-cta{display:grid;grid-template-columns:1fr auto;gap:9px;margin-top:16px}
+.nv-cta .btn.primary{min-height:48px;font-size:14px}
+.nv-save{min-width:48px}
+.nv-info-boxes{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+.nv-info-box{border:1px solid var(--line);border-radius:13px;padding:11px 12px;background:rgba(255,255,255,.025)}
+.nv-info-box b{display:block;font-size:11px;margin-bottom:3px}
+.nv-info-box span{display:block;color:#91a3b8;font-size:10px;line-height:1.45}
+.nv-explain{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);gap:18px;margin-top:2px}
+.nv-section-card{border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.025);padding:20px}
+.nv-section-card h2{font-size:20px;margin:0 0 13px;letter-spacing:-.02em}
+.nv-feature-list{display:grid;gap:9px;margin:0;padding:0;list-style:none}
+.nv-feature-list li{display:flex;gap:10px;color:#ccd8e5;font-size:13px;line-height:1.5}
+.nv-feature-list li:before{content:"✓";flex:0 0 20px;width:20px;height:20px;display:grid;place-items:center;border-radius:50%;background:rgba(111,217,255,.10);color:#9ce7ff;font-weight:900;font-size:11px}
+.nv-details-toggle{width:100%;border:0;background:none;color:#dce8f4;padding:0;text-align:left;display:flex;justify-content:space-between;align-items:center;font-weight:800}
+.nv-detail-body{margin-top:14px;color:#b9c7d6;font-size:13px;line-height:1.7}
+.nv-detail-body p{margin:0 0 10px}
+.nv-specs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.nv-spec{border:1px solid var(--line);border-radius:11px;padding:10px;background:rgba(255,255,255,.02)}
+.nv-spec b{display:block;color:#8194aa;font-size:9px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.nv-spec span{font-size:11px;color:#dbe5ef;overflow-wrap:anywhere}
+.nv-disclosure{margin-top:14px;color:#72869d;font-size:10px;line-height:1.5}
+.nv-related{margin-top:18px}
+.nv-related h2{font-size:23px;margin:0 0 14px}
+@media(max-width:850px){.nv-product-top,.nv-explain{grid-template-columns:1fr}.nv-gallery{order:0}.nv-info{order:1}.nv-image-card{height:72vw;min-height:290px}.nv-info h1{font-size:38px}}
+@media(max-width:560px){.product-page{padding-top:18px}.nv-product-top{gap:18px}.nv-image-card{height:88vw;min-height:260px;border-radius:19px}.nv-thumb{width:62px;height:62px;flex-basis:62px}.nv-info h1{font-size:31px}.nv-buy-card{padding:15px;border-radius:17px}.nv-current{font-size:27px}.nv-cta{grid-template-columns:1fr 52px}.nv-info-boxes{grid-template-columns:1fr}.nv-section-card{padding:16px;border-radius:17px}.nv-specs{grid-template-columns:1fr}.nv-related h2{font-size:20px}}
+
 /* Nuvora storefront polish */
 .confidence-strip{padding:0 0 28px}.confidence-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.confidence-card{border:1px solid var(--line);background:rgba(255,255,255,.035);border-radius:18px;padding:17px}.confidence-card b{display:block;margin-bottom:5px}.confidence-card span{font-size:12px;color:var(--muted)}
 .announcement{border-bottom:1px solid var(--line);background:linear-gradient(90deg,rgba(111,217,255,.06),rgba(156,123,255,.06));text-align:center;padding:8px 14px;color:#c8d5e4;font-size:12px}.announcement b{color:#fff}
@@ -155,22 +210,37 @@ function renderProductPage(p){
   (first.selectedOptions||[]).forEach(o=>selected[o.name]=o.value);
   let qty=1;
   const initialPrice=first.price!=null?first.price:p.rawPrice;
-  const imageMarkup=images.length?'<img id="productMainImage" src="'+htmlEsc(images[0])+'" alt="'+htmlEsc(p.name)+'">':'<span style="font-size:64px;color:#ffffff55">'+htmlEsc(p.icon||'✦')+'</span>';
-  el.innerHTML='<div class="product-layout"><div class="product-gallery"><div class="product-main-image" id="productMainImageWrap">'+imageMarkup+'</div><div class="product-thumbs">'+images.map((src,i)=>'<button class="product-thumb '+(i===0?'active':'')+'" data-i="'+i+'"><img src="'+htmlEsc(src)+'" alt=""></button>').join('')+'</div></div><div class="product-info"><div class="eyebrow"><i></i> '+htmlEsc(p.type==='Shop'?'Shop':'Find')+'</div><h1>'+htmlEsc(p.name)+'</h1><div class="product-submeta">'+(p.brand?'<span>Brand: '+htmlEsc(p.brand)+'</span>':'')+(p.retailer?'<span>Sold through '+htmlEsc(p.retailer)+'</span>':'')+'<span>'+htmlEsc(p.availability||'Available')+'</span></div><div class="product-price" id="productPrice">'+htmlEsc(formatPrice(initialPrice,p.currency||''))+'</div><div class="product-rating" id="productRating">No reviews yet.</div><div id="productOptions">'+optionNames.map(name=>'<div class="product-option"><label>'+htmlEsc(name)+'</label><select data-option="'+htmlEsc(name)+'">'+[...new Set(variants.map(v=>(v.selectedOptions||[]).find(o=>o.name===name)?.value).filter(Boolean))].map(value=>'<option value="'+htmlEsc(value)+'" '+(selected[name]===value?'selected':'')+'>'+htmlEsc(value)+'</option>').join('')+'</select></div>').join('')+'</div><div class="product-buy-row">'+(p.type==='Shop'?'<div class="product-qty"><button id="productQtyMinus">−</button><span id="productQty">1</span><button id="productQtyPlus">+</button></div><button class="btn primary" id="productAdd">Add to cart</button><button class="btn" id="productBuy">Buy now</button>':'<button class="btn primary" style="grid-column:1/-1" id="productBuy">View deal</button>')+'</div><div class="product-trust"><div><b>Secure checkout</b><span>Checkout is handled through the connected store.</span></div><div><b>Clear product details</b><span>Options and descriptions are shown before purchase.</span></div><div><b>Save for later</b><span>Keep this product in your Nuvora saved list.</span></div></div><div class="detail-desc">'+formatDescription(p.desc)+'</div><div class="detail-specs">'+(extractSpecs(p.desc).length?'<h3>Product details</h3><div class="spec-grid">'+extractSpecs(p.desc).map(([k,v])=>'<div class="spec-item"><b>'+htmlEsc(k)+'</b><span>'+htmlEsc(v)+'</span></div>').join('')+'</div>':'')+'</div><button class="btn" id="productSave" style="margin-top:18px">'+(saved.includes(p.id)?'♥ Saved':'♡ Save for later')+'</button></div></div><section class="related-section"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">Reviews</h2><span class="muted" id="reviewHint">Share your experience.</span></div><div id="reviewFormWrap" style="margin:16px 0"></div><div class="product-grid" id="productReviews"></div></section><section class="related-section"><h2>You may also like</h2><div class="product-grid" id="relatedProducts"></div></section>';
+  const rating=Number(p.amazonRating);
+  const reviewCount=Number(p.amazonReviews)||0;
+  const hasAmazonMeta=p.retailer==='Amazon'||p.amazonRating!=null||p.amazonDeal||p.amazonListPrice!=null;
+  const listPrice=p.amazonListPrice!=null?Number(p.amazonListPrice):null;
+  const discount=p.amazonDiscount!=null?Number(p.amazonDiscount):null;
+  const deal=p.amazonDeal||'';
+  const bought=p.amazonBought||'';
+  const shipping=p.amazonShipping||'';
+  const tax=p.amazonTax||'';
+  const ratingMarkup=rating>0?'<span class="nv-stars">'+('★'.repeat(Math.max(0,Math.min(5,Math.round(rating))))+'☆'.repeat(Math.max(0,5-Math.round(rating))))+'</span><strong>'+rating.toFixed(1)+'</strong><a href="#productReviews">'+(reviewCount?reviewCount.toLocaleString()+' reviews':'Reviews')+'</a>':'<span style="color:var(--muted)">No reviews yet</span>';
+  const imageMarkup=images.length?'<img id="productMainImage" src="'+htmlEsc(images[0])+'" alt="'+htmlEsc(p.name)+'">':'<span class="nv-image-empty">'+htmlEsc(p.icon||'✦')+'</span>';
+  const featureText=cleanProductText(p.desc||'');
+  const featureLines=(p.desc||'').split(/\n|•|\r/).map(x=>cleanProductText(x)).filter(Boolean).slice(0,8);
+  const specs=extractSpecs(p.desc||'');
+  const dealMarkup=deal?'<div class="nv-deal">✦ '+htmlEsc(deal)+'</div>':'';
+  const priceMarkup='<div class="nv-price-row"><span class="nv-current">'+htmlEsc(formatPrice(initialPrice,p.currency||''))+'</span>'+(listPrice!=null?'<span class="nv-list">'+htmlEsc(formatPrice(listPrice,p.currency||''))+'</span>':'')+(discount!=null?'<span class="nv-discount">'+htmlEsc(String(discount).replace(/\.0$/,''))+'% OFF</span>':'')+'</div>';
+  const logistics=(shipping||tax)?'<div class="nv-info-boxes">'+(shipping?'<div class="nv-info-box"><b>Shipping & import</b><span>'+htmlEsc(shipping)+'</span></div>':'')+(tax?'<div class="nv-info-box"><b>Taxes</b><span>'+htmlEsc(tax)+'</span></div>':'')+'</div>':'';
+  const buyLabel=p.destination?(p.retailer==='Amazon'?'View on Amazon':'View deal'):'View product';
+  el.innerHTML='<div class="nv-product-shell"><div class="nv-product-top"><div class="nv-gallery"><div class="nv-image-card" id="productMainImageWrap">'+imageMarkup+'</div><div class="nv-thumbs">'+images.map((src,i)=>'<button class="nv-thumb '+(i===0?'active':'')+'" data-i="'+i+'"><img src="'+htmlEsc(src)+'" alt=""></button>').join('')+'</div></div><div class="nv-info"><div class="nv-kicker"><i></i>'+htmlEsc(p.retailer||p.type||'Product')+'</div><h1>'+htmlEsc(p.name)+'</h1><div class="nv-meta">'+(p.brand?'<span>Brand: '+htmlEsc(p.brand)+'</span>':'')+(p.cat?'<span>'+htmlEsc(p.cat)+'</span>':'')+'</div><div class="nv-rating">'+ratingMarkup+(bought?'<span class="nv-bought">· '+htmlEsc(bought)+' bought this month</span>':'')+'</div><div class="nv-buy-card">'+dealMarkup+priceMarkup+'<div class="nv-price-note">'+(hasAmazonMeta?'Price and availability may vary on the retailer site.':'Product information and availability are shown by Nuvora.')+'</div><div class="nv-cta"><button class="btn primary" id="productBuy">'+htmlEsc(buyLabel)+' →</button><button class="btn nv-save" id="productSave">'+(saved.includes(p.id)?'♥':'♡')+'</button></div>'+logistics+'</div><div id="productOptions">'+optionNames.map(name=>'<div class="product-option"><label>'+htmlEsc(name)+'</label><select data-option="'+htmlEsc(name)+'">'+[...new Set(variants.map(v=>(v.selectedOptions||[]).find(o=>o.name===name)?.value).filter(Boolean))].map(value=>'<option value="'+htmlEsc(value)+'" '+(selected[name]===value?'selected':'')+'>'+htmlEsc(value)+'</option>').join('')+'</select></div>').join('')+'</div>'+(p.type==='Shop'?'<div class="product-buy-row" style="margin-top:12px"><div class="product-qty"><button id="productQtyMinus">−</button><span id="productQty">1</span><button id="productQtyPlus">+</button></div><button class="btn primary" id="productAdd">Add to cart</button></div>':'')+'</div></div><div class="nv-explain"><section class="nv-section-card"><h2>Why you'll like it</h2><ul class="nv-feature-list">'+(featureLines.length?featureLines.map(x=>'<li>'+htmlEsc(x)+'</li>').join(''):'<li>Product details are provided by the retailer and presented by Nuvora.</li>')+'</ul></section><section class="nv-section-card"><button class="nv-details-toggle" id="detailsToggle"><span>Product details</span><span>＋</span></button><div class="nv-detail-body" id="detailsBody">'+(featureText?formatDescription(p.desc):'<p>No additional details have been provided yet.</p>')+(specs.length?'<div class="nv-specs">'+specs.map(([k,v])=>'<div class="nv-spec"><b>'+htmlEsc(k)+'</b><span>'+htmlEsc(v)+'</span></div>').join('')+'</div>':'')+'</div></section></div><div class="nv-related"><section class="related-section"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2>Reviews</h2><span class="muted" id="reviewHint">Share your experience.</span></div><div id="reviewFormWrap" style="margin:16px 0"></div><div class="product-grid" id="productReviews"></div></section><section class="related-section"><h2>You may also like</h2><div class="product-grid" id="relatedProducts"></div></section></div></div>';
   const mainWrap=document.getElementById('productMainImageWrap');
-  el.querySelectorAll('.product-thumb').forEach(btn=>btn.onclick=()=>{const i=Number(btn.dataset.i);mainWrap.innerHTML='<img id="productMainImage" src="'+htmlEsc(images[i])+'" alt="'+htmlEsc(p.name)+'">';el.querySelectorAll('.product-thumb').forEach(x=>x.classList.toggle('active',x===btn));});
-  const resolveVariant=()=>{
-    if(!variants.length)return first;
-    return variants.find(v=>(v.selectedOptions||[]).every(o=>selected[o.name]===o.value))||first;
-  };
-  const refreshVariant=()=>{const v=resolveVariant();document.getElementById('productPrice').textContent=formatPrice(v.price!=null?v.price:p.rawPrice,p.currency||'');return v;};
-  el.querySelectorAll('[data-option]').forEach(sel=>sel.onchange=()=>{selected[sel.dataset.option]=sel.value;refreshVariant()});
+  el.querySelectorAll('.nv-thumb').forEach(btn=>btn.onclick=()=>{const i=Number(btn.dataset.i);mainWrap.innerHTML='<img id="productMainImage" src="'+htmlEsc(images[i])+'" alt="'+htmlEsc(p.name)+'">';el.querySelectorAll('.nv-thumb').forEach(x=>x.classList.toggle('active',x===btn));});
+  const resolveVariant=()=>{if(!variants.length)return first;return variants.find(v=>(v.selectedOptions||[]).every(o=>selected[o.name]===o.value))||first;};
+  const refreshVariant=()=>resolveVariant();
+  el.querySelectorAll('[data-option]').forEach(sel=>sel.onchange=()=>{selected[sel.dataset.option]=sel.value;});
   document.getElementById('productQtyMinus')?.addEventListener('click',()=>{qty=Math.max(1,qty-1);document.getElementById('productQty').textContent=qty});
   document.getElementById('productQtyPlus')?.addEventListener('click',()=>{qty=Math.min(20,qty+1);document.getElementById('productQty').textContent=qty});
   document.getElementById('productSave')?.addEventListener('click',()=>toggleSave(p.id));
   const add=()=>{const v=refreshVariant();if(p.type==='Shop'){addCartItem(p.id,v.id,v.title||'',qty);trackEvent('add_to_cart',String(p.id),{variant_id:v.id,quantity:qty});}};
   document.getElementById('productAdd')?.addEventListener('click',add);
   document.getElementById('productBuy')?.addEventListener('click',()=>{if(p.type==='Shop'){const v=refreshVariant();beginCheckout([{productId:p.id,variantId:v.id,shopifyProductId:p.shopifyProductId,variantTitle:v.title||'',selectedOptions:v.selectedOptions||[],quantity:qty}],document.getElementById('productBuy'));}else if(p.destination){trackEvent('retailer_click',String(p.id),{retailer:p.retailer||''});window.location.href=p.destination;}});
+  document.getElementById('detailsToggle')?.addEventListener('click',()=>{const body=document.getElementById('detailsBody');const btn=document.getElementById('detailsToggle');if(!body)return;const closed=body.style.display==='none';body.style.display=closed?'block':'none';btn.lastElementChild.textContent=closed?'−':'＋';});
   loadProductReviews(p.id);
   const related=products.filter(x=>String(x.id)!==String(p.id)&&((p.cat&&x.cat===p.cat)||(p.brand&&x.brand===p.brand))).slice(0,4);
   document.getElementById('relatedProducts').innerHTML=related.map(card).join('')||'<div class="empty" style="grid-column:1/-1">More products will appear here as the catalog grows.</div>';
