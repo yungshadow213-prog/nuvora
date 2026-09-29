@@ -368,7 +368,17 @@ function quickAction(id){const p=products.find(x=>String(x.id)===String(id));if(
 function showCart(){showView('cart')}
 function renderCartModal(){const el=document.getElementById('cartModalContent');el.innerHTML=cart.length?'<div class="cart-list">'+cart.map(item=>{const x=typeof item==='string'?{id:item,quantity:1}:item;const p=products.find(y=>String(y.id)===String(x.id));if(!p)return '';return '<div class="cart-row"><div style="min-width:0"><strong>'+htmlEsc(p.name)+'</strong><small>'+htmlEsc(x.variantTitle||'Default')+' · Qty '+x.quantity+'</small></div><button class="mini" onclick="removeCartItem('+jsId(x.id)+','+JSON.stringify(x.variantId||'')+');renderCartModal()">Remove</button></div>'}).join('')+'</div><button class="btn primary" style="width:100%;margin-top:16px" onclick="closeCartModal();showView(\'cart\')">View full cart</button>':'<div class="empty">Your cart is empty.</div>'}
 function closeCartModal(){document.getElementById('cartModal').classList.remove('open')}
-function extractSpecs(raw){const text=cleanProductText(raw);const specs=[];const re=/(Applicable Scene|Applicable Season|Brand Name|Closure Type|Craft of Weaving|Fit Type|Front Style|Gender|Item Type|Length|Material|Model Number|Origin|Pant Style|Place Of Origin|Style|Thickness|Waist Type|Color|Size)\\s*[:：]\\s*([^\\n]+?)(?=\\s+(?:Applicable Scene|Applicable Season|Brand Name|Closure Type|Craft of Weaving|Fit Type|Front Style|Gender|Item Type|Length|Material|Model Number|Origin|Pant Style|Place Of Origin|Style|Thickness|Waist Type|Color|Size)\\s*[:：]|$)/gi;let m;while((m=re.exec(text))&&specs.length<16){const value=m[2].trim();if(value&&!specs.some(x=>x[0].toLowerCase()===m[1].toLowerCase()))specs.push([m[1],value])}return specs}
+function extractSpecs(raw){
+  const text=cleanProductText(raw);
+  const specs=[];
+  const re=/(Fabric type|Care instructions|Date First Available|ASIN|Best Sellers Rank|Department|Material|Closure Type|Craft of Weaving|Fit Type|Front Style|Gender|Item Type|Length|Model Number|Origin|Pant Style|Place Of Origin|Style|Thickness|Waist Type|Applicable Scene|Applicable Season|Brand Name|Color|Size)\s*[:：]?\s*([^\n]+?)(?=\s+(?:Fabric type|Care instructions|Date First Available|ASIN|Best Sellers Rank|Department|Material|Closure Type|Craft of Weaving|Fit Type|Front Style|Gender|Item Type|Length|Model Number|Origin|Pant Style|Place Of Origin|Style|Thickness|Waist Type|Applicable Scene|Applicable Season|Brand Name|Color|Size)\s*[:：]?\s*|$)/gi;
+  let m;
+  while((m=re.exec(text))&&specs.length<20){
+    const key=m[1].trim(),value=cleanProductText(m[2]);
+    if(value&&!specs.some(x=>x[0].toLowerCase()===key.toLowerCase()))specs.push([key,value.slice(0,240)]);
+  }
+  return specs;
+}
 function openProductPage(id,push=true){
   const p=products.find(x=>String(x.id)===String(id));
   if(!p)return;
