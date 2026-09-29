@@ -832,7 +832,8 @@ async function scrapeAmazonListing(amazonUrl,asin){
   const productDescription=clean(amazonDecode(productDescriptionBlock.replace(/<[^>]+>/g,' ')),5000);
 
   const descriptionParts=[];
-  if(featureTexts.length)descriptionParts.push('About this item\\n'+featureTexts.join('\\n'));\n  if(productDescription)descriptionParts.push('Product description\\n'+productDescription);
+  if(featureTexts.length)descriptionParts.push('About this item\\n'+featureTexts.join('\\n'));
+  if(productDescription)descriptionParts.push('Product description\\n'+productDescription);
   if(detailTexts.length)descriptionParts.push('Product details\\n'+detailTexts.join('\\n'));
   if(categoryPath)descriptionParts.push('Category\\n'+categoryPath);
   if(department)descriptionParts.push('Department\\n'+department);
