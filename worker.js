@@ -87,11 +87,11 @@ async function scrapeTemuListing(temuUrl){
   const addImage=(v)=>{
     if(!v)return;
     const u=String(v).replace(/\\u0026/g,'&');
-    if(/^https?:\/\//i.test(u)&&!images.includes(u)&&images.length<20)images.push(u);
+    if((u.startsWith('http://')||u.startsWith('https://'))&&!images.includes(u)&&images.length<20)images.push(u);
   };
   addImage(findMeta('og:image'));
   addImage(findMeta('twitter:image'));
-  const imageRe=/https?:\/\/[^"\\s]+?\.(?:jpg|jpeg|png|webp)(?:\?[^"\\s]*)?/gi;
+  const imageRe=/https?:[^\s"']+/gi;
   for(const m of html.matchAll(imageRe))addImage(m[0]);
   const plain=amazonDecode(html.replace(/<script[\\s\\S]*?<\/script>/gi,' ').replace(/<style[\\s\\S]*?<\/style>/gi,' ').replace(/<[^>]+>/g,' '));
   const priceMatch=plain.match(/(?:US\$|\$|£|€|NGN\s*)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/);
