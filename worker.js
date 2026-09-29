@@ -623,7 +623,16 @@ async function scrapeAmazonListing(amazonUrl,asin){
   const imageRe=/(https?:\\/\\/[^"\\s\\\\]+?\\.(?:jpg|jpeg|png|webp)(?:\\?[^"\\s\\\\]*)?)/gi;
   for(const m of html.matchAll(imageRe))addImage(m[1]);
   const badge=/#\s*[0-9]+\s+Best Seller/i.test(plain)?'Best Seller':'';
+  if(!images.length)images.push(amazonImageFallback(title,brand,asin));
   return {asin,title:title.slice(0,180),brand:brand.slice(0,120),current_price:current,list_price:list,discount_percent:discount,deal_text:deal||null,rating:ratingMatch?Number(ratingMatch[1]):null,review_count:reviewsMatch?Number(reviewsMatch[1].replace(/,/g,'')):null,bought_past_month:boughtMatch?boughtMatch[1]:null,badges:[badge].filter(Boolean),shipping_text:shippingMatch?shippingMatch[0].trim():null,tax_text:taxMatch?taxMatch[0].trim():null,features:cleanAmazonFeatures(plain),images};
+}
+function amazonImageFallback(title,brand,asin){
+  const safe=(v,max=70)=>String(v||'').replace(/[&<>"]/g,'').replace(/\\s+/g,' ').trim().slice(0,max);
+  const t=safe(title,58)||'Nuvora Product';
+  const b=safe(brand,34)||'Amazon find';
+  const a=safe(asin,24);
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1628"/><stop offset="1" stop-color="#142b45"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="18" stdDeviation="28" flood-opacity=".35"/></filter></defs><rect width="1200" height="1200" fill="url(#g)"/><circle cx="1030" cy="140" r="220" fill="#6fd9ff" opacity=".08"/><circle cx="140" cy="1080" r="260" fill="#9b7cff" opacity=".08"/><rect x="100" y="105" width="1000" height="990" rx="48" fill="#07111f" stroke="#ffffff" stroke-opacity=".12"/><g filter="url(#s)"><rect x="245" y="250" width="710" height="490" rx="34" fill="#102238" stroke="#6fd9ff" stroke-opacity=".18"/><path d="M390 650h420" stroke="#6fd9ff" stroke-opacity=".22" stroke-width="3"/><circle cx="600" cy="430" r="88" fill="#6fd9ff" opacity=".08"/><path d="M540 430h120M600 370v120" stroke="#9ce7ff" stroke-width="5" stroke-linecap="round" opacity=".75"/></g><text x="600" y="820" fill="#eef7ff" font-family="Arial,Helvetica,sans-serif" font-size="48" font-weight="700" text-anchor="middle">'+t.replace(/'/g,'&#39;')+'</text><text x="600" y="875" fill="#9fb0c5" font-family="Arial,Helvetica,sans-serif" font-size="27" text-anchor="middle">'+b.replace(/'/g,'&#39;')+'</text><text x="600" y="1010" fill="#6fd9ff" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="700" letter-spacing="5" text-anchor="middle">NUVORA • PRODUCT PREVIEW</text><text x="600" y="1055" fill="#6f8299" font-family="Arial,Helvetica,sans-serif" font-size="18" text-anchor="middle">'+a.replace(/'/g,'&#39;')+'</text></svg>';
+  return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
 }
 function amazonDecode(value){return String(value||'').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'").replace(/&nbsp;/gi,' ').replace(/\s+/g,' ').trim();}
 function amazonMoney(value){const m=String(value||'').match(/(?:US\$|\$|£|€|NGN\s*)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i);return m?Number(m[1].replace(/,/g,'')):null;}
