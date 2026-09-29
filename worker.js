@@ -848,6 +848,12 @@ async function scrapeAmazonListing(amazonUrl,asin){
   const department=(plain.match(/Department\s*[:\-]\s*([A-Za-z &]{2,80})/i)||[])[1]?.trim()||null;
   const rank=(plain.match(/Best Sellers Rank\s*[:\-]?\s*([^\n]{0,180})/i)||[])[1]?.trim()||null;
   const categoryPath=clean((plain.match(/Clothing, Shoes & Jewelry›[^\n]{0,180}/i)||[])[0]||'',300);
+  const specRe=/(Fabric type|Care instructions|Origin|Department|Date First Available|ASIN|Best Sellers Rank|Material|Closure Type|Fit Type|Length|Style|Color|Size)\s*[:：]?\s*([^\n]+?)(?=\s+(?:Fabric type|Care instructions|Origin|Department|Date First Available|ASIN|Best Sellers Rank|Material|Closure Type|Fit Type|Length|Style|Color|Size)\s*[:：]?\s*|$)/gi;
+  const specifications=[]; let specMatch;
+  while((specMatch=specRe.exec(plain))&&specifications.length<20){
+    const key=clean(specMatch[1],80),value=clean(specMatch[2],240);
+    if(key&&value&&!specifications.some(x=>x[0].toLowerCase()===key.toLowerCase()))specifications.push([key,value]);
+  }
 
   const colors=[];
   const colorBlock=html.match(/id=[\x22\x27](?:variation_color_name|variation_style_name)[\x22\x27][^>]*>([\s\S]*?)(?:<\/div>|<\/select>)/i)?.[1]||'';
@@ -878,7 +884,8 @@ async function scrapeAmazonListing(amazonUrl,asin){
   if(taxText)descriptionParts.push('Taxes\\n'+taxText);
   if(deliveryText)descriptionParts.push('Delivery\\n'+deliveryText);
   if(returnText)descriptionParts.push('Returns\\n'+returnText);
-  if(rank)descriptionParts.push('Best Sellers Rank\\n'+rank);
+  if(rank)descriptionParts.push('Best Sellers Rank'+nl+rank);
+  if(specifications.length)descriptionParts.push('Specifications'+nl+specifications.map(x=>x[0]+': '+x[1]).join(nl));
 
   const images=[];
   const addImage=(value)=>{
