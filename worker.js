@@ -114,7 +114,7 @@ async function scrapeTemuListing(temuUrl){
   addUnique(images,findMeta('twitter:image'));
 
   const jsonLd=[];
-  const scriptRe=/<script[^>]*type=["']application\\/ld\\+json["'][^>]*>([\\s\\S]*?)<\\/script>/gi;
+  const scriptRe=/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
   for(const m of html.matchAll(scriptRe)){
     try{
       const parsed=JSON.parse(m[1].trim());
