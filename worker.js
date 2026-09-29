@@ -353,8 +353,11 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
       }
       if(url.pathname==='/api/admin/products'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
-        const product=await body(request,512*1024); const validation=validateProduct(product); if(validation)return json({error:validation},400);
-        product.name=String(product.name).trim().slice(0,180); product.slug=String(product.slug).trim().toLowerCase().slice(0,180); product.published=product.published===true;
+        const product=await body(request,512*1024);
+        product.name=String(product.name??'').trim().slice(0,180);
+        product.slug=makeProductSlug(product.slug||product.name||product.amazon_asin||'product');
+        const validation=validateProduct(product); if(validation)return json({error:validation},400);
+        product.published=product.published===true;
         product.description=cleanText(product.description,10000); product.features=cleanText(product.features,10000); product.brand=cleanText(product.brand,180);
         if(Array.isArray(product.image_urls))product.image_urls=product.image_urls.filter(validUrl).slice(0,30);
         if(product.image_url&&!validUrl(product.image_url))product.image_url=null;
@@ -368,9 +371,10 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const id=decodeURIComponent(productMatch[1]);
         if(request.method==='PATCH'){
           const patch=await body(request);
+          if(patch.name)patch.name=String(patch.name).trim().slice(0,180);
+          if(patch.slug||patch.name)patch.slug=makeProductSlug(patch.slug||patch.name);
           const validation=validateProduct({...patch,name:patch.name||'placeholder',slug:patch.slug||'placeholder',kind:patch.kind||'shop'});
           if(validation && (patch.name||patch.slug||patch.kind||patch.display_price||patch.destination_url||patch.image_url||patch.image_urls))return json({error:validation},400);
-          if(patch.name)patch.name=String(patch.name).trim().slice(0,180); if(patch.slug)patch.slug=String(patch.slug).trim().toLowerCase().slice(0,180);
           if(Array.isArray(patch.image_urls))patch.image_urls=patch.image_urls.filter(validUrl).slice(0,30);
           const r=await supabaseRest(env,'PATCH','products',patch,`?id=eq.${encodeURIComponent(id)}`); if(!r.ok)return json({error:await r.text()},400);
           const rows=await r.json(); return json(rows[0]||null);
@@ -494,6 +498,10 @@ async function aiResultBytes(result){
 function bytesToBase64(bytes){let out='';const step=0x8000;for(let i=0;i<bytes.length;i+=step)out+=String.fromCharCode(...bytes.subarray(i,i+step));return btoa(out);}
 function cleanText(value,max=10000){
   return String(value??'').replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]/g,'').trim().slice(0,max);
+}
+function makeProductSlug(value){
+  const base=cleanText(value,180).toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-+/g,'-').slice(0,140);
+  return (base||'product')+'-'+Math.random().toString(36).slice(2,8);
 }
 function validateProduct(product){
   if(!product||typeof product!=='object')return 'Product data is required.';
