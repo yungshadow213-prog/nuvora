@@ -188,6 +188,14 @@ h1{font-size:clamp(48px,6vw,76px);color:var(--text)}.script{color:var(--accent)}
  .nv-quick-links{grid-template-columns:1fr 1fr}.nv-quick-links button{border-bottom:1px solid var(--line)}.nv-quick-links button:nth-child(2){border-right:0}.nv-quick-links button:nth-child(3),.nv-quick-links button:nth-child(4){border-bottom:0}
  .nv-editorial-break .shell{padding:28px 24px;display:block}.nv-editorial-break .btn{margin-top:20px}
 }
+</style><style id="nuvora-readability-fix">
+body{color:#172019}
+.product h3,.product .product-name,.nv-info h1,.nv-info h2,.nv-product-shell h1,.nv-product-shell h2{font-weight:800;color:#111812}
+.product .price,.nv-current{font-weight:850;color:#123f32}
+.nv-kicker,.nv-rating,.nv-price-note,.nv-product-shell .muted{color:#59645c}
+.nv-product-shell p,.nv-product-shell li,.nv-product-shell .details,.nv-product-shell .feature,.nv-product-shell .nv-description{color:#29332d;line-height:1.7;font-size:15px}
+.nv-product-shell .nv-deal{font-weight:800;color:#145b47}
+.product .source,.product .meta,.product small{color:#59645c;font-weight:600}
 </style></head>
 <body>
 <div class="announcement"><div class="shell"><b>Nuvora picks, made simple.</b> Browse curated products, save your favorites, and discover something worth finding.</div></div><header class="topbar"><div class="shell nav">
@@ -295,7 +303,7 @@ let sessionId=localStorage.getItem('nuvoraAnalyticsSession')||crypto.randomUUID(
 function htmlEsc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function jsId(id){return JSON.stringify(String(id));}
 function displayProductName(name){return String(name||'Product').replace(/\s+/g,' ').replace(/\bnew in\b/gi,'').replace(/\bautumn\/winter\b/gi,'').replace(/\bspring\/summer\b/gi,'').replace(/\b202[0-9]\b/g,'').replace(/\s{2,}/g,' ').trim().replace(/[|•]+$/,'').trim();}
-function cleanProductText(raw){const source=String(raw||'').replace(/<br\s*\/?\s*>/gi,'\n').replace(/<\/(p|div|li|tr|h[1-6])>/gi,'\n').replace(/<li\b[^>]*>/gi,'• ');const box=document.createElement('div');box.innerHTML=source;box.querySelectorAll('img,script,style').forEach(x=>x.remove());return box.textContent.replace(/\r/g,'').replace(/[ \t]+/g,' ').replace(/\n[ \t]+/g,'\n').replace(/\n{3,}/g,'\n\n').trim();}
+function cleanProductText(raw){const source=String(raw||'').replace(/(?:sale_list_token|order_receipt_token|refund_detail_token|bg_mail_token|payment_detail_token|email_token|[a-z0-9_]+_token)/gi,' ').replace(/<br\s*\/?\s*>/gi,'\n').replace(/<\/(p|div|li|tr|h[1-6])>/gi,'\n').replace(/<li\b[^>]*>/gi,'• ');const box=document.createElement('div');box.innerHTML=source;box.querySelectorAll('img,script,style').forEach(x=>x.remove());return box.textContent.replace(/\r/g,'').replace(/[ \t]+/g,' ').replace(/\n[ \t]+/g,'\n').replace(/\n{3,}/g,'\n\n').trim();}
 function normalizeSearchName(name){return displayProductName(name).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
 function formatDescription(raw){const text=cleanProductText(raw);if(!text)return '<p>Product details are provided by the retailer.</p>';const blocks=text.split(/\n+/).map(s=>s.trim()).filter(Boolean);const out=[];let list=[];const flush=()=>{if(list.length){out.push('<ul>'+list.map(x=>'<li>'+htmlEsc(x.replace(/^[-•]\s*/,''))+'</li>').join('')+'</ul>');list=[];}};blocks.forEach(b=>{if(/^[-•]\s+/.test(b))list.push(b);else{flush();out.push('<p>'+htmlEsc(b)+'</p>')}});flush();return out.join('');}
 function uniqueProducts(list){const seenName=new Set(),seenImage=new Set();return list.filter(p=>{const n=normalizeSearchName(p.name),img=String(p.image||p.image_urls?.[0]||'').trim();if(n&&seenName.has(n))return false;if(img&&seenImage.has(img))return false;if(n)seenName.add(n);if(img)seenImage.add(img);return true;});}
