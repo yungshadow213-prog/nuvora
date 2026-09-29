@@ -73,19 +73,24 @@ export default {
       }
 
 async function scrapeTemuListing(temuUrl){
-  const r=await fetch(temuUrl,{headers:{'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36','accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8','accept-language':'en-US,en;q=0.9'}});
+  const r=await fetch(temuUrl,{headers:{
+    'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36',
+    'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'accept-language':'en-US,en;q=0.9'
+  }});
   const html=await r.text();
   if(!r.ok||html.length<500)return {error:'Temu page could not be read right now.'};
 
   const decode=amazonDecode;
   const findMeta=(key)=>{
+    const wanted=String(key||'').toLowerCase();
     const lower=html.toLowerCase();
     let p=lower.indexOf('<meta');
     while(p>=0){
       const e=html.indexOf('>',p);
       if(e<0)break;
-      const tag=html.slice(p,e+1), attrs=tag.toLowerCase();
-      const wanted=key.toLowerCase();
+      const tag=html.slice(p,e+1);
+      const attrs=tag.toLowerCase();
       if(attrs.includes('property="'+wanted+'"')||attrs.includes("property='"+wanted+"'")||attrs.includes('name="'+wanted+'"')||attrs.includes("name='"+wanted+"'")){
         const a=attrs.indexOf('content=');
         if(a>=0){
@@ -102,9 +107,10 @@ async function scrapeTemuListing(temuUrl){
   };
 
   const addUnique=(arr,value,max=40)=>{
-    const u=String(value||'').replace(/\\u0026/g,'&').replace(/\\\//g,'/').trim();
+    const u=String(value||'').replaceAll('\\u0026','&').replaceAll('\\/','/').trim();
     if((u.startsWith('https://')||u.startsWith('http://'))&&!arr.includes(u)&&arr.length<max)arr.push(u);
   };
+
   const images=[];
   try{
     const q=new URL(temuUrl).searchParams.get('top_gallery_url');
@@ -121,49 +127,75 @@ async function scrapeTemuListing(temuUrl){
       if(Array.isArray(parsed))jsonLd.push(...parsed); else jsonLd.push(parsed);
     }catch(e){}
   }
-  const productLd=jsonLd.find(x=>x&&((x['@type']==='Product')||(Array.isArray(x['@type'])&&x['@type'].includes('Product'))))||{};
-  const offers=Array.isArray(productLd.offers)?productLd.offers[0]:(productLd.offers||{});
+
+  const productLd=jsonLd.find(x=>{
+    const t=x&&x['@type'];
+    return t==='Product'||(Array.isArray(t)&&t.includes('Product'));
+  })||{};
+  const offers=Array.isArray(productLd.offers)?(productLd.offers[0]||{}):(productLd.offers||{});
   const aggregate=productLd.aggregateRating||{};
 
-  const title=decode(productLd.name||findMeta('og:title')||findMeta('twitter:title'));
-  const description=decode(productLd.description||findMeta('og:description')||findMeta('description'));
+  const title=decode(productLd.name||findMeta('og:title')||findMeta('twitter:title')||'Temu product');
+  const description=decode(productLd.description||findMeta('og:description')||findMeta('description')||'');
   const brand=decode(typeof productLd.brand==='string'?productLd.brand:(productLd.brand?.name||''));
+
   const ldImages=Array.isArray(productLd.image)?productLd.image:(productLd.image?[productLd.image]:[]);
   for(const u of ldImages)addUnique(images,u);
 
-  const rawGallery=[];
-  const galleryParamRe=/top_gallery_url=([^&"\\s]+)/gi;
-  for(const m of html.matchAll(galleryParamRe)){
-    try{addUnique(rawGallery,decodeURIComponent(m[1]));}catch(e){}
+  const lowerHtml=html.toLowerCase();
+  let gp=lowerHtml.indexOf('top_gallery_url=');
+  while(gp>=0){
+    let a=gp+'top_gallery_url='.length;
+    let b=a;
+    while(b<html.length&&html[b]!=='&'&&html[b]!=='"'&&html[b]!=="'"&&html[b]!==' '&&html[b]!=='<')b++;
+    if(b>a){
+      try{addUnique(images,decodeURIComponent(html.slice(a,b)));}catch(e){}
+    }
+    gp=lowerHtml.indexOf('top_gallery_url=',b);
   }
-  for(const u of rawGallery)addUnique(images,u);
 
-  const kwcdnRe=/(https?:\\/\\/img\\.kwcdn\\.com\\/[^"'\\s<>\\\\]+)/gi;
-  for(const m of html.matchAll(kwcdnRe)){
-    let u=m[1].replace(/&amp;/gi,'&').replace(/\\u0026/g,'&');
-    addUnique(images,u);
+  const kwcdnMarker='https://img.kwcdn.com/';
+  let kp=html.indexOf(kwcdnMarker);
+  while(kp>=0){
+    let b=kp;
+    while(b<html.length&&html[b]!=='"'&&html[b]!=="'"&&html[b]!==' '&&html[b]!=='<'&&html[b]!=='>')b++;
+    addUnique(images,html.slice(kp,b));
+    kp=html.indexOf(kwcdnMarker,b);
   }
 
   const plain=decode(html.replaceAll('<',' ').replaceAll('>',' '));
   const money=(v)=>{
-    const m=String(v||'').match(/(?:US\\$|\\$|£|€|NGN)\\s*([0-9][0-9,.]*(?:\\.[0-9]{1,2})?)/i);
-    return m?Number(m[1].replace(/,/g,'')):null;
+    const text=String(v||'');
+    const marker=text.match(/(?:US\$|\$|£|€|NGN)\s*[0-9][0-9,.]*/i);
+    if(!marker)return null;
+    const n=marker[0].replace(/[^0-9.]/g,'');
+    return n?Number(n):null;
   };
   const currentPrice=money(offers.price)||money(findMeta('product:price:amount'));
   const currency=String(offers.priceCurrency||findMeta('product:price:currency')||'').toUpperCase()||null;
-  const originalPrice=money(offers.highPrice)||money((plain.match(/(?:original|was|list price)[^$£€]{0,40}(?:US\\$|\\$|£|€|NGN)\\s*[0-9][0-9,.]*/i)||[])[0]);
-  const reviewText=(plain.match(/[0-9][0-9,]*\\s+reviews?/i)||[])[0]||'';
+  const originalText=(plain.match(/(?:original|was|list price)[^.]{0,80}(?:US\$|\$|£|€|NGN)\s*[0-9][0-9,.]*/i)||[])[0]||'';
+  const originalPrice=money(originalText);
+  const reviewText=(plain.match(/[0-9][0-9,]*\s+reviews?/i)||[])[0]||'';
   const reviewCount=aggregate.reviewCount?Number(aggregate.reviewCount):Number(reviewText.replace(/[^0-9]/g,''))||null;
-  const rating=aggregate.ratingValue?Number(aggregate.ratingValue):((plain.match(/[0-5](?:\\.[0-9])?\\s*(?:out of 5|\\/5)/i)||[])[0]||'').match(/[0-5](?:\\.[0-9])?/);
-  const ratingValue=typeof rating==='object'&&rating?Number(rating[0]):(Number(rating)||null);
+  const ratingText=(plain.match(/[0-5](?:\.[0-9])?\s*(?:out of 5|\/5)/i)||[])[0]||'';
+  const ratingValue=aggregate.ratingValue?Number(aggregate.ratingValue):Number((ratingText.match(/[0-5](?:\.[0-9])?/)||[])[0])||null;
   const dealText=(plain.match(/(?:limited time|flash|deal|sale|off)[^.]{0,100}/i)||[])[0]?.trim()||null;
   const availability=String(offers.availability||'').split('/').pop()||null;
-  const idMatch=temuUrl.match(/(?:goods_id=|-g-)([0-9]{10,18})/i);
-  const productId=idMatch?idMatch[1]:null;
 
-  if(!images.length){
-    const fallback=(plain.match(/https?:\\/\\/[^"'\\s<>]+\\.(?:jpg|jpeg|png|webp)(?:\\?[^"'\\s<>]*)?/i)||[])[0];
-    if(fallback)addUnique(images,fallback);
+  let productId=null;
+  const marker='-g-';
+  const mi=temuUrl.toLowerCase().indexOf(marker);
+  if(mi>=0){
+    const raw=temuUrl.slice(mi+marker.length);
+    const digits=raw.match(/^[0-9]{10,18}/);
+    if(digits)productId=digits[0];
+  }
+  if(!productId){
+    const qi=temuUrl.indexOf('goods_id=');
+    if(qi>=0){
+      const raw=temuUrl.slice(qi+9).split('&')[0];
+      if(raw&&/^[0-9]{10,18}$/.test(raw))productId=raw;
+    }
   }
 
   return {
