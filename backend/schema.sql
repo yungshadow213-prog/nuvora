@@ -31,6 +31,18 @@ alter table public.products add column if not exists brand text;
 alter table public.products add column if not exists image_urls jsonb not null default '[]'::jsonb;
 alter table public.products add column if not exists availability text;
 alter table public.products add column if not exists amazon_last_synced timestamptz;
+-- Amazon merchandising fields captured by the best-effort product-page importer.
+alter table public.products add column if not exists amazon_list_price numeric;
+alter table public.products add column if not exists amazon_discount_percent numeric;
+alter table public.products add column if not exists amazon_deal_text text;
+alter table public.products add column if not exists amazon_rating numeric;
+alter table public.products add column if not exists amazon_review_count integer;
+alter table public.products add column if not exists amazon_bought_past_month text;
+alter table public.products add column if not exists amazon_badges jsonb not null default '[]'::jsonb;
+alter table public.products add column if not exists amazon_shipping_text text;
+alter table public.products add column if not exists amazon_tax_text text;
+alter table public.products add column if not exists amazon_variations jsonb not null default '[]'::jsonb;
+
 create table if not exists public.saved_products (
   user_id uuid references auth.users(id) on delete cascade, product_id uuid references public.products(id) on delete cascade,
   created_at timestamptz not null default now(), primary key(user_id,product_id)
