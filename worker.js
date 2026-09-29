@@ -110,9 +110,9 @@ async function scrapeTemuListing(temuUrl){
   addImage(findMeta('og:image'));
   addImage(findMeta('twitter:image'));
   const plain=amazonDecode(html.replaceAll('<',' ').replaceAll('>',' '));
-  const priceMatch=plain.match(/(?:US\\$|\\$|£|€|NGN\\s*)\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)/);
-  const reviewMatch=plain.match(/([0-9][0-9,]*)\\s+reviews?/i);
-  const ratingMatch=plain.match(/([0-5](?:\\.[0-9])?)\\s*(?:out of 5|\\/5)/i);
+  const priceMatch=plain.match(/(?:US\$|\$|£|€|NGN\s*)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/);
+  const reviewMatch=plain.match(/([0-9][0-9,]*)\s+reviews?/i);
+  const ratingMatch=plain.match(/([0-5](?:\.[0-9])?)\s*(?:out of 5|\/5)/i);
   const dealMatch=plain.match(/(?:limited time|flash|deal|sale)[^.]{0,80}/i);
   const idMatch=temuUrl.indexOf('goods_id=');
   let productId=null;
