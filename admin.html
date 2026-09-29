@@ -16,9 +16,252 @@
 @media(max-width:700px){.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}.image-strip{grid-template-columns:repeat(3,1fr)}.modal-backdrop{padding:8px}.modal{max-height:calc(100vh - 16px)}}
 
 .auth-gate{position:fixed;inset:0;z-index:9999;display:none;place-items:center;padding:24px;background:radial-gradient(circle at 20% 10%,rgba(111,217,255,.09),transparent 30%),radial-gradient(circle at 80% 10%,rgba(156,123,255,.12),transparent 30%),#07111f}.auth-card{width:min(430px,100%);padding:32px;border:1px solid var(--line);border-radius:22px;background:rgba(16,28,46,.92);box-shadow:0 30px 100px rgba(0,0,0,.5);text-align:center}.auth-card h1{margin:0 0 8px;font-size:30px}.auth-card p{color:var(--muted);font-size:13px;line-height:1.6}.google-btn{width:100%;margin-top:18px;padding:13px 16px;border-radius:12px;border:1px solid var(--line);background:#fff;color:#111;font-weight:700;cursor:pointer;font-size:14px}.auth-error{display:none;margin-top:14px;padding:11px 12px;border-radius:10px;background:rgba(255,100,120,.08);border:1px solid rgba(255,100,120,.25);color:#ffb0ba;font-size:12px}.auth-gate small{display:block;margin-top:16px;color:#71849a;font-size:11px}
-</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav"><button class="active" onclick="show('overview',this)">⌂ Overview</button><button onclick="show('products',this)">▣ Products</button><button onclick="show('categories',this)">☷ Categories</button><button onclick="show('collections',this)">✦ Collections</button><button onclick="show('orders',this)">□ Orders</button><button onclick="show('social',this)">↗ Social</button><button onclick="show('analytics',this)">◌ Analytics</button><button onclick="show('settings',this)">⚙ Settings</button></nav><div class="private">Private control center.<br><button class="btn" style="width:100%;margin-top:10px" onclick="signOutAdmin()">Sign out</button></div></aside><main class="main"><header class="top"><div><div class="eyebrow">Nuvora / Admin</div><h1 id="title">Overview</h1><p id="sub">Control the store without exposing the admin to customers.</p></div><div style="display:flex;gap:8px"><button class="btn" onclick="healthCheck()">System status</button><button class="btn" onclick="window.open('/','_blank')">View store</button></div></header>
-<section id="overview" class="view active"><div class="stats"><div class="stat"><span class="muted">Shop products</span><b id="shopCount">0</b><span class="muted">Published Shop products</span></div><div class="stat"><span class="muted">Finds</span><b id="findCount">0</b><span class="muted">Published Finds</span></div><div class="stat"><span class="muted">Courses</span><b id="learnCount">0</b><span class="muted">Published courses</span></div><div class="stat"><span class="muted">Draft products</span><b id="draftCount">0</b><span class="muted">Awaiting review</span></div></div><div class="grid"><div class="panel"><h2>Store structure</h2><div class="row"><span>Shop</span><span class="tag">Commerce</span></div><div class="row"><span>Finds</span><span class="tag">Affiliate</span></div><div class="row"><span>Learn</span><span class="tag">Courses</span></div><div class="row"><span>Collections</span><span class="tag">Curated</span></div></div><div class="panel"><h2>System</h2><div id="systemStatus" class="muted">Checking connections…</div><div class="actions"><button class="btn primary" onclick="show('settings',document.querySelectorAll('.nav button')[7])">Open settings</button></div></div></div></section>
-<section id="products" class="view"><div class="panel"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2>Products</h2><p class="muted">Create a draft, review it, then publish. No product is public until you publish it.</p></div><div style="display:flex;gap:8px"><button class="btn" onclick="openShopifyImport()">Import Shopify</button><button class="btn" onclick="openProductModal(true)">Import Amazon</button><button class="btn" onclick="openTemuImport()">Import Temu</button><button class="btn primary" onclick="openProductModal(false)">+ Add product</button></div></div><div id="productRows" style="margin-top:16px"></div></div><div class="panel" style="margin-top:16px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h2>Bulk CSV import</h2><p class="muted">Import up to 500 products at once. Every imported row becomes a draft for review.</p></div><input id="csvFile" type="file" accept=".csv,text/csv"></div><div id="csvPreview" class="notice" style="display:none;margin-top:14px"></div><div class="actions"><button class="btn" onclick="downloadCsvTemplate()">CSV template</button><button class="btn" onclick="previewCsv()">Preview CSV</button><button class="btn primary" onclick="importCsv()">Import as drafts</button></div></div></section>
+</style><style id="nuvora-admin-redesign">
+:root{
+  --bg:#f5f6f3;--surface:#ffffff;--surface-soft:#f8faf7;--text:#162019;--muted:#707a73;
+  --line:#e4e8e2;--accent:#245b3a;--accent-soft:#edf5ee;--accent-strong:#163d27;
+  --warning:#8a5a12;--warning-soft:#fbf3e3;--danger:#b74747;
+  --shadow:0 12px 35px rgba(26,43,31,.07);--shadow-lg:0 24px 70px rgba(25,40,29,.12);
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{background:var(--bg)!important;color:var(--text)!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+.app{display:grid!important;grid-template-columns:258px minmax(0,1fr)!important;min-height:100vh;background:var(--bg)!important}
+.side{position:sticky!important;top:0;height:100vh!important;padding:28px 18px 20px!important;border-right:1px solid var(--line)!important;background:#fbfcfa!important;color:var(--text)!important;z-index:50}
+.side .brand{font-size:22px!important;color:var(--text)!important;padding:3px 10px 34px!important;letter-spacing:-.6px}
+.side .brand span{color:var(--accent)!important}
+.side .brand .muted{color:#9aa39d!important;text-transform:uppercase;letter-spacing:.14em;font-size:9px!important}
+.nav{gap:5px!important}
+.nav button{display:flex!important;align-items:center!important;gap:12px!important;width:100%!important;padding:12px 13px!important;border-radius:12px!important;background:transparent!important;border:1px solid transparent!important;color:#727b74!important;font-size:13px!important;font-weight:650!important;letter-spacing:0!important;text-align:left!important}
+.nav button::before{content:attr(data-icon);width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:#f1f3ef;color:#77827a;font-size:13px;font-weight:800}
+.nav button:hover{background:#f4f7f3!important;border-color:#e7ebe5!important;color:var(--text)!important}
+.nav button.active{background:var(--accent-soft)!important;border-color:#dcebdd!important;color:var(--accent-strong)!important}
+.nav button.active::before{background:#dcebdd;color:var(--accent)!important}
+.private{margin-top:auto!important;border:1px solid var(--line)!important;background:#fff!important;padding:14px!important;border-radius:15px!important;color:var(--muted)!important;box-shadow:0 8px 20px rgba(30,45,34,.04)}
+.private .btn{background:#f2f4f1!important;color:#334139!important;border-color:#dfe5dd!important}
+.main{max-width:none!important;padding:0 34px 60px!important;background:var(--bg)!important}
+.top{position:sticky!important;top:0!important;z-index:40!important;display:flex!important;justify-content:space-between!important;align-items:center!important;gap:20px!important;margin:0 -34px 34px!important;padding:18px 34px!important;background:rgba(245,246,243,.94)!important;border-bottom:1px solid rgba(220,226,219,.88)!important;backdrop-filter:blur(18px)!important}
+.top-copy{min-width:0}
+.top-breadcrumb{display:flex;gap:8px;align-items:center;text-transform:uppercase;letter-spacing:.12em;font-size:9px;font-weight:800;color:#99a39b;margin-bottom:8px}
+.top-breadcrumb i{font-style:normal;color:#c1c8c2}
+.top h1{font-size:30px!important;line-height:1!important;letter-spacing:-1.3px!important;color:var(--text)!important;margin:0 0 7px!important}
+.top p{color:var(--muted)!important;font-size:12px!important}
+.top-actions{display:flex;align-items:center;gap:8px}
+.live-pill{display:inline-flex;align-items:center;gap:7px;padding:9px 11px;border:1px solid #dfe8df;background:#fff;border-radius:999px;font-size:10px;font-weight:800;color:#526056}
+.live-pill i{width:7px;height:7px;background:#56a36e;border-radius:50%;display:block;box-shadow:0 0 0 4px #e9f4eb}
+.btn{background:#fff!important;color:#243028!important;border:1px solid #dfe5dd!important;border-radius:11px!important;box-shadow:none!important;padding:10px 13px!important;font-size:11px!important;font-weight:750!important}
+.btn:hover{border-color:#c4d0c5!important;background:#f8faf7!important}
+.btn.primary{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.btn.primary:hover{background:var(--accent-strong)!important}
+.top-btn{padding:9px 12px!important}
+.eyebrow,.section-kicker{color:#819087!important;text-transform:uppercase!important;letter-spacing:.14em!important;font-size:9px!important;font-weight:850!important}
+.view{display:none}
+.view.active{display:block}
+.dashboard-hero{display:flex;justify-content:space-between;gap:25px;align-items:flex-end;padding:6px 2px 30px}
+.dashboard-hero h2{font-size:33px;letter-spacing:-1.7px;line-height:1.02;margin:9px 0 10px;max-width:650px}
+.dashboard-hero p{max-width:650px;color:var(--muted);font-size:13px;line-height:1.65;margin:0}
+.hero-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.stats{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:13px!important}
+.stat{position:relative;overflow:hidden;background:#fff!important;border:1px solid var(--line)!important;border-radius:18px!important;padding:20px!important;box-shadow:var(--shadow)!important;min-height:150px}
+.stat-featured{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.stat-warning{background:#fffdf8!important;border-color:#f0e2bf!important}
+.stat-label{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.11em;color:#7b857e}
+.stat-featured .stat-label,.stat-featured .stat-foot{color:#d7e9dc}
+.stat b{font-size:38px!important;letter-spacing:-1.8px!important;margin:18px 0 5px!important;line-height:1!important}
+.stat-foot{font-size:10px;color:#98a19a}
+.stat-mark{position:absolute;right:17px;top:17px;font-size:9px;color:#c0c8c2;font-weight:900;letter-spacing:.1em}
+.stat-featured .stat-mark{color:#78a98a}
+.admin-grid-wide{display:grid;grid-template-columns:1.45fr .8fr;gap:14px;margin-top:14px}
+.panel{background:#fff!important;border:1px solid var(--line)!important;border-radius:18px!important;padding:20px!important;box-shadow:var(--shadow)!important}
+.premium-panel{margin-top:14px!important}
+.admin-grid-wide .premium-panel{margin-top:0!important}
+.panel-head,.catalog-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px}
+.panel h2{color:var(--text)!important;font-size:17px!important;letter-spacing:-.4px!important;margin:4px 0 4px!important}
+.muted{color:var(--muted)!important}
+.panel-head .muted{margin:0;line-height:1.5}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}
+.quick-card{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#fafbf9;color:var(--text);text-align:left;cursor:pointer;transition:.18s ease}
+.quick-card:hover{transform:translateY(-1px);border-color:#cad6cb;background:#fff;box-shadow:0 8px 18px rgba(28,45,33,.05)}
+.quick-card .quick-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-weight:900}
+.quick-card span:nth-child(2){min-width:0;display:grid;gap:3px}
+.quick-card b{font-size:12px}
+.quick-card small{font-size:10px;color:#89938b;white-space:normal}
+.quick-card em{margin-left:auto;font-style:normal;color:#9ba59e}
+.system-list{display:grid;gap:7px;margin-top:16px}.system-list .row{padding:11px 0;border-top:1px solid var(--line);font-size:11px}.system-list .row:first-child{border-top:0}
+.health-loading{display:flex;gap:9px;align-items:center;padding:16px 0;color:var(--muted);font-size:11px}.health-loading i{width:7px;height:7px;border-radius:50%;background:#b7c0b8}
+.text-btn{background:none;border:0;padding:10px 0 0;color:var(--accent);font-size:11px;font-weight:800;cursor:pointer}
+.structure-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
+.structure-grid>div{padding:16px;border:1px solid var(--line);border-radius:13px;background:#fafbf9}
+.structure-num{display:block;font-size:9px;color:#99a29b;font-weight:900;letter-spacing:.1em;margin-bottom:22px}
+.structure-grid b{display:block;font-size:13px;margin-bottom:6px}
+.structure-grid small{display:block;color:#89938b;font-size:10px;line-height:1.5}
+.catalog-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin:8px 2px 18px}
+.catalog-head h2{font-size:34px;letter-spacing:-1.5px;margin:6px 0}
+.catalog-head p{font-size:12px;color:var(--muted);margin:0;max-width:650px}
+.catalog-actions{display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+.retailer-btn{color:#9aa39c!important;background:#f4f5f2!important}
+.catalog-toolbar{display:flex;justify-content:space-between;align-items:center;gap:15px;margin-bottom:12px;padding:11px 13px!important}
+.catalog-search{display:flex;align-items:center;gap:8px;max-width:560px;width:100%;background:#f8faf7;border:1px solid #e6ebe5;border-radius:11px;padding:0 12px}
+.catalog-search span{font-size:17px;color:#98a29b}
+.catalog-search input{border:0!important;background:transparent!important;color:var(--text)!important;padding:10px 0!important;border-radius:0!important}
+.catalog-search input::placeholder{color:#a3aba5}
+.catalog-filter-note{display:flex;gap:7px;align-items:center;font-size:10px;color:#8a938c;white-space:nowrap}
+.filter-dot{width:6px;height:6px;background:#6ba879;border-radius:50%}
+.catalog-panel{padding:0!important;overflow:hidden}
+.catalog-panel-head{padding:19px 20px;border-bottom:1px solid var(--line)}
+.library-note{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:#a0a8a2}
+.product-library{padding:8px 18px 16px}
+.product-library .row{margin:5px 0;border:1px solid var(--line);border-radius:14px!important;padding:14px!important;background:#fbfcfa;transition:.15s ease}
+.product-library .row:hover{background:#fff;border-color:#d4ddd5;box-shadow:0 7px 18px rgba(28,45,33,.04)}
+.product-library .row:first-of-type{border-top:1px solid var(--line)}
+.product-library .muted{font-size:10px}
+.tag{background:#eef2ed!important;color:#6e786f!important;border:1px solid #e2e8e1!important}
+.bulk-panel{margin-top:12px!important;padding:0!important}
+.bulk-drop{margin:16px 20px 0;border:1px dashed #cfd8d0;border-radius:14px;background:#fafcf9;padding:18px;display:flex;align-items:center;gap:12px}
+.bulk-icon{width:38px;height:38px;border-radius:11px;background:var(--accent-soft);display:grid;place-items:center;color:var(--accent);font-weight:900}
+.bulk-drop div:nth-child(2){display:grid;gap:4px}.bulk-drop b{font-size:12px}.bulk-drop span{font-size:10px;color:#929b94}
+.bulk-drop input{margin-left:auto;max-width:260px}
+.bulk-actions{padding:0 20px 20px}
+.formgrid{gap:13px!important}
+.field label{font-size:9px!important;text-transform:uppercase!important;letter-spacing:.1em!important;font-weight:850!important;color:#879189!important}
+input,textarea,select,.field input,.field textarea,.field select{background:#fafbf9!important;color:var(--text)!important;border:1px solid #dfe5dd!important;border-radius:11px!important;box-shadow:none!important}
+input:focus,textarea:focus,select:focus,.field input:focus,.field textarea:focus,.field select:focus{border-color:#8eac95!important;box-shadow:0 0 0 3px rgba(36,91,58,.08)!important;background:#fff!important}
+textarea{line-height:1.55}
+.notice{background:#f7faf6!important;border-color:#dfe8df!important;color:#68746b!important}
+.workspace-note{background:#f2f7f3!important;border-color:#dce9de!important;color:#536158!important}
+.modal-backdrop{background:rgba(14,24,17,.38)!important;backdrop-filter:blur(9px)!important}
+.modal{background:#fff!important;border:1px solid #dfe5dd!important;border-radius:22px!important;box-shadow:var(--shadow-lg)!important}
+.modal-head{background:rgba(255,255,255,.96)!important;border-color:var(--line)!important}
+.modal-head .eyebrow{color:#7e8b81!important}
+.modal-head h2{font-size:22px!important;letter-spacing:-.7px!important}
+.modal-body{background:#fff!important}
+.importbar input{background:#f8faf7!important;color:var(--text)!important;border-color:#dfe5dd!important}
+.image-item{background:#f2f4f1!important;border-color:#dde4dd!important}
+.image-item button{background:rgba(24,33,27,.78)!important}
+.ai-studio{border-color:#dce8de!important;background:#f5f9f4!important}
+.ai-studio-head h3{color:var(--text)!important}
+.ai-status{color:#79837c!important}
+.modal-actions{border-color:var(--line)!important}
+.auth-gate{background:rgba(245,246,243,.98)!important}
+.auth-card{background:#fff!important;border:1px solid var(--line)!important;box-shadow:var(--shadow-lg)!important;border-radius:22px!important;color:var(--text)!important}
+.auth-card h1{color:var(--text)!important}
+.auth-card p,.auth-gate small{color:var(--muted)!important}
+.google-btn{background:#fff!important;color:#1e2721!important;border:1px solid #d9e1da!important}
+@media(max-width:1050px){.main{padding-left:22px!important;padding-right:22px!important}.top{margin-left:-22px!important;margin-right:-22px!important;padding-left:22px!important;padding-right:22px!important}.dashboard-hero{align-items:flex-start;flex-direction:column}.hero-actions{justify-content:flex-start}.admin-grid-wide{grid-template-columns:1fr}.structure-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:850px){.side{display:block!important;position:fixed!important;left:0!important;right:0!important;top:auto!important;bottom:0!important;height:auto!important;padding:7px 9px calc(7px + env(safe-area-inset-bottom))!important;border-right:0!important;border-top:1px solid var(--line)!important;background:rgba(251,252,250,.96)!important;backdrop-filter:blur(18px)!important}.app{display:block!important}.main{padding:16px 12px calc(92px + env(safe-area-inset-bottom))!important}.top{margin:-16px -12px 22px!important;padding:13px 12px!important;position:sticky!important}.top-actions{width:100%;justify-content:stretch}.live-pill{display:none}.top-btn{flex:1}.side .brand,.side .private{display:none!important}.nav{display:flex!important;gap:4px!important;overflow-x:auto!important;scrollbar-width:none}.nav button{flex:1 0 74px!important;min-width:72px!important;justify-content:center!important;flex-direction:column!important;gap:4px!important;padding:7px 6px!important;font-size:9px!important}.nav button::before{width:24px;height:24px!important;font-size:11px!important}.dashboard-hero h2,.catalog-head h2{font-size:28px}.stats{grid-template-columns:1fr 1fr!important}.stat{min-height:130px;padding:16px!important}.stat b{font-size:30px!important}.structure-grid{grid-template-columns:1fr 1fr}.catalog-head{align-items:flex-start;flex-direction:column}.catalog-actions{justify-content:flex-start}.catalog-toolbar{align-items:stretch;flex-direction:column}.catalog-search{max-width:none}.catalog-filter-note{white-space:normal}.product-library{padding:8px}.bulk-drop{margin:14px 14px 0;align-items:flex-start;flex-direction:column}.bulk-drop input{max-width:none;width:100%}.bulk-actions{padding:0 14px 14px}.modal-backdrop{padding:8px!important}.modal{width:100%!important;max-height:calc(100vh - 16px)!important;border-radius:20px!important}.quick-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.stats{gap:8px!important}.stat{padding:13px!important;border-radius:15px!important}.stat b{font-size:26px!important;margin-top:14px!important}.stat-mark{display:none}.structure-grid{grid-template-columns:1fr}.top h1{font-size:26px!important}.catalog-actions{width:100%}.catalog-actions .btn{flex:1}.formgrid{grid-template-columns:1fr!important}.field.full{grid-column:auto!important}}
+</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
+<button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
+<button data-icon="▣" onclick="show('products',this)">Products</button>
+<button data-icon="☷" onclick="show('categories',this)">Categories</button>
+<button data-icon="◫" onclick="show('collections',this)">Collections</button>
+<button data-icon="□" onclick="show('orders',this)">Orders</button>
+<button data-icon="↗" onclick="show('social',this)">Content</button>
+<button data-icon="◌" onclick="show('analytics',this)">Analytics</button>
+<button data-icon="⚙" onclick="show('settings',this)">Settings</button>
+</nav><div class="private">Private control center.<br><button class="btn" style="width:100%;margin-top:10px" onclick="signOutAdmin()">Sign out</button></div></aside><main class="main"><header class="top">
+  <div class="top-copy">
+    <div class="top-breadcrumb"><span>Nuvora</span><i>/</i><span>Control center</span></div>
+    <h1 id="title">Overview</h1>
+    <p id="sub">Manage products, imports, collections and storefront content.</p>
+  </div>
+  <div class="top-actions">
+    <div class="live-pill"><i></i> Store online</div>
+    <button class="btn top-btn" onclick="healthCheck()">System status</button>
+    <button class="btn top-btn primary" onclick="window.open('/','_blank')">View store ↗</button>
+  </div>
+</header>
+<section id="overview" class="view active">
+  <div class="dashboard-hero">
+    <div>
+      <div class="eyebrow">Store overview</div>
+      <h2>Everything you need to run Nuvora.</h2>
+      <p>Your private workspace for importing products, cleaning listings, organizing the catalog and publishing what customers see.</p>
+    </div>
+    <div class="hero-actions">
+      <button class="btn primary" onclick="openProductModal(true)">Import Amazon</button>
+      <button class="btn" onclick="openTemuImport()">Import Temu</button>
+      <button class="btn" onclick="openProductModal(false)">Add product</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat stat-featured"><span class="stat-label">Published products</span><b id="shopCount">0</b><span class="stat-foot">Shop catalog</span><div class="stat-mark">01</div></div>
+    <div class="stat"><span class="stat-label">Finds</span><b id="findCount">0</b><span class="stat-foot">Discovery listings</span><div class="stat-mark">02</div></div>
+    <div class="stat"><span class="stat-label">Learning</span><b id="learnCount">0</b><span class="stat-foot">Course listings</span><div class="stat-mark">03</div></div>
+    <div class="stat stat-warning"><span class="stat-label">Drafts</span><b id="draftCount">0</b><span class="stat-foot">Need your review</span><div class="stat-mark">04</div></div>
+  </div>
+
+  <div class="admin-grid-wide">
+    <div class="panel premium-panel">
+      <div class="panel-head">
+        <div><span class="section-kicker">Quick actions</span><h2>Build the catalog</h2><p class="muted">The fast lane for getting retailer products into Nuvora.</p></div>
+      </div>
+      <div class="quick-grid">
+        <button class="quick-card" onclick="openProductModal(true)"><span class="quick-icon">A</span><span><b>Amazon import</b><small>Paste a product link and pull listing data.</small></span><em>→</em></button>
+        <button class="quick-card" onclick="openTemuImport()"><span class="quick-icon">T</span><span><b>Temu import</b><small>Capture prices, images, specs and highlights.</small></span><em>→</em></button>
+        <button class="quick-card" onclick="openProductModal(false)"><span class="quick-icon">+</span><span><b>Manual product</b><small>Create a listing from scratch.</small></span><em>→</em></button>
+        <button class="quick-card" onclick="show('products',document.querySelector('.nav button:nth-child(2)'))"><span class="quick-icon">↗</span><span><b>Review drafts</b><small>Clean up imported products before publishing.</small></span><em>→</em></button>
+      </div>
+    </div>
+
+    <div class="panel premium-panel">
+      <div class="panel-head">
+        <div><span class="section-kicker">System health</span><h2>Connections</h2><p class="muted">Current availability of the services Nuvora depends on.</p></div>
+      </div>
+      <div id="systemStatus" class="system-list"><div class="health-loading"><i></i><span>Checking connections…</span></div></div>
+      <button class="text-btn" onclick="show('settings',document.querySelectorAll('.nav button')[7])">Open settings →</button>
+    </div>
+  </div>
+
+  <div class="panel premium-panel">
+    <div class="panel-head">
+      <div><span class="section-kicker">Store structure</span><h2>How Nuvora is organized</h2></div>
+    </div>
+    <div class="structure-grid">
+      <div><span class="structure-num">01</span><b>Shop</b><small>Commerce-ready products and future direct checkout.</small></div>
+      <div><span class="structure-num">02</span><b>Finds</b><small>Curated retailer products such as Amazon and Temu.</small></div>
+      <div><span class="structure-num">03</span><b>Learn</b><small>Courses and educational offers when enabled.</small></div>
+      <div><span class="structure-num">04</span><b>Collections</b><small>Curated groups that span multiple product types.</small></div>
+    </div>
+  </div>
+</section>
+<section id="products" class="view">
+  <div class="catalog-head">
+    <div>
+      <span class="eyebrow">Catalog workspace</span>
+      <h2>Products</h2>
+      <p>Import, edit, organize and publish the products customers discover on Nuvora.</p>
+    </div>
+    <div class="catalog-actions">
+      <button class="btn retailer-btn" disabled>Shopify · Coming soon</button>
+      <button class="btn" onclick="openProductModal(true)">Amazon</button>
+      <button class="btn" onclick="openTemuImport()">Temu</button>
+      <button class="btn primary" onclick="openProductModal(false)">+ Add product</button>
+    </div>
+  </div>
+
+  <div class="catalog-toolbar panel">
+    <div class="catalog-search"><span>⌕</span><input id="adminProductSearch" oninput="renderProducts()" placeholder="Search product name, brand or ASIN"></div>
+    <div class="catalog-filter-note"><span class="filter-dot"></span><span>Drafts stay private until published.</span></div>
+  </div>
+
+  <div class="panel catalog-panel">
+    <div class="catalog-panel-head"><div><span class="section-kicker">Live catalog</span><h2>Product library</h2></div><span class="library-note">Edit · Publish · Delete</span></div>
+    <div id="productRows" class="product-library"></div>
+  </div>
+
+  <div class="panel catalog-panel bulk-panel">
+    <div class="catalog-panel-head"><div><span class="section-kicker">Bulk tools</span><h2>CSV import</h2><p class="muted">Bring in up to 500 products. Imported rows remain drafts until you publish them.</p></div></div>
+    <div class="bulk-drop">
+      <div class="bulk-icon">↓</div>
+      <div><b>Drop your CSV here</b><span>or choose a file below</span></div>
+      <input id="csvFile" type="file" accept=".csv,text/csv">
+    </div>
+    <div id="csvPreview" class="notice" style="display:none;margin-top:14px"></div>
+    <div class="actions bulk-actions"><button class="btn" onclick="downloadCsvTemplate()">CSV template</button><button class="btn" onclick="previewCsv()">Preview CSV</button><button class="btn primary" onclick="importCsv()">Import as drafts</button></div>
+  </div>
+</section>
 <section id="categories" class="view"><div class="panel"><h2>Categories</h2><p class="muted">Categories are stored in Supabase and can be used by products and storefront filters.</p><div class="formgrid"><div class="field"><label>Name</label><input id="catName" placeholder="Gaming Setup"></div><div class="field"><label>Slug</label><input id="catSlug" placeholder="gaming-setup"></div><div class="field full"><label>Description</label><textarea id="catDesc" placeholder="Optional category description"></textarea></div></div><div class="actions"><button class="btn primary" onclick="createCategory()">Create category</button></div><div id="categoryRows" style="margin-top:16px"></div></div></section>
 <section id="collections" class="view"><div class="panel"><h2>Collections</h2><p class="muted">Create curated groups that can later be attached to products.</p><div class="formgrid"><div class="field"><label>Name</label><input id="colName" placeholder="Gaming Setup"></div><div class="field"><label>Slug</label><input id="colSlug" placeholder="gaming-setup"></div><div class="field full"><label>Description</label><textarea id="colDesc"></textarea></div></div><div class="actions"><button class="btn primary" onclick="createCollection()">Create collection</button></div><div id="collectionRows" style="margin-top:16px"></div></div></section>
 <section id="orders" class="view"><div class="panel"><h2>Orders</h2><p class="muted">Shopify orders are not mirrored into Supabase yet. The storefront checkout can hand customers to Shopify once Shopify is configured.</p><button class="btn" onclick="show('settings',document.querySelectorAll('.nav button')[7])">Configure Shopify</button></div></section>
