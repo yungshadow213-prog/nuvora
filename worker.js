@@ -73,57 +73,114 @@ export default {
       }
 
 async function scrapeTemuListing(temuUrl){
-  const r=await fetch(temuUrl,{headers:{'user-agent':'Mozilla/5.0','accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8','accept-language':'en-US,en;q=0.9'}});
+  const r=await fetch(temuUrl,{headers:{'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36','accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8','accept-language':'en-US,en;q=0.9'}});
   const html=await r.text();
   if(!r.ok||html.length<500)return {error:'Temu page could not be read right now.'};
+
+  const decode=amazonDecode;
   const findMeta=(key)=>{
     const lower=html.toLowerCase();
-    const needle='<meta';
-    let p=lower.indexOf(needle);
+    let p=lower.indexOf('<meta');
     while(p>=0){
       const e=html.indexOf('>',p);
       if(e<0)break;
-      const tag=html.slice(p,e+1);
-      const attrs=tag.toLowerCase();
-      if(attrs.includes('property="'+key.toLowerCase()+'"')||attrs.includes("property='"+key.toLowerCase()+"'")||attrs.includes('name="'+key.toLowerCase()+'"')||attrs.includes("name='"+key.toLowerCase()+"'")){
+      const tag=html.slice(p,e+1), attrs=tag.toLowerCase();
+      const wanted=key.toLowerCase();
+      if(attrs.includes('property="'+wanted+'"')||attrs.includes("property='"+wanted+"'")||attrs.includes('name="'+wanted+'"')||attrs.includes("name='"+wanted+"'")){
         const a=attrs.indexOf('content=');
         if(a>=0){
           const q=tag[a+8];
           if(q==='"'||q==="'"){
             const b=tag.indexOf(q,a+9);
-            if(b>0)return amazonDecode(tag.slice(a+9,b));
+            if(b>a+9)return decode(tag.slice(a+9,b));
           }
         }
       }
-      p=lower.indexOf(needle,e+1);
+      p=lower.indexOf('<meta',e+1);
     }
     return '';
   };
-  const title=findMeta('og:title')||findMeta('twitter:title');
-  const description=findMeta('og:description')||findMeta('description');
-  const images=[];
-  const addImage=(v)=>{
-    if(!v)return;
-    const u=String(v).replace('\\u0026','&');
-    if((u.startsWith('http://')||u.startsWith('https://'))&&!images.includes(u)&&images.length<20)images.push(u);
+
+  const addUnique=(arr,value,max=40)=>{
+    const u=String(value||'').replace(/\\u0026/g,'&').replace(/\\\//g,'/').trim();
+    if((u.startsWith('https://')||u.startsWith('http://'))&&!arr.includes(u)&&arr.length<max)arr.push(u);
   };
-  addImage(findMeta('og:image'));
-  addImage(findMeta('twitter:image'));
-  const plain=amazonDecode(html.replaceAll('<',' ').replaceAll('>',' '));
-  const moneyText=(plain.match(/(?:US\$|\$|£|€|NGN)\s*[0-9][0-9,.]*/i)||[])[0]||'';
-  const priceNumber=moneyText.replace(/[^0-9.]/g,'');
-  const reviewText=(plain.match(/[0-9][0-9,]*\s+reviews?/i)||[])[0]||'';
-  const reviewNumber=reviewText.replace(/[^0-9]/g,'');
-  const ratingText=(plain.match(/[0-5](?:\.[0-9])?\s*(?:out of 5|\/5)/i)||[])[0]||'';
-  const ratingNumber=ratingText.match(/[0-5](?:\.[0-9])?/);
-  const dealText=(plain.match(/(?:limited time|flash|deal|sale)[^.]{0,80}/i)||[])[0]||'';
-  const idMatch=temuUrl.indexOf('goods_id=');
-  let productId=null;
-  if(idMatch>=0){
-    const raw=temuUrl.slice(idMatch+9).split('&')[0];
-    if(raw&&raw.split('').every(c=>c>='0'&&c<='9'))productId=raw;
+  const images=[];
+  try{
+    const q=new URL(temuUrl).searchParams.get('top_gallery_url');
+    if(q)addUnique(images,q);
+  }catch(e){}
+  addUnique(images,findMeta('og:image'));
+  addUnique(images,findMeta('twitter:image'));
+
+  const jsonLd=[];
+  const scriptRe=/<script[^>]*type=["']application\\/ld\\+json["'][^>]*>([\\s\\S]*?)<\\/script>/gi;
+  for(const m of html.matchAll(scriptRe)){
+    try{
+      const parsed=JSON.parse(m[1].trim());
+      if(Array.isArray(parsed))jsonLd.push(...parsed); else jsonLd.push(parsed);
+    }catch(e){}
   }
-  return {id:productId,title:title.slice(0,180),description:description.slice(0,8000),current_price:priceNumber?Number(priceNumber):null,rating:ratingNumber?Number(ratingNumber[0]):null,review_count:reviewNumber?Number(reviewNumber):null,deal_text:dealText.trim()||null,images};
+  const productLd=jsonLd.find(x=>x&&((x['@type']==='Product')||(Array.isArray(x['@type'])&&x['@type'].includes('Product'))))||{};
+  const offers=Array.isArray(productLd.offers)?productLd.offers[0]:(productLd.offers||{});
+  const aggregate=productLd.aggregateRating||{};
+
+  const title=decode(productLd.name||findMeta('og:title')||findMeta('twitter:title'));
+  const description=decode(productLd.description||findMeta('og:description')||findMeta('description'));
+  const brand=decode(typeof productLd.brand==='string'?productLd.brand:(productLd.brand?.name||''));
+  const ldImages=Array.isArray(productLd.image)?productLd.image:(productLd.image?[productLd.image]:[]);
+  for(const u of ldImages)addUnique(images,u);
+
+  const rawGallery=[];
+  const galleryParamRe=/top_gallery_url=([^&"\\s]+)/gi;
+  for(const m of html.matchAll(galleryParamRe)){
+    try{addUnique(rawGallery,decodeURIComponent(m[1]));}catch(e){}
+  }
+  for(const u of rawGallery)addUnique(images,u);
+
+  const kwcdnRe=/(https?:\\/\\/img\\.kwcdn\\.com\\/[^"'\\s<>\\\\]+)/gi;
+  for(const m of html.matchAll(kwcdnRe)){
+    let u=m[1].replace(/&amp;/gi,'&').replace(/\\u0026/g,'&');
+    addUnique(images,u);
+  }
+
+  const plain=decode(html.replaceAll('<',' ').replaceAll('>',' '));
+  const money=(v)=>{
+    const m=String(v||'').match(/(?:US\\$|\\$|£|€|NGN)\\s*([0-9][0-9,.]*(?:\\.[0-9]{1,2})?)/i);
+    return m?Number(m[1].replace(/,/g,'')):null;
+  };
+  const currentPrice=money(offers.price)||money(findMeta('product:price:amount'));
+  const currency=String(offers.priceCurrency||findMeta('product:price:currency')||'').toUpperCase()||null;
+  const originalPrice=money(offers.highPrice)||money((plain.match(/(?:original|was|list price)[^$£€]{0,40}(?:US\\$|\\$|£|€|NGN)\\s*[0-9][0-9,.]*/i)||[])[0]);
+  const reviewText=(plain.match(/[0-9][0-9,]*\\s+reviews?/i)||[])[0]||'';
+  const reviewCount=aggregate.reviewCount?Number(aggregate.reviewCount):Number(reviewText.replace(/[^0-9]/g,''))||null;
+  const rating=aggregate.ratingValue?Number(aggregate.ratingValue):((plain.match(/[0-5](?:\\.[0-9])?\\s*(?:out of 5|\\/5)/i)||[])[0]||'').match(/[0-5](?:\\.[0-9])?/);
+  const ratingValue=typeof rating==='object'&&rating?Number(rating[0]):(Number(rating)||null);
+  const dealText=(plain.match(/(?:limited time|flash|deal|sale|off)[^.]{0,100}/i)||[])[0]?.trim()||null;
+  const availability=String(offers.availability||'').split('/').pop()||null;
+  const idMatch=temuUrl.match(/(?:goods_id=|-g-)([0-9]{10,18})/i);
+  const productId=idMatch?idMatch[1]:null;
+
+  if(!images.length){
+    const fallback=(plain.match(/https?:\\/\\/[^"'\\s<>]+\\.(?:jpg|jpeg|png|webp)(?:\\?[^"'\\s<>]*)?/i)||[])[0];
+    if(fallback)addUnique(images,fallback);
+  }
+
+  return {
+    id:productId,
+    title:title.slice(0,180),
+    brand:brand.slice(0,120),
+    description:description.slice(0,12000),
+    current_price:currentPrice,
+    list_price:originalPrice,
+    discount_percent:currentPrice&&originalPrice&&originalPrice>currentPrice?Math.round((1-currentPrice/originalPrice)*100):null,
+    currency,
+    rating:ratingValue,
+    review_count:reviewCount,
+    deal_text:dealText,
+    availability,
+    images
+  };
 }
       if(url.pathname==='/api/temu/prepare'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
