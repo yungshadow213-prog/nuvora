@@ -137,7 +137,30 @@ main{min-height:calc(100vh - 76px)}.view{display:none}.view.active{display:block
 .card-save{position:absolute;right:9px;top:9px;z-index:5;width:34px;height:34px;border:1px solid rgba(255,255,255,.13);border-radius:50%;background:rgba(7,17,31,.72);color:#fff}.card-save.saved{color:#ff9ac9}.card-meta{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-top:6px;font-size:10px;color:var(--muted)}.card-rating{color:#ffd978;font-weight:800}.card-source{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#8fa5bc;font-size:10px;margin-bottom:4px}.card-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}.card-action{border:1px solid rgba(111,217,255,.2);background:rgba(111,217,255,.08);color:#ccefff;border-radius:9px;padding:6px 8px;font-size:10px;font-weight:800}
 @media(max-width:700px){.store-search{display:none}.commerce-strip{grid-template-columns:1fr 1fr}.home-search{max-width:none}.home-search input{padding:13px}.home-search button{padding:0 15px}}
 </style>
-</head>
+<style id="nuvora-clean-redesign">
+:root{--bg:#f6f7f5;--surface:#fff;--surface2:#f0f2ef;--text:#172019;--muted:#6f786f;--line:#e3e7e2;--accent:#1d5c4a;--accent2:#dceee8;--shadow:0 12px 34px rgba(24,36,28,.08)}
+html,body{background:var(--bg);color:var(--text)}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.shell{width:min(calc(100% - 40px),1280px)}
+.topbar{background:rgba(246,247,245,.94);border-bottom:1px solid var(--line);backdrop-filter:blur(16px)}
+.nav{height:72px}.brandmark{width:34px;height:34px;border-radius:10px;background:var(--accent);box-shadow:none}.brandmark:before{border-color:#fff}.brand small{color:var(--muted)}
+.icon-btn,.avatar-btn{border-color:var(--line);background:#fff;color:var(--text);border-radius:10px}.cart-count{background:var(--accent);color:#fff}
+.menu-panel{background:#fff;border-color:var(--line);box-shadow:var(--shadow)}.menu-list button{color:var(--text)}.menu-list button:hover{background:var(--surface2)}
+.hero{padding:76px 0 44px}.hero-grid{gap:64px}.eyebrow{color:var(--accent)}.eyebrow i{background:var(--accent)}
+h1{font-size:clamp(48px,6vw,76px);color:var(--text)}.script{color:var(--accent)}.hero-copy{color:var(--muted);font-size:17px}
+.btn{border-color:var(--line);background:#fff;color:var(--text);border-radius:10px;box-shadow:none}.btn.primary{background:var(--accent);color:#fff}.btn:hover{border-color:#cbd2cc}
+.frame{background:#fff;border-color:var(--line);box-shadow:var(--shadow)}.grad1{background:linear-gradient(145deg,#e7f1ed,#dbe7e2)}.grad2{background:linear-gradient(145deg,#f2eee7,#e9e3d8)}.art-kicker,.art-footer{color:#66736b}.art-title{color:var(--text)}
+.section{padding:34px 0}.section-head h2{color:var(--text)}.section-head p{color:var(--muted)}
+.category-grid{grid-template-columns:repeat(4,1fr)}.cat{background:#fff;border-color:var(--line);box-shadow:none}.cat:hover{border-color:#c7d2cb;box-shadow:var(--shadow)}.cat p{color:var(--muted)}.arrow{background:var(--surface2);color:var(--accent)}
+.product-grid{gap:18px}.product{background:#fff;border-color:var(--line);border-radius:14px}.product:hover{border-color:#c8d4cd;box-shadow:var(--shadow);transform:translateY(-3px)}
+.thumb,.product:nth-child(2) .thumb,.product:nth-child(3) .thumb,.product:nth-child(4) .thumb{background:#eef1ee}.prodtext{background:#fff}.prodtext h4,.prodprice{color:var(--text)}
+.discover{background:#fff;border-color:var(--line)}.notice{background:#f1f5f2;border-color:#dce5df}.footer{border-color:var(--line);color:#7b847d}
+.browse{padding:46px 0}.search{background:#fff;border-color:var(--line);color:var(--text)}.chip{background:#fff;border-color:var(--line);color:#59645c}.chip.active{background:var(--accent2);border-color:#c9e0d7;color:var(--accent)}
+.auth-card,.modal-card{background:#fff;border-color:var(--line);box-shadow:var(--shadow)}.field input,.product-option select,.variant-select,.qty-control{background:#fff;color:var(--text);border-color:var(--line)}
+.detail-thumb{background:#eef1ee}.cart-row,.empty{background:#fff;border-color:var(--line)}.product-main-image,.product-thumb{background:#fff;border-color:var(--line)}.product-thumb.active{border-color:var(--accent);box-shadow:0 0 0 1px rgba(29,92,74,.12)}
+.product-info .eyebrow{color:var(--accent)}.product-submeta,.detail-meta{color:var(--muted)}.product-rating{color:#4d5a51}.product-trust div,.spec-item{background:#fff;border-color:var(--line)}.product-trust span,.spec-item b{color:#7b857d}.menu-divider{background:var(--line)}.close{background:var(--surface2);color:var(--text)}
+@media(max-width:850px){.category-grid{grid-template-columns:1fr 1fr}}@media(max-width:560px){.shell{width:calc(100% - 24px)}}
+</style></head>
 <body>
 <div class="announcement"><div class="shell"><b>Nuvora picks, made simple.</b> Browse curated products, save your favorites, and discover something worth finding.</div></div><header class="topbar"><div class="shell nav">
 <button class="icon-btn" id="menuBtn" aria-label="Open menu">☰</button>
