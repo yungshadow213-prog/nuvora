@@ -668,7 +668,7 @@ async function scrapeAmazonListing(amazonUrl,asin){
     if(!value)return;
     let u=String(value).replace(/\\u0026/g,'&').replace(/\\\//g,'/');
     try{u=JSON.parse('"'+u.replace(/"/g,'\\\"')+'"')}catch(e){}
-    if(/^https?:\\/\\//i.test(u)&&!images.includes(u)&&images.length<30)images.push(u);
+    if((u.startsWith('http://')||u.startsWith('https://'))&&!images.includes(u)&&images.length<30)images.push(u);
   };
   const addImageList=(value)=>{
     if(!value)return;
