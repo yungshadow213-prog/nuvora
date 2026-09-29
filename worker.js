@@ -826,12 +826,14 @@ async function scrapeAmazonListing(amazonUrl,asin){
 
   const featureBlock=html.match(/id=[\x22\x27]feature-bullets[\x22\x27][\s\S]*?<\/ul>/i)?.[0]||'';
   const featureTexts=[...featureBlock.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)].map(m=>clean(amazonDecode(m[1]),800)).filter(Boolean);
-  const detailBlock=html.match(/id=[\x22\x27]detailBullets_feature_div[\x22\x27][\s\S]*?(?:<\/div>){2,5}/i)?.[0]||'';
-  const detailText=clean(amazonDecode(detailBlock.replace(/<[^>]+>/g,' ')),5000);
+  const detailBlock=html.match(/id=[\x22\x27]detailBullets_feature_div[\x22\x27][\s\S]*?(?:<\/ul>|<\/div>\\s*<\/div>)/i)?.[0]||'';
+  const detailTexts=[...detailBlock.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)].map(m=>clean(amazonDecode(m[1]),500)).filter(Boolean);
+  const productDescriptionBlock=html.match(/id=[\x22\x27]productDescription[\x22\x27][\s\S]*?<\/div>/i)?.[0]||'';
+  const productDescription=clean(amazonDecode(productDescriptionBlock.replace(/<[^>]+>/g,' ')),5000);
 
   const descriptionParts=[];
-  if(featureTexts.length)descriptionParts.push('About this item\\n'+featureTexts.join('\\n'));
-  if(detailText)descriptionParts.push('Product details\\n'+detailText);
+  if(featureTexts.length)descriptionParts.push('About this item\\n'+featureTexts.join('\\n'));\n  if(productDescription)descriptionParts.push('Product description\\n'+productDescription);
+  if(detailTexts.length)descriptionParts.push('Product details\\n'+detailTexts.join('\\n'));
   if(categoryPath)descriptionParts.push('Category\\n'+categoryPath);
   if(department)descriptionParts.push('Department\\n'+department);
   if(colors.length)descriptionParts.push('Available colors\\n'+colors.join(', '));
