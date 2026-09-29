@@ -58,6 +58,25 @@ export default {
         const {url:amazonUrl}=await body(request,256*1024);
         if(!amazonUrl||!validUrl(amazonUrl))return json({error:'A valid Amazon product URL is required'},400);
         const parsed=new URL(amazonUrl);
+        if(!/(^|\.)amazon\./i.test(parsed.hostname))return json({error:'Please paste an Amazon product URL.'},400);
+        const asin=asinFromUrl(amazonUrl); if(!asin)return json({error:'Could not find an ASIN in that Amazon URL'},400);
+        const cleanPath=decodeURIComponent(parsed.pathname).replace(/^\/+|\/+$/g,'');
+        const dpIndex=cleanPath.toLowerCase().indexOf('/dp/');
+        const beforeDp=dpIndex>=0?cleanPath.slice(0,dpIndex):cleanPath;
+        const titleHint=beforeDp.split('/').pop().replace(/[-_+]+/g,' ').replace(/\b(?:dp|gp|product)\b/gi,'').replace(/\s+/g,' ').trim().replace(/\b\w/g,c=>c.toUpperCase()).slice(0,180);
+        let duplicate=null;
+        try{const dup=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published,amazon_asin&amazon_asin=eq.'+encodeURIComponent(asin)+'&limit=5');if(dup.ok){const rows=await dup.json();duplicate=rows[0]||null;}}catch(e){}
+        let category_id=null;
+        try{const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cats.ok){const categories=await cats.json();category_id=autoCategory(titleHint,'','',categories);}}catch(e){}
+        let listing=null; try{listing=await scrapeAmazonListing(amazonUrl,asin);}catch(e){listing={error:String(e?.message||e).slice(0,300)};}
+        return json({ok:true,asin,destination_url:amazonUrl,title_hint:listing?.title||titleHint||'Amazon product',retailer:'Amazon',kind:'find',category_id,duplicate,listing:listing||null});
+      }
+
+
+        const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        const {url:amazonUrl}=await body(request,256*1024);
+        if(!amazonUrl||!validUrl(amazonUrl))return json({error:'A valid Amazon product URL is required'},400);
+        const parsed=new URL(amazonUrl);
         if(!/(^|\\.)amazon\\./i.test(parsed.hostname))return json({error:'Please paste an Amazon product URL.'},400);
         const asin=asinFromUrl(amazonUrl); if(!asin)return json({error:'Could not find an ASIN in that Amazon URL'},400);
         const cleanPath=decodeURIComponent(parsed.pathname).replace(/^\\/+|\\/+$/g,'');
@@ -587,6 +606,36 @@ async function amazonGetItem(env,asin){
   // integration layer when credentials are available; return null otherwise.
   return null;
 }
+async function scrapeAmazonListing(amazonUrl,asin){
+  const r=await fetch(amazonUrl,{headers:{'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36','accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8','accept-language':'en-US,en;q=0.9'}});
+  const html=await r.text();
+  if(!r.ok||html.length<1000)return {error:'Amazon page could not be read right now.'};
+  const plain=amazonDecode(html.replace(/<script[\s\S]*?<\/script>/gi,' ').replace(/<style[\s\S]*?<\/style>/gi,' ').replace(/<[^>]+>/g,' '));
+  const findTag=(id)=>{const re=new RegExp('id=["\\\']'+id+'["\\\'][^>]*>([\\s\\S]*?)<\\/','i');const m=html.match(re);return m?amazonDecode(m[1]):''};
+  const findMeta=(key)=>{const re=new RegExp('<meta[^>]+(?:name|property)=["\\\']'+key+'["\\\'][^>]+content=["\\\']([^"\\\']*)["\\\']','i');const m=html.match(re);return m?amazonDecode(m[1]):''};
+  const title=findTag('productTitle')||findMeta('og:title')||findMeta('twitter:title');
+  const brand=findTag('bylineInfo').replace(/^Visit the /i,'').replace(/ Store$/i,'').trim();
+  const deal=findTag('dealBadge')||(/limited time deal/i.test(plain)?'Limited time deal':'');
+  const priceRaw=findTag('priceblock_ourprice')||findTag('priceblock_dealprice')||findTag('corePriceDisplay_desktop_feature_div');
+  const current=amazonMoney(priceRaw);
+  const listRaw=findTag('priceblock_listprice')||findTag('listPrice');
+  const list=amazonMoney(listRaw);
+  const discountMatch=plain.match(/(?:([0-9]{1,3})%\s*(?:off|savings)|save\s+([0-9]{1,3})%)/i);
+  const discount=discountMatch?Number(discountMatch[1]||discountMatch[2]):(current&&list?Math.round((1-current/list)*100):null);
+  const ratingMatch=plain.match(/([0-5]\.[0-9])\s+out of 5 stars/i);
+  const reviewsMatch=plain.match(/([0-9][0-9,]*)\s+(?:ratings|reviews?)/i);
+  const boughtMatch=plain.match(/([0-9][0-9Kk+.]*)\s+bought in past month/i);
+  const shippingMatch=plain.match(/Shipping & Import Charges[^.]{0,220}/i);
+  const taxMatch=plain.match(/Sales taxes may apply[^.]{0,180}/i);
+  const images=[];
+  const imageRe=/(?:\"(?:hiRes|large|medium|thumb)\"\s*:\s*\"(https?:\\/\\/[^"\\]+)\"|https?:\\/\\/[^"\\s]+\.(?:jpg|jpeg|png|webp)(?:\?[^"\\s]*)?)/gi;
+  for(const m of html.matchAll(imageRe)){const u=m[1]||m[0];if(!images.includes(u)&&images.length<30)images.push(u.replace(/\\u0026/g,'&'));}
+  const badge=/#\s*[0-9]+\s+Best Seller/i.test(plain)?'Best Seller':'';
+  return {asin,title:title.slice(0,180),brand:brand.slice(0,120),current_price:current,list_price:list,discount_percent:discount,deal_text:deal||null,rating:ratingMatch?Number(ratingMatch[1]):null,review_count:reviewsMatch?Number(reviewsMatch[1].replace(/,/g,'')):null,bought_past_month:boughtMatch?boughtMatch[1]:null,badges:[badge].filter(Boolean),shipping_text:shippingMatch?shippingMatch[0].trim():null,tax_text:taxMatch?taxMatch[0].trim():null,features:cleanAmazonFeatures(plain),images};
+}
+function amazonDecode(value){return String(value||'').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'").replace(/&nbsp;/gi,' ').replace(/\s+/g,' ').trim();}
+function amazonMoney(value){const m=String(value||'').match(/(?:US\$|\$|£|€|NGN\s*)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i);return m?Number(m[1].replace(/,/g,'')):null;}
+function cleanAmazonFeatures(raw){return amazonDecode(raw).replace(/\bAbout this item\b/i,'').replace(/\s*•\s*/g,'\n').replace(/\s{2,}/g,' ').trim().slice(0,8000);}
 function configured(env){const shopifyAdmin=!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET;return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:shopifyAdmin,shopifyStorefront:shopifyAdmin,shopifyAdmin,openaiOptional:!!env.OPENAI_API_KEY,workersAI:!!env.AI,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
 async function shopifyGraphql(env,query,variables={},admin=false){
   const domain=env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN;
