@@ -196,6 +196,15 @@ body{color:#172019}
 .nv-product-shell p,.nv-product-shell li,.nv-product-shell .details,.nv-product-shell .feature,.nv-product-shell .nv-description{color:#29332d;line-height:1.7;font-size:15px}
 .nv-product-shell .nv-deal{font-weight:800;color:#145b47}
 .product .source,.product .meta,.product small{color:#59645c;font-weight:600}
+</style><style id="nuvora-detail-readability">
+.nv-section-card h2,.nv-related h2,.nv-info h1{color:#101711;font-weight:850}
+.nv-feature-list li,.nv-detail-body,.nv-detail-body p,.nv-spec span{color:#26312a;font-size:15px;line-height:1.75}
+.nv-feature-list li:before{background:#e5f1ec;color:#1d5c4a}
+.nv-spec{background:#fafcf9;border-color:#dce3dd}
+.nv-spec b{color:#5d6a61;font-weight:800}
+.nv-info-box span{color:#4d5a52;font-size:12px}
+.nv-rating strong{color:#172019;font-weight:850}.nv-rating a{color:#1d5c4a;font-weight:750}
+.nv-bought{color:#4d5a52;font-weight:650}
 </style></head>
 <body>
 <div class="announcement"><div class="shell"><b>Nuvora picks, made simple.</b> Browse curated products, save your favorites, and discover something worth finding.</div></div><header class="topbar"><div class="shell nav">
@@ -509,7 +518,7 @@ async function bootNuvora(){
     });
   }catch(e){console.warn('Nuvora account backend unavailable:',e.message)}
 }
-function mapProduct(p){let variants=[];try{variants=Array.isArray(p.shopify_variants)?p.shopify_variants:(typeof p.shopify_variants==='string'?JSON.parse(p.shopify_variants||'[]'):[])}catch(e){variants=[]}return {id:p.id,slug:p.slug||p.id,name:displayProductName(p.name),rawName:p.name,type:p.kind==='find'?'Find':p.kind==='learn'?'Learn':'Shop',cat:p.category?.name||'Uncategorized',collection:p.collection?.name||'',desc:p.description||'',brand:p.brand||'',price:formatPrice(p.display_price,p.currency),rawPrice:p.display_price,currency:p.currency||'',amazonListPrice:p.amazon_list_price,amazonDiscount:p.amazon_discount_percent,amazonDeal:p.amazon_deal_text,amazonRating:p.amazon_rating,amazonReviews:p.amazon_review_count,amazonBought:p.amazon_bought_past_month,amazonBadges:Array.isArray(p.amazon_badges)?p.amazon_badges:[],amazonShipping:p.amazon_shipping_text,amazonTax:p.amazon_tax_text,rating:p.temu_rating??p.rating??p.amazon_rating,reviews:p.temu_review_count??p.review_count??p.amazon_review_count,deal:p.temu_deal_text??p.deal_text??p.amazon_deal_text,listPrice:p.temu_list_price??p.list_price??p.amazon_list_price,discount:p.temu_discount_percent??p.discount_percent??p.amazon_discount_percent,icon:'✦',image:p.image_url,image_urls:Array.isArray(p.image_urls)?p.image_urls:[],variants,trend:p.trending,top:p.top_pick,featured:p.featured,destination:p.destination_url,variantId:p.shopify_variant_id,shopifyProductId:p.shopify_product_id,retailer:p.retailer||''};}
+function mapProduct(p){let variants=[];try{variants=Array.isArray(p.shopify_variants)?p.shopify_variants:(typeof p.shopify_variants==='string'?JSON.parse(p.shopify_variants||'[]'):[])}catch(e){variants=[]}return {id:p.id,slug:p.slug||p.id,name:displayProductName(p.name),rawName:p.name,type:p.kind==='find'?'Find':p.kind==='learn'?'Learn':'Shop',cat:p.category?.name||'Uncategorized',collection:p.collection?.name||'',desc:[p.features,p.description].filter(Boolean).join('\n\n'),brand:p.brand||'',price:formatPrice(p.display_price,p.currency),rawPrice:p.display_price,currency:p.currency||'',amazonListPrice:p.amazon_list_price,amazonDiscount:p.amazon_discount_percent,amazonDeal:p.amazon_deal_text,amazonRating:p.amazon_rating,amazonReviews:p.amazon_review_count,amazonBought:p.amazon_bought_past_month,amazonBadges:Array.isArray(p.amazon_badges)?p.amazon_badges:[],amazonShipping:p.amazon_shipping_text,amazonTax:p.amazon_tax_text,rating:p.temu_rating??p.rating??p.amazon_rating,reviews:p.temu_review_count??p.review_count??p.amazon_review_count,deal:p.temu_deal_text??p.deal_text??p.amazon_deal_text,listPrice:p.temu_list_price??p.list_price??p.amazon_list_price,discount:p.temu_discount_percent??p.discount_percent??p.amazon_discount_percent,icon:'✦',image:p.image_url,image_urls:Array.isArray(p.image_urls)?p.image_urls:[],variants,trend:p.trending,top:p.top_pick,featured:p.featured,destination:p.destination_url,variantId:p.shopify_variant_id,shopifyProductId:p.shopify_product_id,retailer:p.retailer||''};}
 async function loadLiveProducts(){
   const r=await fetch('/api/products',{cache:'no-store'});
   const data=await r.json().catch(()=>[]);
