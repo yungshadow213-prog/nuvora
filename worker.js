@@ -72,6 +72,40 @@ export default {
         return json({ok:true,asin,destination_url:amazonUrl,title_hint:listing?.title||titleHint||'Amazon product',retailer:'Amazon',kind:'find',category_id,duplicate,listing:listing||null});
       }
 
+async function scrapeTemuListing(temuUrl){
+  const r=await fetch(temuUrl,{headers:{'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36','accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8','accept-language':'en-US,en;q=0.9'}});
+  const html=await r.text();
+  if(!r.ok||html.length<500)return {error:'Temu page could not be read right now.'};
+  const findMeta=(key)=>{const re=new RegExp('<meta[^>]+(?:name|property)=[\\x22\\x27]'+key+'[\\x22\\x27][^>]+content=[\\x22\\x27]([^\\x22\\x27]*)[\\x22\\x27]','i');const m=html.match(re);return m?amazonDecode(m[1]):''};
+  const title=findMeta('og:title')||findMeta('twitter:title');
+  const description=findMeta('og:description')||findMeta('description');
+  const images=[]; const addImage=(v)=>{if(!v)return;let u=String(v).replace(/\\u0026/g,'&');if(/^https?:\\/\\//i.test(u)&&!images.includes(u)&&images.length<20)images.push(u)};
+  addImage(findMeta('og:image')); addImage(findMeta('twitter:image'));
+  for(const m of html.matchAll(/https?:\\/\\/[^"\\s\\]+?(?:\\.jpg|\\.jpeg|\\.png|\\.webp)(?:\\?[^"\\s\\]*)?/gi))addImage(m[0]);
+  const plain=amazonDecode(html.replace(/<script[\\s\\S]*?<\\/script>/gi,' ').replace(/<style[\\s\\S]*?<\\/style>/gi,' ').replace(/<[^>]+>/g,' '));
+  const priceMatch=plain.match(/(?:US\\$|\\$|£|€|NGN\\s*)\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)/);
+  const reviewMatch=plain.match(/([0-9][0-9,]*)\\s+reviews?/i);
+  const ratingMatch=plain.match(/([0-5](?:\\.[0-9])?)\\s*(?:out of 5|\\/5)/i);
+  const dealMatch=plain.match(/(?:limited time|flash|deal|sale)[^.]{0,80}/i);
+  const idMatch=temuUrl.match(/[?&]goods_id=([0-9]+)/i)||temuUrl.match(/-g-([0-9]+)\\.html/i);
+  return {id:idMatch?idMatch[1]:null,title:title.slice(0,180),description:description.slice(0,8000),current_price:priceMatch?Number(priceMatch[1].replace(/,/g,'')):null,rating:ratingMatch?Number(ratingMatch[1]):null,review_count:reviewMatch?Number(reviewMatch[1].replace(/,/g,'')):null,deal_text:dealMatch?dealMatch[0].trim():null,images};
+}
+      if(url.pathname==='/api/temu/prepare'&&request.method==='POST'){
+        const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        const {url:temuUrl}=await body(request,256*1024);
+        if(!temuUrl||!validUrl(temuUrl))return json({error:'A valid Temu product URL is required'},400);
+        const parsed=new URL(temuUrl);
+        if(!/(^|\\.)temu\\.com$/i.test(parsed.hostname)&&!/(^|\\.)temu\\.com$/i.test(parsed.hostname.replace(/^www\\./i,'')))return json({error:'Please paste a Temu product URL.'},400);
+        const listing=await scrapeTemuListing(temuUrl);
+        if(listing?.error)return json(listing,502);
+        const titleHint=(listing?.title||'Temu product').replace(/\\s+/g,' ').trim().slice(0,180);
+        let category_id=null;
+        try{const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cats.ok)category_id=autoCategory(titleHint,listing?.description||'','',await cats.json());}catch(e){}
+        let duplicate=null;
+        if(listing?.id){try{const dup=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published&retailer=eq.Temu&amazon_asin=eq.'+encodeURIComponent(listing.id)+'&limit=5');if(dup.ok){const rows=await dup.json();duplicate=rows[0]||null;}}catch(e){}}
+        return json({ok:true,product_id:listing?.id||null,destination_url:temuUrl,title_hint:titleHint,retailer:'Temu',kind:'find',category_id,duplicate,listing});
+      }
+
       if(url.pathname==='/api/amazon/import'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         if(!configured(env).amazon)return json({error:'Amazon Creators API is not configured'},503);
