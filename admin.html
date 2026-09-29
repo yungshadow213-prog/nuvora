@@ -352,7 +352,7 @@ async function useAmazonLink(){
     if(a.shipping_text)document.getElementById('pfShipping').value=a.shipping_text;
     if(a.tax_text)document.getElementById('pfTax').value=a.tax_text;
     if(Array.isArray(a.images)&&a.images.length)document.getElementById('pfImages').value=a.images.join('\\n');
-    if(a.features)document.getElementById('pfFeatures').value=a.features;
+    if(a.features)document.getElementById('pfFeatures').value=Array.isArray(a.features)?a.features.join('\n'):a.features;
     renderProductImages();
     document.getElementById('productModalTitle').textContent='Review Amazon product';
     document.getElementById('productModalSub').textContent='Link recognized → review details → save as draft → publish when ready.';
