@@ -110,24 +110,28 @@ async function scrapeTemuListing(temuUrl){
   addImage(findMeta('og:image'));
   addImage(findMeta('twitter:image'));
   const plain=amazonDecode(html.replaceAll('<',' ').replaceAll('>',' '));
-  const priceMatch=plain.match(/(?:US\$|\$|£|€|NGN\s*)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/);
-  const reviewMatch=plain.match(/([0-9][0-9,]*)\s+reviews?/i);
-  const ratingMatch=plain.match(/([0-5](?:\.[0-9])?)\s*(?:out of 5|\/5)/i);
-  const dealMatch=plain.match(/(?:limited time|flash|deal|sale)[^.]{0,80}/i);
+  const moneyText=(plain.match(/(?:US\$|\$|£|€|NGN)\s*[0-9][0-9,.]*/i)||[])[0]||'';
+  const priceNumber=moneyText.replace(/[^0-9.]/g,'');
+  const reviewText=(plain.match(/[0-9][0-9,]*\s+reviews?/i)||[])[0]||'';
+  const reviewNumber=reviewText.replace(/[^0-9]/g,'');
+  const ratingText=(plain.match(/[0-5](?:\.[0-9])?\s*(?:out of 5|\/5)/i)||[])[0]||'';
+  const ratingNumber=ratingText.match(/[0-5](?:\.[0-9])?/);
+  const dealText=(plain.match(/(?:limited time|flash|deal|sale)[^.]{0,80}/i)||[])[0]||'';
   const idMatch=temuUrl.indexOf('goods_id=');
   let productId=null;
   if(idMatch>=0){
     const raw=temuUrl.slice(idMatch+9).split('&')[0];
-    if(/^[0-9]+$/.test(raw))productId=raw;
+    if(raw&&raw.split('').every(c=>c>='0'&&c<='9'))productId=raw;
   }
-  return {id:productId,title:title.slice(0,180),description:description.slice(0,8000),current_price:priceMatch?Number(priceMatch[1].replace(/,/g,'')):null,rating:ratingMatch?Number(ratingMatch[1]):null,review_count:reviewMatch?Number(reviewMatch[1].replace(/,/g,'')):null,deal_text:dealMatch?dealMatch[0].trim():null,images};
+  return {id:productId,title:title.slice(0,180),description:description.slice(0,8000),current_price:priceNumber?Number(priceNumber):null,rating:ratingNumber?Number(ratingNumber[0]):null,review_count:reviewNumber?Number(reviewNumber):null,deal_text:dealText.trim()||null,images};
 }
       if(url.pathname==='/api/temu/prepare'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const {url:temuUrl}=await body(request,256*1024);
         if(!temuUrl||!validUrl(temuUrl))return json({error:'A valid Temu product URL is required'},400);
         const parsed=new URL(temuUrl);
-        if(!/(^|\\.)temu\\.com$/i.test(parsed.hostname)&&!/(^|\\.)temu\\.com$/i.test(parsed.hostname.replace(/^www\\./i,'')))return json({error:'Please paste a Temu product URL.'},400);
+        const host=parsed.hostname.toLowerCase().replace(/^www\\./,'');
+        if(host!=='temu.com'&&!host.endsWith('.temu.com')&&host!=='temu.to')return json({error:'Please paste a Temu product URL.'},400);
         const listing=await scrapeTemuListing(temuUrl);
         if(listing?.error)return json(listing,502);
         const titleHint=(listing?.title||'Temu product').replace(/\\s+/g,' ').trim().slice(0,180);
