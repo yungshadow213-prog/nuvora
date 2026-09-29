@@ -73,33 +73,54 @@ export default {
       }
 
 async function scrapeTemuListing(temuUrl){
-  const r=await fetch(temuUrl,{headers:{'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36','accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8','accept-language':'en-US,en;q=0.9'}});
+  const r=await fetch(temuUrl,{headers:{'user-agent':'Mozilla/5.0','accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8','accept-language':'en-US,en;q=0.9'}});
   const html=await r.text();
   if(!r.ok||html.length<500)return {error:'Temu page could not be read right now.'};
   const findMeta=(key)=>{
-    const re=new RegExp('<meta[^>]+(?:name|property)=["\\x27]'+key+'["\\x27][^>]+content=["\\x27]([^"\\x27]*)["\\x27]','i');
-    const m=html.match(re);
-    return m?amazonDecode(m[1]):'';
+    const lower=html.toLowerCase();
+    const needle='<meta';
+    let p=lower.indexOf(needle);
+    while(p>=0){
+      const e=html.indexOf('>',p);
+      if(e<0)break;
+      const tag=html.slice(p,e+1);
+      const attrs=tag.toLowerCase();
+      if(attrs.includes('property="'+key.toLowerCase()+'"')||attrs.includes("property='"+key.toLowerCase()+"'")||attrs.includes('name="'+key.toLowerCase()+'"')||attrs.includes("name='"+key.toLowerCase()+"'")){
+        const a=attrs.indexOf('content=');
+        if(a>=0){
+          const q=tag[a+8];
+          if(q==='"'||q==="'"){
+            const b=tag.indexOf(q,a+9);
+            if(b>0)return amazonDecode(tag.slice(a+9,b));
+          }
+        }
+      }
+      p=lower.indexOf(needle,e+1);
+    }
+    return '';
   };
   const title=findMeta('og:title')||findMeta('twitter:title');
   const description=findMeta('og:description')||findMeta('description');
   const images=[];
   const addImage=(v)=>{
     if(!v)return;
-    const u=String(v).replace(/\\u0026/g,'&');
+    const u=String(v).replace('\\u0026','&');
     if((u.startsWith('http://')||u.startsWith('https://'))&&!images.includes(u)&&images.length<20)images.push(u);
   };
   addImage(findMeta('og:image'));
   addImage(findMeta('twitter:image'));
-  const imageRe=/https?:[^\s"']+/gi;
-  for(const m of html.matchAll(imageRe))addImage(m[0]);
-  const plain=amazonDecode(html.replace(/<script[\\s\\S]*?<\/script>/gi,' ').replace(/<style[\\s\\S]*?<\/style>/gi,' ').replace(/<[^>]+>/g,' '));
-  const priceMatch=plain.match(/(?:US\$|\$|£|€|NGN\s*)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/);
-  const reviewMatch=plain.match(/([0-9][0-9,]*)\s+reviews?/i);
-  const ratingMatch=plain.match(/([0-5](?:\.[0-9])?)\s*(?:out of 5|\/5)/i);
+  const plain=amazonDecode(html.replaceAll('<',' ').replaceAll('>',' '));
+  const priceMatch=plain.match(/(?:US\\$|\\$|£|€|NGN\\s*)\\s*([0-9][0-9,]*(?:\\.[0-9]{1,2})?)/);
+  const reviewMatch=plain.match(/([0-9][0-9,]*)\\s+reviews?/i);
+  const ratingMatch=plain.match(/([0-5](?:\\.[0-9])?)\\s*(?:out of 5|\\/5)/i);
   const dealMatch=plain.match(/(?:limited time|flash|deal|sale)[^.]{0,80}/i);
-  const idMatch=temuUrl.match(/[?&]goods_id=([0-9]+)/i)||temuUrl.match(/-g-([0-9]+)\.html/i);
-  return {id:idMatch?idMatch[1]:null,title:title.slice(0,180),description:description.slice(0,8000),current_price:priceMatch?Number(priceMatch[1].replace(/,/g,'')):null,rating:ratingMatch?Number(ratingMatch[1]):null,review_count:reviewMatch?Number(reviewMatch[1].replace(/,/g,'')):null,deal_text:dealMatch?dealMatch[0].trim():null,images};
+  const idMatch=temuUrl.indexOf('goods_id=');
+  let productId=null;
+  if(idMatch>=0){
+    const raw=temuUrl.slice(idMatch+9).split('&')[0];
+    if(/^[0-9]+$/.test(raw))productId=raw;
+  }
+  return {id:productId,title:title.slice(0,180),description:description.slice(0,8000),current_price:priceMatch?Number(priceMatch[1].replace(/,/g,'')):null,rating:ratingMatch?Number(ratingMatch[1]):null,review_count:reviewMatch?Number(reviewMatch[1].replace(/,/g,'')):null,deal_text:dealMatch?dealMatch[0].trim():null,images};
 }
       if(url.pathname==='/api/temu/prepare'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
