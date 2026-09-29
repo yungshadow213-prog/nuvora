@@ -679,14 +679,14 @@ async function scrapeAmazonListing(amazonUrl,asin){
         for(const key of Object.keys(parsed))addImage(parsed[key]);
       }
     }catch(e){
-      for(const m of raw.matchAll(/https?:\\/\\/[^"\\\\]+/gi))addImage(m[0]);
+      for(const m of raw.matchAll(/https?:\/\/[^"\\]+/gi))addImage(m[0]);
     }
   };
   addImage(findMeta('og:image'));
   addImage(findMeta('twitter:image'));
   const dataImageRe=/(?:data-old-hi-res|data-a-dynamic-image|data-image-url|data-src)=[\\x22\\x27]([^\\x22\\x27]+)[\\x22\\x27]/gi;
   for(const m of html.matchAll(dataImageRe))addImageList(m[1]);
-  const imageRe=/(https?:\\/\\/[^"\\s\\\\]+?\\.(?:jpg|jpeg|png|webp)(?:\\?[^"\\s\\\\]*)?)/gi;
+  const imageRe=/(https?:\/\/[^"\\s\\]+?\.(?:jpg|jpeg|png|webp)(?:\?[^"\\s\\]*)?)/gi;
   for(const m of html.matchAll(imageRe))addImage(m[1]);
   const badge=/#\s*[0-9]+\s+Best Seller/i.test(plain)?'Best Seller':'';
   if(!images.length)images.push(amazonImageFallback(title,brand,asin));
