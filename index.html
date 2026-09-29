@@ -175,7 +175,7 @@ function card(p){
   const off=discount!=null?'<span style="margin-left:6px;color:#ffb36b;font-size:11px">'+htmlEsc(String(discount)+'% OFF')+'</span>':'';
   const savedNow=saved.includes(p.id);
   return '<article class="product" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button" aria-label="View '+htmlEsc(p.name)+'">'+
-    '<button class="card-save '+(savedNow?'saved':'')+'" aria-label="Save product" onclick="event.stopPropagation();toggleSave(this.closest(\\'.product\\').dataset.productId)">'+(savedNow?'♥':'♡')+'</button>'+
+    '<button class="card-save '+(savedNow?'saved':'')+'" aria-label="Save product" onclick="event.stopPropagation();toggleSave(this.closest(\'.product\').dataset.productId)">'+(savedNow?'♥':'♡')+'</button>'+
     '<div class="prod-open"><div class="thumb">'+(image?'<img src="'+htmlEsc(image)+'" alt="'+htmlEsc(p.name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\\'none\\'">':'✦')+'</div>'+
     '<div class="prodtext"><div class="card-source">'+htmlEsc(source)+'</div><h4>'+deal+htmlEsc(p.name)+'</h4><div class="card-meta"><span class="card-rating">'+htmlEsc(rating)+htmlEsc(reviews)+'</span><span>'+htmlEsc(p.cat||'')+'</span></div><div class="card-bottom"><span class="prodprice">'+htmlEsc(p.price)+oldPrice+off+'</span><span class="card-action">View</span></div></div></div></article>';
 }
