@@ -228,6 +228,8 @@ async function scrapeTemuListing(temuUrl){
   const freeShipping=(plain.match(/Free shipping[^.\n]*/i)||[])[0]||null;
   const reviewSnapshot=(plain.match(/\b[0-9][0-9,.]*\s+reviews?\b/i)||[])[0]||null;
   const reviewVerified=/All reviews are from verified purchases/i.test(plain);
+  const bestSellerText=(plain.match(/#[0-9]+\s+Best Seller(?:[^.\n]*)?/i)||[])[0]||null;
+  const promoPriceMatch=(plain.match(/after applying promos to\s+(?:₦|NGN|US\$|\$|£|€)\s*[0-9][0-9,.]*/i)||[])[0]||null;
   const detailSentences=[...new Set(sectionClean.split(/(?<=[.!?])\s+/).map(x=>cleanRetailerText(x)).filter(x=>{
     if(x.length<45||x.length>700)return false;
     if(/Product details \d|open claw|Company info|Customer service|Get the Temu App|Best-Selling Items|Price adjustment|Delivery guarantee/i.test(x))return false;
@@ -238,10 +240,11 @@ async function scrapeTemuListing(temuUrl){
     specifications.length?'Specifications\n'+specifications.map(x=>x[0]+': '+x[1]).join('\n'):'',
     featureLines.length?'Highlights\n'+featureLines.join('\n'):'',
     reviewSnapshot?'Review snapshot: '+reviewSnapshot+(reviewVerified?' · verified purchases':''):'',
+    bestSellerText?'Retailer badge: '+bestSellerText:'',
+    promoPriceMatch?'Promotional price: '+promoPriceMatch:'',
     soldText?'Sales activity: '+soldText:'',
     scarcityText?'Availability: '+scarcityText:''
   ].filter(Boolean).join('\n\n');
-
 
   let productId=null;
   const marker='-g-';
@@ -279,7 +282,8 @@ async function scrapeTemuListing(temuUrl){
     variations:buildProductOptions(plain),
     scarcity_text:scarcityText,
     review_verified:reviewVerified,
-    variations:buildProductOptions(plain),
+    best_seller_text:bestSellerText,
+    promo_price_text:promoPriceMatch,
     images
   };
 }
