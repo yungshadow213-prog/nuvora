@@ -93,8 +93,16 @@
         <div class="field full"><label>Product title</label><input id="pfName" placeholder="Product title"></div>
         <div class="field"><label>Type</label><select id="pfKind"><option value="shop">Shop</option><option value="find">Find</option><option value="learn">Learn</option></select></div>
         <div class="field"><label>Brand</label><input id="pfBrand" placeholder="Brand"></div>
-        <div class="field"><label>Price</label><input id="pfPrice" type="number" step="0.01" placeholder="0.00"></div>
-        <div class="field"><label>Currency</label><input id="pfCurrency" value="NGN" placeholder="USD"></div>
+        <div class="field"><label>Current price</label><input id="pfPrice" type="number" step="0.01" placeholder="0.00"></div>
+        <div class="field"><label>List / original price</label><input id="pfListPrice" type="number" step="0.01" placeholder="36.99"></div>
+        <div class="field"><label>Discount %</label><input id="pfDiscount" type="number" step="1" placeholder="59"></div>
+        <div class="field"><label>Currency</label><input id="pfCurrency" value="USD" placeholder="USD"></div>
+        <div class="field"><label>Deal badge</label><input id="pfDeal" placeholder="Limited time deal"></div>
+        <div class="field"><label>Rating</label><input id="pfRating" type="number" step="0.1" min="0" max="5" placeholder="4.3"></div>
+        <div class="field"><label>Review count</label><input id="pfReviews" type="number" step="1" placeholder="1934"></div>
+        <div class="field"><label>Bought in past month</label><input id="pfBought" placeholder="9K+"></div>
+        <div class="field full"><label>Shipping / import text</label><input id="pfShipping" placeholder="Shipping & Import Charges..."></div>
+        <div class="field full"><label>Tax notice</label><input id="pfTax" placeholder="Sales taxes may apply at checkout"></div>
         <div class="field"><label>Category ID (optional)</label><input id="pfCategory" placeholder="Supabase category UUID"></div>
         <div class="field"><label>Collection ID (optional)</label><input id="pfCollection" placeholder="Supabase collection UUID"></div>
         <div class="field full"><label>Description</label><textarea id="pfDescription" placeholder="Product description"></textarea></div>
@@ -172,7 +180,7 @@ async function importSelectedShopify(){
 }
 
 function resetProductForm(){
-  ['pfName','pfBrand','pfPrice','pfCategory','pfCollection','pfDescription','pfFeatures','pfDestination','pfAsin','pfImages','amazonUrlInput'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfFeatures','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.getElementById('pfKind').value='shop'; document.getElementById('pfCurrency').value='NGN'; document.getElementById('pfRetailer').value='Amazon';
   document.getElementById('pfImageStrip').innerHTML='';
   document.getElementById('importStatus').textContent='You can enter a product manually or fetch an Amazon product below. Imported data stays editable and nothing becomes public until you publish it.';
@@ -191,7 +199,15 @@ function setProductForm(p){
   document.getElementById('pfKind').value=p.kind||'find';
   document.getElementById('pfBrand').value=p.brand||'';
   document.getElementById('pfPrice').value=p.display_price??'';
-  document.getElementById('pfCurrency').value=p.currency||'NGN';
+  document.getElementById('pfListPrice').value=p.amazon_list_price??'';
+  document.getElementById('pfDiscount').value=p.amazon_discount_percent??'';
+  document.getElementById('pfCurrency').value=p.currency||'USD';
+  document.getElementById('pfDeal').value=p.amazon_deal_text||'';
+  document.getElementById('pfRating').value=p.amazon_rating??'';
+  document.getElementById('pfReviews').value=p.amazon_review_count??'';
+  document.getElementById('pfBought').value=p.amazon_bought_past_month||'';
+  document.getElementById('pfShipping').value=p.amazon_shipping_text||'';
+  document.getElementById('pfTax').value=p.amazon_tax_text||'';
   document.getElementById('pfCategory').value=p.category_id||'';
   document.getElementById('pfCollection').value=p.collection_id||'';
   document.getElementById('pfDescription').value=p.description||'';
@@ -277,6 +293,21 @@ async function useAmazonLink(){
     document.getElementById('pfKind').value=j.kind||'find';
     if(j.title_hint&&!document.getElementById('pfName').value.trim())document.getElementById('pfName').value=j.title_hint;
     if(j.category_id&&!document.getElementById('pfCategory').value.trim())document.getElementById('pfCategory').value=j.category_id;
+    const a=j.listing||{};
+    if(a.title)document.getElementById('pfName').value=a.title;
+    if(a.brand)document.getElementById('pfBrand').value=a.brand;
+    if(a.current_price!=null)document.getElementById('pfPrice').value=a.current_price;
+    if(a.list_price!=null)document.getElementById('pfListPrice').value=a.list_price;
+    if(a.discount_percent!=null)document.getElementById('pfDiscount').value=a.discount_percent;
+    if(a.deal_text)document.getElementById('pfDeal').value=a.deal_text;
+    if(a.rating!=null)document.getElementById('pfRating').value=a.rating;
+    if(a.review_count!=null)document.getElementById('pfReviews').value=a.review_count;
+    if(a.bought_past_month)document.getElementById('pfBought').value=a.bought_past_month;
+    if(a.shipping_text)document.getElementById('pfShipping').value=a.shipping_text;
+    if(a.tax_text)document.getElementById('pfTax').value=a.tax_text;
+    if(Array.isArray(a.images)&&a.images.length)document.getElementById('pfImages').value=a.images.join('\\n');
+    if(a.features)document.getElementById('pfFeatures').value=a.features;
+    renderProductImages();
     document.getElementById('productModalTitle').textContent='Review Amazon product';
     document.getElementById('productModalSub').textContent='Link recognized → review details → save as draft → publish when ready.';
     if(j.duplicate){
@@ -298,6 +329,11 @@ async function saveProductDraft(){
     name,kind:document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
     description:document.getElementById('pfDescription').value.trim()||null,features:document.getElementById('pfFeatures').value.trim()||null,
     image_url:images[0]||null,image_urls:images,display_price:document.getElementById('pfPrice').value===''?null:Number(document.getElementById('pfPrice').value),
+    amazon_list_price:document.getElementById('pfListPrice').value===''?null:Number(document.getElementById('pfListPrice').value),
+    amazon_discount_percent:document.getElementById('pfDiscount').value===''?null:Number(document.getElementById('pfDiscount').value),
+    amazon_deal_text:document.getElementById('pfDeal').value.trim()||null,amazon_rating:document.getElementById('pfRating').value===''?null:Number(document.getElementById('pfRating').value),
+    amazon_review_count:document.getElementById('pfReviews').value===''?null:Number(document.getElementById('pfReviews').value),amazon_bought_past_month:document.getElementById('pfBought').value.trim()||null,
+    amazon_shipping_text:document.getElementById('pfShipping').value.trim()||null,amazon_tax_text:document.getElementById('pfTax').value.trim()||null,
     currency:document.getElementById('pfCurrency').value.trim()||'NGN',destination_url:document.getElementById('pfDestination').value.trim()||null,
     retailer:document.getElementById('pfRetailer').value.trim()||null,category_id:document.getElementById('pfCategory').value.trim()||null,
     collection_id:document.getElementById('pfCollection').value.trim()||null,amazon_asin:document.getElementById('pfAsin').value.trim()||null,
