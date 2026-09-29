@@ -340,10 +340,12 @@ async function saveProductDraft(){
     amazon_source_url:document.getElementById('amazonUrlInput').value.trim()||null,published:window.editingProductId?!!adminProducts.find(x=>x.id===window.editingProductId)?.published:false
   };
   try{
+    const slugSource = name || document.getElementById('pfAsin').value.trim() || 'product';
+    const slugBase = slugSource.toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-+/g,'-').slice(0,140);
+    const slug = (slugBase || 'product') + '-' + Date.now().toString(36);
     if(window.editingProductId){
-      await api('/api/admin/products/'+encodeURIComponent(window.editingProductId),{method:'PATCH',body:product});
+      await api('/api/admin/products/'+encodeURIComponent(window.editingProductId),{method:'PATCH',body:{...product,slug}});
     }else{
-      const slug=name.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-'+Date.now();
       await api('/api/admin/products',{method:'POST',body:{...product,slug}});
     }
     const wasEditing=!!window.editingProductId; closeProductModal(); await liveAdminProducts(); alert(wasEditing?'Product updated.':'Product saved as a draft.');
