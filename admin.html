@@ -106,7 +106,7 @@
         <div class="field"><label>Category ID (optional)</label><input id="pfCategory" placeholder="Supabase category UUID"></div>
         <div class="field"><label>Collection ID (optional)</label><input id="pfCollection" placeholder="Supabase collection UUID"></div>
         <div class="field full"><label>Description</label><textarea id="pfDescription" placeholder="Product description"></textarea></div>
-        <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div>
+        <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div><div class="field full"><label>Product options</label><textarea id="pfVariations" placeholder="Size: X-Small, Small, Medium, Large&#10;Color: Black, Grey, White"></textarea><div class="muted">Nuvora shows these as product options when the retailer provides them.</div></div>
         <div class="field full"><label>Destination / affiliate URL</label><input id="pfDestination" placeholder="https://..."></div>
         <div class="field"><label>Amazon ASIN</label><input id="pfAsin" placeholder="B0XXXXXXXX"></div>
         <div class="field"><label>Retailer</label><input id="pfRetailer" value="Amazon"></div>
@@ -180,7 +180,7 @@ async function importSelectedShopify(){
 }
 
 function resetProductForm(){
-  ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfFeatures','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfFeatures','pfVariations','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.getElementById('pfKind').value='shop'; document.getElementById('pfCurrency').value='NGN'; document.getElementById('pfRetailer').value='Amazon';
   document.getElementById('pfImageStrip').innerHTML='';
   document.getElementById('importStatus').textContent='You can enter a product manually or fetch an Amazon product below. Imported data stays editable and nothing becomes public until you publish it.';
@@ -212,7 +212,7 @@ function setProductForm(p){
   document.getElementById('pfCategory').value=p.category_id||'';
   document.getElementById('pfCollection').value=p.collection_id||'';
   document.getElementById('pfDescription').value=p.description||'';
-  document.getElementById('pfFeatures').value=p.features||'';
+  document.getElementById('pfFeatures').value=p.features||'';try{const v=Array.isArray(p.amazon_variations)?p.amazon_variations:[];document.getElementById('pfVariations').value=v.map(x=>x.name+': '+(Array.isArray(x.values)?x.values.join(', '):'')).join('\n')}catch(e){document.getElementById('pfVariations').value='';}
   document.getElementById('pfDestination').value=p.destination_url||'';
   document.getElementById('pfAsin').value=p.amazon_asin||'';
   document.getElementById('pfRetailer').value=p.retailer||'Amazon';
@@ -305,9 +305,9 @@ async function useTemuLink(){
     if(a.review_count!=null)document.getElementById('pfReviews').value=a.review_count;
     if(a.deal_text)document.getElementById('pfDeal').value=a.deal_text;
     if(a.sold_count_text)document.getElementById('pfBought').value=a.sold_count_text;
-    if(a.shipping_text)document.getElementById('pfShipping').value=a.shipping_text;
+    if(a.shipping_text)document.getElementById('pfShipping').value=a.shipping_text;if(Array.isArray(a.variations)&&a.variations.length)document.getElementById('pfVariations').value=a.variations.map(x=>x.name+': '+x.values.join(', ')).join('\n');
     else if(a.availability)document.getElementById('pfShipping').value=a.availability;
-    if(a.features)document.getElementById('pfFeatures').value=Array.isArray(a.features)?a.features.join('\n'):a.features;
+    if(a.features)document.getElementById('pfFeatures').value=Array.isArray(a.features)?a.features.join('\n'):a.features;if(Array.isArray(a.variations)&&a.variations.length)document.getElementById('pfVariations').value=a.variations.map(x=>x.name+': '+x.values.join(', ')).join('\n');
     if(Array.isArray(a.images)&&a.images.length)document.getElementById('pfImages').value=a.images.join('\n');
     renderProductImages();
     document.getElementById('productModalTitle').textContent='Review Temu product';
@@ -368,6 +368,15 @@ async function useAmazonLink(){
     if(btn){btn.disabled=false;btn.textContent='Use Amazon link';}
   }
 }
+function parseProductVariations(raw){
+  return String(raw||'').split(/\r?\n/).map(line=>line.trim()).filter(Boolean).map(line=>{
+    const i=line.indexOf(':');
+    if(i<0)return null;
+    const name=line.slice(0,i).trim();
+    const values=line.slice(i+1).split(',').map(v=>v.trim()).filter(Boolean);
+    return name&&values.length?{name,values:[...new Set(values)].slice(0,40)}:null;
+  }).filter(Boolean).slice(0,20);
+}
 async function saveProductDraft(){
   const name=document.getElementById('pfName').value.trim(); if(!name)return alert('Product title is required.');
   const images=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
@@ -379,7 +388,7 @@ async function saveProductDraft(){
     amazon_discount_percent:document.getElementById('pfDiscount').value===''?null:Number(document.getElementById('pfDiscount').value),
     amazon_deal_text:document.getElementById('pfDeal').value.trim()||null,amazon_rating:document.getElementById('pfRating').value===''?null:Number(document.getElementById('pfRating').value),
     amazon_review_count:document.getElementById('pfReviews').value===''?null:Number(document.getElementById('pfReviews').value),amazon_bought_past_month:document.getElementById('pfBought').value.trim()||null,
-    amazon_shipping_text:document.getElementById('pfShipping').value.trim()||null,amazon_tax_text:document.getElementById('pfTax').value.trim()||null,
+    amazon_shipping_text:document.getElementById('pfShipping').value.trim()||null,amazon_tax_text:document.getElementById('pfTax').value.trim()||null,amazon_variations:parseProductVariations(document.getElementById('pfVariations').value),
     currency:document.getElementById('pfCurrency').value.trim()||'NGN',destination_url:document.getElementById('pfDestination').value.trim()||null,
     retailer:document.getElementById('pfRetailer').value.trim()||null,category_id:document.getElementById('pfCategory').value.trim()||null,
     collection_id:document.getElementById('pfCollection').value.trim()||null,amazon_asin:document.getElementById('pfAsin').value.trim()||null,
