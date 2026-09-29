@@ -529,7 +529,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const categoryMap=new Map(categories.map(x=>[String(x.id),x]));
         const collectionMap=new Map(collections.map(x=>[String(x.id),x]));
         return json(products.map(p=>{
-          const safeText=v=>cleanText(v,12000)||null;
+          const safeText=v=>cleanMultilineText(v,12000)||null;
           return {
             ...p,
             name:cleanText(p.name,180),
@@ -557,7 +557,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         product.slug=makeProductSlug(product.slug||product.name||product.amazon_asin||'product');
         const validation=validateProduct(product); if(validation)return json({error:validation},400);
         product.published=product.published===true;
-        product.description=cleanText(product.description,10000); product.features=cleanText(product.features,10000); product.brand=cleanText(product.brand,180);
+        product.description=cleanMultilineText(product.description,12000); product.features=cleanMultilineText(product.features,12000); product.brand=cleanText(product.brand,180);
         if(Array.isArray(product.image_urls))product.image_urls=product.image_urls.filter(validUrl).slice(0,30);
         if(product.image_url&&!validUrl(product.image_url))product.image_url=null;
         const r=await supabaseRest(env,'POST','products',product); if(!r.ok)return json({error:'Supabase rejected the product.',detail:(await r.text()).slice(0,2000)},400);
@@ -574,6 +574,12 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           if(patch.slug||patch.name)patch.slug=makeProductSlug(patch.slug||patch.name);
           const validation=validateProduct({...patch,name:patch.name||'placeholder',slug:patch.slug||'placeholder',kind:patch.kind||'shop'});
           if(validation && (patch.name||patch.slug||patch.kind||patch.display_price||patch.destination_url||patch.image_url||patch.image_urls))return json({error:validation},400);
+          if(typeof patch.description==='string')patch.description=cleanMultilineText(patch.description,12000);
+          if(typeof patch.features==='string')patch.features=cleanMultilineText(patch.features,12000);
+          if(typeof patch.brand==='string')patch.brand=cleanText(patch.brand,180);
+          if(typeof patch.deal_text==='string')patch.deal_text=cleanText(patch.deal_text,500);
+          if(typeof patch.amazon_deal_text==='string')patch.amazon_deal_text=cleanText(patch.amazon_deal_text,500);
+          if(typeof patch.temu_deal_text==='string')patch.temu_deal_text=cleanText(patch.temu_deal_text,500);
           if(Array.isArray(patch.image_urls))patch.image_urls=patch.image_urls.filter(validUrl).slice(0,30);
           const r=await supabaseRest(env,'PATCH','products',patch,`?id=eq.${encodeURIComponent(id)}`); if(!r.ok)return json({error:await r.text()},400);
           const rows=await r.json(); return json(rows[0]||null);
@@ -700,6 +706,16 @@ function cleanText(value,max=10000){
     .replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]/g,'')
     .replace(/(?:sale_list_token|order_receipt_token|refund_detail_token|bg_mail_token|payment_detail_token|email_token|[a-z0-9_]+_token)/gi,' ')
     .replace(/\\s+/g,' ')
+    .trim().slice(0,max);
+}
+function cleanMultilineText(value,max=12000){
+  return String(value??'')
+    .replace(/[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]/g,'')
+    .replace(/(?:sale_list_token|order_receipt_token|refund_detail_token|bg_mail_token|payment_detail_token|email_token|[a-z0-9_]+_token)/gi,' ')
+    .replace(/\\r/g,'')
+    .replace(/[ \\t]+/g,' ')
+    .replace(/\\n[ \\t]+/g,'\\n')
+    .replace(/\\n{3,}/g,'\\n\\n')
     .trim().slice(0,max);
 }
 function makeProductSlug(value){
