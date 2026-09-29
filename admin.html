@@ -304,7 +304,10 @@ async function useTemuLink(){
     if(a.rating!=null)document.getElementById('pfRating').value=a.rating;
     if(a.review_count!=null)document.getElementById('pfReviews').value=a.review_count;
     if(a.deal_text)document.getElementById('pfDeal').value=a.deal_text;
-    if(a.availability)document.getElementById('pfShipping').value=a.availability;
+    if(a.sold_count_text)document.getElementById('pfBought').value=a.sold_count_text;
+    if(a.shipping_text)document.getElementById('pfShipping').value=a.shipping_text;
+    else if(a.availability)document.getElementById('pfShipping').value=a.availability;
+    if(a.features)document.getElementById('pfFeatures').value=Array.isArray(a.features)?a.features.join('\n'):a.features;
     if(Array.isArray(a.images)&&a.images.length)document.getElementById('pfImages').value=a.images.join('\n');
     renderProductImages();
     document.getElementById('productModalTitle').textContent='Review Temu product';
