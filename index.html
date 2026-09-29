@@ -24,6 +24,49 @@ main{min-height:calc(100vh - 76px)}.view{display:none}.view.active{display:block
 }
 @media(max-width:420px){.shell{width:calc(100% - 16px)}.nav-actions{gap:3px}.icon-btn,.avatar-btn{width:36px;height:36px;flex-basis:36px}.category-grid{grid-template-columns:1fr}.product-grid{grid-template-columns:1fr 1fr}.thumb{height:145px}.prodtext h4{font-size:12px}.hero h1{font-size:43px}.hero-actions{grid-template-columns:1fr}.product-trust{grid-template-columns:1fr}.detail-actions{grid-template-columns:1fr}.browse-tools{grid-template-columns:1fr}.search{grid-column:auto}}
 
+/* Nuvora editorial storefront — minimal cards, curated rhythm */
+.product-grid{gap:18px}
+.nv-card{position:relative;border:1px solid rgba(255,255,255,.075);background:#0b1727;border-radius:22px;overflow:hidden;transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
+.nv-card:hover{transform:translateY(-6px);border-color:rgba(156,123,255,.28);box-shadow:0 20px 50px rgba(0,0,0,.24)}
+.nv-card .thumb{height:290px;background:#101c2d;position:relative}
+.nv-card .thumb img{transition:transform .45s ease}
+.nv-card:hover .thumb img{transform:scale(1.035)}
+.nv-card .prodtext{padding:14px 16px 16px;background:linear-gradient(180deg,#0b1727,#091422)}
+.nv-card .card-source{font-size:9px;text-transform:uppercase;letter-spacing:.14em;color:#70849a;font-weight:800;margin-bottom:5px}
+.nv-card .prodtext h4{font-size:14px;line-height:1.35;font-weight:700;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:38px}
+.nv-card .card-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+.nv-card .prodprice{margin:0;font-size:14px;font-weight:900}
+.nv-card .card-action{font-size:11px;color:#aebfd0;opacity:.75;transition:.2s}
+.nv-card:hover .card-action{opacity:1;color:#dff5ff}
+.nv-card .card-action span{display:inline-block;transition:transform .2s}
+.nv-card:hover .card-action span{transform:translateX(3px)}
+.nv-card .card-save{position:absolute;right:12px;top:12px;z-index:4;width:34px;height:34px;border:1px solid rgba(255,255,255,.14);border-radius:50%;background:rgba(5,12,22,.58);backdrop-filter:blur(12px);color:#fff;display:grid;place-items:center;font-size:15px}
+.nv-card .card-save.saved{color:#ff9ac9;border-color:rgba(255,154,201,.3)}
+.nv-card-badge{position:absolute;left:12px;top:12px;z-index:4;padding:5px 8px;border-radius:999px;background:rgba(7,17,31,.78);border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(10px);color:#dff5ff;font-size:9px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;max-width:65%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nv-image-mark{opacity:.35;font-size:42px}
+.curated-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.curated-grid .nv-card:first-child{grid-column:span 2;grid-row:span 2}
+.curated-grid .nv-card:first-child .thumb{height:100%;min-height:608px}
+.discovery-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.discovery-grid .nv-card .thumb{height:250px}
+@media(max-width:900px){
+  .curated-grid,.discovery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .curated-grid .nv-card:first-child{grid-column:span 2;grid-row:auto}
+  .curated-grid .nv-card:first-child .thumb{min-height:340px;height:340px}
+}
+@media(max-width:560px){
+  .product-grid{gap:10px}
+  .nv-card{border-radius:17px}
+  .nv-card .thumb{height:185px}
+  .nv-card .prodtext{padding:10px 11px 12px}
+  .nv-card .prodtext h4{font-size:12px;min-height:33px}
+  .nv-card .prodprice{font-size:13px}
+  .nv-card .card-action{font-size:10px}
+  .nv-card .card-save{right:8px;top:8px;width:31px;height:31px}
+  .nv-card-badge{left:8px;top:8px;font-size:8px}
+  .curated-grid .nv-card:first-child .thumb{height:250px;min-height:250px}
+}
+
 /* Nuvora storefront polish v2 — clear, explanatory commerce UI */
 .product-page{padding:26px 0 72px}
 .product-breadcrumb{margin-bottom:16px}
@@ -112,8 +155,8 @@ main{min-height:calc(100vh - 76px)}.view{display:none}.view.active{display:block
 <main>
 <section class="view active" id="view-home"><section class="hero"><div class="shell hero-grid"><div><div class="eyebrow"><i></i> Curated discovery</div><h1>Find things <span class="script">worth</span> finding.</h1><p class="hero-copy">Nuvora brings useful products, interesting finds and worthwhile discoveries into one place — without making you dig through everything.</p><div class="hero-actions"><button class="btn primary" onclick="showView('browse')">Explore Nuvora →</button><button class="btn" onclick="showView('collections')">View collections</button></div><form class="home-search" onsubmit="event.preventDefault();goHomeSearch(document.getElementById('homeSearchInput')?.value)"><input id="homeSearchInput" type="search" placeholder="What are you looking for?" autocomplete="off"><button type="submit">Search</button></form><div class="home-tools"><button onclick="browseCategory('Tech')">Tech</button><button onclick="browseCategory('Fashion')">Fashion</button><button onclick="browseCategory('Home & Living')">Home & Living</button><button onclick="browseCategory('Baby & Kids')">Baby & Kids</button><button onclick="showView('browse')">View all products →</button></div></div><div class="hero-art"><div class="frame back"><div class="art grad2"><div class="art-kicker">Nuvora / Finds</div><div class="art-title">Good things are easier to find when someone curates them.</div><div class="art-footer"><span>01</span><span>DISCOVER</span></div></div></div><div class="frame main"><div class="art grad1"><div class="art-kicker">Featured collection</div><div class="art-title">Useful things for everyday life.</div><div class="art-footer"><span>Nuvora</span><span>EXPLORE →</span></div></div></div></div></div></section>
 
-<section class="section"><div class="shell"><div class="commerce-strip"><div class="commerce-card" onclick="showView('browse')"><b>✨ Just added</b><span>See the latest products.</span><strong>Shop new</strong></div><div class="commerce-card" onclick="focusDeals()"><b>🏷️ Deals</b><span>Products with visible savings.</span><strong>View deals</strong></div><div class="commerce-card" onclick="focusTrending()"><b>🔥 Trending</b><span>Popular picks worth exploring.</span><strong>Explore</strong></div><div class="commerce-card" onclick="showView('saved')"><b>♡ Saved</b><span>Keep products for later.</span><strong>Open saved</strong></div></div></div></section><section class="section"><div class="shell"><div class="section-head"><div><h2>New products</h2><p>Fresh arrivals recently added to Nuvora.</p></div><button class="link-btn" onclick="showView('browse')">See all →</button></div><div class="product-grid" id="newProducts"></div></div></section>
-<section class="section"><div class="shell"><div class="section-head"><div><h2>Random picks</h2><p>A few things worth discovering right now.</p></div><button class="link-btn" onclick="showView('browse')">Browse all →</button></div><div class="product-grid" id="randomPicks"></div></div></section>
+<section class="section"><div class="shell"><div class="commerce-strip"><div class="commerce-card" onclick="showView('browse')"><b>✨ Just added</b><span>See the latest products.</span><strong>Shop new</strong></div><div class="commerce-card" onclick="focusDeals()"><b>🏷️ Deals</b><span>Products with visible savings.</span><strong>View deals</strong></div><div class="commerce-card" onclick="focusTrending()"><b>🔥 Trending</b><span>Popular picks worth exploring.</span><strong>Explore</strong></div><div class="commerce-card" onclick="showView('saved')"><b>♡ Saved</b><span>Keep products for later.</span><strong>Open saved</strong></div></div></div></section><section class="section"><div class="shell"><div class="section-head"><div><h2>Just dropped</h2><p>Fresh finds, quietly curated.</p></div><button class="link-btn" onclick="showView('browse')">See all →</button></div><div class="product-grid curated-grid" id="newProducts"></div></div></section>
+<section class="section"><div class="shell"><div class="section-head"><div><h2>Worth a look</h2><p>A few unexpected finds.</p></div><button class="link-btn" onclick="showView('browse')">Browse all →</button></div><div class="product-grid discovery-grid" id="randomPicks"></div></div></section>
 <section class="confidence-strip"><div class="shell confidence-grid"><div class="confidence-card"><b>Curated, not cluttered</b><span>Products are selected to keep discovery focused and useful.</span></div><div class="confidence-card"><b>Save what you like</b><span>Keep interesting finds in your saved space for later.</span></div><div class="confidence-card"><b>Clear retailer links</b><span>When a product comes from a retailer, you can see where the click goes.</span></div></div></section><section class="section"><div class="shell"><div class="section-head"><div><h2>Explore Nuvora</h2><p>Three ways to discover something useful.</p></div></div><div class="category-grid"><div class="cat" onclick="showView('shop')"><div><span class="pill">SHOP · SOON</span><h3 style="margin-top:10px">Shop directly.</h3><p>Direct Nuvora shopping is coming soon.</p></div><span class="arrow">→</span></div><div class="cat" onclick="showView('finds')"><div><span class="pill">FINDS</span><h3 style="margin-top:10px">Discover finds.</h3><p>Interesting products from trusted retailers.</p></div><span class="arrow">→</span></div><div class="cat" onclick="showView('learn')"><div><span class="pill">LEARN · SOON</span><h3 style="margin-top:10px">Learn something.</h3><p>Learning resources are coming to Nuvora.</p></div><span class="arrow">→</span></div></div></div></section>
 <section class="section"><div class="shell"><div class="discover"><div><h2>Not sure what you need?</h2><p>Nuvora can help you narrow things down when Discovery is ready.</p></div><button class="btn primary" onclick="startDiscovery()">Discovery · Coming soon</button></div></div></section>
 </section>
@@ -165,19 +208,14 @@ function browseCategory(cat){activeCat=cat;activeCollection='All';showView('brow
 function card(p){
   const image=p.image||p.image_urls?.[0];
   const source=p.retailer||'Nuvora';
-  const rating=p.rating!=null&&Number(p.rating)>0?'★ '+Number(p.rating).toFixed(1):'';
-  const reviews=p.reviews!=null&&Number(p.reviews)>0?' · '+Number(p.reviews).toLocaleString()+' reviews':'';
   const dealText=p.deal||p.amazonDeal||'';
-  const deal=dealText?'<span style="display:inline-block;margin-bottom:5px;padding:3px 7px;border-radius:999px;background:#24120a;color:#ffb36b;font-size:10px;font-weight:700">'+htmlEsc(dealText)+'</span>':'';
-  const listPrice=p.listPrice!=null&&Number(p.listPrice)>Number(p.rawPrice||0)?p.listPrice:(p.amazonListPrice!=null&&Number(p.amazonListPrice)>Number(p.rawPrice||0)?p.amazonListPrice:null);
-  const oldPrice=listPrice!=null?'<span style="margin-left:6px;text-decoration:line-through;color:var(--muted);font-size:11px">'+htmlEsc(formatPrice(listPrice,p.currency))+'</span>':'';
-  const discount=p.discount!=null?p.discount:p.amazonDiscount;
-  const off=discount!=null?'<span style="margin-left:6px;color:#ffb36b;font-size:11px">'+htmlEsc(String(discount)+'% OFF')+'</span>':'';
   const savedNow=saved.includes(p.id);
-  return '<article class="product" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button" aria-label="View '+htmlEsc(p.name)+'">'+
-    '<button class="card-save '+(savedNow?'saved':'')+'" aria-label="Save product" onclick="event.stopPropagation();toggleSave(this.closest(\'.product\').dataset.productId)">'+(savedNow?'♥':'♡')+'</button>'+
-    '<div class="prod-open"><div class="thumb">'+(image?'<img src="'+htmlEsc(image)+'" alt="'+htmlEsc(p.name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\'">':'✦')+'</div>'+
-    '<div class="prodtext"><div class="card-source">'+htmlEsc(source)+'</div><h4>'+deal+htmlEsc(p.name)+'</h4><div class="card-meta"><span class="card-rating">'+htmlEsc(rating)+htmlEsc(reviews)+'</span><span>'+htmlEsc(p.cat||'')+'</span></div><div class="card-bottom"><span class="prodprice">'+htmlEsc(p.price)+oldPrice+off+'</span><span class="card-action">View</span></div></div></div></article>';
+  const badge=dealText?'<span class="nv-card-badge">'+htmlEsc(dealText)+'</span>':'';
+  return '<article class="product nv-card" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button" aria-label="View '+htmlEsc(p.name)+'">'+
+    badge+
+    '<button class="card-save '+(savedNow?'saved':'')+'" aria-label="Save product" onclick="event.stopPropagation();toggleSave(this.closest(\\'.product\\').dataset.productId)">'+(savedNow?'♥':'♡')+'</button>'+
+    '<div class="prod-open"><div class="thumb">'+(image?'<img src="'+htmlEsc(image)+'" alt="'+htmlEsc(p.name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\\'none\\'">':'<span class="nv-image-mark">✦</span>')+'</div>'+
+    '<div class="prodtext"><div class="card-source">'+htmlEsc(source)+'</div><h4>'+htmlEsc(p.name)+'</h4><div class="card-bottom"><span class="prodprice">'+htmlEsc(p.price)+'</span><span class="card-action">View <span>→</span></span></div></div></div></article>';
 }
 function renderList(id,type){document.getElementById(id).innerHTML=products.filter(p=>p.type===type).map(card).join('')||'<div class="empty" style="grid-column:1/-1"><strong>No products yet.</strong><br><span>New Nuvora products will appear here after you add and publish them from Admin.</span></div>'}
 function renderLearn(){document.getElementById('learnGrid').innerHTML='<div class="notice" style="grid-column:1/-1"><strong>Learn is coming soon.</strong><span>We are preparing the learning side of Nuvora. No courses are being shown until it is actually available.</span></div>'}
