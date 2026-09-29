@@ -208,11 +208,9 @@ function browseCategory(cat){activeCat=cat;activeCollection='All';showView('brow
 function card(p){
   const image=p.image||p.image_urls?.[0];
   const source=p.retailer||'Nuvora';
-  const dealText=p.deal||p.amazonDeal||'';
   const savedNow=saved.includes(p.id);
-  const badge=dealText?'<span class="nv-card-badge">'+htmlEsc(dealText)+'</span>':'';
   return '<article class="product nv-card" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button" aria-label="View '+htmlEsc(p.name)+'">'+
-    badge+
+
     '<button class="card-save '+(savedNow?'saved':'')+'" aria-label="Save product" onclick="event.stopPropagation();toggleSave(this.closest(\'.product\').dataset.productId)">'+(savedNow?'♥':'♡')+'</button>'+
     '<div class="prod-open"><div class="thumb">'+(image?'<img src="'+htmlEsc(image)+'" alt="'+htmlEsc(p.name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\'">':'<span class="nv-image-mark">✦</span>')+'</div>'+
     '<div class="prodtext"><div class="card-source">'+htmlEsc(source)+'</div><h4>'+htmlEsc(p.name)+'</h4><div class="card-bottom"><span class="prodprice">'+htmlEsc(p.price)+'</span><span class="card-action">View <span>→</span></span></div></div></div></article>';
