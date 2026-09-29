@@ -179,7 +179,14 @@ async function scrapeTemuListing(temuUrl){
   const reviewCount=aggregate.reviewCount?Number(aggregate.reviewCount):Number(reviewText.replace(/[^0-9]/g,''))||null;
   const ratingText=(plain.match(/[0-5](?:\.[0-9])?\s*(?:out of 5|\/5)/i)||[])[0]||'';
   const ratingValue=aggregate.ratingValue?Number(aggregate.ratingValue):Number((ratingText.match(/[0-5](?:\.[0-9])?/)||[])[0])||null;
-  const dealText=(plain.match(/(?:limited time|flash|deal|sale|off)[^.]{0,100}/i)||[])[0]?.trim()||null;
+  // Only expose human-readable promotional language. Amazon pages contain
+  // internal offer/token strings that must never reach the Nuvora storefront.
+  const dealCandidates=[
+    plain.match(/limited time deal/i)?.[0],
+    plain.match(/flash deal/i)?.[0],
+    plain.match(/today'?s deal/i)?.[0]
+  ].filter(Boolean);
+  const dealText=dealCandidates[0]||null;
   const availability=String(offers.availability||'').split('/').pop()||null;
 
   let productId=null;
@@ -747,10 +754,23 @@ async function scrapeAmazonListing(amazonUrl,asin){
   const title=findTag('productTitle')||findMeta('og:title')||findMeta('twitter:title');
   const brand=findTag('bylineInfo').replace(/^Visit the /i,'').replace(/ Store$/i,'').trim();
   const deal=findTag('dealBadge')||(/limited time deal/i.test(plain)?'Limited time deal':'');
-  const current=amazonMoney(findTag('priceblock_ourprice')||findTag('priceblock_dealprice')||findTag('corePriceDisplay_desktop_feature_div'));
-  const list=amazonMoney(findTag('priceblock_listprice')||findTag('listPrice'));
+  // Read the actual visible buying price first, then fall back to common
+  // Amazon price containers. Never invent a price when Amazon did not expose one.
+  const priceSources=[
+    findTag('priceblock_dealprice'),
+    findTag('priceblock_ourprice'),
+    findTag('corePriceDisplay_desktop_feature_div'),
+    findTag('price_inside_buybox'),
+    findTag('priceblock_saleprice')
+  ];
+  const current=priceSources.map(amazonMoney).find(v=>v!=null) ?? null;
+  const listSources=[findTag('priceblock_listprice'),findTag('listPrice'),findTag('basisPrice')];
+  const list=listSources.map(amazonMoney).find(v=>v!=null) ?? null;
+  const fallbackPriceMatch=plain.match(/(?:US\$|\$|£|€|NGN\s*)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i);
+  const visibleFallback=fallbackPriceMatch?Number(fallbackPriceMatch[1].replace(/,/g,'')):null;
+  const resolvedCurrent=current??visibleFallback;
   const discountMatch=plain.match(/(?:([0-9]{1,3})%\s*(?:off|savings)|save\s+([0-9]{1,3})%)/i);
-  const discount=discountMatch?Number(discountMatch[1]||discountMatch[2]):(current&&list?Math.round((1-current/list)*100):null);
+  const discount=discountMatch?Number(discountMatch[1]||discountMatch[2]):(resolvedCurrent&&list?Math.round((1-resolvedCurrent/list)*100):null);
   const ratingMatch=plain.match(/([0-5]\.[0-9])\s+out of 5 stars/i);
   const reviewsMatch=plain.match(/([0-9][0-9,]*)\s+(?:ratings|reviews?)/i);
   const boughtMatch=plain.match(/([0-9][0-9Kk+.]*)\s+bought in past month/i);
@@ -783,7 +803,7 @@ async function scrapeAmazonListing(amazonUrl,asin){
   for(const m of html.matchAll(imageRe))addImage(m[1]);
   const badge=/#\s*[0-9]+\s+Best Seller/i.test(plain)?'Best Seller':'';
   if(!images.length)images.push(amazonImageFallback(title,brand,asin));
-  return {asin,title:title.slice(0,180),brand:brand.slice(0,120),current_price:current,list_price:list,discount_percent:discount,deal_text:deal||null,rating:ratingMatch?Number(ratingMatch[1]):null,review_count:reviewsMatch?Number(reviewsMatch[1].replace(/,/g,'')):null,bought_past_month:boughtMatch?boughtMatch[1]:null,badges:[badge].filter(Boolean),shipping_text:shippingMatch?shippingMatch[0].trim():null,tax_text:taxMatch?taxMatch[0].trim():null,features:cleanAmazonFeatures(plain),images};
+  return {asin,title:title.slice(0,180),brand:brand.slice(0,120),current_price:resolvedCurrent,list_price:list,discount_percent:discount,deal_text:dealText||null,rating:ratingMatch?Number(ratingMatch[1]):null,review_count:reviewsMatch?Number(reviewsMatch[1].replace(/,/g,'')):null,bought_past_month:boughtMatch?boughtMatch[1]:null,badges:[badge].filter(Boolean),shipping_text:shippingMatch?shippingMatch[0].trim():null,tax_text:taxMatch?taxMatch[0].trim():null,features:cleanAmazonFeatures(plain),images};
 }
 function amazonImageFallback(title,brand,asin){
   const safe=(v,max=70)=>String(v||'').replace(/[&<>"]/g,'').replace(/\\s+/g,' ').trim().slice(0,max);
