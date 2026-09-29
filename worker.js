@@ -598,8 +598,30 @@ async function scrapeAmazonListing(amazonUrl,asin){
   const shippingMatch=plain.match(/Shipping & Import Charges[^.]{0,220}/i);
   const taxMatch=plain.match(/Sales taxes may apply[^.]{0,180}/i);
   const images=[];
-  const imageRe=/(https?:\/\/[^"\s]+?\.(?:jpg|jpeg|png|webp)(?:\?[^"\s]*)?)/gi;
-  for(const m of html.matchAll(imageRe)){const u=m[1];if(!images.includes(u)&&images.length<30)images.push(u.replace(/\\u0026/g,'&'));}
+  const addImage=(value)=>{
+    if(!value)return;
+    let u=String(value).replace(/\\u0026/g,'&').replace(/\\\//g,'/');
+    try{u=JSON.parse('"'+u.replace(/"/g,'\\\"')+'"')}catch(e){}
+    if(/^https?:\\/\\//i.test(u)&&!images.includes(u)&&images.length<30)images.push(u);
+  };
+  const addImageList=(value)=>{
+    if(!value)return;
+    let raw=String(value);
+    try{
+      const parsed=JSON.parse(raw);
+      if(parsed&&typeof parsed==='object'){
+        for(const key of Object.keys(parsed))addImage(parsed[key]);
+      }
+    }catch(e){
+      for(const m of raw.matchAll(/https?:\\/\\/[^"\\\\]+/gi))addImage(m[0]);
+    }
+  };
+  addImage(findMeta('og:image'));
+  addImage(findMeta('twitter:image'));
+  const dataImageRe=/(?:data-old-hi-res|data-a-dynamic-image|data-image-url|data-src)=[\\x22\\x27]([^\\x22\\x27]+)[\\x22\\x27]/gi;
+  for(const m of html.matchAll(dataImageRe))addImageList(m[1]);
+  const imageRe=/(https?:\\/\\/[^"\\s\\\\]+?\\.(?:jpg|jpeg|png|webp)(?:\\?[^"\\s\\\\]*)?)/gi;
+  for(const m of html.matchAll(imageRe))addImage(m[1]);
   const badge=/#\s*[0-9]+\s+Best Seller/i.test(plain)?'Best Seller':'';
   return {asin,title:title.slice(0,180),brand:brand.slice(0,120),current_price:current,list_price:list,discount_percent:discount,deal_text:deal||null,rating:ratingMatch?Number(ratingMatch[1]):null,review_count:reviewsMatch?Number(reviewsMatch[1].replace(/,/g,'')):null,bought_past_month:boughtMatch?boughtMatch[1]:null,badges:[badge].filter(Boolean),shipping_text:shippingMatch?shippingMatch[0].trim():null,tax_text:taxMatch?taxMatch[0].trim():null,features:cleanAmazonFeatures(plain),images};
 }
