@@ -211,7 +211,7 @@ async function scrapeTemuListing(temuUrl){
     .replace(/\\bsvg\\b/gi,' ')
     .replace(/\\s+/g,' ').trim();
   const specKeys=['Wireless Property','Battery Properties','Applicable Age Group','Brand','Major Material','Color','Power Mode','Operating Voltage','Item ID','Origin','Connectivity','Compatible Devices','Compatibility','Dimensions','Drawing Area','Interface','Material','Model','Style','Size'];
-  const escRe=s=>s.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\  const escRe=s=>s.replace(/[|\\{}()\\[\\]^$+*?.-]/g,'\\$&');');
+  const escRe=s=>String(s).split('').map(ch=>['|','\\','{','}','(',')','[',']','^','$','+','*','?','.','-'].includes(ch)?'\\'+ch:ch).join('');
   const keyPart=specKeys.map(escRe).join('|');
   const specifications=[];
   const specRe=new RegExp('('+keyPart+')\\s*[:：]\\s*(.*?)(?=\\s+(?:'+keyPart+')\\s*[:：]|$)','gi');
