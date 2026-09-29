@@ -201,6 +201,11 @@ async function scrapeTemuListing(temuUrl){
   ].filter(Boolean);
   const dealText=cleanRetailerText(dealCandidates[0]||extraDeals.join(' · ')||'')||null;
   const availability=String(offers.availability||'').split('/').pop()||null;
+  const detailsBlock=(plain.match(/Product details([\\s\\S]{0,5000}?)(?:Reviews|Product details 0|\\b[0-9]{1,3}\\s+sold\\b)/i)||[])[1]||'';
+  const featureLines=detailsBlock.split(/[\\n•]+/).map(x=>cleanRetailerText(x)).filter(x=>x.length>20&&x.length<500).slice(0,12);
+  const soldText=(plain.match(/\\b[0-9][0-9,.]*\\s+sold\\b/i)||[])[0]||null;
+  const freeShipping=(plain.match(/\\bFree shipping[^\\n.]*/i)||[])[0]||null;
+
 
   let productId=null;
   const marker='-g-';
@@ -231,6 +236,9 @@ async function scrapeTemuListing(temuUrl){
     review_count:reviewCount,
     deal_text:dealText,
     availability,
+    sold_count_text:soldText,
+    shipping_text:cleanRetailerText(freeShipping||''),
+    features:featureLines,
     images
   };
 }
