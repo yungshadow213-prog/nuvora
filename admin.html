@@ -341,6 +341,7 @@ async function useAmazonLink(){
     const a=j.listing||{};
     if(a.title)document.getElementById('pfName').value=a.title;
     if(a.brand)document.getElementById('pfBrand').value=a.brand;
+    if(a.description)document.getElementById('pfDescription').value=a.description;
     if(a.current_price!=null)document.getElementById('pfPrice').value=a.current_price;
     if(a.list_price!=null)document.getElementById('pfListPrice').value=a.list_price;
     if(a.discount_percent!=null)document.getElementById('pfDiscount').value=a.discount_percent;
