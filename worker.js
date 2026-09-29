@@ -832,10 +832,11 @@ async function scrapeAmazonListing(amazonUrl,asin){
   const productDescription=clean(amazonDecode(productDescriptionBlock.replace(/<[^>]+>/g,' ')),5000);
 
   const descriptionParts=[];
-  if(featureTexts.length)descriptionParts.push('About this item\\n'+featureTexts.join('\\n'));
-  if(productDescription)descriptionParts.push('Product description\\n'+productDescription);
-  if(detailTexts.length)descriptionParts.push('Product details\\n'+detailTexts.join('\\n'));
-  if(categoryPath)descriptionParts.push('Category\\n'+categoryPath);
+  const nl=String.fromCharCode(10);
+  if(featureTexts.length)descriptionParts.push('About this item'+nl+featureTexts.join(nl));
+  if(productDescription)descriptionParts.push('Product description'+nl+productDescription);
+  if(detailTexts.length)descriptionParts.push('Product details'+nl+detailTexts.join(nl));
+  if(categoryPath)descriptionParts.push('Category'+nl+categoryPath);
   if(department)descriptionParts.push('Department\\n'+department);
   if(colors.length)descriptionParts.push('Available colors\\n'+colors.join(', '));
   if(sizes.length)descriptionParts.push('Available sizes\\n'+sizes.join(', '));
