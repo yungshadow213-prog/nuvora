@@ -239,6 +239,7 @@ async function scrapeTemuListing(temuUrl){
     sold_count_text:soldText,
     shipping_text:cleanRetailerText(freeShipping||''),
     features:featureLines,
+    variations:buildProductOptions(plain),
     images
   };
 }
@@ -801,6 +802,32 @@ async function amazonGetItem(env,asin){
   // integration layer when credentials are available; return null otherwise.
   return null;
 }
+function buildProductOptions(text){
+  const src=String(text||'');
+  const groups=[];
+  const add=(name,values)=>{
+    const cleanValues=[...new Set((values||[]).map(v=>String(v||'').trim()).filter(v=>v&&v.length<=80))].slice(0,40);
+    if(cleanValues.length>=1)groups.push({name,values:cleanValues});
+  };
+  const pick=(label,pattern)=>{const m=src.match(pattern);if(m)add(label,[m[1]]);};
+  const sizes=[...src.matchAll(/\b(?:XXS|XS|S|M|L|XL|XXL|XXXL|XX-Small|X-Small|Small|Medium|Large|X-Large|XX-Large|2X-Large|3X-Large|4X-Large)\b/gi)].map(m=>m[0]);
+  add('Size',sizes);
+  const colors=[...src.matchAll(/\b(?:Black|White|Grey|Gray|Red|Blue|Green|Pink|Purple|Orange|Yellow|Brown|Beige|Cream|Navy|Khaki|Burgundy|Camel|Chocolate Brown|Light Pink|Light Green|Dark Blue|Royal Blue|Hot Pink|Oatmeal|Apricot|Aqua|Leopard)\b/gi)].map(m=>m[0]);
+  add('Color',[...new Set(colors.map(v=>v.replace(/\bGray\b/i,'Grey')))]);
+  const storage=[...src.matchAll(/\b(?:16|32|64|128|256|512)\s*(?:GB|G|TB)\b/gi)].map(m=>m[0].replace(/\s+/g,' '));
+  add('Storage',storage);
+  const ram=[...src.matchAll(/\b(?:4|6|8|12|16|24|32)\s*GB\s*RAM\b/gi)].map(m=>m[0]);
+  add('RAM',ram);
+  const packs=[...src.matchAll(/\b(?:Pack of|Set of|[0-9]+)[ \-]*(?:1|2|3|4|5|6|8|10|12|24)\b/gi)].map(m=>m[0]);
+  add('Pack',packs);
+  pick('Voltage',/(?:Voltage|Operating Voltage)\s*[:：]?\s*([^\n]{1,80})/i);
+  pick('Material',/(?:Material|Major Material|Fabric type)\s*[:：]?\s*([^\n]{1,120})/i);
+  pick('Model',/(?:Model Number|Model)\s*[:：]?\s*([^\n]{1,100})/i);
+  pick('Shade',/(?:Shade|Color Name)\s*[:：]?\s*([^\n]{1,100})/i);
+  pick('Pattern',/(?:Pattern)\s*[:：]?\s*([^\n]{1,100})/i);
+  return groups.filter(g=>g.values.length);
+}
+
 async function scrapeAmazonListing(amazonUrl,asin){
   const r=await fetch(amazonUrl,{headers:{
     'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36',
@@ -921,6 +948,7 @@ async function scrapeAmazonListing(amazonUrl,asin){
     deal_text:deal?clean(deal,80):null,rating,review_count:reviewCount,bought_past_month:bought,
     badges,shipping_text:shippingText?clean(shippingText,300):null,tax_text:taxText?clean(taxText,240):null,
     features:featureTexts,description:clean(descriptionParts.join('\\n\\n'),12000),
+    variations:buildProductOptions(plain).filter(g=>['Size','Color'].includes(g.name)||g.values.length>1),
     colors:colors.slice(0,40),sizes:sizes.slice(0,30),
     delivery_text:deliveryText?clean(deliveryText,220):null,seller:seller?clean(seller,100):null,
     ships_from:shipsFrom?clean(shipsFrom,100):null,department:department?clean(department,100):null,
