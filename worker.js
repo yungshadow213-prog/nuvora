@@ -201,50 +201,70 @@ async function scrapeTemuListing(temuUrl){
   ].filter(Boolean);
   const dealText=cleanRetailerText(dealCandidates[0]||extraDeals.join(' · ')||'')||null;
   const availability=String(offers.availability||'').split('/').pop()||null;
-  const productSection=(plain.match(/Product details([\s\S]{0,9000}?)(?:Explore your interests|Company info|Customer service)/i)||[])[1]||'';
-  const sectionClean=cleanRetailerText(productSection)
-    .replace(/Product details\s*[0-9]+/gi,' ')
-    .replace(/open claw/gi,' ')
-    .replace(/Save\s*Save/gi,' ')
-    .replace(/Report this item/gi,' ')
-    .replace(/common_arrows/gi,' ')
-    .replace(/\bsvg\b/gi,' ')
-    .replace(/\s+/g,' ').trim();
-  const specKeys=['Wireless Property','Battery Properties','Applicable Age Group','Brand','Major Material','Color','Power Mode','Operating Voltage','Item ID','Origin','Connectivity','Compatible Devices','Compatibility','Dimensions','Drawing Area','Interface','Material','Model','Style','Size'];
-  const escRe=s=>String(s).split('').map(ch=>['|','{','}','(',')','[',']','^','$','+','*','?','.','-'].includes(ch)?'\\'+ch:ch).join('');
-  const keyPart=specKeys.map(escRe).join('|');
-  const specifications=[];
-  const specRe=new RegExp('('+keyPart+')\s*[:：]\s*(.*?)(?=\s+(?:'+keyPart+')\s*[:：]|$)','gi');
-  let sm;
-  while((sm=specRe.exec(sectionClean))&&specifications.length<30){
-    const key=cleanRetailerText(sm[1]);
-    const value=cleanRetailerText(sm[2]).replace(/See all details and dimensions/gi,'').trim();
-    if(key&&value&&value.length<300&&!specifications.some(x=>x[0].toLowerCase()===key.toLowerCase()))specifications.push([key,value]);
+  const detailStart=plain.toLowerCase().indexOf('product details');
+  const stopWords=['explore your interests','company info','customer service','back to top'];
+  let detailEnd=plain.length;
+  if(detailStart>=0){
+    for(const word of stopWords){
+      const p=plain.toLowerCase().indexOf(word,detailStart+1);
+      if(p>=0&&p<detailEnd)detailEnd=p;
+    }
   }
-  const highlightBlock=(plain.match(/Highlights([\s\S]{0,2500}?)(?:Explore your interests|Company info|Customer service)/i)||[])[1]||'';
-  const featureLines=[...new Set(highlightBlock.split(/[.!?]\s+/).map(x=>cleanRetailerText(x)).filter(x=>x.length>25&&x.length<450))].slice(0,10);
-  const soldText=(plain.match(/\b[0-9][0-9,.]*\s+sold\b/i)||[])[0]||null;
-  const scarcityText=(plain.match(/\bONLY\s+[0-9,]+\s+LEFT\b/i)||[])[0]||null;
-  const freeShipping=(plain.match(/Free shipping[^.\n]*/i)||[])[0]||null;
-  const reviewSnapshot=(plain.match(/\b[0-9][0-9,.]*\s+reviews?\b/i)||[])[0]||null;
+  const detailText=detailStart>=0?plain.slice(detailStart,detailEnd):'';
+  const sectionClean=cleanRetailerText(detailText)
+    .replace(/product details\\s*[0-9]+/gi,' ')
+    .replace(/open claw/gi,' ')
+    .replace(/save\\s*save/gi,' ')
+    .replace(/report this item/gi,' ')
+    .replace(/common_arrows/gi,' ')
+    .replace(/\\bsvg\\b/gi,' ')
+    .replace(/\\s+/g,' ').trim();
+
+  const specLabels=['Wireless Property','Battery Properties','Applicable Age Group','Brand','Major Material','Color','Power Mode','Operating Voltage','Item ID','Origin','Connectivity','Compatible Devices','Compatibility','Dimensions','Drawing Area','Interface','Material','Model','Style','Size','Capacity','Screen Size'];
+  const specifications=[];
+  const lowerDetails=sectionClean.toLowerCase();
+  for(const label of specLabels){
+    const needle=label.toLowerCase()+':';
+    const pos=lowerDetails.indexOf(needle);
+    if(pos<0)continue;
+    const start=pos+needle.length;
+    let end=sectionClean.length;
+    for(const other of specLabels){
+      const next=lowerDetails.indexOf(other.toLowerCase()+':',start);
+      if(next>=0&&next<end)end=next;
+    }
+    const value=cleanRetailerText(sectionClean.slice(start,end)).trim();
+    if(value&&value.length<300&&!specifications.some(x=>x[0].toLowerCase()===label.toLowerCase()))specifications.push([label,value]);
+  }
+
+  const highlightStart=plain.toLowerCase().indexOf('highlights');
+  let highlightEnd=plain.length;
+  for(const word of stopWords){
+    const p=plain.toLowerCase().indexOf(word,highlightStart+10);
+    if(p>=0&&p<highlightEnd)highlightEnd=p;
+  }
+  const highlightText=highlightStart>=0?plain.slice(highlightStart+10,highlightEnd):'';
+  const featureLines=[...new Set(highlightText.split(/[.!?]+/).map(x=>cleanRetailerText(x)).filter(x=>x.length>25&&x.length<450))].slice(0,10);
+
+  const soldText=(plain.match(/\\b[0-9][0-9,.]*\\s+sold\\b/i)||[])[0]||null;
+  const scarcityText=(plain.match(/\\bONLY\\s+[0-9,]+\\s+LEFT\\b/i)||[])[0]||null;
+  const freeShipping=(plain.match(/\\bFree shipping[^.\\n]*/i)||[])[0]||null;
+  const reviewSnapshot=(plain.match(/\\b[0-9][0-9,.]*\\s+reviews?\\b/i)||[])[0]||null;
   const reviewVerified=/All reviews are from verified purchases/i.test(plain);
-  const bestSellerText=(plain.match(/#[0-9]+\s+Best Seller(?:[^.\n]*)?/i)||[])[0]||null;
-  const promoPriceMatch=(plain.match(/after applying promos to\s+(?:₦|NGN|US\$|\$|£|€)\s*[0-9][0-9,.]*/i)||[])[0]||null;
-  const detailSentences=[...new Set(sectionClean.split(/(?<=[.!?])\s+/).map(x=>cleanRetailerText(x)).filter(x=>{
-    if(x.length<45||x.length>700)return false;
-    if(/Product details \d|open claw|Company info|Customer service|Get the Temu App|Best-Selling Items|Price adjustment|Delivery guarantee/i.test(x))return false;
-    return true;
-  }))].slice(0,8);
-  const descriptionParts=[
-    detailSentences.length?'Product information\n'+detailSentences.join(' '):'',
-    specifications.length?'Specifications\n'+specifications.map(x=>x[0]+': '+x[1]).join('\n'):'',
-    featureLines.length?'Highlights\n'+featureLines.join('\n'):'',
-    reviewSnapshot?'Review snapshot: '+reviewSnapshot+(reviewVerified?' · verified purchases':''):'',
-    bestSellerText?'Retailer badge: '+bestSellerText:'',
-    promoPriceMatch?'Promotional price: '+promoPriceMatch:'',
-    soldText?'Sales activity: '+soldText:'',
-    scarcityText?'Availability: '+scarcityText:''
-  ].filter(Boolean).join('\n\n');
+  const bestSellerText=(plain.match(/#[0-9]+\\s+Best Seller[^.\\n]*/i)||[])[0]||null;
+  const promoPriceMatch=(plain.match(/after applying promos to\\s+(?:₦|NGN|US\\$|\\$|£|€)\\s*[0-9][0-9,.]*/i)||[])[0]||null;
+
+  const descriptionParts=[];
+  const productSentences=[...new Set(sectionClean.split(/(?<=[.!?])\\s+/).map(x=>cleanRetailerText(x)).filter(x=>x.length>45&&x.length<800))].slice(0,8);
+  if(productSentences.length)descriptionParts.push('Product information\\n'+productSentences.join(' '));
+  if(specifications.length)descriptionParts.push('Specifications\\n'+specifications.map(x=>x[0]+': '+x[1]).join('\\n'));
+  if(featureLines.length)descriptionParts.push('Highlights\\n'+featureLines.join('\\n'));
+  if(reviewSnapshot)descriptionParts.push('Review snapshot: '+reviewSnapshot+(reviewVerified?' · verified purchases':''));
+  if(bestSellerText)descriptionParts.push('Retailer badge: '+bestSellerText);
+  if(promoPriceMatch)descriptionParts.push('Promotional price: '+promoPriceMatch);
+  if(soldText)descriptionParts.push('Sales activity: '+soldText);
+  if(scarcityText)descriptionParts.push('Availability: '+scarcityText);
+
 
   let productId=null;
   const marker='-g-';
@@ -266,7 +286,7 @@ async function scrapeTemuListing(temuUrl){
     id:productId,
     title:title.slice(0,180),
     brand:brand.slice(0,120),
-    description:(descriptionParts||cleanRetailerText(description)).slice(0,12000),
+    description:(descriptionParts.join('\\n\\n')||cleanRetailerText(description)).slice(0,12000),
     current_price:currentPrice,
     list_price:originalPrice,
     discount_percent:currentPrice&&originalPrice&&originalPrice>currentPrice?Math.round((1-currentPrice/originalPrice)*100):null,
