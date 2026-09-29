@@ -278,7 +278,46 @@ async function generateAIProductCopy(){
   }catch(e){status.textContent='Copy generation failed.';alert(e.message)}finally{btn.disabled=false;btn.textContent='Polish product listing';}
 }
 
-async function useTemuLink(){ const input=document.getElementById('amazonUrlInput'); const url=input.value.trim(); if(!url)return alert('Paste your Temu product link first.'); const status=document.getElementById('importStatus'); status.textContent='Reading the Temu link and preparing the product form…'; try{ const j=await api('/api/temu/prepare',{method:'POST',body:{url}}); document.getElementById('pfDestination').value=j.destination_url||url; document.getElementById('pfRetailer').value='Temu'; document.getElementById('pfAsin').value=j.product_id||''; document.getElementById('pfKind').value=j.kind||'find'; const a=j.listing||{}; if(a.title)document.getElementById('pfName').value=a.title; if(a.description)document.getElementById('pfDescription').value=a.description; if(a.current_price!=null)document.getElementById('pfPrice').value=a.current_price; if(a.rating!=null)document.getElementById('pfRating').value=a.rating; if(a.review_count!=null)document.getElementById('pfReviews').value=a.review_count; if(a.deal_text)document.getElementById('pfDeal').value=a.deal_text; if(Array.isArray(a.images)&&a.images.length)document.getElementById('pfImages').value=a.images.join('\n'); renderProductImages(); status.textContent='Temu link recognized. Review the imported details and save it as a draft.'; }catch(e){status.textContent='Could not prepare this Temu link.';alert(e.message||'Temu link could not be prepared.');} }
+async function useTemuLink(){
+  const input=document.getElementById('amazonUrlInput');
+  const url=input.value.trim();
+  if(!url)return alert('Paste your Temu product link first.');
+  const status=document.getElementById('importStatus');
+  const btn=document.querySelector('.importbar .btn.primary');
+  if(btn){btn.disabled=true;btn.textContent='Reading Temu…';}
+  status.textContent='Reading the Temu product page and extracting the full listing…';
+  try{
+    const j=await api('/api/temu/prepare',{method:'POST',body:{url}});
+    document.getElementById('pfDestination').value=j.destination_url||url;
+    document.getElementById('pfRetailer').value='Temu';
+    document.getElementById('pfAsin').value=j.product_id||'';
+    document.getElementById('pfKind').value=j.kind||'find';
+    if(j.category_id)document.getElementById('pfCategory').value=j.category_id;
+    const a=j.listing||{};
+    if(a.title)document.getElementById('pfName').value=a.title;
+    if(a.brand)document.getElementById('pfBrand').value=a.brand;
+    if(a.description)document.getElementById('pfDescription').value=a.description;
+    if(a.current_price!=null)document.getElementById('pfPrice').value=a.current_price;
+    if(a.list_price!=null)document.getElementById('pfListPrice').value=a.list_price;
+    if(a.discount_percent!=null)document.getElementById('pfDiscount').value=a.discount_percent;
+    if(a.currency)document.getElementById('pfCurrency').value=a.currency;
+    if(a.rating!=null)document.getElementById('pfRating').value=a.rating;
+    if(a.review_count!=null)document.getElementById('pfReviews').value=a.review_count;
+    if(a.deal_text)document.getElementById('pfDeal').value=a.deal_text;
+    if(a.availability)document.getElementById('pfShipping').value=a.availability;
+    if(Array.isArray(a.images)&&a.images.length)document.getElementById('pfImages').value=a.images.join('\n');
+    renderProductImages();
+    document.getElementById('productModalTitle').textContent='Review Temu product';
+    document.getElementById('productModalSub').textContent='Temu link recognized → review the imported listing → save as draft → publish when ready.';
+    const imageCount=Array.isArray(a.images)?a.images.length:0;
+    status.innerHTML='<strong>Temu product imported.</strong> '+(a.description?'Description captured. ':'')+(imageCount?' '+imageCount+' image'+(imageCount===1?'':'s')+' captured.':' No image was exposed by the page; add one manually if needed.');
+  }catch(e){
+    status.textContent='Could not prepare this Temu link.';
+    alert(e.message||'Temu link could not be prepared.');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='Use Temu link';}
+  }
+}
 async function useAmazonLink(){
   if(window.temuImportMode)return useTemuLink();
   const input=document.getElementById('amazonUrlInput');
