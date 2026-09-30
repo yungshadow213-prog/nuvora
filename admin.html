@@ -180,6 +180,7 @@ textarea{line-height:1.55}
     </div>
     <div class="hero-actions">
       <button class="btn primary" onclick="openProductModal(true)">Import Amazon</button>
+      <button class="btn" onclick="openSourcinBoxImport()">Import SourcinBox</button>
       <button class="btn" onclick="openTemuImport()">Import Temu</button>
       <button class="btn" onclick="openProductModal(false)">Add product</button>
     </div>
@@ -199,6 +200,7 @@ textarea{line-height:1.55}
       </div>
       <div class="quick-grid">
         <button class="quick-card" onclick="openProductModal(true)"><span class="quick-icon">A</span><span><b>Amazon import</b><small>Paste a product link and pull listing data.</small></span><em>→</em></button>
+        <button class="quick-card" onclick="openSourcinBoxImport()"><span class="quick-icon">S</span><span><b>SourcinBox import</b><small>Bring supplier products into Nuvora as drafts.</small></span><em>→</em></button>
         <button class="quick-card" onclick="openTemuImport()"><span class="quick-icon">T</span><span><b>Temu import</b><small>Capture prices, images, specs and highlights.</small></span><em>→</em></button>
         <button class="quick-card" onclick="openProductModal(false)"><span class="quick-icon">+</span><span><b>Manual product</b><small>Create a listing from scratch.</small></span><em>→</em></button>
         <button class="quick-card" onclick="show('products',document.querySelector('.nav button:nth-child(2)'))"><span class="quick-icon">↗</span><span><b>Review drafts</b><small>Clean up imported products before publishing.</small></span><em>→</em></button>
@@ -319,7 +321,7 @@ textarea{line-height:1.55}
   </div>
 </div>
 
-<div id="productModal" class="modal-backdrop" onclick="if(event.target===this)closeProductModal()">
+<div id="sourcinBoxModal" class="modal-backdrop" onclick="if(event.target===this)closeSourcinBoxImport()"><div class="modal"><div class="modal-head"><div><div class="eyebrow">Supplier workspace</div><h2>SourcinBox</h2><div class="muted">Find supplier products and bring their references into Nuvora.</div></div><button class="btn" onclick="closeSourcinBoxImport()">Close</button></div><div class="modal-body"><div class="workspace-note">SourcinBox currently documents integrations for Shopify, WooCommerce, Yampi, Nuvemshop, CartPanda, Shoplazza and Etsy. Nuvora is a custom Cloudflare/Supabase store, so this adds a safe supplier-reference workflow without pretending there is a native connector.</div><div class="quick-grid" style="margin-top:0"><button class="quick-card" onclick="window.open('https://app.sourcinbox.com/v2/product/Marketplace','_blank')"><span class="quick-icon">↗</span><span><b>Open Marketplace</b><small>Find a product and copy its Marketplace URL.</small></span><em>→</em></button><button class="quick-card" onclick="startSourcinBoxDraft()"><span class="quick-icon">+</span><span><b>Create Nuvora draft</b><small>Save the supplier URL and listing data.</small></span><em>→</em></button></div><div class="notice" style="margin-top:14px">Products are saved as drafts. Automatic order syncing to SourcinBox is not enabled yet.</div></div></div></div><div id="productModal" class="modal-backdrop" onclick="if(event.target===this)closeProductModal()">
   <div class="modal">
     <div class="modal-head">
       <div><div class="eyebrow">Product workspace</div><h2 id="productModalTitle">Add product</h2><div class="muted" id="productModalSub">Create a draft and review it before publishing.</div></div>
@@ -335,6 +337,7 @@ textarea{line-height:1.55}
       <div class="formgrid">
         <div class="field full"><label>Product title</label><input id="pfName" placeholder="Product title"></div>
         <div class="field"><label>Type</label><select id="pfKind"><option value="shop">Shop</option><option value="find">Find</option><option value="learn">Learn</option></select></div>
+        <div class="field"><label>Product source</label><select id="pfSource"><option value="manual">Manual</option><option value="amazon">Amazon</option><option value="sourcinbox">SourcinBox</option><option value="temu">Temu</option><option value="shopify">Shopify</option></select></div>
         <div class="field"><label>Brand</label><input id="pfBrand" placeholder="Brand"></div>
         <div class="field"><label>Current price</label><input id="pfPrice" type="number" step="0.01" placeholder="0.00"></div>
         <div class="field"><label>List / original price</label><input id="pfListPrice" type="number" step="0.01" placeholder="36.99"></div>
@@ -352,7 +355,10 @@ textarea{line-height:1.55}
         <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div><div class="field full"><label>Product options</label><textarea id="pfVariations" placeholder="Size: X-Small, Small, Medium, Large&#10;Color: Black, Grey, White"></textarea><div class="muted">Nuvora shows these as product options when the retailer provides them.</div></div>
         <div class="field full"><label>Destination / affiliate URL</label><input id="pfDestination" placeholder="https://..."></div>
         <div class="field"><label>Amazon ASIN</label><input id="pfAsin" placeholder="B0XXXXXXXX"></div>
-        <div class="field"><label>Retailer</label><input id="pfRetailer" value="Amazon"></div>
+        <div class="field"><label>Retailer / supplier</label><input id="pfRetailer" value="Amazon"></div>
+        <div class="field full"><label>SourcinBox product URL</label><input id="pfSourcinboxUrl" placeholder="https://app.sourcinbox.com/..."></div>
+        <div class="field"><label>SourcinBox product ID</label><input id="pfSourcinboxId" placeholder="Optional marketplace product ID"></div>
+        <div class="field"><label>Supplier cost</label><input id="pfSupplierCost" type="number" step="0.01" placeholder="0.00"></div>
         <div class="field full"><label>Images — one URL per line</label><textarea id="pfImages" placeholder="https://..."></textarea></div><div class="field full"><label>Custom image upload</label><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="pfUpload" type="file" accept="image/*" multiple style="flex:1"><button type="button" class="btn" onclick="uploadProductImages()">Upload selected images</button></div><div class="muted" id="uploadStatus" style="margin-top:6px">JPG, PNG, WEBP or GIF · max 6 MB each.</div></div>
         <div class="field full"><label>Image preview</label><div id="pfImageStrip" class="image-strip"></div></div>
       </div>
@@ -422,25 +428,31 @@ async function importSelectedShopify(){
   finally{btn.disabled=false;btn.textContent='Import selected';}
 }
 
+function openSourcinBoxImport(){document.getElementById('sourcinBoxModal').classList.add('open');}
+function closeSourcinBoxImport(){document.getElementById('sourcinBoxModal').classList.remove('open');}
+function startSourcinBoxDraft(){closeSourcinBoxImport();resetProductForm();document.getElementById('productModalTitle').textContent='Import SourcinBox product';document.getElementById('productModalSub').textContent='Paste the SourcinBox Marketplace product URL and add the supplier listing details.';document.getElementById('importStatus').textContent='SourcinBox products are supplier/fulfillment listings. Nuvora will keep the supplier reference so automated fulfillment can be added later.';document.getElementById('amazonUrlInput').placeholder='Optional Amazon/Temu link field';document.getElementById('pfSource').value='sourcinbox';document.getElementById('pfKind').value='shop';document.getElementById('pfRetailer').value='SourcinBox';document.getElementById('pfSourcinboxUrl').focus();document.getElementById('productModal').classList.add('open');}
 function resetProductForm(){
-  ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfFeatures','pfVariations','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
-  document.getElementById('pfKind').value='shop'; document.getElementById('pfCurrency').value='NGN'; document.getElementById('pfRetailer').value='Amazon';
+  ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfFeatures','pfVariations','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('pfKind').value='shop'; document.getElementById('pfSource').value='manual'; document.getElementById('pfCurrency').value='NGN'; document.getElementById('pfRetailer').value='Amazon';
   document.getElementById('pfImageStrip').innerHTML='';
   document.getElementById('importStatus').textContent='You can enter a product manually or fetch an Amazon product below. Imported data stays editable and nothing becomes public until you publish it.';
   window.editingProductId=null;
 }
-function openTemuImport(){ resetProductForm(); document.getElementById('productModalTitle').textContent='Import Temu product'; document.getElementById('productModalSub').textContent='Paste your Temu product or affiliate link, review the details, then save it as a draft.'; document.getElementById('productModal').classList.add('open'); document.getElementById('amazonUrlInput').placeholder='Paste your Temu product or affiliate link'; document.getElementById('amazonUrlInput').focus(); window.temuImportMode=true; }
+function openTemuImport(){ resetProductForm(); document.getElementById('productModalTitle').textContent='Import Temu product'; document.getElementById('productModalSub').textContent='Paste your Temu product or affiliate link, review the details, then save it as a draft.'; document.getElementById('productModal').classList.add('open'); document.getElementById('amazonUrlInput').placeholder='Paste your Temu product or affiliate link'; document.getElementById('pfSource').value='temu'; document.getElementById('pfRetailer').value='Temu'; document.getElementById('amazonUrlInput').focus(); window.temuImportMode=true; }
 function openProductModal(importMode=false){
   resetProductForm();
   document.getElementById('productModalTitle').textContent=importMode?'Import Amazon product':'Add product';
   document.getElementById('productModalSub').textContent=importMode?'Paste your affiliate link, add the essentials, then save it as a draft.':'Create a product manually and save it as a draft.';
   document.getElementById('productModal').classList.add('open');
+  document.getElementById('pfSource').value='amazon';
+  document.getElementById('pfRetailer').value='Amazon';
   document.getElementById('amazonUrlInput').focus();
 }
 function closeProductModal(){document.getElementById('productModal').classList.remove('open');}
 function setProductForm(p){
   document.getElementById('pfName').value=p.name||'';
   document.getElementById('pfKind').value=p.kind||'find';
+  document.getElementById('pfSource').value=p.source_type||((p.sourcinbox_product_url||p.sourcinbox_product_id)?'sourcinbox':(p.amazon_asin||p.amazon_source_url?'amazon':'manual'));
   document.getElementById('pfBrand').value=p.brand||'';
   document.getElementById('pfPrice').value=p.display_price??'';
   document.getElementById('pfListPrice').value=p.amazon_list_price??'';
@@ -459,6 +471,9 @@ function setProductForm(p){
   document.getElementById('pfDestination').value=p.destination_url||'';
   document.getElementById('pfAsin').value=p.amazon_asin||'';
   document.getElementById('pfRetailer').value=p.retailer||'Amazon';
+  document.getElementById('pfSourcinboxUrl').value=p.sourcinbox_product_url||'';
+  document.getElementById('pfSourcinboxId').value=p.sourcinbox_product_id||'';
+  document.getElementById('pfSupplierCost').value=p.supplier_cost??'';
   const imgs=p.image_urls||((p.image_url)?[p.image_url]:[]);
   document.getElementById('pfImages').value=imgs.filter(Boolean).join('\\n');
   renderProductImages();
@@ -635,7 +650,12 @@ async function saveProductDraft(){
     currency:document.getElementById('pfCurrency').value.trim()||'NGN',destination_url:document.getElementById('pfDestination').value.trim()||null,
     retailer:document.getElementById('pfRetailer').value.trim()||null,category_id:document.getElementById('pfCategory').value.trim()||null,
     collection_id:document.getElementById('pfCollection').value.trim()||null,amazon_asin:document.getElementById('pfAsin').value.trim()||null,
-    amazon_source_url:document.getElementById('amazonUrlInput').value.trim()||null,published:window.editingProductId?!!adminProducts.find(x=>x.id===window.editingProductId)?.published:false
+    amazon_source_url:document.getElementById('amazonUrlInput').value.trim()||null,
+    source_type:document.getElementById('pfSource').value,
+    sourcinbox_product_url:document.getElementById('pfSourcinboxUrl').value.trim()||null,
+    sourcinbox_product_id:document.getElementById('pfSourcinboxId').value.trim()||null,
+    supplier_cost:document.getElementById('pfSupplierCost').value===''?null:Number(document.getElementById('pfSupplierCost').value),
+    published:window.editingProductId?!!adminProducts.find(x=>x.id===window.editingProductId)?.published:false
   };
   try{
     const slugSource = name || document.getElementById('pfAsin').value.trim() || 'product';
