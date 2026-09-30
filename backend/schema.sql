@@ -23,7 +23,12 @@ create table if not exists public.products (
   category_id uuid references public.categories(id), collection_id uuid references public.collections(id), why_we_picked_it text,
   featured boolean not null default false, trending boolean not null default false, top_pick boolean not null default false,
   published boolean not null default false, shopify_product_id text, shopify_variant_id text,
-  amazon_asin text, amazon_source_url text, created_at timestamptz not null default now(), updated_at timestamptz not null default now(), amazon_last_synced timestamptz
+  amazon_asin text, amazon_source_url text,
+  source_type text not null default 'manual',
+  sourcinbox_product_url text,
+  sourcinbox_product_id text,
+  supplier_cost numeric,
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now(), amazon_last_synced timestamptz
 );
 
 alter table public.products add column if not exists features text;
@@ -31,6 +36,11 @@ alter table public.products add column if not exists brand text;
 alter table public.products add column if not exists image_urls jsonb not null default '[]'::jsonb;
 alter table public.products add column if not exists availability text;
 alter table public.products add column if not exists amazon_last_synced timestamptz;
+alter table public.products add column if not exists source_type text not null default 'manual';
+alter table public.products add column if not exists sourcinbox_product_url text;
+alter table public.products add column if not exists sourcinbox_product_id text;
+alter table public.products add column if not exists supplier_cost numeric;
+
 -- Amazon merchandising fields captured by the best-effort product-page importer.
 alter table public.products add column if not exists amazon_list_price numeric;
 alter table public.products add column if not exists amazon_discount_percent numeric;
