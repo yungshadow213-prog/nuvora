@@ -594,15 +594,22 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const categoryMap=new Map(categories.map(x=>[String(x.id),x]));
         const collectionMap=new Map(collections.map(x=>[String(x.id),x]));
         return json(products.map(p=>{
+          const normalized=normalizeAmazonProduct(p);
           const safeText=v=>cleanMultilineText(v,12000)||null;
           return {
             ...p,
-            name:cleanText(p.name,180),
-            brand:safeText(p.brand),
-            description:safeText(p.description),
-            features:safeText(p.features),
-            deal_text:safeText(p.deal_text),
-            amazon_deal_text:safeText(p.amazon_deal_text),
+            name:normalized.name,
+            brand:normalized.brand,
+            description:normalized.description,
+            features:normalized.features,
+            image_url:normalized.image_url,
+            image_urls:normalized.image_urls,
+            display_price:normalized.display_price,
+            currency:normalized.currency,
+            amazon_rating:normalized.rating,
+            amazon_review_count:normalized.review_count,
+            amazon_deal_text:safeText(normalized.deal),
+            deal_text:safeText(p.deal_text)||safeText(normalized.deal),
             temu_deal_text:safeText(p.temu_deal_text),
             amazon_shipping_text:safeText(p.amazon_shipping_text),
             amazon_tax_text:safeText(p.amazon_tax_text),
@@ -1060,6 +1067,48 @@ async function shopifyGraphql(env,query,variables={},admin=false){
   const j=await r.json().catch(()=>({}));
   if(!r.ok||j.errors)throw new Error(j.errors?.[0]?.message||`Shopify API returned ${r.status}`);
   return j.data;
+}
+function normalizeAmazonProduct(p){
+  const clean=String(v=>{});
+  const nav=/\b(?:search|keyboard shortcuts|ask shift|home|orders|account|sign in|prime video|amazon fashion|customer service|gift cards|today's deals|best sellers|new releases|sponsored|back to top|deliver(?:ing|y) to|update location|all departments|shop by|buying options|add to basket|add to cart|payment security|legal warranty|report an issue|see all product specifications|loading content|open claw|common_arrows)\b/gi;
+  const title=cleanText(p.name,180).replace(/\s+/g,' ').trim();
+  let brand=cleanText(p.brand,120).replace(/^brand\s*:\s*/i,'').trim();
+  if(!brand){
+    const m=title.match(/^([^:|]+?)(?=\s+(?:women'?s|men'?s|kids'?|girls'?|boys'?|unisex)\b)/i);
+    brand=(m?m[1]:title.split(/\s+/).slice(0,2).join('')).trim();
+  }
+  const stripRetailerNoise=(value)=>{
+    let s=cleanMultilineText(value,12000);
+    s=s.replace(nav,' ').replace(/\b(?:Amazon\.co\.uk|Amazon\.com|Amazon)\b/gi,' ').replace(/\s+/g,' ').trim();
+    const bad=/^(?:amazon product|product details|product information|sponsored|image unavailable|image not available)$/i;
+    return bad.test(s)?'':s;
+  };
+  let description=stripRetailerNoise(p.description);
+  let features=stripRetailerNoise(p.features);
+  const featureLines=features.split(/[\n•|]+/).map(x=>stripRetailerNoise(x)).filter(x=>x.length>=8&&x.length<=500&&!nav.test(x)).slice(0,10);
+  if(featureLines.length)features=featureLines.map(x=>'• '+x).join('\n');
+  if(!features && description){
+    const candidates=description.split(/[.!?]+/).map(x=>x.trim()).filter(x=>x.length>25&&x.length<350&&!nav.test(x)).slice(0,6);
+    features=candidates.map(x=>'• '+x).join('\n');
+  }
+  if(description.length>6000)description=description.slice(0,6000);
+  const rawImages=[p.image_url,...(Array.isArray(p.image_urls)?p.image_urls:[])];
+  const imageBad=/(?:sprite|nav-sprite|timeline_sprite|ad-feedback|transparent-1x1|pixel|tracking|logo|icon|amazon.*(?:nav|sprite))/i;
+  const images=[...new Set(rawImages.map(x=>String(x||'').trim()).filter(u=>/^https?:\/\//i.test(u)&&!imageBad.test(u)))].slice(0,30);
+  const price=Number(p.display_price);
+  return {
+    name:title||'Amazon product',
+    brand:brand||null,
+    description:description||null,
+    features:features||null,
+    image_url:images[0]||null,
+    image_urls:images,
+    display_price:Number.isFinite(price)&&price>0?price:null,
+    currency:cleanText(p.currency,12)||'USD',
+    rating:Number(p.amazon_rating??p.rating)||null,
+    review_count:Number(p.amazon_review_count??p.review_count)||null,
+    deal:cleanText(p.amazon_deal_text||p.deal_text,500)||null
+  };
 }
 function autoCategory(title,description,productType,categories){
   const t=(String(title||'')+' '+String(description||'')+' '+String(productType||'')).toLowerCase();
