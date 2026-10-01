@@ -603,12 +603,14 @@ async function useAmazonLink(){
     if(a.current_price!=null)document.getElementById('pfPrice').value=a.current_price;
     if(a.list_price!=null)document.getElementById('pfListPrice').value=a.list_price;
     if(a.discount_percent!=null)document.getElementById('pfDiscount').value=a.discount_percent;
+    if(a.currency)document.getElementById('pfCurrency').value=a.currency;
     if(a.deal_text)document.getElementById('pfDeal').value=a.deal_text;
     if(a.rating!=null)document.getElementById('pfRating').value=a.rating;
     if(a.review_count!=null)document.getElementById('pfReviews').value=a.review_count;
     if(a.bought_past_month)document.getElementById('pfBought').value=a.bought_past_month;
     if(a.shipping_text)document.getElementById('pfShipping').value=a.shipping_text;
     if(a.tax_text)document.getElementById('pfTax').value=a.tax_text;
+    if(Array.isArray(a.variations)&&a.variations.length)document.getElementById('pfVariations').value=a.variations.map(x=>x.name+': '+x.values.join(', ')).join('\\n');
     if(Array.isArray(a.images)&&a.images.length)document.getElementById('pfImages').value=a.images.join('\\n');
     if(a.features)document.getElementById('pfFeatures').value=Array.isArray(a.features)?a.features.join('\n'):a.features;
     renderProductImages();
@@ -617,7 +619,14 @@ async function useAmazonLink(){
     if(j.duplicate){
       status.innerHTML='<strong>⚠️ This ASIN is already in Nuvora.</strong> '+esc(j.duplicate.name||'Existing product')+' — you can close this form and edit the existing product instead.';
     }else{
-      status.textContent='Amazon link recognized. ASIN '+j.asin+' detected. Review the suggested title/category, add the product image and details, then save it as a draft.';
+      const captured=[];
+      if(a.description)captured.push('description');
+      if(Array.isArray(a.features)&&a.features.length)captured.push('features');
+      if(a.current_price!=null)captured.push('price');
+      if(a.rating!=null)captured.push('rating');
+      if(a.review_count!=null)captured.push('reviews');
+      if(Array.isArray(a.images)&&a.images.length)captured.push(a.images.length+' images');
+      status.textContent='Amazon link recognized. ASIN '+j.asin+' detected. '+(captured.length?'Automatically captured: '+captured.join(' · ')+'. ':'')+'Review the imported product and save it as a draft.';
     }
   }catch(e){
     status.textContent='Could not prepare this Amazon link.';
