@@ -390,7 +390,35 @@ body{background:var(--bg);color:var(--text);letter-spacing:-.01em}
  .nv-image-card{border-radius:16px}
 }
 </style>
-</head>
+<style id="nuvora-final-store-polish">
+:root{--nuvora-ink:#172019;--nuvora-muted:#6f7a72;--nuvora-green:#245b3a;--nuvora-green-dark:#163d27;--nuvora-sage:#edf5ee;--nuvora-cream:#f7f6f1;--nuvora-line:#e4e8e2;--nuvora-shadow:0 16px 45px rgba(30,48,36,.08)}
+body{background:var(--nuvora-cream)!important;color:var(--nuvora-ink)!important}
+.header,.site-header,.nav-wrap,.search-wrap{background:rgba(247,246,241,.94)!important}
+button,.btn,.chip,.category-chip{transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease,background .16s ease}
+button:hover,.btn:hover{transform:translateY(-1px)}
+.product-card,.card,.confidence-card,.detail-card,.product-panel{border-color:var(--nuvora-line)!important;box-shadow:var(--nuvora-shadow)!important}
+.product-card{background:#fff!important;border-radius:20px!important;overflow:hidden}
+.product-card img{transition:transform .28s ease}.product-card:hover img{transform:scale(1.035)}
+.product-card .price,.product-price,.price{color:var(--nuvora-green-dark)!important}
+.product-card .badge,.deal,.tag{background:var(--nuvora-sage)!important;color:var(--nuvora-green)!important;border-color:#dce9de!important}
+.hero{border-radius:26px!important;overflow:hidden}
+.hero h1,.hero-title{letter-spacing:-1.8px!important}
+.search-input,.input,.select{border-color:#dfe5dd!important;background:#fff!important}
+.search-input:focus,.input:focus,.select:focus{border-color:#8eac95!important;box-shadow:0 0 0 4px rgba(36,91,58,.08)!important}
+.primary,.primary-btn{background:var(--nuvora-green)!important;border-color:var(--nuvora-green)!important}
+.primary:hover,.primary-btn:hover{background:var(--nuvora-green-dark)!important}
+.quick-nav,.category-row{scrollbar-width:none}.quick-nav::-webkit-scrollbar,.category-row::-webkit-scrollbar{display:none}
+.detail-modal,.product-detail,.detail-panel{background:#fff!important;border-color:var(--nuvora-line)!important;box-shadow:0 28px 90px rgba(24,39,29,.16)!important}
+.detail-gallery img{border-radius:18px!important}
+.detail-section{border-color:var(--nuvora-line)!important}
+.footer{background:#18231c!important;color:#dce6de!important}
+.footer a{color:#dce6de!important}
+@media(max-width:700px){
+  .product-card{border-radius:17px!important}
+  .hero{border-radius:20px!important}
+  .product-grid{gap:10px!important}
+}
+</style></head>
 <body>
 <div class="announcement"><div class="shell"><b>Nuvora picks, made simple.</b> Browse curated products, save your favorites, and discover something worth finding.</div></div><header class="topbar"><div class="shell nav">
 <button class="icon-btn nav-menu" id="menuBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
