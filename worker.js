@@ -915,3 +915,13 @@ async function supabaseRest(env,method,table,payload=null,query=''){
   const options={method,headers:{...sbHeaders(env,true),'Prefer':'return=representation'}};
   if(payload!==undefined&&payload!==null){
     options.body=JSON.stringify(payload);
+  }
+  const response=await fetch(url,options);
+  const raw=await response.text();
+  return {
+    ok:response.ok,
+    status:response.status,
+    text:async()=>raw,
+    json:async()=>{try{return raw?JSON.parse(raw):null}catch(e){return null;}}
+  };
+}
