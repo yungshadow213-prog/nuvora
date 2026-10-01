@@ -53,6 +53,30 @@ export default {
         return json({ok,checks,shopifyError,shopifyMissing,aiMissing});
       }
 
+function autoCategory(title='',description='',brand='',categories=[]){
+  const text=(String(title)+' '+String(description)+' '+String(brand)).toLowerCase();
+  const aliases={
+    electronics:['electronics','electronic','gadget','computer','laptop','tablet','phone','mobile','headphone','earbud','keyboard','mouse','monitor','camera'],
+    fashion:['fashion','clothing','shirt','dress','shoe','sneaker','jacket','hoodie','jeans','baby clothes','women','men','kids'],
+    beauty:['beauty','skincare','skin care','makeup','cosmetic','hair','shampoo','serum','lotion'],
+    home:['home','kitchen','furniture','decor','storage','organizer','bedding','bathroom'],
+    fitness:['fitness','gym','exercise','yoga','workout','sports'],
+    toys:['toy','toys','game','kids','children','puzzle'],
+    baby:['baby','infant','toddler','newborn','maternity'],
+    pets:['pet','dog','cat','puppy','kitten','animal']
+  };
+  for(const cat of (Array.isArray(categories)?categories:[])){
+    const hay=(String(cat.name||'')+' '+String(cat.slug||'')).toLowerCase().replace(/-/g,' ');
+    if(hay&&text.includes(hay))return cat.id||null;
+  }
+  for(const [group,words] of Object.entries(aliases)){
+    if(words.some(w=>text.includes(w))){
+      const cat=(Array.isArray(categories)?categories:[]).find(x=>String(x.name||'').toLowerCase().includes(group)||String(x.slug||'').toLowerCase().includes(group));
+      if(cat)return cat.id||null;
+    }
+  }
+  return null;
+}
 function cleanImportedTitle(value,brand=''){
   let t=amazonDecode(value).replace(/\s+/g,' ').trim();
   t=t.replace(/^Amazon\.com\s*[:|-]\s*/i,'').replace(/\s*[|·]\s*(?:Amazon|Temu)\s*$/i,'');
