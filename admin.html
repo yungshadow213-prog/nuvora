@@ -8,11 +8,12 @@
 @media(max-width:480px){.nav button{min-width:62px;padding:8px 7px;font-size:9px}.main{padding-left:9px;padding-right:9px}.top{margin-left:-9px;margin-right:-9px;padding-left:9px;padding-right:9px}.stats{grid-template-columns:1fr 1fr}.stat b{font-size:20px}.top h1{font-size:24px}.top p{max-width:260px}.modal-head h2{font-size:19px}.modal-head .muted{font-size:11px}.ai-actions .btn{width:100%}}
 
 /* Product workspace polish */
-.modal-backdrop{position:fixed;inset:0;background:rgba(1,6,14,.78);backdrop-filter:blur(10px);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
-.modal-backdrop.open{display:flex}.modal{width:min(1040px,100%);max-height:calc(100vh - 40px);overflow:auto;background:#0b1728;border:1px solid var(--line);border-radius:22px;box-shadow:0 30px 100px rgba(0,0,0,.55)}
+.modal-backdrop{position:fixed;inset:0;background:var(--bg);z-index:200;display:none;align-items:stretch;justify-content:stretch;padding:0}
+.modal-backdrop.open{display:flex}.modal{width:100%;max-height:calc(100vh - 40px);overflow:auto;background:#0b1728;border:1px solid var(--line);border-radius:22px;box-shadow:0 30px 100px rgba(0,0,0,.55)}
 .modal-head{display:flex;justify-content:space-between;gap:15px;align-items:flex-start;padding:22px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(11,23,40,.96);z-index:2}
 .modal-head h2{margin:0 0 5px}.modal-body{padding:22px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:grid;gap:7px}.field.full{grid-column:1/-1}.field label{font-size:12px;color:#b7c5d6}.field input,.field textarea,.field select{width:100%;background:#081321;border:1px solid var(--line);border-radius:11px;color:#fff;padding:11px 12px;outline:none}.field textarea{min-height:115px;resize:vertical}.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(156,123,255,.65);box-shadow:0 0 0 3px rgba(156,123,255,.08)}
 .importbar{display:flex;gap:9px;margin-bottom:18px}.importbar input{flex:1;background:#081321;border:1px solid var(--line);border-radius:12px;color:#fff;padding:12px}.importbar button{white-space:nowrap}.image-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-top:8px}.image-item{position:relative;aspect-ratio:1;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#07111f}.image-item img{width:100%;height:100%;object-fit:cover}.image-item button{position:absolute;right:5px;top:5px;width:25px;height:25px;border:0;border-radius:50%;background:rgba(0,0,0,.75);color:#fff}.ai-studio{margin:16px 0;border:1px solid rgba(156,123,255,.2);background:linear-gradient(135deg,rgba(111,217,255,.05),rgba(156,123,255,.09));border-radius:16px;padding:15px}.ai-studio-head{display:flex;justify-content:space-between;gap:12px;align-items:center}.ai-studio-head h3{margin:0 0 4px;font-size:15px}.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.ai-preview{margin-top:12px;display:none;gap:10px;align-items:flex-start}.ai-preview img{width:180px;max-width:42vw;border-radius:13px;border:1px solid var(--line);display:block}.ai-status{font-size:12px;color:var(--muted);margin-top:8px}.ai-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}@media(max-width:700px){.ai-grid{grid-template-columns:1fr}.ai-preview{flex-direction:column}.ai-preview img{width:100%;max-width:none}}.workspace-note{padding:12px 14px;border:1px solid rgba(111,217,255,.16);background:rgba(111,217,255,.05);border-radius:12px;color:#b9cadc;font-size:12px;margin-bottom:16px}.modal-actions{display:flex;justify-content:flex-end;gap:9px;padding-top:18px;margin-top:18px;border-top:1px solid var(--line)}
+.admin-inline-status{max-width:360px;min-height:22px;padding:6px 10px;border-radius:10px;background:#f2f6f1;color:#55705d;font-size:11px;display:flex;align-items:center;line-height:1.35}.admin-inline-status[data-status="error"]{background:#fff0f0;color:#a33f3f}.admin-inline-status[data-status="warning"]{background:#fff7e8;color:#8a5a12}.admin-inline-status[data-status="success"]{background:#edf7ef;color:#245b3a}
 @media(max-width:700px){.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}.image-strip{grid-template-columns:repeat(3,1fr)}.modal-backdrop{padding:8px}.modal{max-height:calc(100vh - 16px)}}
 
 .auth-gate{position:fixed;inset:0;z-index:9999;display:none;place-items:center;padding:24px;background:radial-gradient(circle at 20% 10%,rgba(111,217,255,.09),transparent 30%),radial-gradient(circle at 80% 10%,rgba(156,123,255,.12),transparent 30%),#07111f}.auth-card{width:min(430px,100%);padding:32px;border:1px solid var(--line);border-radius:22px;background:rgba(16,28,46,.92);box-shadow:0 30px 100px rgba(0,0,0,.5);text-align:center}.auth-card h1{margin:0 0 8px;font-size:30px}.auth-card p{color:var(--muted);font-size:13px;line-height:1.6}.google-btn{width:100%;margin-top:18px;padding:13px 16px;border-radius:12px;border:1px solid var(--line);background:#fff;color:#111;font-weight:700;cursor:pointer;font-size:14px}.auth-error{display:none;margin-top:14px;padding:11px 12px;border-radius:10px;background:rgba(255,100,120,.08);border:1px solid rgba(255,100,120,.25);color:#ffb0ba;font-size:12px}.auth-gate small{display:block;margin-top:16px;color:#71849a;font-size:11px}
@@ -207,7 +208,7 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
     <h1 id="title">Overview</h1>
     <p id="sub">Manage products, imports, collections and storefront content.</p>
   </div>
-  <div class="top-actions">
+  <div class="top-actions"><div id="globalAdminStatus" class="admin-inline-status" aria-live="polite"></div>
     <div class="live-pill"><i></i> Store online</div>
     <button class="btn top-btn" onclick="healthCheck()">System status</button>
     <button class="btn top-btn primary" onclick="window.open('/','_blank')">View store ↗</button>
@@ -474,7 +475,8 @@ const meta={overview:['Overview','Control the store without exposing the admin t
 let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[],collections=[],socialPosts=[];
 function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=meta[id][0];document.getElementById('sub').textContent=meta[id][1];if(id==='settings')loadSettings();if(id==='categories')loadCategories();if(id==='collections')loadCollections();if(id==='social')loadSocial();if(id==='analytics')loadAnalytics();}
 function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
-async function api(path,options={}){if(!adminSession)throw new Error('Admin session required.');options.headers={...(options.headers||{}),Authorization:'Bearer '+adminSession.access_token};if(options.body&&typeof options.body!=='string'&&!(options.body instanceof FormData)){options.headers['content-type']='application/json';options.body=JSON.stringify(options.body)}let r;try{r=await fetch(path,options)}catch(e){throw new Error('Cannot reach Nuvora. Check the Cloudflare deployment and try again.')}let j={};try{j=await r.json()}catch{}if(!r.ok){const detail=j.detail?` ${j.detail}`:'';throw new Error((j.error||`Request failed (${r.status})`)+detail)}return j;}
+async function setAdminStatus(message,type='info'){const ids=['globalAdminStatus','importStatus','shopifyImportStatus','aiImageStatus','aiCopyStatus','uploadStatus'];for(const id of ids){const el=document.getElementById(id);if(el&&message){el.textContent=String(message);el.dataset.status=type;}}} 
+function api(path,options={}){if(!adminSession)throw new Error('Admin session required.');options.headers={...(options.headers||{}),Authorization:'Bearer '+adminSession.access_token};if(options.body&&typeof options.body!=='string'&&!(options.body instanceof FormData)){options.headers['content-type']='application/json';options.body=JSON.stringify(options.body)}let r;try{r=await fetch(path,options)}catch(e){throw new Error('Cannot reach Nuvora. Check the Cloudflare deployment and try again.')}let j={};try{j=await r.json()}catch{}if(!r.ok){const detail=j.detail?` ${j.detail}`:'';throw new Error((j.error||`Request failed (${r.status})`)+detail)}return j;}
 function retailerDestination(p){
   const r=String(p?.retailer||p?.source_type||'').toLowerCase();
   if(r.includes('temu')||String(p?.source_type||'').toLowerCase()==='temu') return p?.destination_url||p?.temu_source_url||'';
@@ -541,21 +543,21 @@ async function loadShopifyProducts(){
 function toggleAllShopify(checked){document.querySelectorAll('.shopify-check').forEach(x=>x.checked=checked);}
 async function importSelectedShopify(){
   const ids=[...document.querySelectorAll('.shopify-check:checked')].map(x=>x.value);
-  if(!ids.length)return alert('Select at least one Shopify product.');
+  if(!ids.length)return setAdminStatus('Select at least one Shopify product.');
   const btn=document.getElementById('shopifyImportButton'); btn.disabled=true; btn.textContent='Importing…';
   try{
     const j=await api('/api/admin/shopify/import',{method:'POST',body:{ids}});
     await liveAdminProducts();
     const imported=Number(j.imported||0),skipped=Number(j.skipped||0),failed=Number(j.failed||0);
-    const detail=(j.results||[]).filter(x=>!x.ok).slice(0,3).map(x=>(x.title||'Product')+': '+(x.error||'Unknown error')).join('\n'); alert('Shopify sync complete. Imported: '+imported+' · Already in Nuvora: '+skipped+' · Failed: '+failed+(detail?'\n\nFirst errors:\n'+detail:''));
+    const detail=(j.results||[]).filter(x=>!x.ok).slice(0,3).map(x=>(x.title||'Product')+': '+(x.error||'Unknown error')).join('\n'); setAdminStatus('Shopify sync complete. Imported: '+imported+' · Already in Nuvora: '+skipped+' · Failed: '+failed+(detail?'\n\nFirst errors:\n'+detail:''));
     closeShopifyImport();
-  }catch(e){alert(e.message||'Shopify import failed.');}
+  }catch(e){setAdminStatus(e.message||'Shopify import failed.');}
   finally{btn.disabled=false;btn.textContent='Import selected';}
 }
 
-function openSourcinBoxImport(){document.getElementById('sourcinBoxModal').classList.add('open');}
-function closeSourcinBoxImport(){document.getElementById('sourcinBoxModal').classList.remove('open');}
-function startSourcinBoxDraft(){closeSourcinBoxImport();resetProductForm();document.getElementById('productModalTitle').textContent='Import SourcinBox product';document.getElementById('productModalSub').textContent='Paste the SourcinBox Marketplace product URL and add the supplier listing details.';document.getElementById('importStatus').textContent='SourcinBox products are supplier/fulfillment listings. Nuvora will keep the supplier reference so automated fulfillment can be added later.';document.getElementById('amazonUrlInput').placeholder='Optional Amazon/Temu link field';document.getElementById('pfSource').value='sourcinbox';document.getElementById('pfKind').value='shop';document.getElementById('pfRetailer').value='SourcinBox';document.getElementById('pfSourcinboxUrl').focus();document.getElementById('productModal').classList.add('open');}
+function openSourcinBoxImport(){document.body.classList.add('admin-workspace-open');document.getElementById('aiStudioModal')?.classList.remove('open');document.getElementById('productModal')?.classList.remove('open');document.getElementById('shopifyModal')?.classList.remove('open');const page=document.getElementById('sourcinBoxModal');page.classList.add('open');page.scrollIntoView({behavior:'smooth',block:'start'});}
+function closeSourcinBoxImport(){document.getElementById('sourcinBoxModal').classList.remove('open');document.body.classList.remove('admin-workspace-open');}
+function startSourcinBoxDraft(){closeSourcinBoxImport();resetProductForm();document.body.classList.add('admin-workspace-open');document.getElementById('productModalTitle').textContent='Import SourcinBox product';document.getElementById('productModalSub').textContent='Paste the SourcinBox Marketplace product URL and add the supplier listing details.';document.getElementById('importStatus').textContent='SourcinBox products are supplier/fulfillment listings. Nuvora will keep the supplier reference so automated fulfillment can be added later.';document.getElementById('amazonUrlInput').placeholder='Optional Amazon/Temu link field';document.getElementById('pfSource').value='sourcinbox';document.getElementById('pfKind').value='shop';document.getElementById('pfRetailer').value='SourcinBox';document.getElementById('pfSourcinboxUrl').focus();document.getElementById('productModal').classList.add('open');document.getElementById('productModal').scrollIntoView({behavior:'smooth',block:'start'});}
 function resetProductForm(){
   window.temuImportMode=false;
   ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfFeatures','pfVariations','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
@@ -645,7 +647,7 @@ async function getAIReferenceFile(){
 }
 async function generateAIProductImage(){
   const btn=document.getElementById('aiGenerateBtn'),status=document.getElementById('aiImageStatus');
-  const p=aiProductData(); if(!p.name)return alert('Add the product title first.');
+  const p=aiProductData(); if(!p.name){setAdminStatus('Add the product title first.','error');return;}
   btn.disabled=true;btn.textContent='Preparing…';status.textContent='Using the product image as the reference…';
   try{
     const file=await getAIReferenceFile();
@@ -657,28 +659,28 @@ async function generateAIProductImage(){
     fd.append('prompt',`Create a professional ecommerce advertising image for the exact product shown in the reference image. Preserve the product's identity, shape, materials, colors, branding and important physical details. Do not invent extra product features or change the product. Style: ${style}. Product name: ${p.name}. Brand: ${p.brand||'unknown'}. Place it in a polished, uncluttered commercial composition suitable for Nuvora product publishing. No fake logos, no misleading claims, no random text, no watermark. ${custom}`);
     const j=await api('/api/admin/ai/image',{method:'POST',body:fd});
     window.lastAIImage=j.image;document.getElementById('aiPreviewImg').src=j.image;document.getElementById('aiPreview').style.display='flex';status.textContent='Image ready. Review it before applying.';
-  }catch(e){status.textContent='Generation failed.';alert(e.message)}
+  }catch(e){status.textContent='Generation failed: '+(e.message||'Unknown error.');setAdminStatus(e.message||'AI image generation failed.','error')}
   finally{btn.disabled=false;btn.textContent='Generate advertising image';}
 }
 function dataUrlBlob(dataUrl){const [head,data]=dataUrl.split(',');const mime=(head.match(/data:([^;]+)/)||[])[1]||'image/png';const bin=atob(data);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime});}
 async function useAIImage(){
-  if(!window.lastAIImage||!adminSB)return alert('Generate an image first and make sure Supabase is connected.');
+  if(!window.lastAIImage||!adminSB){setAdminStatus('Generate an image first and make sure Supabase is connected.','error');return;}
   const status=document.getElementById('aiImageStatus');status.textContent='Saving image to Nuvora…';
   try{
     const blob=dataUrlBlob(window.lastAIImage),path=`products/ai-${crypto.randomUUID()}.png`;
     const {error}=await adminSB.storage.from('product-images').upload(path,blob,{cacheControl:'31536000',contentType:'image/png',upsert:false});if(error)throw error;
     const {data}=adminSB.storage.from('product-images').getPublicUrl(path);const url=data?.publicUrl;if(!url)throw new Error('Could not create image URL.');
     const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);document.getElementById('pfImages').value=[url,...urls].filter((x,i,a)=>a.indexOf(x)===i).join('\n');renderProductImages();status.textContent='AI image added to the product images.';closeAIStudio();
-  }catch(e){status.textContent='Could not save the image.';alert(e.message)}
+  }catch(e){status.textContent='Could not save the image: '+(e.message||'Unknown error.');setAdminStatus(e.message||'Could not save the image.','error')}
 }
 async function generateAIProductCopy(){
-  const btn=document.getElementById('aiCopyBtn'),status=document.getElementById('aiCopyStatus');const p=aiProductData();if(!p.name)return alert('Add the product title first.');
+  const btn=document.getElementById('aiCopyBtn'),status=document.getElementById('aiCopyStatus');const p=aiProductData();if(!p.name){setAdminStatus('Add the product title first.','error');return;}
   btn.disabled=true;btn.textContent='Polishing…';status.textContent='Writing publish-ready copy…';
   try{
     const j=await api('/api/admin/ai/copy',{method:'POST',body:{product:p}});
     if(j.title)document.getElementById('pfName').value=j.title;if(j.description)document.getElementById('pfDescription').value=j.description;if(j.features)document.getElementById('pfFeatures').value=Array.isArray(j.features)?j.features.join('\n'):j.features;
     status.textContent='Listing copy updated in the form. Review it before saving.';
-  }catch(e){status.textContent='Copy generation failed.';alert(e.message)}finally{btn.disabled=false;btn.textContent='Polish product listing';}
+  }catch(e){status.textContent='Copy generation failed: '+(e.message||'Unknown error.');setAdminStatus(e.message||'AI copy generation failed.','error')}finally{btn.disabled=false;btn.textContent='Polish product listing';}
 }
 
 function showImportPage(source='amazon'){
@@ -698,10 +700,10 @@ function setSmartSource(source){
 async function runSmartImport(){
   const box=document.getElementById('smartImportUrls'),btn=document.getElementById('smartImportButton'),progress=document.getElementById('smartImportProgress');
   const urls=[...new Set((box?.value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];
-  if(!urls.length)return alert('Paste at least one product link.');
-  if(urls.length>30)return alert('Please import 30 links or fewer at a time.');
+  if(!urls.length)return setAdminStatus('Paste at least one product link.');
+  if(urls.length>30)return setAdminStatus('Please import 30 links or fewer at a time.');
   const valid=urls.filter(u=>{try{const h=new URL(u).hostname.toLowerCase();return smartImportSource==='amazon'?h.includes('amazon.'):h==='temu.com'||h.endsWith('.temu.com')||h==='temu.to'}catch(e){return false}});
-  if(valid.length!==urls.length)return alert('One or more links do not match the selected retailer. You can switch Amazon/Temu above.');
+  if(valid.length!==urls.length)return setAdminStatus('One or more links do not match the selected retailer. You can switch Amazon/Temu above.');
   btn.disabled=true;btn.textContent='Importing…';progress.style.display='block';
   document.getElementById('smartProgressTitle').textContent='Reading '+urls.length+' product'+(urls.length===1?'':'s')+'…';
   document.getElementById('smartProgressCount').textContent='Working…';document.getElementById('smartProgressBar').style.width='8%';
@@ -731,7 +733,7 @@ function showToastAdmin(msg){const target=document.getElementById('smartImportRe
 async function useTemuLink(){
   const input=document.getElementById('amazonUrlInput');
   const url=input.value.trim();
-  if(!url)return alert('Paste your Temu product link first.');
+  if(!url)return setAdminStatus('Paste your Temu product link first.');
   const status=document.getElementById('importStatus');
   const btn=document.querySelector('.importbar .btn.primary');
   if(btn){btn.disabled=true;btn.textContent='Reading Temu…';}
@@ -766,7 +768,7 @@ async function useTemuLink(){
     status.innerHTML='<strong>Temu product imported.</strong> '+(a.description?'Description captured. ':'')+(imageCount?' '+imageCount+' image'+(imageCount===1?'':'s')+' captured.':' No image was exposed by the page; add one manually if needed.');
   }catch(e){
     status.textContent='Could not prepare this Temu link.';
-    alert(e.message||'Temu link could not be prepared.');
+    setAdminStatus(e.message||'Temu link could not be prepared.');
   }finally{
     if(btn){btn.disabled=false;btn.textContent='Use Temu link';}
   }
@@ -775,7 +777,7 @@ async function useAmazonLink(){
   if(window.temuImportMode)return useTemuLink();
   const input=document.getElementById('amazonUrlInput');
   const url=input.value.trim();
-  if(!url)return alert('Paste your Amazon affiliate link first.');
+  if(!url)return setAdminStatus('Paste your Amazon affiliate link first.');
   const status=document.getElementById('importStatus');
   const btn=document.querySelector('.importbar .btn.primary');
   if(btn){btn.disabled=true;btn.textContent='Reading link…';}
@@ -822,7 +824,7 @@ async function useAmazonLink(){
     }
   }catch(e){
     status.textContent='Could not prepare this Amazon link.';
-    alert(e.message||'Amazon link could not be prepared.');
+    setAdminStatus(e.message||'Amazon link could not be prepared.');
   }finally{
     if(btn){btn.disabled=false;btn.textContent='Use Amazon link';}
   }
@@ -837,7 +839,7 @@ function parseProductVariations(raw){
   }).filter(Boolean).slice(0,20);
 }
 async function saveProductDraft(){
-  const name=document.getElementById('pfName').value.trim(); if(!name)return alert('Product title is required.');
+  const name=document.getElementById('pfName').value.trim(); if(!name){setAdminStatus('Product title is required.','error');return;}
   const images=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   const product={
     name,kind:document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
@@ -867,8 +869,8 @@ async function saveProductDraft(){
     }else{
       await api('/api/admin/products',{method:'POST',body:{...product,slug}});
     }
-    const wasEditing=!!window.editingProductId; closeProductModal(); await liveAdminProducts(); alert(wasEditing?'Product updated.':'Product saved as a draft.');
-  }catch(e){alert(e.message)}
+    const wasEditing=!!window.editingProductId; closeProductModal(); await liveAdminProducts(); setAdminStatus(wasEditing?'Product updated.':'Product saved as a draft.');
+  }catch(e){setAdminStatus(e.message)}
 }
 async function editProduct(id){
   const p=adminProducts.find(x=>x.id===id); if(!p)return;
@@ -880,12 +882,12 @@ async function editProduct(id){
 function openProductForm(){openProductModal(false)}
 async function createProduct(product){openProductModal(false);setProductForm(product)}
 async function amazonImport(){showImportPage('amazon')}
-async function togglePublish(id){try{const p=adminProducts.find(x=>x.id===id);await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body:{published:!p.published,updated_at:new Date().toISOString()}});await liveAdminProducts();}catch(e){alert(e.message)}}
-async function removeProduct(id){if(!confirm('Delete this product?'))return;try{await api('/api/admin/products/'+encodeURIComponent(id),{method:'DELETE'});await liveAdminProducts();}catch(e){alert(e.message)}}
-async function healthCheck(){try{const j=await fetch('/api/health').then(r=>r.json());document.getElementById('systemStatus').innerHTML=Object.entries(j.configured).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Configured':'Not configured'}</span></div>`).join('')}catch(e){alert(e.message)}}
+async function togglePublish(id){try{const p=adminProducts.find(x=>x.id===id);await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body:{published:!p.published,updated_at:new Date().toISOString()}});await liveAdminProducts();}catch(e){setAdminStatus(e.message)}}
+async function removeProduct(id){try{await api('/api/admin/products/'+encodeURIComponent(id),{method:'DELETE'});await liveAdminProducts();}catch(e){setAdminStatus(e.message)}}
+async function healthCheck(){try{const j=await fetch('/api/health').then(r=>r.json());document.getElementById('systemStatus').innerHTML=Object.entries(j.configured).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Configured':'Not configured'}</span></div>`).join('')}catch(e){setAdminStatus(e.message)}}
 async function uploadProductImages(){
-  const input=document.getElementById('pfUpload'); const files=[...(input?.files||[])]; if(!files.length)return alert('Select one or more image files first.');
-  if(!adminSB) return alert('Supabase is not connected.');
+  const input=document.getElementById('pfUpload'); const files=[...(input?.files||[])]; if(!files.length)return setAdminStatus('Select one or more image files first.');
+  if(!adminSB) return setAdminStatus('Supabase is not connected.');
   const status=document.getElementById('uploadStatus'); status.textContent='Uploading…';
   const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   try{
@@ -899,16 +901,16 @@ async function uploadProductImages(){
       const {data}=adminSB.storage.from('product-images').getPublicUrl(path); if(data?.publicUrl)urls.push(data.publicUrl);
     }
     document.getElementById('pfImages').value=[...new Set(urls)].join('\n'); renderProductImages(); input.value=''; status.textContent=`Uploaded ${files.length} image${files.length===1?'':'s'}.`;
-  }catch(e){status.textContent='Upload failed.';alert(e.message||'Image upload failed.');}
+  }catch(e){status.textContent='Upload failed.';setAdminStatus(e.message||'Image upload failed.');}
 }
 function parseCsvLine(line){const out=[];let cur='',quoted=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(quoted&&line[i+1]==='"'){cur+='"';i++;}else quoted=!quoted;}else if(ch===','&&!quoted){out.push(cur);cur='';}else cur+=ch;}out.push(cur);return out;}
 function parseCsvText(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());if(!lines.length)return [];const headers=parseCsvLine(lines[0]).map(x=>x.trim().toLowerCase());return lines.slice(1).map(line=>{const vals=parseCsvLine(line);const row={};headers.forEach((h,i)=>row[h]=(vals[i]??'').trim());return row;}).filter(r=>Object.values(r).some(Boolean));}
 let csvRows=[];
 function downloadCsvTemplate(){const csv='name,kind,description,features,brand,image_url,image_urls,display_price,currency,destination_url,retailer,provider,region,category_id,collection_id\nGaming Mouse,shop,Short description,Feature 1|Feature 2,Brand,https://example.com/mouse.jpg,,29999,NGN,https://example.com/product,Example Retailer,,,,';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='nuvora-products-template.csv';a.click();URL.revokeObjectURL(a.href);}
-async function previewCsv(){const f=document.getElementById('csvFile')?.files?.[0];if(!f)return alert('Choose a CSV file first.');if(f.size>2*1024*1024)return alert('CSV must be 2 MB or smaller.');try{csvRows=parseCsvText(await f.text());if(csvRows.length>500)return alert('CSV imports are limited to 500 rows.');const box=document.getElementById('csvPreview');box.style.display='block';box.innerHTML=`<b>${csvRows.length} row${csvRows.length===1?'':'s'} ready.</b><div class="muted" style="margin-top:5px">Columns found: ${esc(Object.keys(csvRows[0]||{}).join(', '))}. All rows will be imported as drafts.</div>`;}catch(e){alert('Could not read this CSV.');}}
-async function importCsv(){if(!csvRows.length){await previewCsv();if(!csvRows.length)return;}const items=csvRows.map(r=>({name:r.name||r.title||'',kind:(r.kind||r.type||'shop').toLowerCase(),description:r.description||null,features:r.features||r.key_points||null,brand:r.brand||null,image_url:r.image_url||r.image||null,image_urls:r.image_urls?r.image_urls.split('|').map(x=>x.trim()).filter(Boolean):undefined,display_price:r.display_price||r.price||null,currency:r.currency||'NGN',destination_url:r.destination_url||r.url||null,retailer:r.retailer||null,provider:r.provider||null,region:r.region||null,category_id:r.category_id||null,collection_id:r.collection_id||null}));try{const j=await api('/api/admin/products/bulk',{method:'POST',body:{items}});alert(`Import complete. ${j.imported} imported as drafts, ${j.failed} failed.`);csvRows=[];document.getElementById('csvFile').value='';document.getElementById('csvPreview').style.display='none';await liveAdminProducts();}catch(e){alert(e.message)}}
+async function previewCsv(){const f=document.getElementById('csvFile')?.files?.[0];if(!f)return setAdminStatus('Choose a CSV file first.');if(f.size>2*1024*1024)return setAdminStatus('CSV must be 2 MB or smaller.');try{csvRows=parseCsvText(await f.text());if(csvRows.length>500)return setAdminStatus('CSV imports are limited to 500 rows.');const box=document.getElementById('csvPreview');box.style.display='block';box.innerHTML=`<b>${csvRows.length} row${csvRows.length===1?'':'s'} ready.</b><div class="muted" style="margin-top:5px">Columns found: ${esc(Object.keys(csvRows[0]||{}).join(', '))}. All rows will be imported as drafts.</div>`;}catch(e){setAdminStatus('Could not read this CSV.');}}
+async function importCsv(){if(!csvRows.length){await previewCsv();if(!csvRows.length)return;}const items=csvRows.map(r=>({name:r.name||r.title||'',kind:(r.kind||r.type||'shop').toLowerCase(),description:r.description||null,features:r.features||r.key_points||null,brand:r.brand||null,image_url:r.image_url||r.image||null,image_urls:r.image_urls?r.image_urls.split('|').map(x=>x.trim()).filter(Boolean):undefined,display_price:r.display_price||r.price||null,currency:r.currency||'NGN',destination_url:r.destination_url||r.url||null,retailer:r.retailer||null,provider:r.provider||null,region:r.region||null,category_id:r.category_id||null,collection_id:r.collection_id||null}));try{const j=await api('/api/admin/products/bulk',{method:'POST',body:{items}});setAdminStatus(`Import complete. ${j.imported} imported as drafts, ${j.failed} failed.`);csvRows=[];document.getElementById('csvFile').value='';document.getElementById('csvPreview').style.display='none';await liveAdminProducts();}catch(e){setAdminStatus(e.message)}}
 async function loadAnalytics(){try{const j=await api('/api/admin/analytics');const rows=Object.entries(j.counts||{}).sort((a,b)=>b[1]-a[1]);document.getElementById('analyticsRows').innerHTML=rows.length?rows.map(([name,count])=>`<div class="row"><span>${esc(name)}</span><span class="tag">${count}</span></div>`).join(''):'<div class="empty" style="text-align:center">No events recorded yet.</div>';}catch(e){document.getElementById('analyticsRows').innerHTML=`<div class="muted">${esc(e.message)}</div>`;}}
-async function loadSettings(){try{const s=await api('/api/admin/settings');document.getElementById('setName').value=s.store_name||'Nuvora';document.getElementById('setEmail').value=s.support_email||'';document.getElementById('setCurrency').value=s.currency||'NGN';document.getElementById('setTimezone').value=s.timezone||'Africa/Lagos';document.getElementById('setRegion').value=s.default_region||'NG';document.getElementById('setMaintenance').value=String(!!s.maintenance_mode);document.getElementById('setDescription').value=s.store_description||'';document.getElementById('setDisclosure').value=s.affiliate_disclosure||'';document.getElementById('setShipping').value=s.shipping_policy||'';document.getElementById('setReturns').value=s.returns_policy||'';document.getElementById('adminEmail').textContent='Signed in as '+(adminSession.user?.email||'admin');const h=await fetch('/api/health').then(r=>r.json());document.getElementById('connectionRows').innerHTML=Object.entries(h.configured).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Connected':'Not configured'}</span></div>`).join('');}catch(e){alert(e.message)}}
+async function loadSettings(){try{const s=await api('/api/admin/settings');document.getElementById('setName').value=s.store_name||'Nuvora';document.getElementById('setEmail').value=s.support_email||'';document.getElementById('setCurrency').value=s.currency||'NGN';document.getElementById('setTimezone').value=s.timezone||'Africa/Lagos';document.getElementById('setRegion').value=s.default_region||'NG';document.getElementById('setMaintenance').value=String(!!s.maintenance_mode);document.getElementById('setDescription').value=s.store_description||'';document.getElementById('setDisclosure').value=s.affiliate_disclosure||'';document.getElementById('setShipping').value=s.shipping_policy||'';document.getElementById('setReturns').value=s.returns_policy||'';document.getElementById('adminEmail').textContent='Signed in as '+(adminSession.user?.email||'admin');const h=await fetch('/api/health').then(r=>r.json());document.getElementById('connectionRows').innerHTML=Object.entries(h.configured).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Connected':'Not configured'}</span></div>`).join('');}catch(e){setAdminStatus(e.message)}}
 async function runDiagnostics(){
   const box=document.getElementById('diagnosticRows');
   box.innerHTML='<div class="muted">Running diagnostics…</div>';
@@ -918,16 +920,16 @@ async function runDiagnostics(){
     box.innerHTML=Object.entries(labels).map(([k,label])=>`<div class="row"><span>${esc(label)}</span><span class="status"><i class="dot ${j.checks?.[k]?'':'off'}"></i>${j.checks?.[k]?'Passed':'Failed'}</span></div>`).join('')+`<div class="notice" style="margin-top:12px">${j.ok?'All diagnostics passed.':'One or more diagnostics failed. Check the failed item above.'}${j.shopifyMissing?.length?'<br><strong>Shopify configuration missing:</strong> '+esc(j.shopifyMissing.join(', ')):'' }${j.aiMissing?.length?'<br><strong>AI configuration missing:</strong> '+esc(j.aiMissing.join(', ')):''}${j.shopifyError?'<br><strong>Shopify:</strong> '+esc(j.shopifyError):''}</div>`;
   }catch(e){box.innerHTML=`<div class="notice">${esc(e.message||'Diagnostics failed.')}</div>`;}
 }
-async function saveSettings(){try{await api('/api/admin/settings',{method:'PATCH',body:{store_name:document.getElementById('setName').value.trim()||'Nuvora',support_email:document.getElementById('setEmail').value.trim()||null,currency:document.getElementById('setCurrency').value,timezone:document.getElementById('setTimezone').value.trim()||'Africa/Lagos',default_region:document.getElementById('setRegion').value.trim()||'NG',maintenance_mode:document.getElementById('setMaintenance').value==='true',store_description:document.getElementById('setDescription').value,affiliate_disclosure:document.getElementById('setDisclosure').value,shipping_policy:document.getElementById('setShipping').value,returns_policy:document.getElementById('setReturns').value}});alert('Settings saved.');}catch(e){alert(e.message)}}
-async function loadCategories(){try{categories=await api('/api/admin/categories');document.getElementById('categoryRows').innerHTML=categories.length?categories.map(c=>`<div class="row"><span><b>${esc(c.name)}</b><div class="muted">${esc(c.slug)}</div></span><span class="tag">Category</span></div>`).join(''):'<div class="muted">No categories yet.</div>'}catch(e){alert(e.message)}}
-async function createCategory(){const name=document.getElementById('catName').value.trim();const slug=document.getElementById('catSlug').value.trim()||name.toLowerCase().replace(/[^a-z0-9]+/g,'-');if(!name)return alert('Category name required.');try{await api('/api/admin/categories',{method:'POST',body:{name,slug,description:document.getElementById('catDesc').value}});document.getElementById('catName').value='';document.getElementById('catSlug').value='';document.getElementById('catDesc').value='';await loadCategories();}catch(e){alert(e.message)}}
-async function loadCollections(){try{collections=await api('/api/admin/collections');document.getElementById('collectionRows').innerHTML=collections.length?collections.map(c=>`<div class="row"><span><b>${esc(c.name)}</b><div class="muted">${esc(c.slug)} · ${c.published?'Published':'Draft'}</div></span><span class="tag">${c.published?'Published':'Draft'}</span></div>`).join(''):'<div class="muted">No collections yet.</div>'}catch(e){alert(e.message)}}
-async function createCollection(){const name=document.getElementById('colName').value.trim();const slug=document.getElementById('colSlug').value.trim()||name.toLowerCase().replace(/[^a-z0-9]+/g,'-');if(!name)return alert('Collection name required.');try{await api('/api/admin/collections',{method:'POST',body:{name,slug,description:document.getElementById('colDesc').value,published:false}});document.getElementById('colName').value='';document.getElementById('colSlug').value='';document.getElementById('colDesc').value='';await loadCollections();}catch(e){alert(e.message)}}
+async function saveSettings(){try{await api('/api/admin/settings',{method:'PATCH',body:{store_name:document.getElementById('setName').value.trim()||'Nuvora',support_email:document.getElementById('setEmail').value.trim()||null,currency:document.getElementById('setCurrency').value,timezone:document.getElementById('setTimezone').value.trim()||'Africa/Lagos',default_region:document.getElementById('setRegion').value.trim()||'NG',maintenance_mode:document.getElementById('setMaintenance').value==='true',store_description:document.getElementById('setDescription').value,affiliate_disclosure:document.getElementById('setDisclosure').value,shipping_policy:document.getElementById('setShipping').value,returns_policy:document.getElementById('setReturns').value}});setAdminStatus('Settings saved.');}catch(e){setAdminStatus(e.message)}}
+async function loadCategories(){try{categories=await api('/api/admin/categories');document.getElementById('categoryRows').innerHTML=categories.length?categories.map(c=>`<div class="row"><span><b>${esc(c.name)}</b><div class="muted">${esc(c.slug)}</div></span><span class="tag">Category</span></div>`).join(''):'<div class="muted">No categories yet.</div>'}catch(e){setAdminStatus(e.message)}}
+async function createCategory(){const name=document.getElementById('catName').value.trim();const slug=document.getElementById('catSlug').value.trim()||name.toLowerCase().replace(/[^a-z0-9]+/g,'-');if(!name)return setAdminStatus('Category name required.');try{await api('/api/admin/categories',{method:'POST',body:{name,slug,description:document.getElementById('catDesc').value}});document.getElementById('catName').value='';document.getElementById('catSlug').value='';document.getElementById('catDesc').value='';await loadCategories();}catch(e){setAdminStatus(e.message)}}
+async function loadCollections(){try{collections=await api('/api/admin/collections');document.getElementById('collectionRows').innerHTML=collections.length?collections.map(c=>`<div class="row"><span><b>${esc(c.name)}</b><div class="muted">${esc(c.slug)} · ${c.published?'Published':'Draft'}</div></span><span class="tag">${c.published?'Published':'Draft'}</span></div>`).join(''):'<div class="muted">No collections yet.</div>'}catch(e){setAdminStatus(e.message)}}
+async function createCollection(){const name=document.getElementById('colName').value.trim();const slug=document.getElementById('colSlug').value.trim()||name.toLowerCase().replace(/[^a-z0-9]+/g,'-');if(!name)return setAdminStatus('Collection name required.');try{await api('/api/admin/collections',{method:'POST',body:{name,slug,description:document.getElementById('colDesc').value,published:false}});document.getElementById('colName').value='';document.getElementById('colSlug').value='';document.getElementById('colDesc').value='';await loadCollections();}catch(e){setAdminStatus(e.message)}}
 function fillSocialProducts(){const s=document.getElementById('socialProduct');if(!s)return;s.innerHTML='<option value="">No product</option>'+adminProducts.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}
-async function loadSocial(){try{socialPosts=await api('/api/admin/social-posts');fillSocialProducts();document.getElementById('socialRows').innerHTML=socialPosts.length?socialPosts.map(p=>`<div class="row"><div><b>${esc(p.title)}</b><div class="muted">${esc(p.platform)} · ${esc(p.status)}${p.destination_url?' · '+esc(p.destination_url):''}</div></div><div style="display:flex;gap:7px"><button class="btn" onclick="markSocialReady('${p.id}')">${p.status==='draft'?'Mark ready':'Ready'}</button><button class="btn danger" onclick="deleteSocial('${p.id}')">Delete</button></div></div>`).join(''):'<div class="muted">No social posts yet.</div>'}catch(e){alert(e.message)}}
-async function createSocialPost(){const title=document.getElementById('socialTitle').value.trim();const caption=document.getElementById('socialCaption').value.trim();const platform=document.getElementById('socialPlatform').value;if(!title||!caption)return alert('Post title and caption are required.');try{await api('/api/admin/social-posts',{method:'POST',body:{title,caption,platform,product_id:document.getElementById('socialProduct').value||null,destination_url:document.getElementById('socialUrl').value.trim()||null,image_url:document.getElementById('socialImage').value.trim()||null,status:'draft'}});document.getElementById('socialTitle').value='';document.getElementById('socialCaption').value='';document.getElementById('socialUrl').value='';document.getElementById('socialImage').value='';await loadSocial();alert('Social post saved as a draft.');}catch(e){alert(e.message)}}
-async function markSocialReady(id){try{await api('/api/admin/social-posts/'+encodeURIComponent(id),{method:'PATCH',body:{status:'ready'}});await loadSocial();}catch(e){alert(e.message)}}
-async function deleteSocial(id){if(!confirm('Delete this social post?'))return;try{await api('/api/admin/social-posts/'+encodeURIComponent(id),{method:'DELETE'});await loadSocial();}catch(e){alert(e.message)}}
+async function loadSocial(){try{socialPosts=await api('/api/admin/social-posts');fillSocialProducts();document.getElementById('socialRows').innerHTML=socialPosts.length?socialPosts.map(p=>`<div class="row"><div><b>${esc(p.title)}</b><div class="muted">${esc(p.platform)} · ${esc(p.status)}${p.destination_url?' · '+esc(p.destination_url):''}</div></div><div style="display:flex;gap:7px"><button class="btn" onclick="markSocialReady('${p.id}')">${p.status==='draft'?'Mark ready':'Ready'}</button><button class="btn danger" onclick="deleteSocial('${p.id}')">Delete</button></div></div>`).join(''):'<div class="muted">No social posts yet.</div>'}catch(e){setAdminStatus(e.message)}}
+async function createSocialPost(){const title=document.getElementById('socialTitle').value.trim();const caption=document.getElementById('socialCaption').value.trim();const platform=document.getElementById('socialPlatform').value;if(!title||!caption)return setAdminStatus('Post title and caption are required.');try{await api('/api/admin/social-posts',{method:'POST',body:{title,caption,platform,product_id:document.getElementById('socialProduct').value||null,destination_url:document.getElementById('socialUrl').value.trim()||null,image_url:document.getElementById('socialImage').value.trim()||null,status:'draft'}});document.getElementById('socialTitle').value='';document.getElementById('socialCaption').value='';document.getElementById('socialUrl').value='';document.getElementById('socialImage').value='';await loadSocial();setAdminStatus('Social post saved as a draft.');}catch(e){setAdminStatus(e.message)}}
+async function markSocialReady(id){try{await api('/api/admin/social-posts/'+encodeURIComponent(id),{method:'PATCH',body:{status:'ready'}});await loadSocial();}catch(e){setAdminStatus(e.message)}}
+async function deleteSocial(id){try{await api('/api/admin/social-posts/'+encodeURIComponent(id),{method:'DELETE'});await loadSocial();}catch(e){setAdminStatus(e.message)}}
 document.addEventListener('input',e=>{if(e.target&&e.target.id==='pfImages')renderProductImages();});
 async function signOutAdmin(){try{if(adminSB)await adminSB.auth.signOut()}finally{location.href='/'}}
 function showAuthError(message){const e=document.getElementById('authError');e.textContent=message;e.style.display='block';}
