@@ -183,6 +183,14 @@ textarea{line-height:1.55}
 .smart-import-footer{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:16px 18px;margin-top:12px}.smart-import-footer div{display:grid;gap:3px}.smart-import-footer b{font-size:11px}.smart-import-footer span{font-size:10px;color:var(--muted)}
 @media(max-width:950px){.smart-import-shell{grid-template-columns:1fr}.smart-import-side{display:none}}
 @media(max-width:700px){.import-page-head{align-items:flex-start;flex-direction:column}.import-page-head h2{font-size:29px}.import-source-grid{grid-template-columns:1fr}.smart-import-main{padding:15px}.smart-url-box{min-height:190px}.smart-run{width:100%;margin-left:0}.smart-import-footer{align-items:flex-start;flex-direction:column}.smart-import-footer .btn{width:100%}}
+</style><style id="nuvora-no-popups">
+body.admin-workspace-open{overflow:auto}
+body.admin-workspace-open>.app,body.admin-workspace-open>footer{display:none!important}
+body.admin-workspace-open .modal-backdrop{position:static!important;inset:auto!important;display:block!important;min-height:100vh!important;padding:0!important;background:var(--bg)!important;backdrop-filter:none!important;z-index:auto!important}
+body.admin-workspace-open .modal-backdrop .modal{width:100%!important;max-width:none!important;min-height:100vh!important;max-height:none!important;overflow:visible!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:var(--bg)!important}
+body.admin-workspace-open .modal-backdrop .modal-head{position:sticky!important;top:0!important;background:rgba(245,246,243,.96)!important;border-bottom:1px solid var(--line)!important;padding:22px max(22px,calc((100vw - 1180px)/2))!important}
+body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important;margin:0 auto!important;padding:28px 22px 70px!important;background:var(--bg)!important}
+.workspace-back{margin-right:8px}
 </style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
 <button data-icon="↥" onclick="show('import',this)">Import</button>
@@ -367,7 +375,7 @@ textarea{line-height:1.55}
 <div id="aiStudioModal" class="modal-backdrop" onclick="if(event.target===this)closeAIStudio()">
   <div class="modal">
     <div class="modal-head">
-      <div><div class="eyebrow">Nuvora AI Studio</div><h2>Make this product publish-ready</h2><div class="muted">Generate a polished advertising image and refined listing copy with Nuvora AI. Nuvora AI runs through Cloudflare Workers AI and does not require OpenAI API credits.</div></div>
+      <div><div class="eyebrow">Nuvora AI Studio</div><h2>Make this product publish-ready</h2><div class="muted">Generate a polished advertising image and refined listing copy with Nuvora AI. Nuvora AI runs through Cloudflare Workers AI and runs on Cloudflare Workers AI; no OpenAI service is used.</div></div>
       <button class="btn" onclick="closeAIStudio()">Close</button>
     </div>
     <div class="modal-body">
@@ -420,7 +428,7 @@ textarea{line-height:1.55}
       <button class="btn" onclick="closeProductModal()">Close</button>
     </div>
     <div class="modal-body">
-      <div class="workspace-note" id="importStatus">You can enter a product manually or use the quick Amazon link workflow below. Nothing becomes public until you publish it.</div><div style="display:flex;justify-content:flex-end;margin:-4px 0 14px"><button type="button" class="btn primary" onclick="openAIStudio()">✦ Open AI Studio</button></div>
+      <div class="workspace-note" id="importStatus">You can enter a product manually or use the quick Amazon link workflow below. Nothing becomes public until you publish it.</div><div style="display:flex;justify-content:flex-end;margin:-4px 0 14px"><button type="button" class="btn primary" onclick="openAIStudio()">✦ Run Nuvora AI</button></div>
       <div class="importbar">
         <input id="amazonUrlInput" placeholder="Paste your Amazon affiliate/product link">
         <button class="btn primary" onclick="useAmazonLink()">Use Amazon link</button>
@@ -467,11 +475,36 @@ let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[]
 function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=meta[id][0];document.getElementById('sub').textContent=meta[id][1];if(id==='settings')loadSettings();if(id==='categories')loadCategories();if(id==='collections')loadCollections();if(id==='social')loadSocial();if(id==='analytics')loadAnalytics();}
 function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 async function api(path,options={}){if(!adminSession)throw new Error('Admin session required.');options.headers={...(options.headers||{}),Authorization:'Bearer '+adminSession.access_token};if(options.body&&typeof options.body!=='string'&&!(options.body instanceof FormData)){options.headers['content-type']='application/json';options.body=JSON.stringify(options.body)}let r;try{r=await fetch(path,options)}catch(e){throw new Error('Cannot reach Nuvora. Check the Cloudflare deployment and try again.')}let j={};try{j=await r.json()}catch{}if(!r.ok){const detail=j.detail?` ${j.detail}`:'';throw new Error((j.error||`Request failed (${r.status})`)+detail)}return j;}
-function renderProducts(){const el=document.getElementById('productRows');if(!adminProducts.length){el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet.</div>';}else{el.innerHTML=adminProducts.map(p=>`<div class="row"><div><b>${esc(p.name)}</b><div class="muted">${esc(p.kind)} · ${p.published?'Published':'Draft'}${p.amazon_asin?' · Amazon '+esc(p.amazon_asin):''}</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">${p.published?'Published':'Draft'}</span><button class="btn" onclick="editProduct('${p.id}')">Edit</button><button class="btn" onclick="togglePublish('${p.id}')">${p.published?'Unpublish':'Publish'}</button><button class="btn danger" onclick="removeProduct('${p.id}')">Delete</button></div></div>`).join('')}updateCounts();}
+function retailerDestination(p){
+  const r=String(p?.retailer||p?.source_type||'').toLowerCase();
+  if(r.includes('temu')||String(p?.source_type||'').toLowerCase()==='temu') return p?.destination_url||p?.temu_source_url||'';
+  if(r.includes('amazon')||p?.amazon_asin||p?.amazon_source_url||String(p?.source_type||'').toLowerCase()==='amazon') return p?.destination_url||p?.amazon_source_url||'';
+  return p?.destination_url||'';
+}
+function retailerLabel(p){
+  const r=String(p?.retailer||p?.source_type||'').toLowerCase();
+  if(r.includes('temu')||String(p?.source_type||'').toLowerCase()==='temu') return 'Temu';
+  if(r.includes('amazon')||p?.amazon_asin||p?.amazon_source_url||String(p?.source_type||'').toLowerCase()==='amazon') return 'Amazon';
+  return p?.retailer||'Source';
+}
+function renderProducts(){
+  const el=document.getElementById('productRows');
+  if(!adminProducts.length){
+    el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet.</div>';
+  }else{
+    el.innerHTML=adminProducts.map(p=>{
+      const dest=retailerDestination(p),label=retailerLabel(p);
+      return '<div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+JSON.stringify(dest)+')">Open '+esc(label)+'</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit</button><button class="btn" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';
+    }).join('');
+  }
+  updateCounts();
+}
+function openRetailerLink(url){if(url)window.open(url,'_blank','noopener,noreferrer');}
 function updateCounts(){document.getElementById('shopCount').textContent=adminProducts.filter(p=>p.kind==='shop'&&p.published).length;document.getElementById('findCount').textContent=adminProducts.filter(p=>p.kind==='find'&&p.published).length;document.getElementById('learnCount').textContent=adminProducts.filter(p=>p.kind==='learn'&&p.published).length;document.getElementById('draftCount').textContent=adminProducts.filter(p=>!p.published).length;}
 async function liveAdminProducts(){adminProducts=await api('/api/admin/products');renderProducts();fillSocialProducts();}
 let shopifyProducts=[];
 function openShopifyImport(){
+  document.body.classList.add('admin-workspace-open');
   document.getElementById('shopifyModal').classList.add('open');
   document.getElementById('shopifyImportStatus').textContent='Loading your Shopify catalog…';
   document.getElementById('shopifyProductRows').innerHTML='<div class="muted">Loading…</div>';
@@ -479,7 +512,7 @@ function openShopifyImport(){
   document.getElementById('shopifyCount').textContent='';
   loadShopifyProducts();
 }
-function closeShopifyImport(){document.getElementById('shopifyModal').classList.remove('open');}
+function closeShopifyImport(){document.getElementById('shopifyModal').classList.remove('open');document.body.classList.remove('admin-workspace-open');}
 async function loadShopifyProducts(){
   try{
     const j=await api('/api/admin/shopify/products');
@@ -531,18 +564,22 @@ function resetProductForm(){
   document.getElementById('importStatus').textContent='You can enter a product manually or fetch an Amazon product below. Imported data stays editable and nothing becomes public until you publish it.';
   window.editingProductId=null;
 }
-function showImportPage('temu'){ resetProductForm(); document.getElementById('productModalTitle').textContent='Import Temu product'; document.getElementById('productModalSub').textContent='Paste your Temu product or affiliate link, review the details, then save it as a draft.'; document.getElementById('productModal').classList.add('open'); document.getElementById('amazonUrlInput').placeholder='Paste your Temu product or affiliate link'; document.getElementById('pfSource').value='temu'; document.getElementById('pfRetailer').value='Temu'; document.getElementById('amazonUrlInput').focus(); window.temuImportMode=true; }
+function showImportPage('temu'){ resetProductForm(); document.getElementById('productModalTitle').textContent='Import Temu product'; document.getElementById('productModalSub').textContent='Paste your Temu product or affiliate link, review the details, then save it as a draft.'; document.body.classList.add('admin-workspace-open'); document.getElementById('productModal').classList.add('open'); document.getElementById('amazonUrlInput').placeholder='Paste your Temu product or affiliate link'; document.getElementById('pfSource').value='temu'; document.getElementById('pfRetailer').value='Temu'; document.getElementById('amazonUrlInput').focus(); window.temuImportMode=true; }
 function openProductModal(importMode=false){
   window.temuImportMode=false;
+  document.body.classList.add('admin-workspace-open');
+  document.getElementById('aiStudioModal')?.classList.remove('open');
+  document.getElementById('shopifyModal')?.classList.remove('open');
   resetProductForm();
   document.getElementById('productModalTitle').textContent=importMode?'Import Amazon product':'Add product';
-  document.getElementById('productModalSub').textContent=importMode?'Paste your affiliate link, add the essentials, then save it as a draft.':'Create a product manually and save it as a draft.';
+  document.getElementById('productModalSub').textContent=importMode?'Paste your Amazon link, capture the listing, then save it as a draft.':'Create a product manually and save it as a draft.';
   document.getElementById('productModal').classList.add('open');
   document.getElementById('pfSource').value='amazon';
   document.getElementById('pfRetailer').value='Amazon';
+  document.getElementById('amazonUrlInput').placeholder='Paste your Amazon product or affiliate link';
   document.getElementById('amazonUrlInput').focus();
 }
-function closeProductModal(){document.getElementById('productModal').classList.remove('open');}
+function closeProductModal(){document.getElementById('productModal').classList.remove('open');document.body.classList.remove('admin-workspace-open');}
 function setProductForm(p){
   document.getElementById('pfName').value=p.name||'';
   document.getElementById('pfKind').value=p.kind||'find';
@@ -580,8 +617,22 @@ function removeProductImage(i){
   const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean); urls.splice(i,1);
   document.getElementById('pfImages').value=urls.join('\\n'); renderProductImages();
 }
-function openAIStudio(){document.getElementById('aiStudioModal').classList.add('open');document.getElementById('aiPrompt').value='';document.getElementById('aiImageStatus').textContent='';document.getElementById('aiCopyStatus').textContent='';document.getElementById('aiPreview').style.display='none';document.getElementById('aiReference').value='';}
-function closeAIStudio(){document.getElementById('aiStudioModal').classList.remove('open');}
+async function openAIStudio(){
+  document.body.classList.add('admin-workspace-open');
+  document.getElementById('productModal')?.classList.remove('open');
+  document.getElementById('shopifyModal')?.classList.remove('open');
+  const page=document.getElementById('aiStudioModal');
+  page.classList.add('open');
+  document.getElementById('aiPrompt').value='';
+  document.getElementById('aiImageStatus').textContent='Starting Cloudflare Workers AI…';
+  document.getElementById('aiCopyStatus').textContent='Waiting for Nuvora AI…';
+  document.getElementById('aiPreview').style.display='none';
+  document.getElementById('aiReference').value='';
+  page.scrollIntoView({behavior:'smooth',block:'start'});
+  await generateAIProductCopy();
+  await generateAIProductImage();
+}
+function closeAIStudio(){document.getElementById('aiStudioModal').classList.remove('open');document.body.classList.remove('admin-workspace-open');}
 function aiProductData(){return {name:document.getElementById('pfName').value.trim(),brand:document.getElementById('pfBrand').value.trim(),description:document.getElementById('pfDescription').value.trim(),features:document.getElementById('pfFeatures').value.trim(),category:document.getElementById('pfCategory').value.trim(),price:document.getElementById('pfPrice').value,currency:document.getElementById('pfCurrency').value};}
 async function getAIReferenceFile(){
   const manual=document.getElementById('aiReference').files?.[0];
@@ -676,11 +727,7 @@ async function runSmartImport(){
     results.innerHTML='<div class="notice" style="margin:0">'+esc(e.message||'The import could not be completed.')+'</div>';
   }finally{btn.disabled=false;btn.textContent='Import as drafts';}
 }
-function showToastAdmin(msg){
-  let t=document.getElementById('adminToast');
-  if(!t){t=document.createElement('div');t.id='adminToast';t.style='position:fixed;right:22px;bottom:22px;z-index:500;background:#183e29;color:#fff;padding:12px 15px;border-radius:12px;box-shadow:0 15px 40px rgba(20,40,25,.22);font-size:11px;font-weight:750';document.body.appendChild(t)}
-  t.textContent=msg;t.style.display='block';clearTimeout(window.adminToastTimer);window.adminToastTimer=setTimeout(()=>t.style.display='none',2600);
-}
+function showToastAdmin(msg){const target=document.getElementById('smartImportResults')||document.getElementById('importStatus')||document.getElementById('aiImageStatus');if(target){target.textContent=String(msg||'');target.classList.add('workspace-note');target.scrollIntoView({behavior:'smooth',block:'nearest'});}}
 async function useTemuLink(){
   const input=document.getElementById('amazonUrlInput');
   const url=input.value.trim();
@@ -804,7 +851,7 @@ async function saveProductDraft(){
     currency:document.getElementById('pfCurrency').value.trim()||'NGN',destination_url:document.getElementById('pfDestination').value.trim()||null,
     retailer:document.getElementById('pfRetailer').value.trim()||null,category_id:document.getElementById('pfCategory').value.trim()||null,
     collection_id:document.getElementById('pfCollection').value.trim()||null,amazon_asin:document.getElementById('pfAsin').value.trim()||null,
-    amazon_source_url:document.getElementById('amazonUrlInput').value.trim()||null,
+    amazon_source_url:document.getElementById('pfSource').value==='amazon'?document.getElementById('amazonUrlInput').value.trim()||document.getElementById('pfDestination').value.trim()||null:null,
     source_type:document.getElementById('pfSource').value,
     sourcinbox_product_url:document.getElementById('pfSourcinboxUrl').value.trim()||null,
     sourcinbox_product_id:document.getElementById('pfSourcinboxId').value.trim()||null,
@@ -933,4 +980,14 @@ async function adminBoot(){
   }
 }
 adminBoot();
-</script></body></html>
+document.addEventListener('DOMContentLoaded',()=>{
+  ['productModal','aiStudioModal','shopifyModal'].forEach(id=>{
+    const root=document.getElementById(id); if(!root)return;
+    const head=root.querySelector('.modal-head');
+    if(head&&!head.querySelector('.workspace-back')){
+      const b=document.createElement('button');b.className='btn workspace-back';b.textContent='← Back to admin';
+      b.onclick=()=>{if(id==='productModal')closeProductModal();else if(id==='aiStudioModal')closeAIStudio();else closeShopifyImport();};
+      head.querySelector('.eyebrow')?.parentElement?.prepend(b);
+    }
+  });
+});</script></body></html>
