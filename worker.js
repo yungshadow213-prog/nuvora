@@ -660,6 +660,24 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           };
         }));
       }
+      async function supabaseProductWrite(env,method,product,query=''){
+        const payload={...product};
+        for(let attempt=0;attempt<12;attempt++){
+          const r=await supabaseRest(env,method,'products',payload,query);
+          if(r.ok)return r;
+          const raw=await r.text();
+          let bad=null;
+          try{
+            const j=JSON.parse(raw);
+            const m=String(j.message||'').match(/Could not find the '([^']+)' column of 'products'/i);
+            if(m)bad=m[1];
+          }catch(e){}
+          if(!bad || !(bad in payload)) return {ok:false,text:async()=>raw};
+          delete payload[bad];
+        }
+        return {ok:false,text:async()=>JSON.stringify({message:'Too many unsupported product fields'})};
+      }
+
       if(url.pathname==='/api/admin/products'&&request.method==='GET'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const r=await supabaseRest(env,'GET','products',undefined,'?select=*&order=created_at.desc'); if(!r.ok)return json({error:await r.text()},500); return json(await r.json());
@@ -674,7 +692,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         product.description=cleanMultilineText(product.description,12000); product.features=cleanMultilineText(product.features,12000); product.brand=cleanText(product.brand,180);
         if(Array.isArray(product.image_urls))product.image_urls=product.image_urls.filter(validUrl).slice(0,30);
         if(product.image_url&&!validUrl(product.image_url))product.image_url=null;
-        const r=await supabaseRest(env,'POST','products',product); if(!r.ok)return json({error:'Supabase rejected the product.',detail:(await r.text()).slice(0,2000)},400);
+        const r=await supabaseProductWrite(env,'POST',product); if(!r.ok)return json({error:'Supabase rejected the product.',detail:(await r.text()).slice(0,2000)},400);
         return json((await r.json())[0]);
       }
 
@@ -695,7 +713,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           if(typeof patch.amazon_deal_text==='string')patch.amazon_deal_text=cleanText(patch.amazon_deal_text,500);
           if(typeof patch.temu_deal_text==='string')patch.temu_deal_text=cleanText(patch.temu_deal_text,500);
           if(Array.isArray(patch.image_urls))patch.image_urls=patch.image_urls.filter(validUrl).slice(0,30);
-          const r=await supabaseRest(env,'PATCH','products',patch,`?id=eq.${encodeURIComponent(id)}`); if(!r.ok)return json({error:await r.text()},400);
+          const r=await supabaseProductWrite(env,'PATCH',patch,`?id=eq.${encodeURIComponent(id)}`); if(!r.ok)return json({error:await r.text()},400);
           const rows=await r.json(); return json(rows[0]||null);
         }
         const r=await supabaseRest(env,'DELETE','products',undefined,`?id=eq.${encodeURIComponent(id)}`); if(!r.ok)return json({error:await r.text()},400);
