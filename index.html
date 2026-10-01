@@ -420,6 +420,7 @@ button:hover,.btn:hover{transform:translateY(-1px)}
 }
 </style><style id="nuvora-zero-popup">
 #authModal,#detailModal,#cartModal{display:none!important}
+.store-status{max-width:1180px;margin:0 auto;height:0;overflow:hidden;padding:0 14px;border-radius:12px;font-size:12px;line-height:1.4;transition:all .2s ease}.store-status.visible{height:auto;min-height:38px;margin-top:10px;padding:10px 14px;background:#f1f6f1;color:#31583e;border:1px solid #dce9dd}.store-status[data-status="error"]{background:#fff1f1;color:#9d4141;border-color:#f0d6d6}@media(max-width:700px){.store-status{margin-left:12px;margin-right:12px}.store-status.visible{margin-top:8px}}
 </style></head>
 <body>
 <div class="announcement"><div class="shell"><b>Nuvora picks, made simple.</b> Browse curated products, save your favorites, and discover something worth finding.</div></div><header class="topbar"><div class="shell nav">
@@ -428,6 +429,7 @@ button:hover,.btn:hover{transform:translateY(-1px)}
 <form class="store-search" id="storeSearch" onsubmit="event.preventDefault();goHomeSearch()"><input id="topSearchInput" type="search" placeholder="Search products, brands or categories…" autocomplete="off"><button type="submit" aria-label="Search"><span class="search-glyph"></span></button></form>
 <div class="nav-actions"><button class="icon-btn nav-search" id="searchBtn" aria-label="Search"><span class="search-glyph"></span></button><button class="icon-btn" id="favBtn" aria-label="Saved"><span class="heart-glyph">♡</span></button><button class="icon-btn cart-btn" id="cartBtn" aria-label="Cart"><span class="bag-glyph"></span><span class="cart-count" id="cartCount">0</span></button><button class="avatar-btn" id="accountBtn" aria-label="Account">N</button></div>
 </div></header>
+<div id="storeStatus" class="store-status" aria-live="polite"></div>
 
 <aside class="menu-panel" id="menuPanel"><div class="menu-head"><span class="menu-title">Explore</span><button class="close" id="menuClose">×</button></div>
 <div class="menu-list"><button onclick="showView('home');closeMenu()">Home</button><button onclick="showView('browse');closeMenu()">Browse all</button><button onclick="showView('collections');closeMenu()">Collections</button></div>
@@ -768,7 +770,7 @@ function toggleAuth(){openAuth(authMode==='login'?'signup':'login')}
 function handleAccountAction(){user?signOut():openAuth('login')}
 function updateAccountUI(){const initial=user?user[0].toUpperCase():'N';document.getElementById('accountBtn').textContent=initial;document.getElementById('menuAuthBtn').textContent=user?'Sign out':'Sign in';renderAccount()}
 function renderAccount(){const text=document.getElementById('accountText');const main=document.getElementById('accountMainBtn');if(user){text.textContent=`Signed in as ${user}. Your saved discoveries and cart stay with this account on this device.`;main.textContent='Sign out';main.className='btn';}else{text.textContent='Sign in to save discoveries and keep your Nuvora activity together.';main.textContent='Sign in';main.className='btn primary'}}
-function showPageStatus(msg){const el=document.getElementById('accountText')||document.getElementById('cartContent');if(el)el.textContent=String(msg||'');}function showToast(msg){const el=document.getElementById('cartContent')||document.getElementById('accountText');if(el&&msg)el.setAttribute('data-status',String(msg));}
+function showPageStatus(msg,type='error'){const el=document.getElementById('storeStatus');if(!el)return;el.textContent=String(msg||'');el.dataset.status=type;el.classList.toggle('visible',!!msg);clearTimeout(window.__nuvoraStatusTimer);if(msg)window.__nuvoraStatusTimer=setTimeout(()=>{el.classList.remove('visible');},5000);}function showToast(msg){showPageStatus(msg,'info');}
 let searchTimer;document.getElementById('searchInput')?.addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>{const q=document.getElementById('searchInput')?.value||'';trackEvent('search',null,{query:q.slice(0,80)});renderBrowse();},250)});document.getElementById('typeFilter')?.addEventListener('change',()=>{trackEvent('filter_used',null,{type:document.getElementById('typeFilter')?.value||'All'});renderBrowse()});document.getElementById('sortFilter')?.addEventListener('change',renderBrowse);trackEvent('page_view');
 document.getElementById('newProducts').innerHTML=products.slice(0,8).map(card).join('');document.getElementById('randomPicks').innerHTML=[...products].sort(()=>Math.random()-0.5).slice(0,8).map(card).join('');
 updateCart();updateAccountUI();renderBrowse();
