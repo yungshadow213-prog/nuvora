@@ -183,21 +183,21 @@ async function scrapeTemuListing(temuUrl){
   const cleanRetailerText=(value)=>{
     return String(value||'')
       .replace(/(?:sale_list_token|order_receipt_token|refund_detail_token|bg_mail_token|payment_detail_token|email_token|[a-z0-9_]+_token)/gi,' ')
-      .replace(/\\s+/g,' ')
-      .replace(/\\s+([.,;:])/g,'$1')
+      .replace(/\s+/g,' ')
+      .replace(/\s+([.,;:])/g,'$1')
       .trim();
   };
   const money=(v)=>{
     const text=String(v||'');
-    const marker=text.match(/(?:US\\$|\\$|£|€|₦|NGN)\\s*[0-9][0-9,.]*/i);
+    const marker=text.match(/(?:US\$|\$|£|€|₦|NGN)\s*[0-9][0-9,.]*/i);
     if(!marker)return null;
     const n=marker[0].replace(/[^0-9.]/g,'');
     return n?Number(n):null;
   };
-  const currentText=(plain.match(/(?:after applying promos to|now|current price|sale price|price)[^₦$€£0-9]{0,45}(?:₦|NGN|US\\$|\\$|£|€)\\s*[0-9][0-9,.]*/i)||[])[0]||'';
+  const currentText=(plain.match(/(?:after applying promos to|now|current price|sale price|price)[^₦$€£0-9]{0,45}(?:₦|NGN|US\$|\$|£|€)\s*[0-9][0-9,.]*/i)||[])[0]||'';
   const currentPrice=money(offers.price)||money(findMeta('product:price:amount'))||money(currentText);
   const currency=String(offers.priceCurrency||findMeta('product:price:currency')||(plain.includes('₦')?'NGN':'')).toUpperCase()||null;
-  const originalText=(plain.match(/(?:original|was|list price|from)[^₦$€£0-9]{0,45}(?:₦|NGN|US\\$|\\$|£|€)\\s*[0-9][0-9,.]*/i)||[])[0]||'';
+  const originalText=(plain.match(/(?:original|was|list price|from)[^₦$€£0-9]{0,45}(?:₦|NGN|US\$|\$|£|€)\s*[0-9][0-9,.]*/i)||[])[0]||'';
   const originalPrice=money(originalText);
   const reviewText=(plain.match(/[0-9][0-9,]*\s+reviews?/i)||[])[0]||'';
   const reviewCount=aggregate.reviewCount?Number(aggregate.reviewCount):Number(reviewText.replace(/[^0-9]/g,''))||null;
@@ -211,9 +211,9 @@ async function scrapeTemuListing(temuUrl){
     plain.match(/today'?s deal/i)?.[0]
   ].filter(Boolean);
   const extraDeals=[
-    plain.match(/\\b[0-9]{1,2}\\s*%\\s*OFF\\b/i)?.[0],
-    plain.match(/\\bONLY\\s+[0-9,]+\\s+LEFT\\b/i)?.[0],
-    plain.match(/\\bFREE\\s+SHIPPING\\b/i)?.[0]
+    plain.match(/\b[0-9]{1,2}\s*%\s*OFF\b/i)?.[0],
+    plain.match(/\bONLY\s+[0-9,]+\s+LEFT\b/i)?.[0],
+    plain.match(/\bFREE\s+SHIPPING\b/i)?.[0]
   ].filter(Boolean);
   const dealText=cleanRetailerText(dealCandidates[0]||extraDeals.join(' · ')||'')||null;
   const availability=String(offers.availability||'').split('/').pop()||null;
@@ -228,13 +228,13 @@ async function scrapeTemuListing(temuUrl){
   }
   const detailText=detailStart>=0?plain.slice(detailStart,detailEnd):'';
   const sectionClean=cleanRetailerText(detailText)
-    .replace(/product details\\s*[0-9]+/gi,' ')
+    .replace(/product details\s*[0-9]+/gi,' ')
     .replace(/open claw/gi,' ')
-    .replace(/save\\s*save/gi,' ')
+    .replace(/save\s*save/gi,' ')
     .replace(/report this item/gi,' ')
     .replace(/common_arrows/gi,' ')
-    .replace(/\\bsvg\\b/gi,' ')
-    .replace(/\\s+/g,' ').trim();
+    .replace(/\bsvg\b/gi,' ')
+    .replace(/\s+/g,' ').trim();
 
   const specLabels=['Wireless Property','Battery Properties','Applicable Age Group','Brand','Major Material','Color','Power Mode','Operating Voltage','Item ID','Origin','Connectivity','Compatible Devices','Compatibility','Dimensions','Drawing Area','Interface','Material','Model','Style','Size','Capacity','Screen Size'];
   const specifications=[];
@@ -262,19 +262,19 @@ async function scrapeTemuListing(temuUrl){
   const highlightText=highlightStart>=0?plain.slice(highlightStart+10,highlightEnd):'';
   const featureLines=[...new Set(highlightText.split(/[.!?]+/).map(x=>cleanRetailerText(x)).filter(x=>x.length>25&&x.length<450))].slice(0,10);
 
-  const soldText=(plain.match(/\\b[0-9][0-9,.]*\\s+sold\\b/i)||[])[0]||null;
-  const scarcityText=(plain.match(/\\bONLY\\s+[0-9,]+\\s+LEFT\\b/i)||[])[0]||null;
-  const freeShipping=(plain.match(/\\bFree shipping[^.\\n]*/i)||[])[0]||null;
-  const reviewSnapshot=(plain.match(/\\b[0-9][0-9,.]*\\s+reviews?\\b/i)||[])[0]||null;
+  const soldText=(plain.match(/\b[0-9][0-9,.]*\s+sold\b/i)||[])[0]||null;
+  const scarcityText=(plain.match(/\bONLY\s+[0-9,]+\s+LEFT\b/i)||[])[0]||null;
+  const freeShipping=(plain.match(/\bFree shipping[^.\n]*/i)||[])[0]||null;
+  const reviewSnapshot=(plain.match(/\b[0-9][0-9,.]*\s+reviews?\b/i)||[])[0]||null;
   const reviewVerified=/All reviews are from verified purchases/i.test(plain);
-  const bestSellerText=(plain.match(/#[0-9]+\\s+Best Seller[^.\\n]*/i)||[])[0]||null;
-  const promoPriceMatch=(plain.match(/after applying promos to\\s+(?:₦|NGN|US\\$|\\$|£|€)\\s*[0-9][0-9,.]*/i)||[])[0]||null;
+  const bestSellerText=(plain.match(/#[0-9]+\s+Best Seller[^.\n]*/i)||[])[0]||null;
+  const promoPriceMatch=(plain.match(/after applying promos to\s+(?:₦|NGN|US\$|\$|£|€)\s*[0-9][0-9,.]*/i)||[])[0]||null;
 
   const descriptionParts=[];
-  const productSentences=[...new Set(sectionClean.split(/(?<=[.!?])\\s+/).map(x=>cleanRetailerText(x)).filter(x=>x.length>45&&x.length<800))].slice(0,8);
-  if(productSentences.length)descriptionParts.push('Product information\\n'+productSentences.join(' '));
-  if(specifications.length)descriptionParts.push('Specifications\\n'+specifications.map(x=>x[0]+': '+x[1]).join('\\n'));
-  if(featureLines.length)descriptionParts.push('Highlights\\n'+featureLines.join('\\n'));
+  const productSentences=[...new Set(sectionClean.split(/(?<=[.!?])\s+/).map(x=>cleanRetailerText(x)).filter(x=>x.length>45&&x.length<800))].slice(0,8);
+  if(productSentences.length)descriptionParts.push('Product information\n'+productSentences.join(' '));
+  if(specifications.length)descriptionParts.push('Specifications\n'+specifications.map(x=>x[0]+': '+x[1]).join('\n'));
+  if(featureLines.length)descriptionParts.push('Highlights\n'+featureLines.join('\n'));
   if(reviewSnapshot)descriptionParts.push('Review snapshot: '+reviewSnapshot+(reviewVerified?' · verified purchases':''));
   if(bestSellerText)descriptionParts.push('Retailer badge: '+bestSellerText);
   if(promoPriceMatch)descriptionParts.push('Promotional price: '+promoPriceMatch);
@@ -302,7 +302,7 @@ async function scrapeTemuListing(temuUrl){
     id:productId,
     title:title.slice(0,180),
     brand:brand.slice(0,120),
-    description:(descriptionParts.join('\\n\\n')||cleanRetailerText(description)).slice(0,12000),
+    description:(descriptionParts.join('\n\n')||cleanRetailerText(description)).slice(0,12000),
     current_price:currentPrice,
     list_price:originalPrice,
     discount_percent:currentPrice&&originalPrice&&originalPrice>currentPrice?Math.round((1-currentPrice/originalPrice)*100):null,
@@ -328,12 +328,12 @@ async function scrapeTemuListing(temuUrl){
         const {url:temuUrl}=await body(request,256*1024);
         if(!temuUrl||!validUrl(temuUrl))return json({error:'A valid Temu product URL is required'},400);
         const parsed=new URL(temuUrl);
-        const host=parsed.hostname.toLowerCase().replace(/^www\\./,'');
+        const host=parsed.hostname.toLowerCase().replace(/^www\./,'');
         if(host!=='temu.com'&&!host.endsWith('.temu.com')&&host!=='temu.to')return json({error:'Please paste a Temu product URL.'},400);
         let listing=await scrapeTemuListing(temuUrl);
         if(listing?.error)return json(listing,502);
         listing.title=cleanImportedTitle(listing.title,listing.brand);
-        const titleHint=(listing?.title||'Temu product').replace(/\\s+/g,' ').trim().slice(0,180);
+        const titleHint=(listing?.title||'Temu product').replace(/\s+/g,' ').trim().slice(0,180);
         let category_id=null;
         try{const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cats.ok)category_id=autoCategory(titleHint,listing?.description||'','',await cats.json());}catch(e){}
         let duplicate=null;
@@ -627,7 +627,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
                   name:listing.title||p.name,
                   brand:listing.brand||p.brand||null,
                   description:listing.description||p.description||null,
-                  features:Array.isArray(listing.features)&&listing.features.length?listing.features.join('\\n'):p.features||null,
+                  features:Array.isArray(listing.features)&&listing.features.length?listing.features.join('\n'):p.features||null,
                   image_url:Array.isArray(listing.images)&&listing.images[0]?listing.images[0]:p.image_url||null,
                   image_urls:Array.isArray(listing.images)?listing.images:[],
                   display_price:listing.current_price??p.display_price??null,
@@ -854,9 +854,9 @@ function cleanText(value,max=10000){
   const text=String(value??'')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g,'')
     .replace(/(?:sale_list_token|order_receipt_token|refund_detail_token|bg_mail_token|payment_detail_token|email_token|[a-z0-9_]+_token)/gi,' ')
-    .replace(/\\s+/g,' ')
+    .replace(/\s+/g,' ')
     .trim().slice(0,max);
-  if(/^[\\s✦★☆•*"',;:._-]*(?:ema(?:il)?)?[\\s✦★☆•*"',;:._-]*$/i.test(text))return '';
+  if(/^[\s✦★☆•*"',;:._-]*(?:ema(?:il)?)?[\s✦★☆•*"',;:._-]*$/i.test(text))return '';
   return text;
 }
 function cleanMultilineText(value,max=12000){
@@ -865,10 +865,10 @@ function cleanMultilineText(value,max=12000){
     .replace(/(?:sale_list_token|order_receipt_token|refund_detail_token|bg_mail_token|payment_detail_token|email_token|[a-z0-9_]+_token)/gi,' ')
     .replace(/\\r/g,'')
     .replace(/[ \\t]+/g,' ')
-    .replace(/\\n[ \\t]+/g,'\\n')
-    .replace(/\\n{3,}/g,'\\n\\n')
+    .replace(/\n[ \\t]+/g,'\n')
+    .replace(/\n{3,}/g,'\n\n')
     .trim().slice(0,max);
-  if(/^[\\s✦★☆•*"',;:._-]*(?:ema(?:il)?)?[\\s✦★☆•*"',;:._-]*$/i.test(text))return '';
+  if(/^[\s✦★☆•*"',;:._-]*(?:ema(?:il)?)?[\s✦★☆•*"',;:._-]*$/i.test(text))return '';
   return text;
 }
 function makeProductSlug(value){
