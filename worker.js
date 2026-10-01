@@ -1000,8 +1000,16 @@ async function scrapeAmazonListing(amazonUrl,asin){
     const m=html.match(re); return m?clean(amazonDecode(m[1]),2000):'';
   };
 
-  const title=clean(findTag('productTitle')||findMeta('og:title'),240)||'Amazon product';
-  const brand=clean(findTag('bylineInfo').replace(/^Visit the /i,'').replace(/ Store$/i,''),120);
+  // Use structured Product JSON-LD first, then Amazon's dedicated HTML/meta fallbacks.
+  const jsonLd=[];
+  for(const m of html.matchAll(/<script[^>]*type=["']application\\/ld\\+json["'][^>]*>([\\s\\S]*?)<\\/script>/gi)){
+    try{const parsed=JSON.parse(m[1].trim());if(Array.isArray(parsed))jsonLd.push(...parsed);else jsonLd.push(parsed);}catch(e){}
+  }
+  const productLd=jsonLd.find(x=>{const t=x&&x['@type'];return t==='Product'||(Array.isArray(t)&&t.includes('Product'));})||{};
+  const ldOffers=Array.isArray(productLd.offers)?(productLd.offers[0]||{}):(productLd.offers||{});
+  const ldAggregate=productLd.aggregateRating||{};
+  const title=clean(productLd.name||findTag('productTitle')||findMeta('og:title'),240)||'Amazon product';
+  const brand=clean(typeof productLd.brand==='string'?productLd.brand:(productLd.brand?.name||''),120)||clean(findTag('bylineInfo').replace(/^Visit the /i,'').replace(/ Store$/i,''),120);
 
   const money=(v)=>{
     const m=String(v||'').match(/(?:US\$|\$|£|€|NGN|₦)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i);
@@ -1009,14 +1017,17 @@ async function scrapeAmazonListing(amazonUrl,asin){
   };
   const priceSources=[findTag('priceblock_dealprice'),findTag('priceblock_ourprice'),findTag('corePriceDisplay_desktop_feature_div'),findTag('price_inside_buybox'),findTag('priceblock_saleprice')];
   const current=priceSources.map(money).find(v=>v!=null)??null;
+  const ldPrice=money(ldOffers.price||ldOffers.lowPrice);
   const list=[findTag('priceblock_listprice'),findTag('listPrice'),findTag('basisPrice')].map(money).find(v=>v!=null)??null;
+  const ldListPrice=money(ldOffers.highPrice);
   const fallbackPriceMatch=plain.match(/(?:US\$|\$|£|€|NGN|₦)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i);
-  const resolvedCurrent=current??(fallbackPriceMatch?Number(fallbackPriceMatch[1].replace(/,/g,'')):null);
+  const resolvedCurrent=current??ldPrice??(fallbackPriceMatch?Number(fallbackPriceMatch[1].replace(/,/g,'')):null);
+  const resolvedList=list??ldListPrice??null;
   const discountMatch=plain.match(/(?:([0-9]{1,3})%\s*(?:off|savings)|save\s+([0-9]{1,3})%)/i);
-  const discount=discountMatch?Number(discountMatch[1]||discountMatch[2]):(resolvedCurrent&&list?Math.round((1-resolvedCurrent/list)*100):null);
-
-  const rating=Number((plain.match(/([0-5](?:\.[0-9])?)\s+out of 5 stars/i)||[])[1])||null;
-  const reviewCount=Number(((plain.match(/([0-9][0-9,]*)\s+(?:ratings|reviews?)/i)||[])[1]||'').replace(/,/g,''))||null;
+  const discount=discountMatch?Number(discountMatch[1]||discountMatch[2]):(resolvedCurrent&&resolvedList?Math.round((1-resolvedCurrent/resolvedList)*100):null);
+  const rating=Number(ldAggregate.ratingValue)||Number((plain.match(/([0-5](?:\.[0-9])?)\s+out of 5 stars/i)||[])[1])||null;
+  const reviewCount=Number(ldAggregate.reviewCount)||Number(((plain.match(/([0-9][0-9,]*)\s+(?:ratings|reviews?)/i)||[])[1]||'').replace(/,/g,''))||null;
+  const currency=String(ldOffers.priceCurrency||findMeta('product:price:currency')||'').toUpperCase()||null;
   const bought=(plain.match(/([0-9][0-9Kk+.]*)\s+bought in past month/i)||[])[1]||null;
   const shippingText=(plain.match(/Shipping & Import Charges[^.]{0,220}/i)||[])[0]||null;
   const taxText=(plain.match(/Sales taxes may apply[^.]{0,180}/i)||[])[0]||null;
@@ -1046,12 +1057,14 @@ async function scrapeAmazonListing(amazonUrl,asin){
   const detailBlock=html.match(/id=[\x22\x27]detailBullets_feature_div[\x22\x27][\s\S]*?(?:<\/ul>|<\/div>\\s*<\/div>)/i)?.[0]||'';
   const detailTexts=[...detailBlock.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)].map(m=>clean(amazonDecode(m[1]),500)).filter(Boolean);
   const productDescriptionBlock=html.match(/id=[\x22\x27]productDescription[\x22\x27][\s\S]*?<\/div>/i)?.[0]||'';
-  const productDescription=clean(amazonDecode(productDescriptionBlock.replace(/<[^>]+>/g,' ')),5000);
+  const productDescription=clean(amazonDecode(productDescriptionBlock.replace(/<[^>]+>/g,' ')),7000);
+  const ldDescription=clean(productLd.description||'',7000);
 
   const descriptionParts=[];
   const nl=String.fromCharCode(10);
   if(featureTexts.length)descriptionParts.push('About this item'+nl+featureTexts.join(nl));
   if(productDescription)descriptionParts.push('Product description'+nl+productDescription);
+  else if(ldDescription)descriptionParts.push('Product description'+nl+ldDescription);
   if(detailTexts.length)descriptionParts.push('Product details'+nl+detailTexts.join(nl));
   if(categoryPath)descriptionParts.push('Category'+nl+categoryPath);
   if(department)descriptionParts.push('Department\\n'+department);
@@ -1081,6 +1094,8 @@ async function scrapeAmazonListing(amazonUrl,asin){
     }catch(e){for(const m of String(value).matchAll(/https?:\/\/[^"\\]+/gi))addImage(m[0]);}
   };
   addImage(findMeta('og:image')); addImage(findMeta('twitter:image'));
+  const ldImages=Array.isArray(productLd.image)?productLd.image:(productLd.image?[productLd.image]:[]);
+  for(const u of ldImages)addImage(u);
   for(const m of html.matchAll(/(?:data-old-hi-res|data-a-dynamic-image|data-image-url|data-src)=[\x22\x27]([^\x22\x27]+)[\x22\x27]/gi))addImageList(m[1]);
   for(const m of html.matchAll(/(https?:\/\/[^"\s]+?\.(?:jpg|jpeg|png|webp)(?:\?[^"\s]*)?)/gi))addImage(m[1]);
   if(!images.length)images.push(amazonImageFallback(title,brand,asin));
@@ -1092,8 +1107,8 @@ async function scrapeAmazonListing(amazonUrl,asin){
   const deal=(plain.match(/limited time deal/i)||[])[0]||null;
 
   return {
-    asin,title,brand,current_price:resolvedCurrent,list_price:list,discount_percent:discount,
-    deal_text:deal?clean(deal,80):null,rating,review_count:reviewCount,bought_past_month:bought,
+    asin,title,brand,current_price:resolvedCurrent,list_price:resolvedList,discount_percent:discount,
+    currency,deal_text:deal?clean(deal,80):null,rating,review_count:reviewCount,bought_past_month:bought,
     badges,shipping_text:shippingText?clean(shippingText,300):null,tax_text:taxText?clean(taxText,240):null,
     features:featureTexts,description:clean(descriptionParts.join('\\n\\n'),12000),
     variations:buildProductOptions(plain).filter(g=>['Size','Color'].includes(g.name)||g.values.length>1),
