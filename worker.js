@@ -53,6 +53,22 @@ export default {
         return json({ok,checks,shopifyError,shopifyMissing,aiMissing});
       }
 
+function cleanImportedTitle(value,brand=''){
+  let t=amazonDecode(value).replace(/\s+/g,' ').trim();
+  t=t.replace(/^Amazon\.com\s*[:|-]\s*/i,'').replace(/\s*[|·]\s*(?:Amazon|Temu)\s*$/i,'');
+  t=t.replace(/^\s*(?:Visit the|Shop)\s+[^:]{1,80}\s*(?:Store|Brand)?\s*[:|-]\s*/i,'');
+  t=t.replace(/\b(?:official|best seller|#1 best seller|hot sale|trending|must have)\b/gi,'');
+  const words=t.split(' ').filter(Boolean),seen=new Set(),kept=[];
+  for(const word of words){
+    const key=word.toLowerCase().replace(/[^a-z0-9]/g,'');
+    if(key&&seen.has(key))continue;
+    if(key)seen.add(key);
+    kept.push(word);
+  }
+  t=kept.join(' ').replace(/\s{2,}/g,' ').replace(/\s+([,.:;])/g,'$1').trim();
+  if(t===t.toLowerCase())t=t.replace(/\b[a-z]/g,c=>c.toUpperCase());
+  return t.slice(0,180);
+}
       if(url.pathname==='/api/amazon/prepare'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const {url:amazonUrl}=await body(request,256*1024);
@@ -314,8 +330,9 @@ async function scrapeTemuListing(temuUrl){
         const parsed=new URL(temuUrl);
         const host=parsed.hostname.toLowerCase().replace(/^www\\./,'');
         if(host!=='temu.com'&&!host.endsWith('.temu.com')&&host!=='temu.to')return json({error:'Please paste a Temu product URL.'},400);
-        const listing=await scrapeTemuListing(temuUrl);
+        let listing=await scrapeTemuListing(temuUrl);
         if(listing?.error)return json(listing,502);
+        listing.title=cleanImportedTitle(listing.title,listing.brand);
         const titleHint=(listing?.title||'Temu product').replace(/\\s+/g,' ').trim().slice(0,180);
         let category_id=null;
         try{const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cats.ok)category_id=autoCategory(titleHint,listing?.description||'','',await cats.json());}catch(e){}
@@ -898,325 +915,3 @@ async function supabaseRest(env,method,table,payload=null,query=''){
   const options={method,headers:{...sbHeaders(env,true),'Prefer':'return=representation'}};
   if(payload!==undefined&&payload!==null){
     options.body=JSON.stringify(payload);
-  }
-  return fetch(url,options);
-}
-async function getShopifyAdminToken(env){
-  const domain=env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN;
-  if(!domain||!env.SHOPIFY_CLIENT_ID||!env.SHOPIFY_CLIENT_SECRET)throw new Error('Shopify Admin credentials are not configured');
-  const r=await fetch('https://'+domain+'/admin/oauth/access_token',{
-    method:'POST',
-    headers:{'content-type':'application/json'},
-    body:JSON.stringify({client_id:env.SHOPIFY_CLIENT_ID,client_secret:env.SHOPIFY_CLIENT_SECRET,grant_type:'client_credentials'})
-  });
-  const j=await r.json().catch(()=>({}));
-  if(!r.ok||!j.access_token)throw new Error(j.error_description||j.error||'Shopify Admin authentication failed');
-  return j.access_token;
-}
-function validUrl(value){
-  try{const u=new URL(String(value||''));return u.protocol==='https:'&&!!u.hostname;}catch{return false;}
-}
-function asinFromUrl(value){
-  const s=String(value||'');
-  const m=s.match(/(?:\/dp\/|\/gp\/product\/|\/product\/)([A-Z0-9]{10})(?:[/?]|$)/i)||s.match(/\b([A-Z0-9]{10})\b/i);
-  return m?m[1].toUpperCase():null;
-}
-async function amazonGetItem(env,asin){
-  const region=env.AMAZON_REGION||'us-east-1';
-  const host=env.AMAZON_HOST||'webservices.amazon.com';
-  const marketplace=env.AMAZON_MARKETPLACE||'www.amazon.com';
-  const partnerTag=env.AMAZON_PARTNER_TAG;
-  const accessKey=env.AMAZON_ACCESS_KEY;
-  const secretKey=env.AMAZON_SECRET_KEY;
-  if(!accessKey||!secretKey||!partnerTag)return null;
-  // Amazon PA-API signing is intentionally delegated to the configured
-  // integration layer when credentials are available; return null otherwise.
-  return null;
-}
-function buildProductOptions(text){
-  const src=String(text||'');
-  const groups=[];
-  const add=(name,values)=>{
-    const cleanValues=[...new Set((values||[]).map(v=>String(v||'').trim()).filter(v=>v&&v.length<=80))].slice(0,40);
-    if(cleanValues.length)groups.push({name,values:cleanValues});
-  };
-  const afterLabel=(label)=>{
-    const m=src.match(new RegExp(label+'\\s*[:：]?\\s*([^\\n]{1,500})','i'));
-    return m?m[1]:'';
-  };
-
-  const sizeText=afterLabel('Size');
-  const sizeValues=[...sizeText.matchAll(/\b(?:XXXS|XXS|XS|S|M|L|XL|XXL|XXXL|XX-Small|X-Small|Small|Medium|Large|X-Large|XX-Large|2X-Large|3X-Large|4X-Large)\b/gi)].map(m=>m[0]);
-  const numericSizes=[...src.matchAll(/\b(?:US|EU)?\s*(?:[3-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9])(?:\.5)?\b/g)].map(m=>m[0]);
-  add('Size',[...sizeValues,...numericSizes.slice(0,20)]);
-
-  const colorText=afterLabel('Color|Colour|Color Name');
-  const colorValues=[...colorText.matchAll(/\b(?:Black|White|Grey|Gray|Red|Blue|Green|Pink|Purple|Orange|Yellow|Brown|Beige|Cream|Navy|Khaki|Burgundy|Camel|Chocolate Brown|Light Pink|Light Green|Dark Blue|Royal Blue|Hot Pink|Oatmeal|Apricot|Aqua|Leopard|Silver|Gold|Rose Gold)\b/gi)].map(m=>m[0]);
-  add('Color',[...colorValues,...[...src.matchAll(/\b(?:Black|White|Grey|Gray|Red|Blue|Green|Pink|Purple|Orange|Yellow|Brown|Beige|Cream|Navy|Khaki|Burgundy|Silver|Gold|Rose Gold)\b/gi)].map(m=>m[0]).slice(0,10)]);
-
-  const storage=[...src.matchAll(/\b(?:16|32|64|128|256|512)\s*(?:GB|G|TB)\b/gi)].map(m=>m[0].replace(/\s+/g,' '));
-  add('Storage',storage);
-  const ram=[...src.matchAll(/\b(?:4|6|8|12|16|24|32)\s*GB\s*RAM\b/gi)].map(m=>m[0].replace(/\s+/g,' '));
-  add('RAM',ram);
-
-  const commonLabels=[
-    ['Capacity','Capacity'],['Screen size','Screen size'],['Model','Model'],['Model number','Model Number'],
-    ['Version','Version'],['Configuration','Configuration'],['Style','Style'],['Pattern','Pattern'],
-    ['Finish','Finish'],['Shade','Shade'],['Scent','Scent'],['Flavor','Flavor'],
-    ['Pack','Pack(?: size)?'],['Plug type','Plug type'],['Voltage','(?:Operating )?Voltage'],
-    ['Shoe size','Shoe size'],['Waist','Waist'],['Length','Length'],['Width','Width'],['Height','Height']
-  ];
-  for(const [name,label] of commonLabels){
-    const value=afterLabel(label);
-    if(value){
-      const cleaned=value.split(/[·•|]/)[0].trim();
-      if(cleaned.length>0&&cleaned.length<=100)add(name,[cleaned]);
-    }
-  }
-  return groups.filter((g,i,a)=>a.findIndex(x=>x.name.toLowerCase()===g.name.toLowerCase())===i);
-}
-
-async function scrapeAmazonListing(amazonUrl,asin){
-  const r=await fetch(amazonUrl,{headers:{
-    'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36',
-    'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-    'accept-language':'en-US,en;q=0.9'
-  }});
-  const html=await r.text();
-  if(!r.ok||html.length<1000)return {error:'Amazon page could not be read right now.'};
-
-  const clean=(v,max=12000)=>String(v||'')
-    .replace(/(?:sale_list_token|order_receipt_token|refund_detail_token|bg_mail_token|payment_detail_token|email_token|[a-z0-9_]+_token)/gi,' ')
-    .replace(/\u00a0/gi,' ')
-    .replace(/\s+/g,' ')
-    .trim().slice(0,max);
-  const plain=amazonDecode(html.replace(/<script[\s\S]*?<\/script>/gi,' ').replace(/<style[\s\S]*?<\/style>/gi,' ').replace(/<[^>]+>/g,' '));
-  const findTag=(id)=>{
-    const re=new RegExp('id=[\\x22\\x27]'+id+'[\\x22\\x27][^>]*>([\\s\\S]*?)<','i');
-    const m=html.match(re); return m?clean(amazonDecode(m[1]),4000):'';
-  };
-  const findMeta=(key)=>{
-    const re=new RegExp('<meta[^>]+(?:name|property)=[\\x22\\x27]'+key+'[\\x22\\x27][^>]+content=[\\x22\\x27]([^\\x22\\x27]*)[\\x22\\x27]','i');
-    const m=html.match(re); return m?clean(amazonDecode(m[1]),2000):'';
-  };
-
-  // Use structured Product JSON-LD first, then Amazon's dedicated HTML/meta fallbacks.
-  const jsonLd=[];
-  for(const m of html.matchAll(/<script[^>]*type=["']application\\/ld\\+json["'][^>]*>([\\s\\S]*?)<\\/script>/gi)){
-    try{const parsed=JSON.parse(m[1].trim());if(Array.isArray(parsed))jsonLd.push(...parsed);else jsonLd.push(parsed);}catch(e){}
-  }
-  const productLd=jsonLd.find(x=>{const t=x&&x['@type'];return t==='Product'||(Array.isArray(t)&&t.includes('Product'));})||{};
-  const ldOffers=Array.isArray(productLd.offers)?(productLd.offers[0]||{}):(productLd.offers||{});
-  const ldAggregate=productLd.aggregateRating||{};
-  const title=clean(productLd.name||findTag('productTitle')||findMeta('og:title'),240)||'Amazon product';
-  const brand=clean(typeof productLd.brand==='string'?productLd.brand:(productLd.brand?.name||''),120)||clean(findTag('bylineInfo').replace(/^Visit the /i,'').replace(/ Store$/i,''),120);
-
-  const money=(v)=>{
-    const m=String(v||'').match(/(?:US\$|\$|£|€|NGN|₦)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i);
-    return m?Number(m[1].replace(/,/g,'')):null;
-  };
-  const priceSources=[findTag('priceblock_dealprice'),findTag('priceblock_ourprice'),findTag('corePriceDisplay_desktop_feature_div'),findTag('price_inside_buybox'),findTag('priceblock_saleprice')];
-  const current=priceSources.map(money).find(v=>v!=null)??null;
-  const ldPrice=money(ldOffers.price||ldOffers.lowPrice);
-  const list=[findTag('priceblock_listprice'),findTag('listPrice'),findTag('basisPrice')].map(money).find(v=>v!=null)??null;
-  const ldListPrice=money(ldOffers.highPrice);
-  const fallbackPriceMatch=plain.match(/(?:US\$|\$|£|€|NGN|₦)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i);
-  const resolvedCurrent=current??ldPrice??(fallbackPriceMatch?Number(fallbackPriceMatch[1].replace(/,/g,'')):null);
-  const resolvedList=list??ldListPrice??null;
-  const discountMatch=plain.match(/(?:([0-9]{1,3})%\s*(?:off|savings)|save\s+([0-9]{1,3})%)/i);
-  const discount=discountMatch?Number(discountMatch[1]||discountMatch[2]):(resolvedCurrent&&resolvedList?Math.round((1-resolvedCurrent/resolvedList)*100):null);
-  const rating=Number(ldAggregate.ratingValue)||Number((plain.match(/([0-5](?:\.[0-9])?)\s+out of 5 stars/i)||[])[1])||null;
-  const reviewCount=Number(ldAggregate.reviewCount)||Number(((plain.match(/([0-9][0-9,]*)\s+(?:ratings|reviews?)/i)||[])[1]||'').replace(/,/g,''))||null;
-  const currency=String(ldOffers.priceCurrency||findMeta('product:price:currency')||'').toUpperCase()||null;
-  const bought=(plain.match(/([0-9][0-9Kk+.]*)\s+bought in past month/i)||[])[1]||null;
-  const shippingText=(plain.match(/Shipping & Import Charges[^.]{0,220}/i)||[])[0]||null;
-  const taxText=(plain.match(/Sales taxes may apply[^.]{0,180}/i)||[])[0]||null;
-  const deliveryText=(plain.match(/(?:Delivery|Arrives)\s+(?:Friday|Saturday|Sunday|Monday|Tuesday|Wednesday|Thursday|Tomorrow|Today|Oct|Nov|Dec|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep)[^\n]{0,100}/i)||[])[0]||null;
-  const returnText=(plain.match(/(?:30-day|90-day|30 day|90 day)[^.]{0,90}(?:refund|replacement|return)/i)||[])[0]||null;
-  const seller=(plain.match(/Sold by\s+([A-Za-z0-9&.' -]{2,80})/i)||[])[1]?.trim()||null;
-  const shipsFrom=(plain.match(/Ships from\s+([A-Za-z0-9&.' -]{2,80})/i)||[])[1]?.trim()||null;
-  const department=(plain.match(/Department\s*[:\-]\s*([A-Za-z &]{2,80})/i)||[])[1]?.trim()||null;
-  const rank=(plain.match(/Best Sellers Rank\s*[:\-]?\s*([^\n]{0,180})/i)||[])[1]?.trim()||null;
-  const categoryPath=clean((plain.match(/Clothing, Shoes & Jewelry›[^\n]{0,180}/i)||[])[0]||'',300);
-  const specRe=/(Fabric type|Care instructions|Origin|Department|Date First Available|ASIN|Best Sellers Rank|Material|Closure Type|Fit Type|Length|Style|Color|Size)\s*[:：]?\s*([^\n]+?)(?=\s+(?:Fabric type|Care instructions|Origin|Department|Date First Available|ASIN|Best Sellers Rank|Material|Closure Type|Fit Type|Length|Style|Color|Size)\s*[:：]?\s*|$)/gi;
-  const specifications=[]; let specMatch;
-  while((specMatch=specRe.exec(plain))&&specifications.length<20){
-    const key=clean(specMatch[1],80),value=clean(specMatch[2],240);
-    if(key&&value&&!specifications.some(x=>x[0].toLowerCase()===key.toLowerCase()))specifications.push([key,value]);
-  }
-
-  const colors=[];
-  const colorBlock=html.match(/id=[\x22\x27](?:variation_color_name|variation_style_name)[\x22\x27][^>]*>([\s\S]*?)(?:<\/div>|<\/select>)/i)?.[1]||'';
-  for(const m of colorBlock.matchAll(/(?:name|title)=[\x22\x27]([^\x22\x27]{1,80})[\x22\x27]/gi)){const v=clean(amazonDecode(m[1]),80);if(v&&!colors.includes(v))colors.push(v);}
-  const sizes=[];
-  const sizeBlock=html.match(/id=[\x22\x27]variation_size_name[\x22\x27][\s\S]*?(?:<\/div>|<\/select>)/i)?.[0]||'';
-  for(const m of sizeBlock.matchAll(/(?:data-csa-c-item-id|title)=[\x22\x27]([^\x22\x27]{1,40})[\x22\x27]/gi)){const v=clean(amazonDecode(m[1]),40);if(v&&!sizes.includes(v)&&!/size/i.test(v))sizes.push(v);}
-
-  const featureBlock=html.match(/id=[\x22\x27]feature-bullets[\x22\x27][\s\S]*?<\/ul>/i)?.[0]||'';
-  const featureTexts=[...featureBlock.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)].map(m=>clean(amazonDecode(m[1]),800)).filter(Boolean);
-  const detailBlock=html.match(/id=[\x22\x27]detailBullets_feature_div[\x22\x27][\s\S]*?(?:<\/ul>|<\/div>\\s*<\/div>)/i)?.[0]||'';
-  const detailTexts=[...detailBlock.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)].map(m=>clean(amazonDecode(m[1]),500)).filter(Boolean);
-  const productDescriptionBlock=html.match(/id=[\x22\x27]productDescription[\x22\x27][\s\S]*?<\/div>/i)?.[0]||'';
-  const productDescription=clean(amazonDecode(productDescriptionBlock.replace(/<[^>]+>/g,' ')),7000);
-  const ldDescription=clean(productLd.description||'',7000);
-
-  const descriptionParts=[];
-  const nl=String.fromCharCode(10);
-  if(featureTexts.length)descriptionParts.push('About this item'+nl+featureTexts.join(nl));
-  if(productDescription)descriptionParts.push('Product description'+nl+productDescription);
-  else if(ldDescription)descriptionParts.push('Product description'+nl+ldDescription);
-  if(detailTexts.length)descriptionParts.push('Product details'+nl+detailTexts.join(nl));
-  if(categoryPath)descriptionParts.push('Category'+nl+categoryPath);
-  if(department)descriptionParts.push('Department\\n'+department);
-  if(colors.length)descriptionParts.push('Available colors\\n'+colors.join(', '));
-  if(sizes.length)descriptionParts.push('Available sizes\\n'+sizes.join(', '));
-  if(seller)descriptionParts.push('Sold by\\n'+seller);
-  if(shipsFrom)descriptionParts.push('Ships from\\n'+shipsFrom);
-  if(shippingText)descriptionParts.push('Shipping & import\\n'+shippingText);
-  if(taxText)descriptionParts.push('Taxes\\n'+taxText);
-  if(deliveryText)descriptionParts.push('Delivery\\n'+deliveryText);
-  if(returnText)descriptionParts.push('Returns\\n'+returnText);
-  if(rank)descriptionParts.push('Best Sellers Rank'+nl+rank);
-  if(specifications.length)descriptionParts.push('Specifications'+nl+specifications.map(x=>x[0]+': '+x[1]).join(nl));
-
-  const images=[];
-  const addImage=(value)=>{
-    if(!value)return;
-    let u=String(value).replace(/\\u0026/g,'&').replace(/\\\//g,'/');
-    try{u=JSON.parse('"'+u.replace(/"/g,'\\\"')+'"')}catch(e){}
-    if((u.startsWith('http://')||u.startsWith('https://'))&&!images.includes(u)&&images.length<30)images.push(u);
-  };
-  const addImageList=(value)=>{
-    if(!value)return;
-    try{
-      const parsed=JSON.parse(String(value));
-      if(parsed&&typeof parsed==='object')Object.values(parsed).forEach(addImage);
-    }catch(e){for(const m of String(value).matchAll(/https?:\/\/[^"\\]+/gi))addImage(m[0]);}
-  };
-  addImage(findMeta('og:image')); addImage(findMeta('twitter:image'));
-  const ldImages=Array.isArray(productLd.image)?productLd.image:(productLd.image?[productLd.image]:[]);
-  for(const u of ldImages)addImage(u);
-  for(const m of html.matchAll(/(?:data-old-hi-res|data-a-dynamic-image|data-image-url|data-src)=[\x22\x27]([^\x22\x27]+)[\x22\x27]/gi))addImageList(m[1]);
-  for(const m of html.matchAll(/(https?:\/\/[^"\s]+?\.(?:jpg|jpeg|png|webp)(?:\?[^"\s]*)?)/gi))addImage(m[1]);
-  if(!images.length)images.push(amazonImageFallback(title,brand,asin));
-
-  const badges=[];
-  const bestSeller=(plain.match(/#\s*[0-9]+\s+Best Seller[^\n]*/i)||[])[0]||'';
-  if(bestSeller)badges.push(clean(bestSeller,120));
-  if(/Amazon's Choice/i.test(plain))badges.push("Amazon's Choice");
-  const deal=(plain.match(/limited time deal/i)||[])[0]||null;
-
-  return {
-    asin,title,brand,current_price:resolvedCurrent,list_price:resolvedList,discount_percent:discount,
-    currency,deal_text:deal?clean(deal,80):null,rating,review_count:reviewCount,bought_past_month:bought,
-    badges,shipping_text:shippingText?clean(shippingText,300):null,tax_text:taxText?clean(taxText,240):null,
-    features:featureTexts,description:clean(descriptionParts.join('\\n\\n'),12000),
-    variations:buildProductOptions(plain).filter(g=>['Size','Color'].includes(g.name)||g.values.length>1),
-    colors:colors.slice(0,40),sizes:sizes.slice(0,30),
-    delivery_text:deliveryText?clean(deliveryText,220):null,seller:seller?clean(seller,100):null,
-    ships_from:shipsFrom?clean(shipsFrom,100):null,department:department?clean(department,100):null,
-    rank:rank?clean(rank,240):null,category_path:categoryPath,images
-  };
-}
-function amazonImageFallback(title,brand,asin){
-  const safe=(v,max=70)=>String(v||'').replace(/[&<>"]/g,'').replace(/\\s+/g,' ').trim().slice(0,max);
-  const t=safe(title,58)||'Nuvora Product';
-  const b=safe(brand,34)||'Amazon find';
-  const a=safe(asin,24);
-  const svg='<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b1628"/><stop offset="1" stop-color="#142b45"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="18" stdDeviation="28" flood-opacity=".35"/></filter></defs><rect width="1200" height="1200" fill="url(#g)"/><circle cx="1030" cy="140" r="220" fill="#6fd9ff" opacity=".08"/><circle cx="140" cy="1080" r="260" fill="#9b7cff" opacity=".08"/><rect x="100" y="105" width="1000" height="990" rx="48" fill="#07111f" stroke="#ffffff" stroke-opacity=".12"/><g filter="url(#s)"><rect x="245" y="250" width="710" height="490" rx="34" fill="#102238" stroke="#6fd9ff" stroke-opacity=".18"/><path d="M390 650h420" stroke="#6fd9ff" stroke-opacity=".22" stroke-width="3"/><circle cx="600" cy="430" r="88" fill="#6fd9ff" opacity=".08"/><path d="M540 430h120M600 370v120" stroke="#9ce7ff" stroke-width="5" stroke-linecap="round" opacity=".75"/></g><text x="600" y="820" fill="#eef7ff" font-family="Arial,Helvetica,sans-serif" font-size="48" font-weight="700" text-anchor="middle">'+t.replace(/'/g,'&#39;')+'</text><text x="600" y="875" fill="#9fb0c5" font-family="Arial,Helvetica,sans-serif" font-size="27" text-anchor="middle">'+b.replace(/'/g,'&#39;')+'</text><text x="600" y="1010" fill="#6fd9ff" font-family="Arial,Helvetica,sans-serif" font-size="24" font-weight="700" letter-spacing="5" text-anchor="middle">NUVORA • PRODUCT PREVIEW</text><text x="600" y="1055" fill="#6f8299" font-family="Arial,Helvetica,sans-serif" font-size="18" text-anchor="middle">'+a.replace(/'/g,'&#39;')+'</text></svg>';
-  return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
-}
-function amazonDecode(value){return String(value||'').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;|&apos;/gi,"'").replace(/&nbsp;/gi,' ').replace(/\s+/g,' ').trim();}
-function amazonMoney(value){const m=String(value||'').match(/(?:US\$|\$|£|€|NGN\s*)\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/i);return m?Number(m[1].replace(/,/g,'')):null;}
-function cleanAmazonFeatures(raw){return amazonDecode(raw).replace(/\bAbout this item\b/i,'').replace(/\s*•\s*/g,'\n').replace(/\s{2,}/g,' ').trim().slice(0,8000);}
-function configured(env){const shopifyAdmin=!!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN)&&!!env.SHOPIFY_CLIENT_ID&&!!env.SHOPIFY_CLIENT_SECRET;return {supabase:!!env.SUPABASE_URL&&!!env.SUPABASE_ANON_KEY&&!!env.SUPABASE_SERVICE_ROLE_KEY,shopify:shopifyAdmin,shopifyStorefront:shopifyAdmin,shopifyAdmin,openaiOptional:!!env.OPENAI_API_KEY,workersAI:!!env.AI,amazon:!!env.AMAZON_CLIENT_ID&&!!env.AMAZON_CLIENT_SECRET&&!!env.AMAZON_PARTNER_TAG};}
-async function shopifyGraphql(env,query,variables={},admin=false){
-  const domain=env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN;
-  let token;
-  if(admin)token=await getShopifyAdminToken(env);
-  else token=env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
-  if(!domain)throw new Error('Shopify is not configured');
-  const version=env.SHOPIFY_API_VERSION||'2026-07';
-  const base=admin?`https://${domain}/admin/api/${version}/graphql.json`:`https://${domain}/api/${version}/graphql.json`;
-  const r=await fetch(base,{method:'POST',headers:{'content-type':'application/json',...(admin?{'X-Shopify-Access-Token':token}:{'X-Shopify-Storefront-Access-Token':token})},body:JSON.stringify({query,variables})});
-  const j=await r.json().catch(()=>({}));
-  if(!r.ok||j.errors)throw new Error(j.errors?.[0]?.message||`Shopify API returned ${r.status}`);
-  return j.data;
-}
-function normalizeAmazonProduct(p){
-  const clean=String(v=>{});
-  const nav=/\b(?:search|keyboard shortcuts|ask shift|home|orders|account|sign in|prime video|amazon fashion|customer service|gift cards|today's deals|best sellers|new releases|sponsored|back to top|deliver(?:ing|y) to|update location|all departments|shop by|buying options|add to basket|add to cart|payment security|legal warranty|report an issue|see all product specifications|loading content|open claw|common_arrows)\b/gi;
-  const title=cleanText(p.name,180).replace(/\s+/g,' ').trim();
-  let brand=cleanText(p.brand,120).replace(/^brand\s*:\s*/i,'').trim();
-  if(!brand){
-    const m=title.match(/^([^:|]+?)(?=\s+(?:women'?s|men'?s|kids'?|girls'?|boys'?|unisex)\b)/i);
-    brand=(m?m[1]:title.split(/\s+/).slice(0,2).join('')).trim();
-  }
-  const stripRetailerNoise=(value)=>{
-    let s=cleanMultilineText(value,12000);
-    s=s.replace(nav,' ').replace(/\b(?:Amazon\.co\.uk|Amazon\.com|Amazon)\b/gi,' ').replace(/\s+/g,' ').trim();
-    const bad=/^(?:amazon product|product details|product information|sponsored|image unavailable|image not available)$/i;
-    return bad.test(s)?'':s;
-  };
-  let description=stripRetailerNoise(p.description);
-  let features=stripRetailerNoise(p.features);
-  const featureLines=features.split(/[\n•|]+/).map(x=>stripRetailerNoise(x)).filter(x=>x.length>=8&&x.length<=500&&!nav.test(x)).slice(0,10);
-  if(featureLines.length)features=featureLines.map(x=>'• '+x).join('\n');
-  if(!features && description){
-    const candidates=description.split(/[.!?]+/).map(x=>x.trim()).filter(x=>x.length>25&&x.length<350&&!nav.test(x)).slice(0,6);
-    features=candidates.map(x=>'• '+x).join('\n');
-  }
-  if(description.length>6000)description=description.slice(0,6000);
-  const rawImages=[p.image_url,...(Array.isArray(p.image_urls)?p.image_urls:[])];
-  const imageBad=/(?:sprite|nav-sprite|timeline_sprite|ad-feedback|transparent-1x1|pixel|tracking|logo|icon|amazon.*(?:nav|sprite))/i;
-  const images=[...new Set(rawImages.map(x=>String(x||'').trim()).filter(u=>/^https?:\/\//i.test(u)&&!imageBad.test(u)))].slice(0,30);
-  const price=Number(p.display_price);
-  return {
-    name:title||'Amazon product',
-    brand:brand||null,
-    description:description||null,
-    features:features||null,
-    image_url:images[0]||null,
-    image_urls:images,
-    display_price:Number.isFinite(price)&&price>0?price:null,
-    currency:cleanText(p.currency,12)||'USD',
-    rating:Number(p.amazon_rating??p.rating)||null,
-    review_count:Number(p.amazon_review_count??p.review_count)||null,
-    deal:cleanText(p.amazon_deal_text||p.deal_text,500)||null
-  };
-}
-function autoCategory(title,description,productType,categories){
-  const t=(String(title||'')+' '+String(description||'')+' '+String(productType||'')).toLowerCase();
-  const rules=[
-    ['fashion-men',['men','mens','male','jogger','sweatpants','trousers','pants','shirt','hoodie','jacket','jeans']],
-    ['fashion-women',['women','womens','female','dress','skirt','blouse','leggings']],
-    ['fashion-kids',['kids','children','child','boy','girl']],
-    ['fashion-shoes',['shoe','sneaker','boots','sandal','footwear']],
-    ['fashion-bags',['bag','backpack','handbag','purse','wallet']],
-    ['fashion-accessories',['watch','belt','hat','cap','scarf','sunglasses','necklace','bracelet']],
-    ['electronics-phone',['iphone','android','phone case','phone charger','power bank','screen protector']],
-    ['electronics-computer',['keyboard','mouse','laptop','computer','webcam','usb hub','monitor']],
-    ['electronics-audio',['headphone','earbud','speaker','microphone','soundbar']],
-    ['electronics-gaming',['gaming','gamepad','controller','console']],
-    ['home-kitchen',['kitchen','cookware','utensil','pan ','pot ','knife','cutlery']],
-    ['home-bedroom',['bedroom','pillow','bedsheet','blanket','mattress']],
-    ['home-bathroom',['bathroom','shower','towel','toilet']],
-    ['home-storage',['storage','organizer','shelf','shelving','container']],
-    ['home-decor',['home decor','decoration','vase','wall art','curtain','lamp']],
-    ['beauty-skincare',['skincare','skin care','serum','moisturizer','cleanser','sunscreen']],
-    ['beauty-hair',['shampoo','conditioner','wig','hair dryer','hair brush']],
-    ['beauty-makeup',['makeup','foundation','lipstick','mascara','eyeshadow','concealer']],
-    ['sports-gym',['gym','fitness','workout','running','yoga','dumbbell']],
-    ['sports-outdoor',['camping','hiking','outdoor','tent','fishing']],
-    ['automotive',['car accessory','car accessories','automotive','vehicle']],
-    ['pets',['pet','dog','cat','leash','collar']],
-    ['gifts',['gift','birthday','present']]
-  ];
-  for(const [slug,words] of rules) if(words.some(w=>t.includes(w))){
-    const c=(categories||[]).find(x=>x.slug===slug);
-    if(c)return c.id;
-  }
-  return (categories||[]).find(x=>x.slug==='gifts-lifestyle')?.id||null;
-}
-function randHex(bytes){const a=new Uint8Array(bytes);crypto.getRandomValues(a);return Array.from(a,x=>x.toString(16).padStart(2,'0')).join('')}
-
