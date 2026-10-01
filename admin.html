@@ -187,7 +187,7 @@ textarea{line-height:1.55}
 </style><style id="nuvora-no-popups">
 body.admin-workspace-open{overflow:auto}
 body.admin-workspace-open>.app,body.admin-workspace-open>footer{display:none!important}
-body.admin-workspace-open .modal-backdrop{position:static!important;inset:auto!important;display:block!important;min-height:100vh!important;padding:0!important;background:var(--bg)!important;backdrop-filter:none!important;z-index:auto!important}
+body.admin-workspace-open .modal-backdrop{position:static!important;inset:auto!important;display:none!important;min-height:100vh!important;padding:0!important;background:var(--bg)!important;backdrop-filter:none!important;z-index:auto!important} body.admin-workspace-open .modal-backdrop.open{display:block!important}
 body.admin-workspace-open .modal-backdrop .modal{width:100%!important;max-width:none!important;min-height:100vh!important;max-height:none!important;overflow:visible!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:var(--bg)!important}
 body.admin-workspace-open .modal-backdrop .modal-head{position:sticky!important;top:0!important;background:rgba(245,246,243,.96)!important;border-bottom:1px solid var(--line)!important;padding:22px max(22px,calc((100vw - 1180px)/2))!important}
 body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important;margin:0 auto!important;padding:28px 22px 70px!important;background:var(--bg)!important}
@@ -982,12 +982,12 @@ async function adminBoot(){
 }
 adminBoot();
 document.addEventListener('DOMContentLoaded',()=>{
-  ['productModal','aiStudioModal','shopifyModal'].forEach(id=>{
+  ['productModal','aiStudioModal','shopifyModal','sourcinBoxModal'].forEach(id=>{
     const root=document.getElementById(id); if(!root)return;
     const head=root.querySelector('.modal-head');
     if(head&&!head.querySelector('.workspace-back')){
       const b=document.createElement('button');b.className='btn workspace-back';b.textContent='← Back to admin';
-      b.onclick=()=>{if(id==='productModal')closeProductModal();else if(id==='aiStudioModal')closeAIStudio();else closeShopifyImport();};
+      b.onclick=()=>{if(id==='productModal')closeProductModal();else if(id==='aiStudioModal')closeAIStudio();else if(id==='shopifyModal')closeShopifyImport();else closeSourcinBoxImport();};
       head.querySelector('.eyebrow')?.parentElement?.prepend(b);
     }
   });
