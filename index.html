@@ -437,6 +437,10 @@ function cleanProductText(raw){
   box.innerHTML=source;
   box.querySelectorAll('img,script,style').forEach(x=>x.remove());
   let text=box.textContent.replace(/\r/g,'').replace(/[ \t]+/g,' ').replace(/\n[ \t]+/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+  text=text
+    .replace(/\b(?:search|keyboard shortcuts|ask shift|home|orders|account|sign in|prime video|amazon fashion|customer service|gift cards|today'?s deals|best sellers|new releases|sponsored|back to top|deliver(?:ing|y) to|update location|all departments|shop by|buying options|add to basket|add to cart|payment security|legal warranty|report an issue|see all product specifications|loading content)\b/gi,' ')
+    .replace(/\bAmazon(?:\.co\.uk|\.com)?\b/gi,' ')
+    .replace(/\s+/g,' ').trim();
   if(/^[\s✦★☆•*'",;:._-]*(?:ema(?:il)?)?[\s✦★☆•*'",;:._-]*$/i.test(text))return '';
   return text;
 }
