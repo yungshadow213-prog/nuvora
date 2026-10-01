@@ -150,8 +150,42 @@ textarea{line-height:1.55}
 @media(max-width:1050px){.main{padding-left:22px!important;padding-right:22px!important}.top{margin-left:-22px!important;margin-right:-22px!important;padding-left:22px!important;padding-right:22px!important}.dashboard-hero{align-items:flex-start;flex-direction:column}.hero-actions{justify-content:flex-start}.admin-grid-wide{grid-template-columns:1fr}.structure-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:850px){.side{display:block!important;position:fixed!important;left:0!important;right:0!important;top:auto!important;bottom:0!important;height:auto!important;padding:7px 9px calc(7px + env(safe-area-inset-bottom))!important;border-right:0!important;border-top:1px solid var(--line)!important;background:rgba(251,252,250,.96)!important;backdrop-filter:blur(18px)!important}.app{display:block!important}.main{padding:16px 12px calc(92px + env(safe-area-inset-bottom))!important}.top{margin:-16px -12px 22px!important;padding:13px 12px!important;position:sticky!important}.top-actions{width:100%;justify-content:stretch}.live-pill{display:none}.top-btn{flex:1}.side .brand,.side .private{display:none!important}.nav{display:flex!important;gap:4px!important;overflow-x:auto!important;scrollbar-width:none}.nav button{flex:1 0 74px!important;min-width:72px!important;justify-content:center!important;flex-direction:column!important;gap:4px!important;padding:7px 6px!important;font-size:9px!important}.nav button::before{width:24px;height:24px!important;font-size:11px!important}.dashboard-hero h2,.catalog-head h2{font-size:28px}.stats{grid-template-columns:1fr 1fr!important}.stat{min-height:130px;padding:16px!important}.stat b{font-size:30px!important}.structure-grid{grid-template-columns:1fr 1fr}.catalog-head{align-items:flex-start;flex-direction:column}.catalog-actions{justify-content:flex-start}.catalog-toolbar{align-items:stretch;flex-direction:column}.catalog-search{max-width:none}.catalog-filter-note{white-space:normal}.product-library{padding:8px}.bulk-drop{margin:14px 14px 0;align-items:flex-start;flex-direction:column}.bulk-drop input{max-width:none;width:100%}.bulk-actions{padding:0 14px 14px}.modal-backdrop{padding:8px!important}.modal{width:100%!important;max-height:calc(100vh - 16px)!important;border-radius:20px!important}.quick-grid{grid-template-columns:1fr}}
 @media(max-width:480px){.stats{gap:8px!important}.stat{padding:13px!important;border-radius:15px!important}.stat b{font-size:26px!important;margin-top:14px!important}.stat-mark{display:none}.structure-grid{grid-template-columns:1fr}.top h1{font-size:26px!important}.catalog-actions{width:100%}.catalog-actions .btn{flex:1}.formgrid{grid-template-columns:1fr!important}.field.full{grid-column:auto!important}}
+</style><style id="nuvora-smart-import-final">
+.import-page-head{display:flex;justify-content:space-between;gap:24px;align-items:flex-end;padding:6px 2px 26px}
+.import-page-head h2{font-size:36px;letter-spacing:-1.7px;margin:7px 0 9px}
+.import-page-head p{max-width:760px;margin:0;color:var(--muted);font-size:13px;line-height:1.65}
+.import-page-actions{display:flex;gap:8px;flex-wrap:wrap}
+.import-source-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;max-width:720px}
+.source-card{display:flex;align-items:center;gap:11px;padding:13px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--text);text-align:left;cursor:pointer}
+.source-card:hover{border-color:#c9d5cb;box-shadow:var(--shadow)}
+.source-card.active{border-color:#c4dcc9;background:var(--accent-soft)}
+.source-card .source-logo{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#eef2ed;color:var(--accent);font-weight:900}
+.source-card .source-logo.temu{background:#f5f0e8;color:#7b5a20}
+.source-card span:nth-child(2){display:grid;gap:3px}.source-card b{font-size:12px}.source-card small{font-size:10px;color:#8b948d}
+.source-card em{margin-left:auto;font-style:normal;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#8b948d}
+.source-card.active em{color:var(--accent);font-weight:800}
+.smart-import-shell{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:12px}
+.smart-import-main,.smart-import-side,.smart-progress,.smart-import-footer{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.smart-import-main{padding:22px}
+.smart-import-toolbar{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}
+.smart-import-toolbar h3{margin:4px 0;font-size:18px;letter-spacing:-.5px}.smart-import-toolbar p{margin:0;color:var(--muted);font-size:11px}
+.source-badge{padding:7px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:9px;font-weight:850;text-transform:uppercase;letter-spacing:.1em}
+.smart-url-box{display:block;min-height:230px;margin-top:18px;padding:16px!important;background:#fafbf9!important;border:1px solid #dce4dc!important;border-radius:14px!important;font-size:13px!important;line-height:1.65!important}
+.smart-url-box::placeholder{color:#a2aaa4}
+.smart-import-bottom{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.smart-hint{display:inline-flex;align-items:center;gap:5px;padding:7px 9px;background:#f6f8f5;border:1px solid #e6ebe5;border-radius:9px;color:#778279;font-size:9px}
+.smart-hint span{color:#4e9564;font-weight:900}.smart-run{margin-left:auto}
+.smart-import-side{padding:20px}.import-step{display:flex;gap:11px;padding:14px 0;border-bottom:1px solid var(--line)}.import-step>b{font-size:9px;color:#a1aaa3;letter-spacing:.1em}.import-step span{display:grid;gap:3px}.import-step strong{font-size:11px}.import-step small{font-size:10px;color:#8b948d;line-height:1.45}
+.import-truth{margin-top:14px;padding:12px;border-radius:12px;background:#f4f8f4;border:1px solid #dfe9e0;display:grid;gap:5px}.import-truth b{font-size:10px;color:var(--accent)}.import-truth span{font-size:10px;color:#718077;line-height:1.5}
+.smart-progress{margin-top:12px;padding:20px}.smart-progress-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-end}.smart-progress-head h3{margin:4px 0 0;font-size:17px}.smart-progress-head>span{font-size:10px;color:var(--muted)}
+.smart-progress-track{height:8px;background:#edf1ed;border-radius:99px;overflow:hidden;margin:14px 0}.smart-progress-track span{display:block;width:0;height:100%;background:var(--accent);border-radius:99px;transition:width .25s}
+.smart-results{display:grid;gap:6px}.smart-result{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid var(--line);border-radius:11px;background:#fafbf9}.smart-result .result-dot{width:8px;height:8px;border-radius:50%;background:#5da56f;flex:0 0 auto}.smart-result.failed .result-dot{background:#c15a5a}.smart-result.skipped .result-dot{background:#b18a43}.smart-result span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px}.smart-result small{margin-left:auto;color:#8a938c;white-space:nowrap}
+.smart-import-footer{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:16px 18px;margin-top:12px}.smart-import-footer div{display:grid;gap:3px}.smart-import-footer b{font-size:11px}.smart-import-footer span{font-size:10px;color:var(--muted)}
+@media(max-width:950px){.smart-import-shell{grid-template-columns:1fr}.smart-import-side{display:none}}
+@media(max-width:700px){.import-page-head{align-items:flex-start;flex-direction:column}.import-page-head h2{font-size:29px}.import-source-grid{grid-template-columns:1fr}.smart-import-main{padding:15px}.smart-url-box{min-height:190px}.smart-run{width:100%;margin-left:0}.smart-import-footer{align-items:flex-start;flex-direction:column}.smart-import-footer .btn{width:100%}}
 </style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
+<button data-icon="↥" onclick="show('import',this)">Import</button>
 <button data-icon="▣" onclick="show('products',this)">Products</button>
 <button data-icon="☷" onclick="show('categories',this)">Categories</button>
 <button data-icon="◫" onclick="show('collections',this)">Collections</button>
@@ -179,9 +213,9 @@ textarea{line-height:1.55}
       <p>Your private workspace for importing products, cleaning listings, organizing the catalog and publishing what customers see.</p>
     </div>
     <div class="hero-actions">
-      <button class="btn primary" onclick="openProductModal(true)">Import Amazon</button>
+      <button class="btn primary" onclick="showImportPage('amazon')">Import Amazon</button>
       <button class="btn" onclick="openSourcinBoxImport()">Import SourcinBox</button>
-      <button class="btn" onclick="openTemuImport()">Import Temu</button>
+      <button class="btn" onclick="showImportPage('temu')">Import Temu</button>
       <button class="btn" onclick="openProductModal(false)">Add product</button>
     </div>
   </div>
@@ -199,11 +233,11 @@ textarea{line-height:1.55}
         <div><span class="section-kicker">Quick actions</span><h2>Build the catalog</h2><p class="muted">The fast lane for getting retailer products into Nuvora.</p></div>
       </div>
       <div class="quick-grid">
-        <button class="quick-card" onclick="openProductModal(true)"><span class="quick-icon">A</span><span><b>Amazon import</b><small>Paste a product link and pull listing data.</small></span><em>→</em></button>
+        <button class="quick-card" onclick="showImportPage('amazon')"><span class="quick-icon">A</span><span><b>Amazon import</b><small>Paste a product link and pull listing data.</small></span><em>→</em></button>
         <button class="quick-card" onclick="openSourcinBoxImport()"><span class="quick-icon">S</span><span><b>SourcinBox import</b><small>Bring supplier products into Nuvora as drafts.</small></span><em>→</em></button>
-        <button class="quick-card" onclick="openTemuImport()"><span class="quick-icon">T</span><span><b>Temu import</b><small>Capture prices, images, specs and highlights.</small></span><em>→</em></button>
+        <button class="quick-card" onclick="showImportPage('temu')"><span class="quick-icon">T</span><span><b>Temu import</b><small>Capture prices, images, specs and highlights.</small></span><em>→</em></button>
         <button class="quick-card" onclick="openProductModal(false)"><span class="quick-icon">+</span><span><b>Manual product</b><small>Create a listing from scratch.</small></span><em>→</em></button>
-        <button class="quick-card" onclick="show('products',document.querySelector('.nav button:nth-child(2)'))"><span class="quick-icon">↗</span><span><b>Review drafts</b><small>Clean up imported products before publishing.</small></span><em>→</em></button>
+        <button class="quick-card" onclick="show('products',document.querySelector('.nav button:nth-child(3)'))"><span class="quick-icon">↗</span><span><b>Review drafts</b><small>Clean up imported products before publishing.</small></span><em>→</em></button>
       </div>
     </div>
 
@@ -228,6 +262,64 @@ textarea{line-height:1.55}
     </div>
   </div>
 </section>
+<section id="import" class="view">
+  <div class="import-page-head">
+    <div>
+      <span class="eyebrow">Catalog intake</span>
+      <h2>Smart Import</h2>
+      <p>Paste Amazon or Temu product links. Nuvora will identify the retailer, read the listing, clean the title, capture truthful product data, assign a category, skip duplicates and save everything as private drafts.</p>
+    </div>
+    <div class="import-page-actions">
+      <button class="btn" onclick="openProductModal(false)">Add manually</button>
+      <button class="btn" onclick="openSourcinBoxImport()">SourcinBox reference</button>
+    </div>
+  </div>
+
+  <div class="import-source-grid">
+    <button id="smartSourceAmazon" class="source-card active" onclick="setSmartSource('amazon')">
+      <span class="source-logo">A</span><span><b>Amazon</b><small>Affiliate/product links</small></span><em>Selected</em>
+    </button>
+    <button id="smartSourceTemu" class="source-card" onclick="setSmartSource('temu')">
+      <span class="source-logo temu">T</span><span><b>Temu</b><small>Product/affiliate links</small></span><em>Use Temu</em>
+    </button>
+  </div>
+
+  <div class="smart-import-shell">
+    <div class="smart-import-main">
+      <div class="smart-import-toolbar">
+        <div><span class="section-kicker">Paste links</span><h3>One link or a whole batch</h3><p>One URL per line · up to 30 links per run · duplicates are skipped.</p></div>
+        <span id="smartImportMode" class="source-badge">Amazon</span>
+      </div>
+      <textarea id="smartImportUrls" class="smart-url-box" placeholder="https://www.amazon.com/dp/B0XXXXXXXXXX&#10;https://www.amazon.com/dp/B0YYYYYYYYYY"></textarea>
+      <div class="smart-import-bottom">
+        <div class="smart-hint"><span>✓</span> Titles cleaned</div>
+        <div class="smart-hint"><span>✓</span> Images captured</div>
+        <div class="smart-hint"><span>✓</span> Price & rating captured when exposed</div>
+        <div class="smart-hint"><span>✓</span> Category suggested</div>
+        <button id="smartImportButton" class="btn primary smart-run" onclick="runSmartImport()">Import as drafts</button>
+      </div>
+    </div>
+    <aside class="smart-import-side">
+      <span class="section-kicker">What happens</span>
+      <div class="import-step"><b>01</b><span><strong>Read</strong><small>Nuvora fetches the retailer page.</small></span></div>
+      <div class="import-step"><b>02</b><span><strong>Clean</strong><small>Navigation noise and promotional clutter are removed.</small></span></div>
+      <div class="import-step"><b>03</b><span><strong>Organize</strong><small>Category, retailer and product fields are normalized.</small></span></div>
+      <div class="import-step"><b>04</b><span><strong>Save</strong><small>Every successful item becomes a private draft.</small></span></div>
+      <div class="import-truth"><b>Truth-first import</b><span>Nuvora does not invent a price, shipping promise, rating or specification when the source page does not expose it.</span></div>
+    </aside>
+  </div>
+
+  <div id="smartImportProgress" class="smart-progress" style="display:none">
+    <div class="smart-progress-head"><div><span class="section-kicker">Import run</span><h3 id="smartProgressTitle">Preparing…</h3></div><span id="smartProgressCount">0 / 0</span></div>
+    <div class="smart-progress-track"><span id="smartProgressBar"></span></div>
+    <div id="smartImportResults" class="smart-results"></div>
+  </div>
+
+  <div class="smart-import-footer">
+    <div><b>Need to fix one listing?</b><span>Open it from Products and edit only the fields that need attention.</span></div>
+    <button class="btn" onclick="show('products',document.querySelectorAll('.nav button')[2])">Open product library →</button>
+  </div>
+</section>
 <section id="products" class="view">
   <div class="catalog-head">
     <div>
@@ -237,8 +329,8 @@ textarea{line-height:1.55}
     </div>
     <div class="catalog-actions">
       <button class="btn retailer-btn" disabled>Shopify · Coming soon</button>
-      <button class="btn" onclick="openProductModal(true)">Amazon</button>
-      <button class="btn" onclick="openTemuImport()">Temu</button>
+      <button class="btn" onclick="showImportPage('amazon')">Amazon</button>
+      <button class="btn" onclick="showImportPage('temu')">Temu</button><button class="btn primary" onclick="showImportPage('amazon')">Smart Import</button>
       <button class="btn primary" onclick="openProductModal(false)">+ Add product</button>
     </div>
   </div>
@@ -333,7 +425,7 @@ textarea{line-height:1.55}
         <input id="amazonUrlInput" placeholder="Paste your Amazon affiliate/product link">
         <button class="btn primary" onclick="useAmazonLink()">Use Amazon link</button>
       </div>
-      <div class="notice" style="margin-top:10px">Quick Amazon setup: paste your affiliate link, then add the product title, image, description and any other details you want. Nuvora sends customers to that Amazon link when they click Buy on Amazon. No Amazon API is required.</div>
+      <div class="notice" style="margin-top:10px">Quick Amazon fallback: paste a link and Nuvora will try to capture the title, images, price, rating, reviews, shipping and other exposed details automatically. You can still edit anything that needs correction. No Amazon API is required.</div>
       <div class="formgrid">
         <div class="field full"><label>Product title</label><input id="pfName" placeholder="Product title"></div>
         <div class="field"><label>Type</label><select id="pfKind"><option value="shop">Shop</option><option value="find">Find</option><option value="learn">Learn</option></select></div>
@@ -370,7 +462,7 @@ textarea{line-height:1.55}
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
-const meta={overview:['Overview','Control the store without exposing the admin to customers.'],products:['Products','Manage Shop, Finds, and Learn listings.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['Settings','Connections and store configuration.']};
+const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],products:['Products','Manage Shop, Finds, and Learn listings.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['Settings','Connections and store configuration.']};
 let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[],collections=[],socialPosts=[];
 function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=meta[id][0];document.getElementById('sub').textContent=meta[id][1];if(id==='settings')loadSettings();if(id==='categories')loadCategories();if(id==='collections')loadCollections();if(id==='social')loadSocial();if(id==='analytics')loadAnalytics();}
 function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
@@ -432,14 +524,16 @@ function openSourcinBoxImport(){document.getElementById('sourcinBoxModal').class
 function closeSourcinBoxImport(){document.getElementById('sourcinBoxModal').classList.remove('open');}
 function startSourcinBoxDraft(){closeSourcinBoxImport();resetProductForm();document.getElementById('productModalTitle').textContent='Import SourcinBox product';document.getElementById('productModalSub').textContent='Paste the SourcinBox Marketplace product URL and add the supplier listing details.';document.getElementById('importStatus').textContent='SourcinBox products are supplier/fulfillment listings. Nuvora will keep the supplier reference so automated fulfillment can be added later.';document.getElementById('amazonUrlInput').placeholder='Optional Amazon/Temu link field';document.getElementById('pfSource').value='sourcinbox';document.getElementById('pfKind').value='shop';document.getElementById('pfRetailer').value='SourcinBox';document.getElementById('pfSourcinboxUrl').focus();document.getElementById('productModal').classList.add('open');}
 function resetProductForm(){
+  window.temuImportMode=false;
   ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfFeatures','pfVariations','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.getElementById('pfKind').value='shop'; document.getElementById('pfSource').value='manual'; document.getElementById('pfCurrency').value='NGN'; document.getElementById('pfRetailer').value='Amazon';
   document.getElementById('pfImageStrip').innerHTML='';
   document.getElementById('importStatus').textContent='You can enter a product manually or fetch an Amazon product below. Imported data stays editable and nothing becomes public until you publish it.';
   window.editingProductId=null;
 }
-function openTemuImport(){ resetProductForm(); document.getElementById('productModalTitle').textContent='Import Temu product'; document.getElementById('productModalSub').textContent='Paste your Temu product or affiliate link, review the details, then save it as a draft.'; document.getElementById('productModal').classList.add('open'); document.getElementById('amazonUrlInput').placeholder='Paste your Temu product or affiliate link'; document.getElementById('pfSource').value='temu'; document.getElementById('pfRetailer').value='Temu'; document.getElementById('amazonUrlInput').focus(); window.temuImportMode=true; }
+function showImportPage('temu'){ resetProductForm(); document.getElementById('productModalTitle').textContent='Import Temu product'; document.getElementById('productModalSub').textContent='Paste your Temu product or affiliate link, review the details, then save it as a draft.'; document.getElementById('productModal').classList.add('open'); document.getElementById('amazonUrlInput').placeholder='Paste your Temu product or affiliate link'; document.getElementById('pfSource').value='temu'; document.getElementById('pfRetailer').value='Temu'; document.getElementById('amazonUrlInput').focus(); window.temuImportMode=true; }
 function openProductModal(importMode=false){
+  window.temuImportMode=false;
   resetProductForm();
   document.getElementById('productModalTitle').textContent=importMode?'Import Amazon product':'Add product';
   document.getElementById('productModalSub').textContent=importMode?'Paste your affiliate link, add the essentials, then save it as a draft.':'Create a product manually and save it as a draft.';
@@ -536,6 +630,57 @@ async function generateAIProductCopy(){
   }catch(e){status.textContent='Copy generation failed.';alert(e.message)}finally{btn.disabled=false;btn.textContent='Polish product listing';}
 }
 
+function showImportPage(source='amazon'){
+  const btn=document.querySelector('.nav button[data-icon="↥"]');
+  show('import',btn);
+  setSmartSource(source);
+  document.getElementById('smartImportUrls')?.focus();
+}
+let smartImportSource='amazon';
+function setSmartSource(source){
+  smartImportSource=source==='temu'?'temu':'amazon';
+  document.getElementById('smartSourceAmazon')?.classList.toggle('active',smartImportSource==='amazon');
+  document.getElementById('smartSourceTemu')?.classList.toggle('active',smartImportSource==='temu');
+  const mode=document.getElementById('smartImportMode'); if(mode)mode.textContent=smartImportSource==='temu'?'Temu':'Amazon';
+  const box=document.getElementById('smartImportUrls'); if(box)box.placeholder=smartImportSource==='temu'?'https://www.temu.com/...\nhttps://www.temu.com/...':'https://www.amazon.com/dp/B0XXXXXXXXXX\nhttps://www.amazon.com/dp/B0YYYYYYYYYY';
+}
+async function runSmartImport(){
+  const box=document.getElementById('smartImportUrls'),btn=document.getElementById('smartImportButton'),progress=document.getElementById('smartImportProgress');
+  const urls=[...new Set((box?.value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];
+  if(!urls.length)return alert('Paste at least one product link.');
+  if(urls.length>30)return alert('Please import 30 links or fewer at a time.');
+  const valid=urls.filter(u=>{try{const h=new URL(u).hostname.toLowerCase();return smartImportSource==='amazon'?h.includes('amazon.'):h==='temu.com'||h.endsWith('.temu.com')||h==='temu.to'}catch(e){return false}});
+  if(valid.length!==urls.length)return alert('One or more links do not match the selected retailer. You can switch Amazon/Temu above.');
+  btn.disabled=true;btn.textContent='Importing…';progress.style.display='block';
+  document.getElementById('smartProgressTitle').textContent='Reading '+urls.length+' product'+(urls.length===1?'':'s')+'…';
+  document.getElementById('smartProgressCount').textContent='Working…';document.getElementById('smartProgressBar').style.width='8%';
+  const results=document.getElementById('smartImportResults');results.innerHTML='<div class="notice" style="margin:0">Nuvora is reading the retailer pages. Keep this page open until the run finishes.</div>';
+  try{
+    const j=await api('/api/admin/import/bulk',{method:'POST',body:{urls}});
+    const total=Number(j.total||urls.length),done=Number(j.imported||0)+Number(j.skipped||0)+Number(j.failed||0);
+    document.getElementById('smartProgressBar').style.width='100%';document.getElementById('smartProgressCount').textContent=done+' / '+total;
+    document.getElementById('smartProgressTitle').textContent=j.failed?'Import finished with some issues':'Import finished';
+    results.innerHTML=(j.results||[]).map(x=>{
+      const cls=x.status==='failed'?'failed':x.status==='skipped'?'skipped':'';
+      const label=x.status==='failed'?'Failed':x.status==='skipped'?'Skipped':'Imported';
+      const detail=x.status==='failed'?(x.error||'Could not read this page.'):x.name||x.source_url;
+      return '<div class="smart-result '+cls+'"><i class="result-dot"></i><span><b>'+esc(label)+'</b> · '+esc(detail)+'</span><small>'+esc(x.retailer||'')+'</small></div>';
+    }).join('')||'<div class="notice" style="margin:0">No results returned.</div>';
+    box.value='';
+    await liveAdminProducts();
+    const summary='Imported '+Number(j.imported||0)+' · Skipped '+Number(j.skipped||0)+' · Failed '+Number(j.failed||0);
+    showToastAdmin(summary);
+  }catch(e){
+    document.getElementById('smartProgressTitle').textContent='Import failed';
+    document.getElementById('smartProgressCount').textContent='—';
+    results.innerHTML='<div class="notice" style="margin:0">'+esc(e.message||'The import could not be completed.')+'</div>';
+  }finally{btn.disabled=false;btn.textContent='Import as drafts';}
+}
+function showToastAdmin(msg){
+  let t=document.getElementById('adminToast');
+  if(!t){t=document.createElement('div');t.id='adminToast';t.style='position:fixed;right:22px;bottom:22px;z-index:500;background:#183e29;color:#fff;padding:12px 15px;border-radius:12px;box-shadow:0 15px 40px rgba(20,40,25,.22);font-size:11px;font-weight:750';document.body.appendChild(t)}
+  t.textContent=msg;t.style.display='block';clearTimeout(window.adminToastTimer);window.adminToastTimer=setTimeout(()=>t.style.display='none',2600);
+}
 async function useTemuLink(){
   const input=document.getElementById('amazonUrlInput');
   const url=input.value.trim();
@@ -687,7 +832,7 @@ async function editProduct(id){
 }
 function openProductForm(){openProductModal(false)}
 async function createProduct(product){openProductModal(false);setProductForm(product)}
-async function amazonImport(){openProductModal(true)}
+async function amazonImport(){showImportPage('amazon')}
 async function togglePublish(id){try{const p=adminProducts.find(x=>x.id===id);await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body:{published:!p.published,updated_at:new Date().toISOString()}});await liveAdminProducts();}catch(e){alert(e.message)}}
 async function removeProduct(id){if(!confirm('Delete this product?'))return;try{await api('/api/admin/products/'+encodeURIComponent(id),{method:'DELETE'});await liveAdminProducts();}catch(e){alert(e.message)}}
 async function healthCheck(){try{const j=await fetch('/api/health').then(r=>r.json());document.getElementById('systemStatus').innerHTML=Object.entries(j.configured).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Configured':'Not configured'}</span></div>`).join('')}catch(e){alert(e.message)}}
