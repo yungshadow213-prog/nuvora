@@ -566,7 +566,6 @@ function resetProductForm(){
   document.getElementById('importStatus').textContent='You can enter a product manually or fetch an Amazon product below. Imported data stays editable and nothing becomes public until you publish it.';
   window.editingProductId=null;
 }
-function showImportPage('temu'){ resetProductForm(); document.getElementById('productModalTitle').textContent='Import Temu product'; document.getElementById('productModalSub').textContent='Paste your Temu product or affiliate link, review the details, then save it as a draft.'; document.body.classList.add('admin-workspace-open'); document.getElementById('productModal').classList.add('open'); document.getElementById('amazonUrlInput').placeholder='Paste your Temu product or affiliate link'; document.getElementById('pfSource').value='temu'; document.getElementById('pfRetailer').value='Temu'; document.getElementById('amazonUrlInput').focus(); window.temuImportMode=true; }
 function openProductModal(importMode=false){
   window.temuImportMode=false;
   document.body.classList.add('admin-workspace-open');
