@@ -110,7 +110,8 @@ function cleanImportedTitle(value,brand=''){
             const images=Array.isArray(listing.images)?[...new Set(listing.images.filter(Boolean))].slice(0,30):[];
             const features=Array.isArray(listing.features)?listing.features.filter(Boolean).slice(0,20):[];
             const description=String(listing.description||'').trim().slice(0,12000)||null;
-            const category_id=autoCategory(title,description||'',listing.brand||'',categories);
+            const categoryText=(title+' '+(description||'')+' '+(listing.brand||'')).toLowerCase();
+            const category_id=categories.length?((categories.find(cat=>categoryText.includes(String(cat.name||'').toLowerCase()))||categories.find(cat=>categoryText.includes(String(cat.slug||'').toLowerCase().replace(/-/g,' ')))||null)?.id||null):null;
             const product={
               name:title,kind:'find',brand:listing.brand||null,description,features:features.join('\n')||null,
               image_url:images[0]||null,image_urls:images,display_price:listing.current_price??null,currency:listing.currency||'USD',
