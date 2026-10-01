@@ -331,7 +331,66 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,
 .nv-option-chip{display:inline-flex;align-items:center;min-height:34px;padding:7px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:#1d2721;font-size:12px;font-weight:650}
 .nv-option-chip:hover{border-color:#afc4b7;background:var(--accent-soft)}
 @media(max-width:560px){.nv-option-values{gap:6px}.nv-option-chip{font-size:11px;padding:7px 9px}}
-</style></head>
+</style><style id="nuvora-ui-polish-2026">
+:root{
+ --bg:#f7f6f1;--surface:#fffdf9;--surface2:#eef2ec;--text:#18201b;--muted:#707970;
+ --line:#e4e6df;--accent:#235b4d;--accent2:#d17a5c;--accent-soft:#e4eee9;
+ --shadow:0 18px 45px rgba(28,43,35,.09);--shadow-hover:0 24px 55px rgba(28,43,35,.14)
+}
+body{background:var(--bg);color:var(--text);letter-spacing:-.01em}
+.topbar{background:rgba(247,246,241,.88);backdrop-filter:blur(22px);border-bottom:1px solid rgba(34,57,46,.10)}
+.nav{height:74px}
+.brand{font-size:19px;letter-spacing:-.04em}.brandmark{box-shadow:0 7px 20px rgba(35,91,77,.18)}
+.icon-btn,.avatar-btn{background:rgba(255,253,249,.9);border:1px solid var(--line);transition:.18s ease}
+.icon-btn:hover,.avatar-btn:hover{transform:translateY(-1px);border-color:#c7d1ca;background:#fff}
+.store-search{background:rgba(255,253,249,.92);border:1px solid var(--line);box-shadow:0 4px 18px rgba(35,50,42,.04)}
+.store-search:focus-within{border-color:#a9c1b6;box-shadow:0 0 0 4px rgba(35,91,77,.07)}
+.store-search button{background:var(--accent-soft);color:var(--accent);border-left:0}
+.nv-hero-clean{padding:96px 0 70px;background:
+ radial-gradient(circle at 85% 18%,rgba(209,122,92,.12),transparent 24%),
+ linear-gradient(180deg,#fffdf9 0%,#f7f6f1 100%);border-bottom:1px solid var(--line)}
+.nv-hero-copy{max-width:820px}.nv-hero-copy h1{font-weight:800;line-height:.92;letter-spacing:-.075em;color:#18251e}
+.nv-hero-copy p{max-width:590px;color:#68736b;font-size:17px;line-height:1.7}
+.nv-quick-nav{padding:20px 0 38px}.nv-quick-links{background:rgba(255,253,249,.8);border:1px solid var(--line);box-shadow:0 7px 25px rgba(30,45,36,.04)}
+.nv-quick-links button{transition:.18s ease}.nv-quick-links button:hover{color:var(--accent);background:var(--surface2)}
+.nv-editorial-break .shell{background:linear-gradient(135deg,#e5eee8,#f3e9e2);border:1px solid #dce4de;box-shadow:var(--shadow)}
+.product-grid{gap:20px}
+.nv-card{border:1px solid var(--line);background:var(--surface);border-radius:20px;overflow:hidden;box-shadow:0 5px 22px rgba(28,43,35,.035);transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+.nv-card:hover{transform:translateY(-6px);border-color:#c9d5cd;box-shadow:var(--shadow-hover)}
+.nv-card .thumb{height:300px;background:#f0f1ed;overflow:hidden}.nv-card .thumb img{transition:transform .45s ease}
+.nv-card:hover .thumb img{transform:scale(1.035)}
+.nv-card .prodtext{padding:16px 17px 19px;background:var(--surface)}
+.nv-card .card-source{color:#879087;font-size:9px;letter-spacing:.15em}
+.nv-card .prodtext h4{font-size:14px;line-height:1.45;color:#1c251f;font-weight:760}
+.nv-card .prodprice{color:var(--accent);font-size:16px;font-weight:900}
+.card-save{box-shadow:0 4px 12px rgba(20,30,25,.08);transition:.18s ease}.card-save:hover{transform:scale(1.05)}
+.card-save.saved{background:var(--accent-soft);color:var(--accent);border-color:#c8dbd1}
+.browse{padding:70px 0 90px}.browse-heading{margin-bottom:36px}.browse-heading h1{font-weight:800;letter-spacing:-.065em;color:#17231c}
+.browse-sidebar{border-right-color:var(--line)}.browse-sidebar .chip{transition:.16s ease}.browse-sidebar .chip:hover{background:#f0f3ef;color:var(--text)}
+.browse-sidebar .chip.active{background:var(--accent);color:#fff}
+.browse-search{background:var(--surface);box-shadow:0 4px 15px rgba(30,45,36,.035);transition:.18s ease}
+.browse-search:focus-within{border-color:#a9c1b6;box-shadow:0 0 0 4px rgba(35,91,77,.06)}
+.filter-select{border:1px solid var(--line)!important;border-radius:12px!important}
+.nv-product-shell{max-width:1220px}.nv-image-card{background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}
+.nv-info h1{font-weight:800;letter-spacing:-.06em;line-height:1.02}
+.nv-buy-card,.nv-section-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;box-shadow:0 7px 25px rgba(28,43,35,.045)}
+.nv-deal{background:#f4e7e1;border-color:#ead4c9;color:#a4573f}.nv-current{color:#152019}.nv-discount{background:var(--accent-soft);color:var(--accent)}
+.nv-info-box{background:#f7f8f4;border-color:var(--line)}
+.nv-spec{background:#fafbf8;border-color:var(--line);transition:.16s ease}.nv-spec:hover{background:#f1f5f1}
+.nv-feature-list li:before{background:var(--accent-soft);color:var(--accent)}
+.nv-details-toggle{font-weight:760}
+.cart-drawer{background:var(--surface);box-shadow:-20px 0 60px rgba(20,30,25,.12)}.cart-drawer .cart-row{background:#f6f7f3;border-color:var(--line)}
+.cart-drawer .btn.primary,.btn.primary{background:var(--accent);border-color:var(--accent);box-shadow:0 8px 18px rgba(35,91,77,.18)}
+.cart-drawer .btn.primary:hover,.btn.primary:hover{background:#1b4b3f;transform:translateY(-1px)}
+.footer{background:#f1f2ed;border-top:1px solid var(--line);color:#667168}
+@media(max-width:850px){.browse-layout{gap:22px}}
+@media(max-width:560px){
+ .nv-hero-clean{padding:62px 0 42px}.nv-hero-copy h1{font-size:50px}.nv-hero-copy p{font-size:15px}
+ .nv-card{border-radius:16px}.nv-card .thumb{height:220px}.browse{padding:44px 0 65px}
+ .nv-image-card{border-radius:16px}
+}
+</style>
+</head>
 <body>
 <div class="announcement"><div class="shell"><b>Nuvora picks, made simple.</b> Browse curated products, save your favorites, and discover something worth finding.</div></div><header class="topbar"><div class="shell nav">
 <button class="icon-btn nav-menu" id="menuBtn" aria-label="Open menu"><span></span><span></span><span></span></button>
