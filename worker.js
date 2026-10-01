@@ -593,11 +593,53 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const collections=collectionsRes.ok?await collectionsRes.json():[];
         const categoryMap=new Map(categories.map(x=>[String(x.id),x]));
         const collectionMap=new Map(collections.map(x=>[String(x.id),x]));
+        const suspicious=products.filter(p=>{
+          const amazon=String(p.retailer||'').toLowerCase()==='amazon'||!!p.amazon_asin||!!p.amazon_source_url;
+          const text=String(p.description||'');
+          return amazon&&(!p.display_price||Number(p.display_price)<=0||/keyboard shortcuts|prime video|all departments|deliver(?:ing|y) to|amazon fashion|sponsored/i.test(text)||!p.image_url);
+        }).slice(0,5);
+        const repairs=new Map();
+        for(const p of suspicious){
+          try{
+            const source=p.amazon_source_url||p.destination_url;
+            const asin=p.amazon_asin||asinFromUrl(source);
+            if(source&&asin){
+              const listing=await scrapeAmazonListing(source,asin);
+              if(listing&&!listing.error){
+                const patch={
+                  name:listing.title||p.name,
+                  brand:listing.brand||p.brand||null,
+                  description:listing.description||p.description||null,
+                  features:Array.isArray(listing.features)&&listing.features.length?listing.features.join('\\n'):p.features||null,
+                  image_url:Array.isArray(listing.images)&&listing.images[0]?listing.images[0]:p.image_url||null,
+                  image_urls:Array.isArray(listing.images)?listing.images:[],
+                  display_price:listing.current_price??p.display_price??null,
+                  currency:p.currency||'USD',
+                  amazon_list_price:listing.list_price??p.amazon_list_price??null,
+                  amazon_discount_percent:listing.discount_percent??p.amazon_discount_percent??null,
+                  amazon_deal_text:listing.deal_text||p.amazon_deal_text||null,
+                  amazon_rating:listing.rating??p.amazon_rating??null,
+                  amazon_review_count:listing.review_count??p.amazon_review_count??null,
+                  amazon_bought_past_month:listing.bought_past_month||p.amazon_bought_past_month||null,
+                  amazon_badges:listing.badges||p.amazon_badges||[],
+                  amazon_shipping_text:listing.shipping_text||p.amazon_shipping_text||null,
+                  amazon_tax_text:listing.tax_text||p.amazon_tax_text||null,
+                  amazon_variations:listing.variations||p.amazon_variations||[],
+                  amazon_last_synced:new Date().toISOString()
+                };
+                repairs.set(String(p.id),patch);
+                await supabaseRest(env,'PATCH','products',patch,'?id=eq.'+encodeURIComponent(p.id));
+              }
+            }
+          }catch(e){}
+        }
         return json(products.map(p=>{
-          const normalized=normalizeAmazonProduct(p);
+          const repaired=repairs.get(String(p.id));
+          const source=repaired?{...p,...repaired}:p;
+          const normalized=normalizeAmazonProduct(source);
           const safeText=v=>cleanMultilineText(v,12000)||null;
           return {
-            ...p,
+            ...source,
             name:normalized.name,
             brand:normalized.brand,
             description:normalized.description,
@@ -609,12 +651,12 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             amazon_rating:normalized.rating,
             amazon_review_count:normalized.review_count,
             amazon_deal_text:safeText(normalized.deal),
-            deal_text:safeText(p.deal_text)||safeText(normalized.deal),
-            temu_deal_text:safeText(p.temu_deal_text),
-            amazon_shipping_text:safeText(p.amazon_shipping_text),
-            amazon_tax_text:safeText(p.amazon_tax_text),
-            category:p.category_id?categoryMap.get(String(p.category_id))||null:null,
-            collection:p.collection_id?collectionMap.get(String(p.collection_id))||null:null
+            deal_text:safeText(source.deal_text)||safeText(normalized.deal),
+            temu_deal_text:safeText(source.temu_deal_text),
+            amazon_shipping_text:safeText(source.amazon_shipping_text),
+            amazon_tax_text:safeText(source.amazon_tax_text),
+            category:source.category_id?categoryMap.get(String(source.category_id))||null:null,
+            collection:source.collection_id?collectionMap.get(String(source.collection_id))||null:null
           };
         }));
       }
