@@ -37,6 +37,7 @@ alter table public.products add column if not exists features text;
 alter table public.products add column if not exists brand text;
 alter table public.products add column if not exists image_urls jsonb not null default '[]'::jsonb;
 alter table public.products add column if not exists availability text;
+alter table public.products add column if not exists source_sku text;
 alter table public.products add column if not exists amazon_last_synced timestamptz;
 alter table public.products add column if not exists source_type text not null default 'manual';
 alter table public.products add column if not exists sourcinbox_product_url text;
