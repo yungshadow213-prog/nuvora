@@ -81,16 +81,6 @@ function metaValue(html,name){
   }
   return '';
 }
-  const wanted=String(name||'').toLowerCase();
-  const tags=String(html||'').match(/<meta\b[^>]*>/gi)||[];
-  for(const tag of tags){
-    const nm=tag.match(/\b(?:name|property)\s*=\s*["']([^"']+)["']/i);
-    if(!nm||nm[1].toLowerCase()!==wanted)continue;
-    const cm=tag.match(/\bcontent\s*=\s*["']([^"']*)["']/i);
-    if(cm)return htmlText(cm[1]);
-  }
-  return '';
-}
 function parseMoney(v){ const m=String(v||'').replace(/,/g,'').match(/([0-9]+(?:\.[0-9]{1,2})?)/); return m?Number(m[1]):null; }
 function parseRating(v){ const m=String(v||'').match(/([0-5](?:\.[0-9])?)/); return m?Number(m[1]):null; }
 function parseReviewCount(v){ const m=String(v||'').replace(/,/g,'').match(/([0-9]{1,9})/); return m?Number(m[1]):null; }
