@@ -756,7 +756,15 @@ function runSmartImport(){
     results.innerHTML='<div class="notice" style="margin:0">'+esc(e.message||'The import could not be completed.')+'</div>';
   }finally{btn.disabled=false;btn.textContent='Import as drafts';}
 }
-function showToastAdmin(msg){const target=document.getElementById('smartImportResults')||document.getElementById('importStatus')||document.getElementById('aiImageStatus');if(target){target.textContent=String(msg||'');target.classList.add('workspace-note');target.scrollIntoView({behavior:'smooth',block:'nearest'});}}
+function showToastAdmin(msg){
+  const existing=document.getElementById('adminToast');
+  if(existing)existing.remove();
+  const target=document.getElementById('importStatus')||document.getElementById('aiImageStatus');
+  if(!target)return;
+  target.textContent=String(msg||'');
+  target.classList.add('workspace-note');
+  target.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
 async function useTemuLink(){
   const input=document.getElementById('amazonUrlInput');
   const url=input.value.trim();
