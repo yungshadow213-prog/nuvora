@@ -713,7 +713,7 @@ function detectImportRetailer(url){
     return 'Unknown';
   }catch(e){return 'Unknown'}
 }
-function runSmartImport(){
+async function runSmartImport(){
   const box=document.getElementById('smartImportUrls'),btn=document.getElementById('smartImportButton'),progress=document.getElementById('smartImportProgress');
   const urls=normalizeImportUrls(box?.value||'');
   if(!urls.length)return setAdminStatus('Paste at least one product link.');
