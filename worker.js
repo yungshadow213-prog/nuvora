@@ -22,7 +22,14 @@ export default {
         if(!/^[a-z0-9_.-]+$/.test(name)) return json({error:'Invalid analytics event name.'},400);
         const row={event_name:name,product_id:event.product_id||null,session_id:String(event.session_id||'').slice(0,80)||null,metadata:event.metadata&&typeof event.metadata==='object'?event.metadata:{}};
         const r=await supabaseRest(env,'POST','analytics_events',row);
-        if(!r.ok) return json({error:'Analytics event could not be saved.'},400);
+        if(!r.ok){
+          const raw=await r.text();
+          const setupMissing=/PGRST205|relation .*analytics_events|table .*analytics_events/i.test(raw);
+          return json({
+            error:setupMissing?'Analytics database table is not configured yet.':'Analytics event could not be saved.',
+            code:setupMissing?'ANALYTICS_NOT_CONFIGURED':'ANALYTICS_WRITE_FAILED'
+          },setupMissing?503:400);
+        }
         return json({ok:true});
       }
 
@@ -643,9 +650,19 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
 
       if(url.pathname==='/api/admin/analytics'&&request.method==='GET'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
-        const r=await supabaseRest(env,'GET','analytics_events',undefined,'?select=event_name&limit=5000'); if(!r.ok)return json({error:await r.text()},500);
-        const rows=await r.json(),counts={}; for(const x of rows)counts[x.event_name]=(counts[x.event_name]||0)+1;
-        return json({counts,total:rows.length});
+        const r=await supabaseRest(env,'GET','analytics_events',undefined,'?select=event_name&limit=5000');
+        if(!r.ok){
+          const raw=await r.text();
+          const setupMissing=/PGRST205|relation .*analytics_events|table .*analytics_events/i.test(raw);
+          return json({
+            error:setupMissing?'Analytics database table is not configured yet.':'Analytics data could not be loaded.',
+            code:setupMissing?'ANALYTICS_NOT_CONFIGURED':'ANALYTICS_READ_FAILED'
+          },setupMissing?503:500);
+        }
+        const rows=await r.json();
+        const counts={};
+        for(const x of Array.isArray(rows)?rows:[]) counts[x.event_name]=(counts[x.event_name]||0)+1;
+        return json({counts,total:Array.isArray(rows)?rows.length:0});
       }
 
       if(url.pathname==='/api/admin/settings'&&(request.method==='GET'||request.method==='PATCH')){
