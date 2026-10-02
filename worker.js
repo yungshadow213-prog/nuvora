@@ -256,6 +256,80 @@ function normalizeAmazonProduct(product={}){
     deal:product.amazon_deal_text||null
   };
 }
+/* Universal source-ingestion engine */
+function sourceHost(value){try{return new URL(value).hostname.toLowerCase().replace(/^www\./,'')}catch{return ''}}
+function detectRetailer(value){
+  const h=sourceHost(value);
+  if(amazonHost(h))return 'Amazon';
+  if(h==='temu.com'||h.endsWith('.temu.com')||h==='temu.to')return 'Temu';
+  if(h==='app.sourcinbox.com'||h.endsWith('.sourcinbox.com'))return 'Source Box';
+  if(/aliexpress\./i.test(h))return 'AliExpress';
+  if(/shopify\./i.test(h))return 'Shopify';
+  return 'Web source';
+}
+function sourceProductId(url,html=''){
+  const u=String(url||'');
+  const patterns=[
+    /(?:\/dp\/|\/gp\/product\/|\/product\/|\/item\/|\/p\/)([A-Z0-9_-]{5,40})(?:[/?#]|$)/i,
+    /[?&](?:id|product_id|productId|sku|item_id|itemId)=([^&#]+)/i
+  ];
+  for(const re of patterns){const m=u.match(re);if(m)return decodeURIComponent(m[1]).slice(0,120)}
+  const metas=['product:retailer_item_id','product:sku','sku','product_id','productid'];
+  for(const n of metas){const v=metaValue(html,n);if(v)return v.slice(0,120)}
+  const m=String(html).match(/["'](?:sku|productId|product_id|item_id)["']\s*:\s*["']([^"']{4,120})["']/i);
+  return m?m[1]:null;
+}
+function genericJsonLd(html){
+  const out=[];
+  const re=/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\\s\\S]*?)<\/script>/gi;
+  for(const m of String(html||'').matchAll(re)){try{const x=JSON.parse(m[1].trim());if(Array.isArray(x))out.push(...x);else out.push(x)}catch(e){}}
+  return out.find(x=>{const t=x?.['@type'];return t==='Product'||(Array.isArray(t)&&t.some(v=>String(v).toLowerCase()==='product'))})||{};
+}
+function genericImages(html,ld){
+  const out=[]; const add=v=>{if(typeof v==='string'&&validUrl(v)&&!out.includes(v))out.push(v)};
+  const xs=Array.isArray(ld.image)?ld.image:(ld.image?[ld.image]:[]);xs.forEach(add);
+  add(metaValue(html,'og:image'));add(metaValue(html,'twitter:image'));
+  for(const m of String(html||'').matchAll(/(?:data-src|data-lazy-src|src)=["'](https?:\/\/[^"']+)["']/gi))add(m[1]);
+  return out.slice(0,30);
+}
+function genericNumber(v){const m=String(v??'').replace(/,/g,'').match(/(?:[$€£₦]|USD|EUR|GBP|NGN|US\$)?\s*([0-9]+(?:\.[0-9]{1,2})?)/);return m?Number(m[1]):null}
+async function scrapeGenericSource(sourceUrl,retailer){
+  let resolved=sourceUrl;
+  try{const r=await fetch(sourceUrl,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 (compatible; NuvoraImporter/1.0)','accept':'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8','accept-language':'en-US,en;q=0.9'}});resolved=r.url||sourceUrl;if(!r.ok)throw new Error('Source returned HTTP '+r.status);const html=await r.text();if(html.length<200)throw new Error('Source page returned too little data.');
+    const ld=genericJsonLd(html),offers=Array.isArray(ld.offers)?(ld.offers[0]||{}):(ld.offers||{}),agg=ld.aggregateRating||{};
+    const title=htmlText(ld.name)||metaValue(html,'og:title')||metaValue(html,'twitter:title')||amazonText(html,[/<h1[^>]*>([\\s\\S]*?)<\/h1>/i])||htmlText((html.match(/<title[^>]*>([\\s\\S]*?)<\/title>/i)||[])[1]||'');
+    const description=htmlText(ld.description)||metaValue(html,'og:description')||metaValue(html,'description');
+    const brand=typeof ld.brand==='string'?ld.brand:ld.brand?.name||metaValue(html,'product:brand')||metaValue(html,'brand')||null;
+    const current=genericNumber(offers.price)??genericNumber(metaValue(html,'product:price:amount'))??genericNumber(amazonText(html,[/(?:class|id)=["'][^"']*(?:price|sale-price|current-price)[^"']*["'][^>]*>([\\s\\S]*?)<\//i]));
+    const currency=String(offers.priceCurrency||metaValue(html,'product:price:currency')||'USD').toUpperCase();
+    const list=genericNumber(metaValue(html,'product:original_price'))??genericNumber(amazonText(html,[/(?:class|id)=["'][^"']*(?:compare|original|regular)-price[^"']*["'][^>]*>([\\s\\S]*?)<\//i]));
+    const rating=parseRating(agg.ratingValue||metaValue(html,'ratingValue')||amazonText(html,[/(?:rating|stars)[^>]*>([0-5](?:\.[0-9])?)/i]));
+    const reviews=parseReviewCount(agg.reviewCount||agg.ratingCount||metaValue(html,'reviewCount')||amazonText(html,[/([0-9][0-9,.]*)\s+(?:reviews|ratings)/i]));
+    const availability=htmlText(offers.availability)||metaValue(html,'product:availability')||amazonText(html,[/(?:availability|stock)[^>]*>([\\s\\S]*?)<\//i])||null;
+    const sku=String(ld.sku||ld.mpn||sourceProductId(resolved,html)||'').trim()||null;
+    const features=[];
+    for(const m of String(html).matchAll(/<li[^>]*>([\\s\\S]*?)<\/li>/gi)){const t=htmlText(m[1]);if(t&&t.length<500&&!features.includes(t))features.push(t);if(features.length>=20)break}
+    const listPrice=list??(current!=null&&rating==null?null:list);
+    const discount=listPrice&&current!=null&&listPrice>current?Number((((listPrice-current)/listPrice)*100).toFixed(1)):null;
+    if(!title&&!genericImages(html,ld).length)throw new Error('No product data was exposed by the source page.');
+    return {title:title||retailer+' product',description:description||null,brand:brand||null,images:genericImages(html,ld),features,current_price:current,list_price:listPrice,discount_percent:discount,deal_text:null,rating,review_count:reviews,availability,shipping_text:null,tax_text:null,variations:[],sku,destination_url:resolved,resolved_url:resolved,retailer};
+  }catch(e){return {error:String(e?.message||e).slice(0,500)}}
+}
+async function ingestSourceProduct(sourceUrl){
+  const retailer=detectRetailer(sourceUrl);
+  if(retailer==='Amazon'){
+    const resolved=await resolveAmazonUrl(sourceUrl),asin=asinFromUrl(resolved)||asinFromUrl(sourceUrl);
+    if(!asin)return {error:'Could not identify the Amazon product ID (ASIN).'};
+    const listing=await scrapeAmazonListing(resolved,asin);
+    return listing?.error?listing:{...listing,retailer,source_id:asin,resolved_url:resolved};
+  }
+  if(retailer==='Temu'){
+    const listing=await scrapeTemuListing(sourceUrl);
+    return listing?.error?listing:{...listing,retailer,source_id:listing.id||sourceProductId(sourceUrl)};
+  }
+  return await scrapeGenericSource(sourceUrl,retailer);
+}
+
       if(url.pathname==='/api/admin/import/bulk'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const payload=await body(request,512*1024);
@@ -263,64 +337,49 @@ function normalizeAmazonProduct(product={}){
         const urls=extractUrls(rawUrls);
         if(urls.length>30)return json({error:'Import up to 30 links at a time.'},400);
         const results=[]; let imported=0,skipped=0,failed=0;
-        let categories=[];
-        try{const cr=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cr.ok)categories=await cr.json();}catch(e){}
+        let categories=[]; try{const cr=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cr.ok)categories=await cr.json();}catch(e){}
         for(const sourceUrl of urls){
           const started=Date.now();
           try{
             if(!validUrl(sourceUrl))throw new Error('Invalid URL.');
-            const parsed=new URL(sourceUrl),host=parsed.hostname.toLowerCase().replace(/^www\./,'');
-            const isAmazon=amazonHost(host);
-            const isTemu=host==='temu.com'||host.endsWith('.temu.com')||host==='temu.to';
-            if(!isAmazon&&!isTemu)throw new Error('Only Amazon and Temu links are supported.');
-            let listing=null,asin=null,productId=null;
-            if(isAmazon){
-              const resolved=await resolveAmazonUrl(sourceUrl);
-              asin=asinFromUrl(resolved)||asinFromUrl(sourceUrl);
-              if(!asin)throw new Error('Could not find an Amazon ASIN in this link.');
-              const dup=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published,amazon_asin&amazon_asin=eq.'+encodeURIComponent(asin)+'&limit=1');
-              const rows=dup.ok?await dup.json():[];
-              if(rows[0]){skipped++;results.push({ok:true,status:'skipped',retailer:'Amazon',source_url:sourceUrl,name:rows[0].name||'Existing product',reason:'Already imported',id:rows[0].id,duration_ms:Date.now()-started});continue;}
-              listing=await scrapeAmazonListing(resolved,asin);
-              if(!listing||listing.error)throw new Error(listing?.error||'Amazon product data could not be read.');
-              productId=asin;
-            }else{
-              listing=await scrapeTemuListing(sourceUrl);
-              if(!listing||listing.error)throw new Error(listing?.error||'Temu product data could not be read.');
-              productId=listing.id||null;
-              if(productId){
-                const dup=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published,amazon_asin&retailer=eq.Temu&amazon_asin=eq.'+encodeURIComponent(productId)+'&limit=1');
-                const rows=dup.ok?await dup.json():[];
-                if(rows[0]){skipped++;results.push({ok:true,status:'skipped',retailer:'Temu',source_url:sourceUrl,name:rows[0].name||'Existing product',reason:'Already imported',id:rows[0].id,duration_ms:Date.now()-started});continue;}
-              }
-            }
-            const retailer=isAmazon?'Amazon':'Temu';
+            const listing=await ingestSourceProduct(sourceUrl);
+            if(!listing||listing.error)throw new Error(listing?.error||'Product data could not be read from the source.');
+            const retailer=listing.retailer||detectRetailer(sourceUrl);
+            const sourceId=listing.source_id||listing.asin||listing.id||listing.sku||sourceProductId(listing.resolved_url||sourceUrl);
+            if(!sourceId)throw new Error('The source did not expose a stable product ID.');
+            const identityQuery=retailer==='Amazon'
+              ?'?select=id,name,published,amazon_asin&amazon_asin=eq.'+encodeURIComponent(sourceId)+'&limit=1'
+              :'?select=id,name,published,source_sku,retailer&source_sku=eq.'+encodeURIComponent(sourceId)+'&retailer=eq.'+encodeURIComponent(retailer)+'&limit=1';
+            const dup=await supabaseRest(env,'GET','products',undefined,identityQuery);
+            const rows=dup.ok?await dup.json():[];
+            if(rows[0]){skipped++;results.push({ok:true,status:'skipped',retailer,source_url:sourceUrl,name:rows[0].name||'Existing product',reason:'Already imported',id:rows[0].id,duration_ms:Date.now()-started});continue;}
             const title=cleanImportedTitle(listing.title||retailer+' product',listing.brand||'');
-            const images=Array.isArray(listing.images)?[...new Set(listing.images.filter(Boolean))].slice(0,30):[];
+            const images=Array.isArray(listing.images)?[...new Set(listing.images.filter(validUrl))].slice(0,30):[];
             const features=Array.isArray(listing.features)?listing.features.filter(Boolean).slice(0,20):[];
             const description=String(listing.description||'').trim().slice(0,12000)||null;
-            const categoryText=(title+' '+(description||'')+' '+(listing.brand||'')).toLowerCase();
-            const category_id=categories.length?((categories.find(cat=>categoryText.includes(String(cat.name||'').toLowerCase()))||categories.find(cat=>categoryText.includes(String(cat.slug||'').toLowerCase().replace(/-/g,' ')))||null)?.id||null):null;
+            const category_id=autoCategory(title,description,listing.brand,categories);
             const product={
               name:title,kind:'find',brand:listing.brand||null,description,features:features.join('\n')||null,
               image_url:images[0]||null,image_urls:images,display_price:listing.current_price??null,currency:listing.currency||'USD',
-              destination_url:sourceUrl,retailer,category_id,amazon_asin:productId,amazon_source_url:sourceUrl,source_type:isAmazon?'amazon':'temu',
-              amazon_current_price:listing.current_price??null,amazon_list_price:listing.list_price??null,amazon_discount_percent:listing.discount_percent??null,
-              amazon_deal_text:listing.deal_text||null,amazon_rating:listing.rating??null,amazon_review_count:listing.review_count??null,
-              amazon_bought_past_month:listing.bought_past_month||listing.sold_count_text||null,amazon_shipping_text:listing.shipping_text||null,
-              availability:listing.availability||null,source_sku:listing.sku||null,
-              amazon_tax_text:listing.tax_text||null,amazon_variations:Array.isArray(listing.variations)?listing.variations:[],
-              published:false,amazon_last_synced:new Date().toISOString()
+              destination_url:listing.resolved_url||sourceUrl,retailer,category_id,amazon_asin:retailer==='Amazon'?sourceId:null,
+              amazon_source_url:retailer==='Amazon'?(listing.resolved_url||sourceUrl):null,source_type:retailer.toLowerCase().replace(/\s+/g,'_'),
+              amazon_current_price:retailer==='Amazon'?(listing.current_price??null):null,
+              amazon_list_price:retailer==='Amazon'?(listing.list_price??null):null,amazon_discount_percent:retailer==='Amazon'?(listing.discount_percent??null):null,
+              amazon_deal_text:retailer==='Amazon'?(listing.deal_text||null):null,amazon_rating:listing.rating??null,amazon_review_count:listing.review_count??null,
+              amazon_bought_past_month:listing.bought_past_month||null,amazon_shipping_text:listing.shipping_text||null,
+              availability:listing.availability||null,source_sku:listing.sku||sourceId,amazon_tax_text:listing.tax_text||null,
+              amazon_variations:Array.isArray(listing.variations)?listing.variations:[],published:false,amazon_last_synced:new Date().toISOString()
             };
-            const slugBase=title.toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,120);
+            const slugBase=title.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,120);
             product.slug=(slugBase||'product')+'-'+Date.now().toString(36);
             const saved=await supabaseProductWrite(env,'POST',product);
-            if(!saved.ok)throw new Error((await saved.text()).slice(0,500)||'Could not save product.');
+            if(!saved.ok)throw new Error((await saved.text()).slice(0,1000)||'Could not save product.');
             const row=(await saved.json())?.[0]||null;
-            imported++;results.push({ok:true,status:'imported',retailer,source_url:sourceUrl,name:title,id:row?.id||null,captured:{images:images.length,description:!!description,features:features.length,price:listing.current_price!=null,rating:listing.rating!=null,reviews:listing.review_count!=null},duration_ms:Date.now()-started});
-          }catch(e){
-            failed++;results.push({ok:false,status:'failed',source_url:sourceUrl,error:String(e?.message||e).slice(0,500),duration_ms:Date.now()-started});
-          }
+            imported++;results.push({ok:true,status:'imported',retailer,source_url:sourceUrl,name:title,id:row?.id||null,
+              source_id:sourceId,captured:{images:images.length,description:!!description,features:features.length,price:listing.current_price!=null,listPrice:listing.list_price!=null,
+              discount:listing.discount_percent!=null,rating:listing.rating!=null,reviews:listing.review_count!=null,availability:!!listing.availability,shipping:!!listing.shipping_text,variants:Array.isArray(listing.variations)?listing.variations.length:0},
+              duration_ms:Date.now()-started});
+          }catch(e){failed++;results.push({ok:false,status:'failed',source_url:sourceUrl,retailer:detectRetailer(sourceUrl),error:String(e?.message||e).slice(0,500),duration_ms:Date.now()-started});}
         }
         return json({ok:true,imported,skipped,failed,total:urls.length,results});
       }
