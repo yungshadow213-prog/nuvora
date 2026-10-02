@@ -238,25 +238,51 @@ function cleanImportedTitle(value,brand=''){
   return t.slice(0,180);
 }
 function normalizeImageUrl(value){
-  try{const u=new URL(String(value||'').trim());u.hash='';if(/(^|\\.)amazon\\./i.test(u.hostname))u.search='';return u.toString()}catch{return String(value||'').trim()}
+  try{
+    const u=new URL(String(value||'').trim());
+    u.hash='';
+    if(/(^|\.)amazon\./i.test(u.hostname))u.search='';
+    return u.toString();
+  }catch{return String(value||'').trim()}
 }
 function dedupeImages(values,max=60){
   const out=[],seen=new Set();
   for(const value of (Array.isArray(values)?values:[])){
-    const url=normalizeImageUrl(value);if(!validUrl(url))continue;
-    const key=url.toLowerCase().replace(/\\.(?:jpe?g|png|webp)(?:$|[?#])/i,'');
-    if(seen.has(key))continue;seen.add(key);out.push(url);if(out.length>=max)break;
-  }return out;
+    const url=normalizeImageUrl(value);
+    if(!validUrl(url))continue;
+    const key=url.toLowerCase().replace(/\.(?:jpe?g|png|webp)(?:$|[?#])/i,'');
+    if(seen.has(key))continue;
+    seen.add(key);out.push(url);
+    if(out.length>=max)break;
+  }
+  return out;
 }
 function smartProductTitle(value,brand=''){
   let t=htmlText(amazonDecode(value)).replace(/\s+/g,' ').trim();
-  t=t.replace(/^(?:Amazon\.com|Amazon)\\s*[:|-]\\s*/i,'').replace(/\s*[|·]\s*(?:Amazon|Temu).*$/i|·]\\s*(?:Amazon|Temu).*$/i,'').replace(/\b(?:official|best seller|#1 best seller|hot sale|trending|must have|new arrival)\\b/gi,'').replace(/\s{2,}/g,' ').trim();
-  const b=cleanText(brand,120);if(b&&!t.toLowerCase().startsWith(b.toLowerCase()))t=b+' '+t;
-  const words=t.split(' ').filter(Boolean),seen=new Set(),kept=[];for(const word of words){const key=word.toLowerCase().replace(/[^a-z0-9]/g,'');if(key&&seen.has(key))continue;if(key)seen.add(key);kept.push(word)}
-  t=kept.join(' ').replace(/\s+([,.:;])/g,'$1').trim();if(t===t.toLowerCase())t=t.replace(/\b[a-z]/g,c=>c.toUpperCase());return t.slice(0,180)||'Nuvora product';
+  t=t.replace(/^(?:Amazon\.com|Amazon)\s*[:|-]\s*/i,'');
+  t=t.replace(/\s*[|·]\s*(?:Amazon|Temu).*$/i,'');
+  t=t.replace(/\b(?:official|best seller|#1 best seller|hot sale|trending|must have|new arrival)\b/gi,'');
+  t=t.replace(/\s{2,}/g,' ').trim();
+  const b=cleanText(brand,120);
+  if(b&&!t.toLowerCase().startsWith(b.toLowerCase()))t=b+' '+t;
+  const words=t.split(' ').filter(Boolean),seen=new Set(),kept=[];
+  for(const word of words){
+    const key=word.toLowerCase().replace(/[^a-z0-9]/g,'');
+    if(key&&seen.has(key))continue;
+    if(key)seen.add(key);
+    kept.push(word);
+  }
+  t=kept.join(' ').replace(/\s+([,.:;])/g,'$1').trim();
+  if(t===t.toLowerCase())t=t.replace(/\b[a-z]/g,c=>c.toUpperCase());
+  return t.slice(0,180)||'Nuvora product';
 }
 function extractRelatedAmazonProducts(html,asin){
-  const out=[],seen=new Set(),add=id=>{id=String(id||'').toUpperCase();if(/^[A-Z0-9]{10}$/.test(id)&&id!==String(asin||'').toUpperCase()&&!seen.has(id)){seen.add(id);out.push(id)}};
+  const out=[],seen=new Set(),add=id=>{
+    id=String(id||'').toUpperCase();
+    if(/^[A-Z0-9]{10}$/.test(id)&&id!==String(asin||'').toUpperCase()&&!seen.has(id)){
+      seen.add(id);out.push(id);
+    }
+  };
   for(const m of String(html||'').matchAll(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|\?asin=|"asin"\s*:\s*")([A-Z0-9]{10})/gi))add(m[1]);
   return out.slice(0,20);
 }
