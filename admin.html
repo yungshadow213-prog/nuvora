@@ -705,17 +705,36 @@ function formatImportLinks(){
   const urls=normalizeImportUrls(box.value);
   if(urls.length)box.value=urls.join('\n');
 }
+function detectImportRetailer(url){
+  try{
+    const h=new URL(url).hostname.toLowerCase().replace(/^www\\./,'');
+    if(h==='amzn.to'||h==='link.amazon'||h.includes('amazon.'))return 'Amazon';
+    if(h==='temu.com'||h.endsWith('.temu.com')||h==='temu.to')return 'Temu';
+    return 'Unknown';
+  }catch(e){return 'Unknown'}
+}
 function runSmartImport(){
   const box=document.getElementById('smartImportUrls'),btn=document.getElementById('smartImportButton'),progress=document.getElementById('smartImportProgress');
   const urls=normalizeImportUrls(box?.value||'');
   if(!urls.length)return setAdminStatus('Paste at least one product link.');
   if(urls.length>30)return setAdminStatus('Please import 30 links or fewer at a time.');
-  const valid=urls.filter(u=>{try{const h=new URL(u).hostname.toLowerCase();return smartImportSource==='amazon'?h.includes('amazon.'):h==='temu.com'||h.endsWith('.temu.com')||h==='temu.to'}catch(e){return false}});
-  if(valid.length!==urls.length)return setAdminStatus('One or more links do not match the selected retailer. You can switch Amazon/Temu above.');
+
+  // Retailer selection is now a preference, not a validation gate.
+  // The backend detects Amazon/Temu per URL, so mixed batches work.
+  const detected=urls.map(u=>({url:u,retailer:detectImportRetailer(u)}));
+  const unknown=detected.filter(x=>x.retailer==='Unknown');
+  if(unknown.length){
+    const sample=unknown.slice(0,3).map(x=>x.url).join(', ');
+    return setAdminStatus('Unsupported product link detected: '+sample);
+  }
+
   btn.disabled=true;btn.textContent='Importing…';progress.style.display='block';
-  document.getElementById('smartProgressTitle').textContent='Reading '+urls.length+' product'+(urls.length===1?'':'s')+'…';
+  const counts=detected.reduce((a,x)=>(a[x.retailer]=(a[x.retailer]||0)+1,a),{});
+  const retailerSummary=Object.entries(counts).map(([k,v])=>v+' '+k).join(' + ');
+  document.getElementById('smartProgressTitle').textContent='Reading '+urls.length+' product'+(urls.length===1?'':'s')+' ('+retailerSummary+')…';
   document.getElementById('smartProgressCount').textContent='Working…';document.getElementById('smartProgressBar').style.width='8%';
-  const results=document.getElementById('smartImportResults');results.innerHTML='<div class="notice" style="margin:0">Nuvora is reading the retailer pages. Keep this page open until the run finishes.</div>';
+  const results=document.getElementById('smartImportResults');
+  results.innerHTML='<div class="notice" style="margin:0">Nuvora is detecting each retailer automatically. Keep this page open until the run finishes.</div>';
   try{
     const j=await api('/api/admin/import/bulk',{method:'POST',body:{urls}});
     const total=Number(j.total||urls.length),done=Number(j.imported||0)+Number(j.skipped||0)+Number(j.failed||0);
@@ -725,7 +744,7 @@ function runSmartImport(){
       const cls=x.status==='failed'?'failed':x.status==='skipped'?'skipped':'';
       const label=x.status==='failed'?'Failed':x.status==='skipped'?'Skipped':'Imported';
       const detail=x.status==='failed'?(x.error||'Could not read this page.'):x.name||x.source_url;
-      return '<div class="smart-result '+cls+'"><i class="result-dot"></i><span><b>'+esc(label)+'</b> · '+esc(detail)+'</span><small>'+esc(x.retailer||'')+'</small></div>';
+      return '<div class="smart-result '+cls+'"><i class="result-dot"></i><span><b>'+esc(label)+'</b> · '+esc(detail)+'</span><small>'+esc(x.retailer||detectImportRetailer(x.source_url)||'')+'</small></div>';
     }).join('')||'<div class="notice" style="margin:0">No results returned.</div>';
     box.value='';
     await liveAdminProducts();
