@@ -57,6 +57,7 @@ alter table public.products add column if not exists amazon_shipping_text text;
 alter table public.products add column if not exists amazon_tax_text text;
 alter table public.products add column if not exists amazon_variations jsonb not null default '[]'::jsonb;
 alter table public.products add column if not exists source_related_products jsonb not null default '[]'::jsonb;
+alter table public.products add column if not exists source_image_urls jsonb not null default '[]'::jsonb;
 
 
 create table if not exists public.product_reviews (
