@@ -45,6 +45,7 @@ alter table public.products add column if not exists sourcinbox_product_id text;
 alter table public.products add column if not exists supplier_cost numeric;
 
 -- Amazon merchandising fields captured by the best-effort product-page importer.
+alter table public.products add column if not exists amazon_current_price numeric;
 alter table public.products add column if not exists amazon_list_price numeric;
 alter table public.products add column if not exists amazon_discount_percent numeric;
 alter table public.products add column if not exists amazon_deal_text text;
