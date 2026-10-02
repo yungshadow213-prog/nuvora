@@ -909,7 +909,7 @@ async function saveProductDraft(){
 }
 async function editProduct(id){
   if(!id)return;
-  window.location.href='/admin/products/'+encodeURIComponent(id)+'/edit';
+  window.location.href='/edit-product.html?id='+encodeURIComponent(id);
 }
 function openProductForm(){openProductModal(false)}
 async function createProduct(product){openProductModal(false);setProductForm(product)}
