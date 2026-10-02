@@ -25,7 +25,7 @@ main{max-width:1280px;margin:auto;padding:28px 24px 70px}.layout{display:grid;gr
 <header class="header"><div class="header-inner">
 <a class="back" href="/admin">← Admin</a>
 <div class="title-wrap"><div class="eyebrow">Product workspace</div><div class="title" id="pageTitle">Loading… <span class="status" id="status">Draft</span></div></div>
-<div class="actions"><button class="btn" id="previewBtn">Preview</button><button class="btn primary" id="saveBtn">Save changes</button><button class="btn primary" id="publishBtn">Publish</button></div>
+<div class="actions"><button class="btn" id="previewBtn">Preview</button><button class="btn" id="syncBtn">Sync source</button><button class="btn primary" id="saveBtn">Save changes</button><button class="btn primary" id="publishBtn">Publish</button></div>
 </div></header>
 <main>
 <div class="layout">
@@ -73,13 +73,13 @@ function renderGallery(){
 }
 function renderSource(){
  const fields=[
- ['Brand',product.brand],['Current source price',product.display_price!=null?product.display_price+' '+(product.currency||''):null],
+ ['Brand',product.brand],['Current source price',product.amazon_current_price!=null?product.amazon_current_price+' '+(product.currency||''):null],
  ['List price',product.amazon_list_price],['Discount',product.amazon_discount_percent!=null?product.amazon_discount_percent+'%':null],
  ['Deal',product.amazon_deal_text],['Rating',product.amazon_rating!=null?product.amazon_rating+' / 5':null],
  ['Review count',product.amazon_review_count],['Bought recently',product.amazon_bought_past_month],
  ['Availability',product.availability],['Shipping',product.amazon_shipping_text],
  ['Taxes',product.amazon_tax_text],['Variants',Array.isArray(product.amazon_variations)&&product.amazon_variations.length?product.amazon_variations.map(v=>v.name+': '+(v.values||[]).join(', ')).join(' · '):null],
- ['Product number',product.source_sku],['Source URL',product.amazon_source_url||product.destination_url],['Last source sync',product.amazon_last_synced?new Date(product.amazon_last_synced).toLocaleString():null]
+ ['Product number',product.source_sku||product.amazon_asin],['Source URL',product.amazon_source_url||product.destination_url],['Last source sync',product.amazon_last_synced?new Date(product.amazon_last_synced).toLocaleString():null]
  ];
  $('sourceGrid').innerHTML=fields.map(([k,v])=>'<div class="source-item '+(k==='Source URL'?'source-wide':'')+'"><b>'+esc(k)+'</b><span>'+esc(val(v))+'</span></div>').join('');
 }
@@ -87,6 +87,13 @@ async function save(){
  const body={name:$('name').value.trim(),display_price:$('price').value===''?null:Number($('price').value),description:$('description').value.trim()||null,image_url:images[0]||null,image_urls:images,updated_at:new Date().toISOString()};
  if(!body.name)throw new Error('Product title is required.');if(body.display_price!==null&&(!Number.isFinite(body.display_price)||body.display_price<0))throw new Error('Price is invalid.');
  product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body});render();msg('Product changes saved.');}
+async function syncSource(){
+ const btn=$('syncBtn');btn.disabled=true;btn.textContent='Syncing…';
+ try{
+   const result=await api('/api/admin/products/'+encodeURIComponent(product.id)+'/sync',{method:'POST',body:{}});
+   product=result.product||product; render(); msg('Amazon source synced. Your store title, price and images were preserved.');
+ }finally{btn.disabled=false;btn.textContent='Sync source';}
+}
 async function publish(){const next=!product.published;const body={published:next,updated_at:new Date().toISOString()};product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body});render();msg(next?'Product published to the storefront.':'Product unpublished.');}
 async function upload(){
  const files=[...$('imageFiles').files];if(!files.length)return msg('Choose one or more images first.',true);if(!sb)return msg('Supabase is not connected.',true);
@@ -98,7 +105,7 @@ async function generateAI(){
  try{const src=await fetch(images[0]);if(!src.ok)throw new Error('The current image could not be read as an AI reference.');const blob=await src.blob();const file=new File([blob],'product-reference.png',{type:blob.type||'image/png'});const fd=new FormData();fd.append('image',file);fd.append('size','1024x1024');fd.append('prompt','Create a professional ecommerce advertising image for the exact product in the reference. Preserve the product identity, shape, colors, materials, branding and important physical details. '+($('aiPrompt').value.trim()||'Clean premium ecommerce studio presentation, uncluttered background.'));const r=await fetch('/api/admin/ai/image',{method:'POST',headers:{Authorization:'Bearer '+session.access_token},body:fd});const j=await r.json();if(!r.ok)throw new Error(j.error||'AI image generation failed.');generated=j.image;$('aiImg').src=generated;$('aiPreview').style.display='block';$('useAiBtn').disabled=false;$('aiStatus').textContent='Generated. Use it to add this image to the product gallery.';}finally{$('aiBtn').disabled=false;}}
 async function useAI(){
  if(!generated)return;const res=await fetch(generated);const blob=await res.blob();const file=new File([blob],'nuvora-ai-'+crypto.randomUUID()+'.png',{type:blob.type||'image/png'});const ext='png';const path='products/'+crypto.randomUUID()+'.'+ext;const r=await sb.storage.from('product-images').upload(path,file,{cacheControl:'31536000',upsert:false});if(r.error)throw r.error;images.push(sb.storage.from('product-images').getPublicUrl(path).data.publicUrl);selected=images.length-1;await save();$('useAiBtn').disabled=true;generated=null;msg('AI image added to the product gallery.');}
-$('saveBtn').onclick=()=>save().catch(e=>msg(e.message,true));$('publishBtn').onclick=()=>publish().catch(e=>msg(e.message,true));$('uploadBtn').onclick=()=>upload().catch(e=>msg(e.message,true));$('aiBtn').onclick=()=>generateAI().catch(e=>{$('aiStatus').textContent=e.message;msg(e.message,true)});$('useAiBtn').onclick=()=>useAI().catch(e=>msg(e.message,true));$('previewBtn').onclick=()=>{if(product?.slug)window.open('/?product='+encodeURIComponent(product.slug),'_blank','noopener')};
+$('saveBtn').onclick=()=>save().catch(e=>msg(e.message,true));$('syncBtn').onclick=()=>syncSource().catch(e=>msg(e.message,true));$('publishBtn').onclick=()=>publish().catch(e=>msg(e.message,true));$('uploadBtn').onclick=()=>upload().catch(e=>msg(e.message,true));$('aiBtn').onclick=()=>generateAI().catch(e=>{$('aiStatus').textContent=e.message;msg(e.message,true)});$('useAiBtn').onclick=()=>useAI().catch(e=>msg(e.message,true));$('previewBtn').onclick=()=>{if(product?.slug)window.open('/?product='+encodeURIComponent(product.slug),'_blank','noopener')};
 (async()=>{try{const cfg=await fetch('/api/config').then(r=>r.json());sb=supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);const s=await sb.auth.getSession();session=s.data.session;if(!session){location.href='/admin';return;}const id=new URLSearchParams(location.search).get('id');if(!id)throw new Error('Product ID is missing.');product=await api('/api/admin/products/'+encodeURIComponent(id));render();}catch(e){document.body.innerHTML='<main style="padding:40px;font-family:system-ui"><h2>Could not open product</h2><p>'+esc(e.message)+'</p><a href="/admin">Back to admin</a></main>';}})();
 </script>
 </body></html>
