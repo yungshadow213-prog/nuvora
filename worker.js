@@ -88,7 +88,114 @@ function metaValue(html,name){
 function parseMoney(v){ const m=String(v||'').replace(/,/g,'').match(/([0-9]+(?:\.[0-9]{1,2})?)/); return m?Number(m[1]):null; }
 function parseRating(v){ const m=String(v||'').match(/([0-5](?:\.[0-9])?)/); return m?Number(m[1]):null; }
 function parseReviewCount(v){ const m=String(v||'').replace(/,/g,'').match(/([0-9]{1,9})/); return m?Number(m[1]):null; }
-async function scrapeAmazonListing(sourceUrl,asin){const resolved=await resolveAmazonUrl(sourceUrl);const finalAsin=asinFromUrl(resolved)||asin;if(!finalAsin)return {error:'Could not find an ASIN after resolving the Amazon link.'};let html='';try{const r=await fetch(resolved,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 (compatible; Nuvora/1.0)','accept-language':'en-US,en;q=0.9'}});if(!r.ok)throw new Error('Amazon returned HTTP '+r.status);html=await r.text();}catch(e){return {error:'Amazon product page could not be read: '+String(e?.message||e)}}const title=metaValue(html,'og:title')||metaValue(html,'twitter:title')||htmlText((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)||[])[1]||'');const description=metaValue(html,'og:description')||metaValue(html,'description');const image=metaValue(html,'og:image')||metaValue(html,'twitter:image');const price=metaValue(html,'product:price:amount')||metaValue(html,'og:price:amount');const currency=metaValue(html,'product:price:currency')||metaValue(html,'og:price:currency')||'USD';const rating=parseRating(metaValue(html,'ratingValue'));const reviewCount=parseReviewCount(metaValue(html,'reviewCount')||metaValue(html,'ratingCount'));if(!title&&!image)return {error:'Amazon did not expose product data from this page.'};return {title:title||'Amazon product',description:description||null,brand:'',images:image?[image]:[],features:[],current_price:parseMoney(price),list_price:null,discount_percent:null,deal_text:null,rating,review_count:reviewCount,bought_past_month:null,shipping_text:null,tax_text:null,variations:[],currency,destination_url:resolved,resolved_url:resolved,asin:finalAsin};}
+function decodeJsonHtml(value){
+  return String(value||'')
+    .replace(/&quot;/g,'"').replace(/&#34;/g,'"').replace(/&#39;/g,"'")
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+}
+function firstJsonLd(html){
+  const blocks=String(html||'').match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>[\\s\\S]*?<\/script>/gi)||[];
+  for(const block of blocks){
+    const raw=block.replace(/^.*?>/,'').replace(/<\/script>\\s*$/i,'').trim();
+    try{
+      const data=JSON.parse(raw);
+      const list=Array.isArray(data)?data:[data];
+      const product=list.find(x=>String(x?.['@type']||'').toLowerCase()==='product')||list.find(x=>Array.isArray(x?.['@type'])&&x['@type'].some(t=>String(t).toLowerCase()==='product'));
+      if(product)return product;
+    }catch(e){}
+  }
+  return null;
+}
+function amazonStateObjects(html){
+  const out=[];
+  const re=/<(?:div|span|script)[^>]*(?:data-a-state|data-a-dynamic-image|data-csa-c-type|id=["'](?:centerCol|twister|ppd|availability)["'])[^>]*>/gi;
+  const tags=String(html||'').match(re)||[];
+  for(const tag of tags){
+    const m=tag.match(/data-a-state=["']([^"']+)["']/i);
+    if(m){try{out.push(JSON.parse(decodeJsonHtml(m[1])))}catch(e){}}
+  }
+  return out;
+}
+function amazonText(html,patterns){
+  for(const pattern of patterns){
+    const m=String(html||'').match(pattern);
+    if(m&&m[1]){const v=htmlText(decodeJsonHtml(m[1]));if(v)return v;}
+  }
+  return '';
+}
+async function scrapeAmazonListing(sourceUrl,asin){
+  const resolved=await resolveAmazonUrl(sourceUrl);
+  const finalAsin=asinFromUrl(resolved)||asin;
+  if(!finalAsin)return {error:'Could not find an ASIN after resolving the Amazon link.'};
+  let html='';
+  try{
+    const r=await fetch(resolved,{redirect:'follow',headers:{
+      'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154 Safari/537.36',
+      'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+      'accept-language':'en-US,en;q=0.9',
+      'cache-control':'no-cache'
+    }});
+    if(!r.ok)throw new Error('Amazon returned HTTP '+r.status);
+    html=await r.text();
+  }catch(e){
+    return {error:'Amazon product page could not be read: '+String(e?.message||e)};
+  }
+
+  const jsonld=firstJsonLd(html)||{};
+  const states=amazonStateObjects(html);
+  const title=String(jsonld.name||'').trim()
+    ||metaValue(html,'og:title')||metaValue(html,'twitter:title')
+    ||amazonText(html,[/id=["']productTitle["'][^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i,/id=["']productTitle["'][^>]*>([\\s\\S]*?)<\\/h1>/i])
+    ||htmlText((html.match(/<title[^>]*>([\\s\\S]*?)<\\/title>/i)||[])[1]||'');
+  const description=htmlText(jsonld.description||'')
+    ||metaValue(html,'og:description')||metaValue(html,'description')
+    ||amazonText(html,[/id=["']feature-bullets["'][^>]*>[\\s\\S]*?<li[^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i]);
+  const imageCandidates=[];
+  const addImage=v=>{if(typeof v==='string'&&validUrl(v)&&!imageCandidates.includes(v))imageCandidates.push(v);};
+  if(Array.isArray(jsonld.image))jsonld.image.forEach(addImage); else addImage(jsonld.image);
+  addImage(metaValue(html,'og:image')); addImage(metaValue(html,'twitter:image'));
+  const dyn=String(html||'').match(/data-a-dynamic-image=["']([^"']+)["']/gi)||[];
+  for(const tag of dyn){const m=tag.match(/data-a-dynamic-image=["']([^"']+)["']/i);if(m){try{const obj=JSON.parse(decodeJsonHtml(m[1]));Object.keys(obj).forEach(addImage);}catch(e){}}}
+  const brand=typeof jsonld.brand==='string'?jsonld.brand:jsonld.brand?.name
+    ||amazonText(html,[/id=["']bylineInfo["'][^>]*>([\\s\\S]*?)<\\/a>/i,/id=["']brand["'][^>]*>([\\s\\S]*?)<\\/span>/i])||'';
+  const offers=Array.isArray(jsonld.offers)?jsonld.offers[0]:(jsonld.offers||{});
+  const currentPrice=parseMoney(offers.price)
+    ??parseMoney(metaValue(html,'product:price:amount'))
+    ??parseMoney(amazonText(html,[/class=["'][^"']*a-price-whole[^"']*["'][^>]*>([\\s\\S]*?)<\\/span>/i]));
+  const currency=String(offers.priceCurrency||metaValue(html,'product:price:currency')||'USD').toUpperCase();
+  let listPrice=parseMoney(amazonText(html,[/class=["'][^"']*a-text-price[^"']*["'][^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i,/id=["']listPrice["'][^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i]));
+  const discountText=amazonText(html,[/id=["']couponText["'][^>]*>([\\s\\S]*?)<\\/span>/i,/class=["'][^"']*savingsPercentage[^"']*["'][^>]*>([\\s\\S]*?)<\\/span>/i]);
+  let discountPercent=discountText?parseRating(discountText):null;
+  if(listPrice==null&&currentPrice!=null&&discountPercent!=null&&discountPercent>0&&discountPercent<100)listPrice=Number((currentPrice/(1-discountPercent/100)).toFixed(2));
+  if(discountPercent==null&&listPrice!=null&&currentPrice!=null&&listPrice>currentPrice)discountPercent=Number((((listPrice-currentPrice)/listPrice)*100).toFixed(1));
+  const rating=parseRating(jsonld.aggregateRating?.ratingValue)
+    ??parseRating(metaValue(html,'ratingValue'))
+    ??parseRating(amazonText(html,[/id=["']acrPopover["'][^>]*title=["']([^"']+)["']/i]));
+  const reviewCount=parseReviewCount(jsonld.aggregateRating?.reviewCount||jsonld.aggregateRating?.ratingCount)
+    ??parseReviewCount(metaValue(html,'reviewCount')||metaValue(html,'ratingCount'))
+    ??parseReviewCount(amazonText(html,[/id=["']acrCustomerReviewText["'][^>]*>([\\s\\S]*?)<\\/span>/i]));
+  const availability=htmlText(offers.availability||'')
+    ||amazonText(html,[/id=["']availability["'][^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i,/id=["']outOfStock["'][^>]*>([\\s\\S]*?)<\\/div>/i]);
+  const shippingText=amazonText(html,[/id=["']mir-layout-DELIVERY_BLOCK-slot-PRIMARY_DELIVERY_MESSAGE_LARGE["'][^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i,/id=["']deliveryBlockMessage["'][^>]*>([\\s\\S]*?)<\\/span>/i]);
+  const boughtPastMonth=amazonText(html,[/id=["']socialProofingAsinFacepileFeature["'][^>]*>[\\s\\S]*?([0-9,.]+\\+?\\s*(?:bought|purchased)[^<]*)/i,/([0-9,.]+\\+?\\s+bought in past month)/i]);
+  const taxText=amazonText(html,[/id=["']taxInclusiveMessage["'][^>]*>([\\s\\S]*?)<\\/span>/i,/id=["']taxMessage["'][^>]*>([\\s\\S]*?)<\\/span>/i]);
+  const sku=String(jsonld.sku||jsonld.mpn||'').trim()||amazonText(html,[/id=["']productDetails["'][^>]*>[\\s\\S]*?(?:ASIN|Item model number)[^<]*<[^>]*>([A-Z0-9._-]+)/i]);
+  const featureMatches=html.match(/id=["']feature-bullets["'][^>]*>[\\s\\S]*?<li[^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/gi)||[];
+  const features=[...new Set(featureMatches.map(x=>htmlText(x.replace(/^.*?<span[^>]*>/i,'').replace(/<\\/span>[\\s\\S]*$/i,'')).trim()).filter(Boolean))].slice(0,20);
+  const variantNames=[];
+  for(const s of states){
+    const text=JSON.stringify(s);
+    if(/dimension|variation|size|color/i.test(text)&&text.length<100000)variantNames.push(s);
+  }
+  if(!title&&!imageCandidates.length)return {error:'Amazon did not expose product data from this page.'};
+  return {
+    title:title||'Amazon product',description:description||null,brand:brand||null,images:imageCandidates.slice(0,30),
+    features,current_price:currentPrice,list_price:listPrice,discount_percent:discountPercent,deal_text:discountText||null,
+    rating,review_count:reviewCount,bought_past_month:boughtPastMonth||null,shipping_text:shippingText||null,
+    tax_text:taxText||null,availability:availability||null,sku:sku||null,variations:variantNames.slice(0,20),
+    currency,destination_url:resolved,resolved_url:resolved,asin:finalAsin
+  };
+}
 function autoCategory(title='',description='',brand='',categories=[]){
   const text=(String(title)+' '+String(description)+' '+String(brand)).toLowerCase();
   const aliases={
