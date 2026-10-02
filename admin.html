@@ -296,10 +296,10 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
   <div class="smart-import-shell">
     <div class="smart-import-main">
       <div class="smart-import-toolbar">
-        <div><span class="section-kicker">Paste links</span><h3>One link or a whole batch</h3><p>One URL per line · up to 30 links per run · duplicates are skipped.</p></div>
+        <div><span class="section-kicker">Paste links</span><h3>One link or a whole batch</h3><p>Paste as many links as you want — Nuvora automatically puts each link on its own line · up to 30 links per run · duplicates are skipped.</p></div>
         <span id="smartImportMode" class="source-badge">Amazon</span>
       </div>
-      <textarea id="smartImportUrls" class="smart-url-box" placeholder="https://www.amazon.com/dp/B0XXXXXXXXXX&#10;https://www.amazon.com/dp/B0YYYYYYYYYY"></textarea>
+      <textarea id="smartImportUrls" onpaste="handleSmartImportPaste(event)" onblur="formatImportLinks()" class="smart-url-box" placeholder="https://www.amazon.com/dp/B0XXXXXXXXXX&#10;https://www.amazon.com/dp/B0YYYYYYYYYY"></textarea>
       <div class="smart-import-bottom">
         <div class="smart-hint"><span>✓</span> Titles cleaned</div>
         <div class="smart-hint"><span>✓</span> Images captured</div>
@@ -694,11 +694,20 @@ function setSmartSource(source){
   document.getElementById('smartSourceAmazon')?.classList.toggle('active',smartImportSource==='amazon');
   document.getElementById('smartSourceTemu')?.classList.toggle('active',smartImportSource==='temu');
   const mode=document.getElementById('smartImportMode'); if(mode)mode.textContent=smartImportSource==='temu'?'Temu':'Amazon';
-  const box=document.getElementById('smartImportUrls'); if(box)box.placeholder=smartImportSource==='temu'?'https://www.temu.com/...\nhttps://www.temu.com/...':'https://www.amazon.com/dp/B0XXXXXXXXXX\nhttps://www.amazon.com/dp/B0YYYYYYYYYY';
+  const box=document.getElementById('smartImportUrls'); if(box)box.placeholder=smartImportSource==='temu'?'https://www.temu.com/...\nhttps://www.temu.com/...':'https://www.amazon.com/dp/B0XXXXXXXXXX\nhttps://www.amazon.com/dp/B0YYYYYYYYYY\nhttps://link.amazon/B0XXXXXXXXH';
 }
-async function runSmartImport(){
+async function normalizeImportUrls(value){
+  const matches=String(value||'').match(/https?:\/\/[^\s<>"'\]\[),;]+/gi)||[];
+  return [...new Set(matches.map(x=>x.replace(/[.,;]+$/,'').trim()).filter(Boolean))];
+}
+function formatImportLinks(){
+  const box=document.getElementById('smartImportUrls'); if(!box)return;
+  const urls=normalizeImportUrls(box.value);
+  if(urls.length)box.value=urls.join('\n');
+}
+function runSmartImport(){
   const box=document.getElementById('smartImportUrls'),btn=document.getElementById('smartImportButton'),progress=document.getElementById('smartImportProgress');
-  const urls=[...new Set((box?.value||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean))];
+  const urls=normalizeImportUrls(box?.value||'');
   if(!urls.length)return setAdminStatus('Paste at least one product link.');
   if(urls.length>30)return setAdminStatus('Please import 30 links or fewer at a time.');
   const valid=urls.filter(u=>{try{const h=new URL(u).hostname.toLowerCase();return smartImportSource==='amazon'?h.includes('amazon.'):h==='temu.com'||h.endsWith('.temu.com')||h==='temu.to'}catch(e){return false}});
