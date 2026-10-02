@@ -56,7 +56,7 @@ export default {
             }catch(e){shopifyError=String(e?.message||'Shopify authentication failed').slice(0,500);}
           }
         }
-        const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.settings&&checks.social&&checks.analytics&&checks.shopifyEnvironment&&checks.shopifyAuth&&checks.shopifyProducts&&checks.workersAI;
+        const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.settings&&checks.social;
         return json({ok,checks,shopifyError,shopifyMissing,aiMissing});
       }
 
@@ -124,6 +124,25 @@ function cleanImportedTitle(value,brand=''){
   t=kept.join(' ').replace(/\s{2,}/g,' ').replace(/\s+([,.:;])/g,'$1').trim();
   if(t===t.toLowerCase())t=t.replace(/\b[a-z]/g,c=>c.toUpperCase());
   return t.slice(0,180);
+}
+function normalizeAmazonProduct(product={}){
+  const images=Array.isArray(product.image_urls)?product.image_urls.filter(validUrl).slice(0,30):(validUrl(product.image_url)?[product.image_url]:[]);
+  const rawName=cleanImportedTitle(product.name||'Nuvora product',product.brand||'');
+  const description=cleanMultilineText(product.description,12000)||null;
+  const features=cleanMultilineText(product.features,12000)||null;
+  return {
+    name:rawName||'Nuvora product',
+    brand:cleanText(product.brand,180)||null,
+    description,
+    features,
+    image_url:images[0]||null,
+    image_urls:images,
+    display_price:product.display_price??null,
+    currency:product.currency||'USD',
+    rating:product.amazon_rating??null,
+    review_count:product.amazon_review_count??null,
+    deal:product.amazon_deal_text||null
+  };
 }
       if(url.pathname==='/api/admin/import/bulk'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
@@ -746,49 +765,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const collections=collectionsRes.ok?await collectionsRes.json():[];
         const categoryMap=new Map(categories.map(x=>[String(x.id),x]));
         const collectionMap=new Map(collections.map(x=>[String(x.id),x]));
-        const suspicious=products.filter(p=>{
-          const amazon=String(p.retailer||'').toLowerCase()==='amazon'||!!p.amazon_asin||!!p.amazon_source_url;
-          const text=String(p.description||'');
-          return amazon&&(!p.display_price||Number(p.display_price)<=0||/keyboard shortcuts|prime video|all departments|deliver(?:ing|y) to|amazon fashion|sponsored/i.test(text)||!p.image_url);
-        }).slice(0,5);
-        const repairs=new Map();
-        for(const p of suspicious){
-          try{
-            const source=p.amazon_source_url||p.destination_url;
-            const asin=p.amazon_asin||asinFromUrl(source);
-            if(source&&asin){
-              const listing=await scrapeAmazonListing(source,asin);
-              if(listing&&!listing.error){
-                const patch={
-                  name:listing.title||p.name,
-                  brand:listing.brand||p.brand||null,
-                  description:listing.description||p.description||null,
-                  features:Array.isArray(listing.features)&&listing.features.length?listing.features.join('\n'):p.features||null,
-                  image_url:Array.isArray(listing.images)&&listing.images[0]?listing.images[0]:p.image_url||null,
-                  image_urls:Array.isArray(listing.images)?listing.images:[],
-                  display_price:listing.current_price??p.display_price??null,
-                  currency:p.currency||'USD',
-                  amazon_list_price:listing.list_price??p.amazon_list_price??null,
-                  amazon_discount_percent:listing.discount_percent??p.amazon_discount_percent??null,
-                  amazon_deal_text:listing.deal_text||p.amazon_deal_text||null,
-                  amazon_rating:listing.rating??p.amazon_rating??null,
-                  amazon_review_count:listing.review_count??p.amazon_review_count??null,
-                  amazon_bought_past_month:listing.bought_past_month||p.amazon_bought_past_month||null,
-                  amazon_badges:listing.badges||p.amazon_badges||[],
-                  amazon_shipping_text:listing.shipping_text||p.amazon_shipping_text||null,
-                  amazon_tax_text:listing.tax_text||p.amazon_tax_text||null,
-                  amazon_variations:listing.variations||p.amazon_variations||[],
-                  amazon_last_synced:new Date().toISOString()
-                };
-                repairs.set(String(p.id),patch);
-                await supabaseRest(env,'PATCH','products',patch,'?id=eq.'+encodeURIComponent(p.id));
-              }
-            }
-          }catch(e){}
-        }
         return json(products.map(p=>{
-          const repaired=repairs.get(String(p.id));
-          const source=repaired?{...p,...repaired}:p;
+          const source=p;
           const normalized=normalizeAmazonProduct(source);
           const safeText=v=>cleanMultilineText(v,12000)||null;
           return {
