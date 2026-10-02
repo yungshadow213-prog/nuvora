@@ -87,6 +87,7 @@ function metaValue(html,name){
 }
 function parseMoney(v){ const m=String(v||'').replace(/,/g,'').match(/([0-9]+(?:\.[0-9]{1,2})?)/); return m?Number(m[1]):null; }
 function parseRating(v){ const m=String(v||'').match(/([0-5](?:\.[0-9])?)/); return m?Number(m[1]):null; }
+function parsePercent(v){ const m=String(v||'').replace(/,/g,'').match(/([0-9]{1,3}(?:\.[0-9]+)?)\s*%/); return m?Number(m[1]):null; }
 function parseReviewCount(v){ const m=String(v||'').replace(/,/g,'').match(/([0-9]{1,9})/); return m?Number(m[1]):null; }
 function decodeJsonHtml(value){
   return String(value||'')
@@ -165,7 +166,7 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const currency=String(offers.priceCurrency||metaValue(html,'product:price:currency')||'USD').toUpperCase();
   let listPrice=parseMoney(amazonText(html,[/class=["'][^"']*a-text-price[^"']*["'][^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i,/id=["']listPrice["'][^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i]));
   const discountText=amazonText(html,[/id=["']couponText["'][^>]*>([\\s\\S]*?)<\\/span>/i,/class=["'][^"']*savingsPercentage[^"']*["'][^>]*>([\\s\\S]*?)<\\/span>/i]);
-  let discountPercent=discountText?parseRating(discountText):null;
+  let discountPercent=discountText?parsePercent(discountText):null;
   if(listPrice==null&&currentPrice!=null&&discountPercent!=null&&discountPercent>0&&discountPercent<100)listPrice=Number((currentPrice/(1-discountPercent/100)).toFixed(2));
   if(discountPercent==null&&listPrice!=null&&currentPrice!=null&&listPrice>currentPrice)discountPercent=Number((((listPrice-currentPrice)/listPrice)*100).toFixed(1));
   const rating=parseRating(jsonld.aggregateRating?.ratingValue)
@@ -309,7 +310,7 @@ function normalizeAmazonProduct(product={}){
               amazon_bought_past_month:listing.bought_past_month||listing.sold_count_text||null,amazon_shipping_text:listing.shipping_text||null,
               availability:listing.availability||null,source_sku:listing.sku||null,
               amazon_tax_text:listing.tax_text||null,amazon_variations:Array.isArray(listing.variations)?listing.variations:[],
-              published:false
+              published:false,amazon_last_synced:new Date().toISOString()
             };
             const slugBase=title.toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,120);
             product.slug=(slugBase||'product')+'-'+Date.now().toString(36);
@@ -322,6 +323,48 @@ function normalizeAmazonProduct(product={}){
           }
         }
         return json({ok:true,imported,skipped,failed,total:urls.length,results});
+      }
+
+      if(url.pathname.match(/^\/api\/admin\/products\/[^/]+\/sync$/)&&request.method==='POST'){
+        const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        const syncMatch=url.pathname.match(/^\/api\/admin\/products\/([^/]+)\/sync$/); const id=decodeURIComponent(syncMatch[1]);
+        const existingRes=await supabaseRest(env,'GET','products',undefined,'?select=*&id=eq.'+encodeURIComponent(id)+'&limit=1');
+        if(!existingRes.ok)return json({error:'Could not load the product.'},500);
+        const current=(await existingRes.json())?.[0]; if(!current)return json({error:'Product not found.'},404);
+        const sourceUrl=current.amazon_source_url||current.destination_url||'';
+        if(!validUrl(sourceUrl))return json({error:'This product has no valid source URL to sync.'},400);
+        const retailer=String(current.retailer||'').toLowerCase();
+        if(retailer!=='amazon')return json({error:'Source sync currently supports Amazon products.'},400);
+        const asin=asinFromUrl(sourceUrl)||current.amazon_asin;
+        if(!asin)return json({error:'This product has no Amazon ASIN.'},400);
+        const listing=await scrapeAmazonListing(sourceUrl,asin);
+        if(!listing||listing.error)return json({error:listing?.error||'Amazon source could not be read.'},502);
+        const images=Array.isArray(listing.images)?listing.images.filter(validUrl).slice(0,30):[];
+        const patch={
+          amazon_asin:listing.asin||asin,
+          amazon_source_url:sourceUrl,
+          source_type:'amazon',
+          brand:listing.brand||current.brand||null,
+          description:listing.description||current.description||null,
+          features:Array.isArray(listing.features)&&listing.features.length?listing.features.join('\\n'):current.features||null,
+          amazon_list_price:listing.list_price??null,
+          amazon_discount_percent:listing.discount_percent??null,
+          amazon_deal_text:listing.deal_text||null,
+          amazon_rating:listing.rating??null,
+          amazon_review_count:listing.review_count??null,
+          amazon_bought_past_month:listing.bought_past_month||null,
+          amazon_shipping_text:listing.shipping_text||null,
+          amazon_tax_text:listing.tax_text||null,
+          availability:listing.availability||null,
+          source_sku:listing.sku||current.source_sku||null,
+          amazon_variations:Array.isArray(listing.variations)?listing.variations:[],
+          amazon_last_synced:new Date().toISOString()
+        };
+        // Source sync intentionally does not overwrite Nuvora's editable presentation fields: title, display price, and images.
+        if(images.length && (!Array.isArray(current.image_urls)||!current.image_urls.length)) { patch.image_url=images[0]; patch.image_urls=images; }
+        const saved=await supabaseProductWrite(env,'PATCH',patch,'?id=eq.'+encodeURIComponent(id));
+        if(!saved.ok)return json({error:(await saved.text()).slice(0,2000)},400);
+        return json({ok:true,product:(await saved.json())?.[0]||null,source:{asin:listing.asin||asin,fieldsCaptured:{images:images.length,description:!!listing.description,features:Array.isArray(listing.features)?listing.features.length:0,price:listing.current_price!=null,listPrice:listing.list_price!=null,discount:listing.discount_percent!=null,rating:listing.rating!=null,reviews:listing.review_count!=null,availability:!!listing.availability,shipping:!!listing.shipping_text,variants:Array.isArray(listing.variations)?listing.variations.length:0}}});
       }
 
       if(url.pathname==='/api/amazon/prepare'&&request.method==='POST'){
