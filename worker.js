@@ -27,7 +27,7 @@ export default {
       }
 
       if(url.pathname==='/api/admin/diagnostics'&&request.method==='GET'){
-        const cfg=configured(env); const checks={environment:cfg.supabase,auth:false,admin:false,products:false,settings:false,social:false,workersAI:cfg.workersAI,shopifyStorefront:cfg.shopifyStorefront,shopifyEnvironment:cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
+        const cfg=configured(env); const checks={environment:cfg.supabase,auth:false,admin:false,products:false,settings:false,social:false,analytics:false,workersAI:cfg.workersAI,shopifyStorefront:cfg.shopifyStorefront,shopifyEnvironment:cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
         let shopifyError='';
         const shopifyMissing=[]; const aiMissing=[]; if(!env.AI)aiMissing.push('Workers AI binding');
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))shopifyMissing.push('SHOPIFY_SHOP');
@@ -37,9 +37,9 @@ export default {
         if(u&&env.SUPABASE_SERVICE_ROLE_KEY){
           const pr=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});
           if(pr.ok){const rows=await pr.json();const p=rows[0];checks.admin=!!p&&(p.is_admin===true||p.role==='admin');}
-          for(const t of ['products','store_settings','social_posts']){
+          for(const t of ['products','store_settings','social_posts','analytics_events']){
             const rr=await supabaseRest(env,'GET',t,undefined,'?select=*&limit=1');
-            checks[t==='store_settings'?'settings':t==='social_posts'?'social':'products']=rr.ok;
+            checks[t==='store_settings'?'settings':t==='social_posts'?'social':t==='analytics_events'?'analytics':'products']=rr.ok;
           }
           if(checks.admin&&checks.shopifyEnvironment){
             try{
@@ -49,7 +49,7 @@ export default {
             }catch(e){shopifyError=String(e?.message||'Shopify authentication failed').slice(0,500);}
           }
         }
-        const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.settings&&checks.social&&checks.shopifyEnvironment&&checks.shopifyAuth&&checks.shopifyProducts&&checks.workersAI;
+        const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.settings&&checks.social&&checks.analytics&&checks.shopifyEnvironment&&checks.shopifyAuth&&checks.shopifyProducts&&checks.workersAI;
         return json({ok,checks,shopifyError,shopifyMissing,aiMissing});
       }
 
