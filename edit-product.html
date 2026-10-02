@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nuvora — Edit Product</title>
+<style>
+:root{--bg:#f5f6f3;--surface:#fff;--text:#162019;--muted:#707a73;--line:#e1e6e0;--accent:#245b3a;--soft:#edf5ee;--danger:#b74747;--shadow:0 14px 40px rgba(26,43,31,.07)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.header{position:sticky;top:0;z-index:20;background:rgba(245,246,243,.94);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+.header-inner{max-width:1280px;margin:auto;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:15px}
+.back{color:var(--muted);text-decoration:none;font-size:12px;font-weight:750}.back:hover{color:var(--text)}
+.title-wrap{min-width:0;flex:1}.eyebrow{font-size:9px;text-transform:uppercase;letter-spacing:.14em;font-weight:850;color:#819087}.title{font-size:21px;font-weight:850;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding:5px 8px;border-radius:999px;background:var(--soft);color:var(--accent);font-size:9px;text-transform:uppercase;letter-spacing:.08em}
+.actions{display:flex;gap:8px}.btn{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:10px;padding:10px 13px;font-size:11px;font-weight:800;cursor:pointer}.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn:disabled{opacity:.5;cursor:not-allowed}
+main{max-width:1280px;margin:auto;padding:28px 24px 70px}.layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.75fr);gap:18px}.panel{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow);margin-bottom:18px}.panel h2{font-size:16px;margin:0 0 5px}.panel p{font-size:11px;color:var(--muted);line-height:1.55;margin:0 0 17px}
+.field{display:grid;gap:7px;margin-top:15px}.field label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:850;color:#78837b}.field input,.field textarea{width:100%;border:1px solid var(--line);background:#fbfcfa;color:var(--text);border-radius:11px;padding:12px;font:inherit;outline:none}.field textarea{min-height:105px;resize:vertical}.field input:focus,.field textarea:focus{border-color:#9db9a5;box-shadow:0 0 0 3px #edf5ee}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hero-image{aspect-ratio:1/1;max-height:520px;border-radius:15px;background:#f1f3ef;display:grid;place-items:center;overflow:hidden;border:1px solid var(--line)}.hero-image img{width:100%;height:100%;object-fit:contain}.gallery{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}.thumb{aspect-ratio:1;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#f5f6f3;cursor:pointer;padding:0}.thumb.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--soft)}.thumb img{width:100%;height:100%;object-fit:cover}
+.source-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.source-item{border:1px solid var(--line);border-radius:12px;padding:12px;background:#fafbf9}.source-item b{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:#87918a;margin-bottom:5px}.source-item span{font-size:12px;line-height:1.4;word-break:break-word}.source-wide{grid-column:1/-1}
+.readonly-note{padding:11px 12px;background:#f7f9f6;border:1px solid var(--line);border-radius:11px;font-size:10px;color:var(--muted);line-height:1.5}.ai-box{border:1px solid #dce8de;background:linear-gradient(135deg,#f8fbf8,#edf5ee);border-radius:15px;padding:15px}.ai-preview{display:none;margin-top:12px}.ai-preview img{width:100%;max-height:300px;object-fit:contain;border-radius:11px;background:#fff;border:1px solid var(--line)}.ai-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.gallery-add{display:flex;gap:8px;margin-top:10px}.gallery-add input{flex:1}.message{position:fixed;right:20px;bottom:20px;z-index:50;max-width:380px;padding:12px 15px;border-radius:12px;background:#162019;color:#fff;box-shadow:0 15px 35px rgba(0,0,0,.18);font-size:11px;display:none}.message.show{display:block}.message.error{background:#7f3030}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.header-inner{padding:13px 15px}.header .actions .btn:not(.primary){display:none}main{padding:18px 12px 50px}.panel{padding:15px}.hero-image{max-height:none}.source-grid{grid-template-columns:1fr}.source-wide{grid-column:auto}}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}.gallery{grid-template-columns:repeat(4,1fr)}.title{font-size:17px}.header-inner{gap:8px}.actions{gap:5px}.btn{padding:9px 10px}}
+</style>
+</head>
+<body>
+<header class="header"><div class="header-inner">
+<a class="back" href="/admin">← Admin</a>
+<div class="title-wrap"><div class="eyebrow">Product workspace</div><div class="title" id="pageTitle">Loading… <span class="status" id="status">Draft</span></div></div>
+<div class="actions"><button class="btn" id="previewBtn">Preview</button><button class="btn primary" id="saveBtn">Save changes</button><button class="btn primary" id="publishBtn">Publish</button></div>
+</div></header>
+<main>
+<div class="layout">
+<section>
+<div class="panel"><h2>What you can change</h2><p>Nuvora automatically keeps the source information below. This workspace is intentionally focused on the things you actually control.</p>
+<div class="grid2"><div class="field"><label>Store title</label><input id="name"></div><div class="field"><label>Store price</label><input id="price" type="number" step="0.01" min="0"></div></div>
+<div class="field"><label>Store description override <span style="font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label><textarea id="description" placeholder="Leave unchanged if you want Nuvora to use the imported source description."></textarea></div>
+</div>
+<div class="panel"><h2>Product images</h2><p>Keep the source gallery or replace/add images. AI-generated images are added as new gallery images so the original is never lost.</p>
+<div class="hero-image" id="hero"></div><div class="gallery" id="gallery"></div>
+<div class="gallery-add"><input type="file" id="imageFiles" accept="image/*" multiple><button class="btn" id="uploadBtn">Upload</button></div>
+</div>
+<div class="panel"><h2>AI image studio</h2><p>Generate a merchandising image from the current product image while keeping the product identity as the reference.</p>
+<div class="ai-box"><div class="field" style="margin-top:0"><label>Style instruction</label><textarea id="aiPrompt" placeholder="Clean ecommerce studio image, premium neutral background, product clearly visible"></textarea></div><div class="ai-actions"><button class="btn primary" id="aiBtn">Generate image</button><button class="btn" id="useAiBtn" disabled>Use generated image</button></div><div class="ai-preview" id="aiPreview"><img id="aiImg" alt="AI preview"></div><div class="readonly-note" id="aiStatus" style="margin-top:10px">Ready.</div></div>
+</div>
+</section>
+<aside>
+<div class="panel"><h2>Live source information</h2><p>This information is pulled from the imported product record. It is not a manual form.</p><div class="source-grid" id="sourceGrid"></div></div>
+<div class="panel"><h2>Store presentation</h2><div class="source-grid"><div class="source-item"><b>Category</b><span id="category">—</span></div><div class="source-item"><b>Collection</b><span id="collection">—</span></div><div class="source-item"><b>Retailer</b><span id="retailer">—</span></div><div class="source-item"><b>Product ID</b><span id="asin">—</span></div></div></div>
+<div class="panel"><div class="readonly-note">Source facts are never invented. If Amazon or another source does not expose a field, Nuvora will show “Not provided by source” instead of making one up.</div></div>
+</aside>
+</div>
+</main>
+<div class="message" id="message"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+let sb=null,session=null,product=null,images=[],selected=0,generated=null;
+const $=id=>document.getElementById(id);
+function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function msg(t,error=false){const e=$('message');e.textContent=t;e.className='message show'+(error?' error':'');clearTimeout(window._msg);window._msg=setTimeout(()=>e.className='message',3500);}
+async function api(path,options={}){options.headers={...(options.headers||{}),Authorization:'Bearer '+session.access_token};if(options.body&&typeof options.body!=='string'&&!(options.body instanceof FormData)){options.headers['content-type']='application/json';options.body=JSON.stringify(options.body)}const r=await fetch(path,options);let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||'Request failed');return j;}
+function val(x){return x===null||x===undefined||x===''?'Not provided by source':String(x);}
+function render(){
+ $('pageTitle').firstChild.textContent=(product.name||'Product')+' ';
+ $('status').textContent=product.published?'Published':'Draft';
+ $('name').value=product.name||'';$('price').value=product.display_price??'';$('description').value=product.description||'';
+ $('category').textContent=val(product.category?.name||product.category_id);$('collection').textContent=val(product.collection?.name||product.collection_id);$('retailer').textContent=val(product.retailer||product.source_type);$('asin').textContent=val(product.amazon_asin||product.sourcinbox_product_id||product.id);
+ images=[...(Array.isArray(product.image_urls)?product.image_urls:[]).filter(Boolean)];if(product.image_url&&!images.includes(product.image_url))images.unshift(product.image_url);renderGallery();renderSource();
+ $('publishBtn').textContent=product.published?'Unpublish':'Publish';
+}
+function renderGallery(){
+ const hero=$('hero');const src=images[selected]||'';hero.innerHTML=src?'<img src="'+esc(src)+'" alt="'+esc(product.name||'Product')+'">':'<span style="color:#98a29b">No image</span>';
+ $('gallery').innerHTML=images.map((u,i)=>'<button class="thumb '+(i===selected?'active':'')+'" data-i="'+i+'"><img src="'+esc(u)+'" alt=""></button>').join('');
+ document.querySelectorAll('.thumb').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.i);renderGallery()});
+}
+function renderSource(){
+ const fields=[
+ ['Brand',product.brand],['Current source price',product.display_price!=null?product.display_price+' '+(product.currency||''):null],
+ ['List price',product.amazon_list_price],['Discount',product.amazon_discount_percent!=null?product.amazon_discount_percent+'%':null],
+ ['Deal',product.amazon_deal_text],['Rating',product.amazon_rating!=null?product.amazon_rating+' / 5':null],
+ ['Review count',product.amazon_review_count],['Bought recently',product.amazon_bought_past_month],
+ ['Availability',product.availability],['Shipping',product.amazon_shipping_text],
+ ['Taxes',product.amazon_tax_text],['Variants',Array.isArray(product.amazon_variations)&&product.amazon_variations.length?product.amazon_variations.map(v=>v.name+': '+(v.values||[]).join(', ')).join(' · '):null],
+ ['Source URL',product.amazon_source_url||product.destination_url],['Last source sync',product.amazon_last_synced?new Date(product.amazon_last_synced).toLocaleString():null]
+ ];
+ $('sourceGrid').innerHTML=fields.map(([k,v])=>'<div class="source-item '+(k==='Source URL'?'source-wide':'')+'"><b>'+esc(k)+'</b><span>'+esc(val(v))+'</span></div>').join('');
+}
+async function save(){
+ const body={name:$('name').value.trim(),display_price:$('price').value===''?null:Number($('price').value),description:$('description').value.trim()||null,image_url:images[0]||null,image_urls:images,updated_at:new Date().toISOString()};
+ if(!body.name)throw new Error('Product title is required.');if(body.display_price!==null&&(!Number.isFinite(body.display_price)||body.display_price<0))throw new Error('Price is invalid.');
+ product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body});render();msg('Product changes saved.');}
+async function publish(){const next=!product.published;const body={published:next,updated_at:new Date().toISOString()};product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body});render();msg(next?'Product published to the storefront.':'Product unpublished.');}
+async function upload(){
+ const files=[...$('imageFiles').files];if(!files.length)return msg('Choose one or more images first.',true);if(!sb)return msg('Supabase is not connected.',true);
+ for(const file of files){if(!file.type.startsWith('image/'))throw new Error(file.name+' is not an image.');if(file.size>6*1024*1024)throw new Error(file.name+' is larger than 6 MB.');
+ const ext=(file.name.split('.').pop()||'jpg').replace(/[^a-z0-9]/gi,'')||'jpg';const path='products/'+crypto.randomUUID()+'.'+ext;const r=await sb.storage.from('product-images').upload(path,file,{cacheControl:'31536000',upsert:false});if(r.error)throw r.error;const u=sb.storage.from('product-images').getPublicUrl(path).data.publicUrl;images.push(u);}
+ selected=images.length-1;await save();$('imageFiles').value='';msg('Image uploaded and saved.');}
+async function generateAI(){
+ if(!images[0])throw new Error('Add a product image first.');$('aiBtn').disabled=true;$('aiStatus').textContent='Generating…';
+ try{const src=await fetch(images[0]);if(!src.ok)throw new Error('The current image could not be read as an AI reference.');const blob=await src.blob();const file=new File([blob],'product-reference.png',{type:blob.type||'image/png'});const fd=new FormData();fd.append('image',file);fd.append('size','1024x1024');fd.append('prompt','Create a professional ecommerce advertising image for the exact product in the reference. Preserve the product identity, shape, colors, materials, branding and important physical details. '+($('aiPrompt').value.trim()||'Clean premium ecommerce studio presentation, uncluttered background.'));const r=await fetch('/api/admin/ai/image',{method:'POST',headers:{Authorization:'Bearer '+session.access_token},body:fd});const j=await r.json();if(!r.ok)throw new Error(j.error||'AI image generation failed.');generated=j.image;$('aiImg').src=generated;$('aiPreview').style.display='block';$('useAiBtn').disabled=false;$('aiStatus').textContent='Generated. Use it to add this image to the product gallery.';}finally{$('aiBtn').disabled=false;}}
+async function useAI(){
+ if(!generated)return;const res=await fetch(generated);const blob=await res.blob();const file=new File([blob],'nuvora-ai-'+crypto.randomUUID()+'.png',{type:blob.type||'image/png'});const ext='png';const path='products/'+crypto.randomUUID()+'.'+ext;const r=await sb.storage.from('product-images').upload(path,file,{cacheControl:'31536000',upsert:false});if(r.error)throw r.error;images.push(sb.storage.from('product-images').getPublicUrl(path).data.publicUrl);selected=images.length-1;await save();$('useAiBtn').disabled=true;generated=null;msg('AI image added to the product gallery.');}
+$('saveBtn').onclick=()=>save().catch(e=>msg(e.message,true));$('publishBtn').onclick=()=>publish().catch(e=>msg(e.message,true));$('uploadBtn').onclick=()=>upload().catch(e=>msg(e.message,true));$('aiBtn').onclick=()=>generateAI().catch(e=>{$('aiStatus').textContent=e.message;msg(e.message,true)});$('useAiBtn').onclick=()=>useAI().catch(e=>msg(e.message,true));$('previewBtn').onclick=()=>{if(product?.slug)window.open('/?product='+encodeURIComponent(product.slug),'_blank','noopener')};
+(async()=>{try{const cfg=await fetch('/api/config').then(r=>r.json());sb=supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);const s=await sb.auth.getSession();session=s.data.session;if(!session){location.href='/admin';return;}const m=location.pathname.match(/\/admin\/products\/([^/]+)\/edit/);product=await api('/api/admin/products/'+encodeURIComponent(decodeURIComponent(m[1])));render();}catch(e){document.body.innerHTML='<main style="padding:40px;font-family:system-ui"><h2>Could not open product</h2><p>'+esc(e.message)+'</p><a href="/admin">Back to admin</a></main>';}})();
+</script>
+</body></html>
