@@ -421,6 +421,53 @@ button:hover,.btn:hover{transform:translateY(-1px)}
 </style><style id="nuvora-zero-popup">
 #authModal,#detailModal,#cartModal{display:none!important}
 .store-status{max-width:1180px;margin:0 auto;height:0;overflow:hidden;padding:0 14px;border-radius:12px;font-size:12px;line-height:1.4;transition:all .2s ease}.store-status.visible{height:auto;min-height:38px;margin-top:10px;padding:10px 14px;background:#f1f6f1;color:#31583e;border:1px solid #dce9dd}.store-status[data-status="error"]{background:#fff1f1;color:#9d4141;border-color:#f0d6d6}@media(max-width:700px){.store-status{margin-left:12px;margin-right:12px}.store-status.visible{margin-top:8px}}
+</style><style id="nuvora-storefront-polish">
+/* Nuvora storefront UI refresh */
+.topbar{background:rgba(248,251,248,.92)!important;border-bottom:1px solid #e1e8e2!important;box-shadow:0 8px 30px rgba(25,45,32,.06)!important;backdrop-filter:blur(22px)!important}
+.nav{height:74px!important;gap:16px!important}
+.nav-menu,.icon-btn,.avatar-btn{border:1px solid #dce5de!important;background:#fff!important;color:#25362c!important;box-shadow:0 2px 8px rgba(30,50,37,.04)!important;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease!important}
+.nav-menu:hover,.icon-btn:hover,.avatar-btn:hover{transform:translateY(-1px);border-color:#b8cbbd!important;box-shadow:0 7px 18px rgba(30,50,37,.09)!important}
+.nav-menu{width:44px!important;height:44px!important;border-radius:13px!important}
+.nav-menu span{width:17px!important;height:1.8px!important;margin:3px auto!important;background:#304338!important;border-radius:2px!important}
+.brand{color:#1d3025!important}
+.brandmark{background:#6f9b7a!important;box-shadow:0 8px 22px rgba(111,155,122,.2)!important}
+.brand small{color:#7b887f!important}
+.store-search{background:#f4f7f4!important;border:1px solid #dfe7e1!important;border-radius:14px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)!important}
+.store-search input{color:#25362c!important}
+.store-search input::placeholder{color:#89968d!important}
+.search-glyph{color:#4e6256!important}
+.nav-actions{gap:7px!important}
+.cart-btn{overflow:visible!important}
+.cart-count{right:-3px!important;top:-4px!important;min-width:18px!important;height:18px!important;background:#1d5c4a!important;color:#fff!important;border:2px solid #fff!important;font-size:9px!important;box-shadow:0 3px 8px rgba(29,92,74,.2)!important}
+.menu-panel{top:82px!important;background:rgba(255,255,255,.98)!important;border:1px solid #dce5de!important;box-shadow:0 24px 70px rgba(25,45,32,.16)!important;border-radius:20px!important}
+.menu-title{color:#203228!important}
+.menu-list button{min-height:42px!important;color:#304338!important;font-weight:650!important}
+.menu-list button:hover{background:#f1f5f1!important}
+.menu-section{color:#8b988f!important}
+.menu-divider{background:#e4ebe5!important}
+.menu-panel .close{background:#f2f5f2!important;color:#334238!important;border:1px solid #dfe7e1!important}
+.nv-hero-clean,.hero{background:transparent!important}
+.product-grid{gap:16px!important}
+.nv-card{border-color:#e0e8e1!important;background:#fff!important;border-radius:20px!important;box-shadow:0 5px 22px rgba(31,49,38,.045)!important}
+.nv-card:hover{border-color:#c7d8cc!important;box-shadow:0 18px 42px rgba(31,49,38,.10)!important}
+.nv-card .thumb{background:#f3f6f3!important}
+.nv-card .prodtext{background:#fff!important}
+.nv-card .card-source{color:#839188!important}
+.nv-card .prodtext h4{color:#26372d!important}
+.nv-card .prodprice{color:#1f3428!important}
+.nv-card .card-action{color:#718078!important}
+.nv-card .card-save{background:rgba(255,255,255,.9)!important;border-color:#dbe5de!important;color:#53655b!important}
+.nv-card-badge{background:rgba(255,255,255,.94)!important;color:#31583e!important;border-color:#dce7df!important}
+.section-head h2,.section h2{color:#213329}
+.empty{background:#fff!important;border-color:#d6e1d8!important;color:#7a877f!important}
+.browse-toolbar,.browse-search,.search,.filter-select{border-color:#dce5de!important;background:#fff!important}
+.btn{border-color:#dce5de!important;background:#fff!important;color:#304338!important}
+.btn.primary{background:#1d5c4a!important;color:#fff!important;box-shadow:0 8px 18px rgba(29,92,74,.16)!important}
+.btn.primary:hover{background:#174d3e!important;transform:translateY(-1px)}
+.footer{border-top-color:#dce5de!important}
+@media(max-width:900px){.nav{gap:10px!important}.store-search{flex:1;min-width:120px}.brand small{display:none}}
+@media(max-width:700px){.nav{height:68px!important}.store-search{display:none!important}.nav-search{display:grid!important}.nav-menu{width:40px!important;height:40px!important}.icon-btn,.avatar-btn{width:40px!important;height:40px!important}.nav-actions{gap:5px!important}}
+@media(max-width:420px){.nav{gap:6px!important}.nav-actions{gap:3px!important}.icon-btn,.avatar-btn{width:37px!important;height:37px!important}.nav-menu{width:37px!important;height:37px!important}.brand>span:last-child{font-size:17px!important}}
 </style></head>
 <body>
 <div class="announcement"><div class="shell"><b>Nuvora picks, made simple.</b> Browse curated products, save your favorites, and discover something worth finding.</div></div><header class="topbar"><div class="shell nav">
@@ -599,7 +646,7 @@ function renderSaved(){const list=products.filter(p=>saved.includes(p.id));docum
 function cartPrice(item,p){const v=(p.variants||[]).find(x=>String(x.id)===String(item.variantId));return Number(v?.price??p.rawPrice??0)||0}
 function changeCartQuantity(id,variantId,delta){const item=cart.find(x=>String(x.id||x)===String(id)&&String(x.variantId||'')===String(variantId||''));if(!item)return;item.quantity=Math.max(0,(Number(item.quantity)||1)+delta);if(item.quantity===0)cart=cart.filter(x=>!(String(x.id||x)===String(id)&&String(x.variantId||'')===String(variantId||'')));updateCart();renderCart();renderCartModal()}
 function renderCart(){const el=document.getElementById('cartContent');if(!cart.length){el.innerHTML='<div class="empty">Your cart is empty. Add direct Shop products and they will appear here.</div>';return}let total=0;const rows=cart.map(item=>{const x=typeof item==='string'?{id:item,quantity:1}:item;const p=products.find(y=>String(y.id)===String(x.id));if(!p)return '';const qty=Number(x.quantity)||1;total+=cartPrice(x,p)*qty;return '<div class="cart-row"><div style="min-width:0"><strong>'+htmlEsc(p.name)+'</strong><small>'+htmlEsc(x.variantTitle||'Default')+'</small><div class="qty-control cart-qty"><button type="button" onclick="changeCartQuantity('+jsId(x.id)+','+JSON.stringify(x.variantId||'')+',-1)">−</button><span class="qty-value">'+qty+'</span><button type="button" onclick="changeCartQuantity('+jsId(x.id)+','+JSON.stringify(x.variantId||'')+',1)">+</button></div></div><strong>'+htmlEsc(formatPrice(cartPrice(x,p)*qty,p.currency||''))+'</strong></div>'}).join('');el.innerHTML='<div class="cart-list">'+rows+'</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:15px;border-top:1px solid var(--line)"><span class="muted">Subtotal</span><strong>'+htmlEsc(formatPrice(total,products[0]?.currency||''))+'</strong></div><button class="btn primary" style="margin-top:16px;width:100%" onclick="checkout(this)">Checkout securely</button>'}
-function updateCart(){document.getElementById('cartCount').textContent=cart.reduce((n,x)=>n+(Number(x.quantity)||1),0);document.getElementById('cartCount').style.display=cart.length?'grid':'none';persist()}
+function normalizeCart(){if(!products.length)return;cart=cart.filter(item=>{const x=typeof item==='string'?{id:item,quantity:1}:item;const p=products.find(y=>String(y.id)===String(x.id));return !!p&&p.type==='Shop'&&(Number(x.quantity)||0)>0;}).map(item=>typeof item==='string'?{id:item,variantId:null,variantTitle:'',quantity:1}:{...item,quantity:Math.max(1,Number(item.quantity)||1)});} function updateCart(){const count=cart.reduce((n,x)=>n+(Number(x.quantity)||1),0);const el=document.getElementById('cartCount');if(el){el.textContent=count;el.style.display=count>0?'grid':'none';}persist()}
 function cartKey(id,variantId){return String(id)+'|'+String(variantId||'')}
 async function addCartItem(id,variantId,variantTitle,quantity=1){const p=products.find(x=>String(x.id)===String(id));if(!p||p.type!=='Shop')return;const key=cartKey(id,variantId);const existing=cart.find(x=>cartKey(x.id||x,x.variantId)===key);if(existing)existing.quantity=(Number(existing.quantity)||1)+quantity;else cart.push({id:String(id),variantId:variantId||null,variantTitle:variantTitle||'',quantity});updateCart();renderCart();showToast('Added to cart');if(nuvoraSB){const {data:{user:su}}=await nuvoraSB.auth.getUser();if(su){await nuvoraSB.from('cart_items').upsert({user_id:su.id,product_id:id,variant_id:variantId||null,quantity:existing?Number(existing.quantity)||1:quantity,updated_at:new Date().toISOString()});}}}
 function addCart(id){const p=products.find(x=>String(x.id)===String(id));if(!p)return;addCartItem(id,p.variantId||p.variants?.[0]?.id||null,p.variants?.[0]?.title||'',1)}
