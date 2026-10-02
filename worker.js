@@ -144,11 +144,13 @@ function cleanImportedTitle(value,brand=''){
             if(!isAmazon&&!isTemu)throw new Error('Only Amazon and Temu links are supported.');
             let listing=null,asin=null,productId=null;
             if(isAmazon){
-              asin=asinFromUrl(sourceUrl);
-              if(!asin&&(host==='link.amazon'||host==='amzn.to'))asin=asinFromUrl(await resolveAmazonUrl(sourceUrl));
+              const resolved=await resolveAmazonUrl(sourceUrl);
+              asin=asinFromUrl(resolved)||asinFromUrl(sourceUrl);
+              if(!asin)throw new Error('Could not find an Amazon ASIN in this link.');
+              const dup=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published,amazon_asin&amazon_asin=eq.'+encodeURIComponent(asin)+'&limit=1');
               const rows=dup.ok?await dup.json():[];
               if(rows[0]){skipped++;results.push({ok:true,status:'skipped',retailer:'Amazon',source_url:sourceUrl,name:rows[0].name||'Existing product',reason:'Already imported',id:rows[0].id,duration_ms:Date.now()-started});continue;}
-              listing=await scrapeAmazonListing(sourceUrl,asin);
+              listing=await scrapeAmazonListing(resolved,asin);
               if(!listing||listing.error)throw new Error(listing?.error||'Amazon product data could not be read.');
               productId=asin;
             }else{
@@ -196,9 +198,11 @@ function cleanImportedTitle(value,brand=''){
         const {url:amazonUrl}=await body(request,256*1024);
         if(!amazonUrl||!validUrl(amazonUrl))return json({error:'A valid Amazon product URL is required'},400);
         const parsed=new URL(amazonUrl);
-        if(!/(^|\.)amazon\./i.test(parsed.hostname))return json({error:'Please paste an Amazon product URL.'},400);
-        const asin=asinFromUrl(resolvedAmazonUrl); if(!asin)return json({error:'Could not find an ASIN in that Amazon URL'},400);
-        const cleanPath=decodeURIComponent(parsed.pathname).replace(/^\/+|\/+$/g,'');
+        if(!amazonHost(parsed.hostname))return json({error:'Please paste an Amazon product URL.'},400);
+        const resolved=await resolveAmazonUrl(amazonUrl);
+        const asin=asinFromUrl(resolved)||asinFromUrl(amazonUrl); if(!asin)return json({error:'Could not find an ASIN in that Amazon URL'},400);
+        const resolvedParsed=new URL(resolved);
+        const cleanPath=decodeURIComponent(resolvedParsed.pathname).replace(/^\/+|\/+$/g,'');
         const dpIndex=cleanPath.toLowerCase().indexOf('/dp/');
         const beforeDp=dpIndex>=0?cleanPath.slice(0,dpIndex):cleanPath;
         const titleHint=beforeDp.split('/').pop().replace(/[-_+]+/g,' ').replace(/\b(?:dp|gp|product)\b/gi,'').replace(/\s+/g,' ').trim().replace(/\b\w/g,c=>c.toUpperCase()).slice(0,180);
@@ -206,8 +210,8 @@ function cleanImportedTitle(value,brand=''){
         try{const dup=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published,amazon_asin&amazon_asin=eq.'+encodeURIComponent(asin)+'&limit=5');if(dup.ok){const rows=await dup.json();duplicate=rows[0]||null;}}catch(e){}
         let category_id=null;
         try{const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cats.ok){const categories=await cats.json();category_id=autoCategory(titleHint,'','',categories);}}catch(e){}
-        let listing=null; try{listing=await scrapeAmazonListing(amazonUrl,asin);}catch(e){listing={error:String(e?.message||e).slice(0,300)};}
-        return json({ok:true,asin,destination_url:amazonUrl,title_hint:listing?.title||titleHint||'Amazon product',retailer:'Amazon',kind:'find',category_id,duplicate,listing:listing||null});
+        let listing=null; try{listing=await scrapeAmazonListing(resolved,asin);}catch(e){listing={error:String(e?.message||e).slice(0,300)};}
+        return json({ok:true,asin,destination_url:resolved,title_hint:listing?.title||titleHint||'Amazon product',retailer:'Amazon',kind:'find',category_id,duplicate,listing:listing||null});
       }
 
 async function scrapeTemuListing(temuUrl){
