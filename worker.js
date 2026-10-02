@@ -72,6 +72,18 @@ function metaValue(html,name){
   const wanted=String(name||'').toLowerCase();
   const tags=String(html||'').match(/<meta\b[^>]*>/gi)||[];
   for(const tag of tags){
+    const attrs=tag.match(/(?:name|property)\s*=\s*([^ >]+)/i);
+    if(!attrs)continue;
+    const attrName=String(attrs[1]).replaceAll('"','').replaceAll("'","").toLowerCase();
+    if(attrName!==wanted)continue;
+    const content=tag.match(/content\s*=\s*([^ >]+)/i);
+    if(content)return htmlText(String(content[1]).replaceAll('"','').replaceAll("'",""));
+  }
+  return '';
+}
+  const wanted=String(name||'').toLowerCase();
+  const tags=String(html||'').match(/<meta\b[^>]*>/gi)||[];
+  for(const tag of tags){
     const nm=tag.match(/\b(?:name|property)\s*=\s*["']([^"']+)["']/i);
     if(!nm||nm[1].toLowerCase()!==wanted)continue;
     const cm=tag.match(/\bcontent\s*=\s*["']([^"']*)["']/i);
