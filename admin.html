@@ -908,11 +908,8 @@ async function saveProductDraft(){
   }catch(e){setAdminStatus(e.message)}
 }
 async function editProduct(id){
-  const p=adminProducts.find(x=>x.id===id); if(!p)return;
-  resetProductForm(); window.editingProductId=id; setProductForm(p);
-  document.getElementById('productModalTitle').textContent='Edit product';
-  document.getElementById('productModalSub').textContent=p.published?'Edit a published product. Publishing state is unchanged until you toggle it.':'Edit draft before publishing.';
-  document.getElementById('productModal').classList.add('open');
+  if(!id)return;
+  window.location.href='/admin/products/'+encodeURIComponent(id)+'/edit';
 }
 function openProductForm(){openProductModal(false)}
 async function createProduct(product){openProductModal(false);setProductForm(product)}
