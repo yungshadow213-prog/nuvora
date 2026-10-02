@@ -11,6 +11,10 @@ export default {
       if (url.pathname === '/admin' || url.pathname === '/admin/') {
         return serveAsset(env,new Request(new URL('/admin.html',request.url), {method:'GET',headers:request.headers}));
       }
+      const editPageMatch=url.pathname.match(/^\/admin\/products\/([^/]+)\/edit\/?$/);
+      if(editPageMatch){
+        return serveAsset(env,new Request(new URL('/edit-product.html',request.url), {method:'GET',headers:request.headers}));
+      }
       if (url.pathname === '/api/health') return json({ok:true,configured:configured(env)});
       if (url.pathname === '/api/config') return json({supabaseUrl:env.SUPABASE_URL||'',supabaseAnonKey:env.SUPABASE_ANON_KEY||''});
 
@@ -828,9 +832,16 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
       }
 
       const productMatch=url.pathname.match(/^\/api\/admin\/products\/([^/]+)$/);
-      if(productMatch&&(request.method==='PATCH'||request.method==='DELETE')){
+      if(productMatch&&(request.method==='GET'||request.method==='PATCH'||request.method==='DELETE')){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const id=decodeURIComponent(productMatch[1]);
+        if(request.method==='GET'){
+          const r=await supabaseRest(env,'GET','products',undefined,'?select=*&id=eq.'+encodeURIComponent(id)+'&limit=1');
+          if(!r.ok)return json({error:'Could not load the product.'},500);
+          const row=(await r.json())?.[0];
+          if(!row)return json({error:'Product not found.'},404);
+          return json(row);
+        }
         if(request.method==='PATCH'){
           const patch=await body(request);
           if(patch.name)patch.name=String(patch.name).trim().slice(0,180);
