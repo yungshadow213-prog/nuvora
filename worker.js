@@ -249,15 +249,15 @@ function dedupeImages(values,max=60){
   }return out;
 }
 function smartProductTitle(value,brand=''){
-  let t=htmlText(amazonDecode(value)).replace(/\\s+/g,' ').trim();
-  t=t.replace(/^(?:Amazon\\.com|Amazon)\\s*[:|-]\\s*/i,'').replace(/\\s*[|·]\\s*(?:Amazon|Temu).*$/i,'').replace(/\\b(?:official|best seller|#1 best seller|hot sale|trending|must have|new arrival)\\b/gi,'').replace(/\\s{2,}/g,' ').trim();
+  let t=htmlText(amazonDecode(value)).replace(/\s+/g,' ').trim();
+  t=t.replace(/^(?:Amazon\.com|Amazon)\\s*[:|-]\\s*/i,'').replace(/\s*[|·]\s*(?:Amazon|Temu).*$/i|·]\\s*(?:Amazon|Temu).*$/i,'').replace(/\b(?:official|best seller|#1 best seller|hot sale|trending|must have|new arrival)\\b/gi,'').replace(/\s{2,}/g,' ').trim();
   const b=cleanText(brand,120);if(b&&!t.toLowerCase().startsWith(b.toLowerCase()))t=b+' '+t;
   const words=t.split(' ').filter(Boolean),seen=new Set(),kept=[];for(const word of words){const key=word.toLowerCase().replace(/[^a-z0-9]/g,'');if(key&&seen.has(key))continue;if(key)seen.add(key);kept.push(word)}
-  t=kept.join(' ').replace(/\\s+([,.:;])/g,'$1').trim();if(t===t.toLowerCase())t=t.replace(/\\b[a-z]/g,c=>c.toUpperCase());return t.slice(0,180)||'Nuvora product';
+  t=kept.join(' ').replace(/\s+([,.:;])/g,'$1').trim();if(t===t.toLowerCase())t=t.replace(/\b[a-z]/g,c=>c.toUpperCase());return t.slice(0,180)||'Nuvora product';
 }
 function extractRelatedAmazonProducts(html,asin){
   const out=[],seen=new Set(),add=id=>{id=String(id||'').toUpperCase();if(/^[A-Z0-9]{10}$/.test(id)&&id!==String(asin||'').toUpperCase()&&!seen.has(id)){seen.add(id);out.push(id)}};
-  for(const m of String(html||'').matchAll(/(?:\\/dp\\/|\\/gp\\/(?:product|aw\\/d)\\/|\\?asin=|\\"asin\\"\\s*:\\s*\\")([A-Z0-9]{10})/gi))add(m[1]);
+  for(const m of String(html||'').matchAll(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|\?asin=|"asin"\s*:\s*")([A-Z0-9]{10})/gi))add(m[1]);
   return out.slice(0,20);
 }
 function normalizeAmazonProduct(product={}){
