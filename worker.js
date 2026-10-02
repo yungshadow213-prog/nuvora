@@ -146,11 +146,11 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const states=amazonStateObjects(html);
   const title=String(jsonld.name||'').trim()
     ||metaValue(html,'og:title')||metaValue(html,'twitter:title')
-    ||amazonText(html,[/id=["']productTitle["'][^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i,/id=["']productTitle["'][^>]*>([\\s\\S]*?)<\\/h1>/i])
-    ||htmlText((html.match(/<title[^>]*>([\\s\\S]*?)<\\/title>/i)||[])[1]||'');
+    ||amazonText(html,[/id=["']productTitle["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,/id=["']productTitle["'][^>]*>([\s\S]*?)<\/h1>/i])
+    ||htmlText((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)||[])[1]||'');
   const description=htmlText(jsonld.description||'')
     ||metaValue(html,'og:description')||metaValue(html,'description')
-    ||amazonText(html,[/id=["']feature-bullets["'][^>]*>[\\s\\S]*?<li[^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i]);
+    ||amazonText(html,[/id=["']feature-bullets["'][^>]*>[\s\S]*?<li[^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i]);
   const imageCandidates=[];
   const addImage=v=>{if(typeof v==='string'&&validUrl(v)&&!imageCandidates.includes(v))imageCandidates.push(v);};
   if(Array.isArray(jsonld.image))jsonld.image.forEach(addImage); else addImage(jsonld.image);
@@ -158,14 +158,14 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const dyn=String(html||'').match(/data-a-dynamic-image=["']([^"']+)["']/gi)||[];
   for(const tag of dyn){const m=tag.match(/data-a-dynamic-image=["']([^"']+)["']/i);if(m){try{const obj=JSON.parse(decodeJsonHtml(m[1]));Object.keys(obj).forEach(addImage);}catch(e){}}}
   const brand=typeof jsonld.brand==='string'?jsonld.brand:jsonld.brand?.name
-    ||amazonText(html,[/id=["']bylineInfo["'][^>]*>([\\s\\S]*?)<\\/a>/i,/id=["']brand["'][^>]*>([\\s\\S]*?)<\\/span>/i])||'';
+    ||amazonText(html,[/id=["']bylineInfo["'][^>]*>([\s\S]*?)<\/a>/i,/id=["']brand["'][^>]*>([\s\S]*?)<\/span>/i])||'';
   const offers=Array.isArray(jsonld.offers)?jsonld.offers[0]:(jsonld.offers||{});
   const currentPrice=parseMoney(offers.price)
     ??parseMoney(metaValue(html,'product:price:amount'))
-    ??parseMoney(amazonText(html,[/class=["'][^"']*a-price-whole[^"']*["'][^>]*>([\\s\\S]*?)<\\/span>/i]));
+    ??parseMoney(amazonText(html,[/class=["'][^"']*a-price-whole[^"']*["'][^>]*>([\s\S]*?)<\/span>/i]));
   const currency=String(offers.priceCurrency||metaValue(html,'product:price:currency')||'USD').toUpperCase();
-  let listPrice=parseMoney(amazonText(html,[/class=["'][^"']*a-text-price[^"']*["'][^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i,/id=["']listPrice["'][^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i]));
-  const discountText=amazonText(html,[/id=["']couponText["'][^>]*>([\\s\\S]*?)<\\/span>/i,/class=["'][^"']*savingsPercentage[^"']*["'][^>]*>([\\s\\S]*?)<\\/span>/i]);
+  let listPrice=parseMoney(amazonText(html,[/class=["'][^"']*a-text-price[^"']*["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,/id=["']listPrice["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i]));
+  const discountText=amazonText(html,[/id=["']couponText["'][^>]*>([\s\S]*?)<\/span>/i,/class=["'][^"']*savingsPercentage[^"']*["'][^>]*>([\s\S]*?)<\/span>/i]);
   let discountPercent=discountText?parsePercent(discountText):null;
   if(listPrice==null&&currentPrice!=null&&discountPercent!=null&&discountPercent>0&&discountPercent<100)listPrice=Number((currentPrice/(1-discountPercent/100)).toFixed(2));
   if(discountPercent==null&&listPrice!=null&&currentPrice!=null&&listPrice>currentPrice)discountPercent=Number((((listPrice-currentPrice)/listPrice)*100).toFixed(1));
@@ -174,15 +174,15 @@ async function scrapeAmazonListing(sourceUrl,asin){
     ??parseRating(amazonText(html,[/id=["']acrPopover["'][^>]*title=["']([^"']+)["']/i]));
   const reviewCount=parseReviewCount(jsonld.aggregateRating?.reviewCount||jsonld.aggregateRating?.ratingCount)
     ??parseReviewCount(metaValue(html,'reviewCount')||metaValue(html,'ratingCount'))
-    ??parseReviewCount(amazonText(html,[/id=["']acrCustomerReviewText["'][^>]*>([\\s\\S]*?)<\\/span>/i]));
+    ??parseReviewCount(amazonText(html,[/id=["']acrCustomerReviewText["'][^>]*>([\s\S]*?)<\/span>/i]));
   const availability=htmlText(offers.availability||'')
-    ||amazonText(html,[/id=["']availability["'][^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i,/id=["']outOfStock["'][^>]*>([\\s\\S]*?)<\\/div>/i]);
-  const shippingText=amazonText(html,[/id=["']mir-layout-DELIVERY_BLOCK-slot-PRIMARY_DELIVERY_MESSAGE_LARGE["'][^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/i,/id=["']deliveryBlockMessage["'][^>]*>([\\s\\S]*?)<\\/span>/i]);
-  const boughtPastMonth=amazonText(html,[/id=["']socialProofingAsinFacepileFeature["'][^>]*>[\\s\\S]*?([0-9,.]+\\+?\\s*(?:bought|purchased)[^<]*)/i,/([0-9,.]+\\+?\\s+bought in past month)/i]);
-  const taxText=amazonText(html,[/id=["']taxInclusiveMessage["'][^>]*>([\\s\\S]*?)<\\/span>/i,/id=["']taxMessage["'][^>]*>([\\s\\S]*?)<\\/span>/i]);
-  const sku=String(jsonld.sku||jsonld.mpn||'').trim()||amazonText(html,[/id=["']productDetails["'][^>]*>[\\s\\S]*?(?:ASIN|Item model number)[^<]*<[^>]*>([A-Z0-9._-]+)/i]);
-  const featureMatches=html.match(/id=["']feature-bullets["'][^>]*>[\\s\\S]*?<li[^>]*>[\\s\\S]*?<span[^>]*>([\\s\\S]*?)<\\/span>/gi)||[];
-  const features=[...new Set(featureMatches.map(x=>htmlText(x.replace(/^.*?<span[^>]*>/i,'').replace(/<\\/span>[\\s\\S]*$/i,'')).trim()).filter(Boolean))].slice(0,20);
+    ||amazonText(html,[/id=["']availability["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,/id=["']outOfStock["'][^>]*>([\s\S]*?)<\/div>/i]);
+  const shippingText=amazonText(html,[/id=["']mir-layout-DELIVERY_BLOCK-slot-PRIMARY_DELIVERY_MESSAGE_LARGE["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,/id=["']deliveryBlockMessage["'][^>]*>([\s\S]*?)<\/span>/i]);
+  const boughtPastMonth=amazonText(html,[/id=["']socialProofingAsinFacepileFeature["'][^>]*>[\s\S]*?([0-9,.]+\\+?\s*(?:bought|purchased)[^<]*)/i,/([0-9,.]+\\+?\s+bought in past month)/i]);
+  const taxText=amazonText(html,[/id=["']taxInclusiveMessage["'][^>]*>([\s\S]*?)<\/span>/i,/id=["']taxMessage["'][^>]*>([\s\S]*?)<\/span>/i]);
+  const sku=String(jsonld.sku||jsonld.mpn||'').trim()||amazonText(html,[/id=["']productDetails["'][^>]*>[\s\S]*?(?:ASIN|Item model number)[^<]*<[^>]*>([A-Z0-9._-]+)/i]);
+  const featureMatches=html.match(/id=["']feature-bullets["'][^>]*>[\s\S]*?<li[^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/gi)||[];
+  const features=[...new Set(featureMatches.map(x=>htmlText(x.replace(/^.*?<span[^>]*>/i,'').replace(/<\/span>[\s\S]*$/i,'')).trim()).filter(Boolean))].slice(0,20);
   const variantNames=[];
   for(const s of states){
     const text=JSON.stringify(s);
