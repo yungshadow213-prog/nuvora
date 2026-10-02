@@ -150,3 +150,6 @@ create table if not exists public.analytics_events (
 alter table public.analytics_events enable row level security;
 drop policy if exists "public analytics event insert" on public.analytics_events;
 create policy "public analytics event insert" on public.analytics_events for insert to anon, authenticated with check (char_length(event_name) between 1 and 80);
+
+-- Refresh PostgREST's schema cache after applying this migration.
+notify pgrst, 'reload schema';
