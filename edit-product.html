@@ -79,7 +79,7 @@ function renderSource(){
  ['Review count',product.amazon_review_count],['Bought recently',product.amazon_bought_past_month],
  ['Availability',product.availability],['Shipping',product.amazon_shipping_text],
  ['Taxes',product.amazon_tax_text],['Variants',Array.isArray(product.amazon_variations)&&product.amazon_variations.length?product.amazon_variations.map(v=>v.name+': '+(v.values||[]).join(', ')).join(' · '):null],
- ['Product number',product.source_sku||product.amazon_asin],['Source URL',product.amazon_source_url||product.destination_url],['Last source sync',product.amazon_last_synced?new Date(product.amazon_last_synced).toLocaleString():null]
+ ['Product number',product.source_sku||product.amazon_asin],['Related products',Array.isArray(product.source_related_products)&&product.source_related_products.length?product.source_related_products.length+' related source products':null],['Source URL',product.amazon_source_url||product.destination_url],['Last source sync',product.amazon_last_synced?new Date(product.amazon_last_synced).toLocaleString():null]
  ];
  $('sourceGrid').innerHTML=fields.map(([k,v])=>'<div class="source-item '+(k==='Source URL'?'source-wide':'')+'"><b>'+esc(k)+'</b><span>'+esc(val(v))+'</span></div>').join('');
 }
