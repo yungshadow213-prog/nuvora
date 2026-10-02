@@ -61,12 +61,14 @@ export default {
       }
 
 /* Amazon link/import hardening */
+function validUrl(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
+function amazonDecode(value){return String(value||'').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/&nbsp;/gi,' ');}
 function amazonHost(host){const h=String(host||'').toLowerCase().replace(/^www\\./,'');return h==='link.amazon'||h==='amzn.to'||h.includes('amazon.');}
 function extractUrls(value){const m=String(value||'').match(/https?:\\/\\/[^\\s<>"'\\]\\[),;]+/gi)||[];return [...new Set(m.map(x=>x.replace(/[.,;]+$/,'').trim()).filter(Boolean))];}
 async function resolveAmazonUrl(sourceUrl){let current=String(sourceUrl||'').trim();for(let i=0;i<5;i++){const host=new URL(current).hostname.toLowerCase().replace(/^www\\./,'');if(host!=='link.amazon'&&host!=='amzn.to')return current;const r=await fetch(current,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 Nuvora importer'}});if(r.url&&r.url!==current){current=r.url;continue;}break;}return current;}
 function asinFromUrl(url){const s=String(url||'');const m=s.match(/(?:\\/dp\\/|\\/gp\\/product\\/|\\/gp\\/aw\\/d\\/|\\/product\\/|\\/dp%2F)([A-Z0-9]{10})(?:[/?#]|$)/i);if(m)return m[1].toUpperCase();const q=s.match(/[?&](?:asin|ASIN)=([A-Z0-9]{10})(?:&|$)/i);return q?q[1].toUpperCase():null;}
 function htmlText(v){return String(v||'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/\\s+/g,' ').trim();}
-function metaValue(html,name){const n=String(name).replace(/[.*+?^$()|[\\]\\]/g,'\\function autoCategory(title='',description='',brand='',categories=[]){');const r1=new RegExp('<meta[^>]+(?:name|property)=["\\']'+n+'["\\'][^>]+content=["\\']([^"\\']+)["\\']','i');const r2=new RegExp('<meta[^>]+content=["\\']([^"\\']+)["\\'][^>]+(?:name|property)=["\\']'+n+'["\\']','i');const m=html.match(r1)||html.match(r2);return m?htmlText(m[1]):'';}
+function metaValue(html,name){const n=String(name).replace(/[.*+?^$()|[\\]\\]/g,'\\$&');const r1=new RegExp('<meta[^>]+(?:name|property)=["\\']'+n+'["\\'][^>]+content=["\\']([^"\\']+)["\\']','i');const r2=new RegExp('<meta[^>]+content=["\\']([^"\\']+)["\\'][^>]+(?:name|property)=["\\']'+n+'["\\']','i');const m=html.match(r1)||html.match(r2);return m?htmlText(m[1]):'';}
 function parseMoney(v){const m=String(v||'').replace(/,/g,'').match(/([0-9]+(?:\\.[0-9]{1,2})?)/);return m?Number(m[1]):null;}
 function parseRating(v){const m=String(v||'').match(/([0-5](?:\\.[0-9])?)/);return m?Number(m[1]):null;}
 function parseReviewCount(v){const m=String(v||'').replace(/,/g,'').match(/([0-9]{1,9})/);return m?Number(m[1]):null;}
@@ -114,8 +116,8 @@ function cleanImportedTitle(value,brand=''){
       if(url.pathname==='/api/admin/import/bulk'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const payload=await body(request,512*1024);
-        const rawUrls=Array.isArray(payload?.urls)?payload.urls.join('\\n'):String(payload?.urls||'');\n        const urls=extractUrls(rawUrls);
-        if(!urls.length)return json({error:'Add at least one Amazon or Temu product link.'},400);
+        const rawUrls=Array.isArray(payload?.urls)?payload.urls.join('\n'):String(payload?.urls||'');
+        const urls=extractUrls(rawUrls);
         if(urls.length>30)return json({error:'Import up to 30 links at a time.'},400);
         const results=[]; let imported=0,skipped=0,failed=0;
         let categories=[];
@@ -130,8 +132,8 @@ function cleanImportedTitle(value,brand=''){
             if(!isAmazon&&!isTemu)throw new Error('Only Amazon and Temu links are supported.');
             let listing=null,asin=null,productId=null;
             if(isAmazon){
-              asin=asinFromUrl(sourceUrl);\n              if(!asin&&(host==='link.amazon'||host==='amzn.to'))asin=asinFromUrl(await resolveAmazonUrl(sourceUrl));\n              if(!asin)throw new Error('Could not find an ASIN in this Amazon link.');
-              const dup=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published,amazon_asin&amazon_asin=eq.'+encodeURIComponent(asin)+'&limit=1');
+              asin=asinFromUrl(sourceUrl);
+              if(!asin&&(host==='link.amazon'||host==='amzn.to'))asin=asinFromUrl(await resolveAmazonUrl(sourceUrl));
               const rows=dup.ok?await dup.json():[];
               if(rows[0]){skipped++;results.push({ok:true,status:'skipped',retailer:'Amazon',source_url:sourceUrl,name:rows[0].name||'Existing product',reason:'Already imported',id:rows[0].id,duration_ms:Date.now()-started});continue;}
               listing=await scrapeAmazonListing(sourceUrl,asin);
