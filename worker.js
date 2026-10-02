@@ -162,7 +162,7 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const offers=Array.isArray(jsonld.offers)?jsonld.offers[0]:(jsonld.offers||{});
   const currentPrice=parseMoney(offers.price)
     ??parseMoney(metaValue(html,'product:price:amount'))
-    ??parseMoney(amazonText(html,[/class=["'][^"']*a-price-whole[^"']*["'][^>]*>([\s\S]*?)<\/span>/i]));
+    ??parseMoney(amazonText(html,[/class=["'][^"']*a-price-whole[^"']*["'][^>]*>([\s\S]*?)<\/span>/i,/id=["']priceblock_ourprice["'][^>]*>([\s\S]*?)<\//i,/id=["']priceblock_dealprice["'][^>]*>([\s\S]*?)<\//i,/a-offscreen["'][^>]*>([\s\S]*?)<\//i]));
   const currency=String(offers.priceCurrency||metaValue(html,'product:price:currency')||'USD').toUpperCase();
   let listPrice=parseMoney(amazonText(html,[/class=["'][^"']*a-text-price[^"']*["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,/id=["']listPrice["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i]));
   const discountText=amazonText(html,[/id=["']couponText["'][^>]*>([\s\S]*?)<\/span>/i,/class=["'][^"']*savingsPercentage[^"']*["'][^>]*>([\s\S]*?)<\/span>/i]);
@@ -174,7 +174,7 @@ async function scrapeAmazonListing(sourceUrl,asin){
     ??parseRating(amazonText(html,[/id=["']acrPopover["'][^>]*title=["']([^"']+)["']/i]));
   const reviewCount=parseReviewCount(jsonld.aggregateRating?.reviewCount||jsonld.aggregateRating?.ratingCount)
     ??parseReviewCount(metaValue(html,'reviewCount')||metaValue(html,'ratingCount'))
-    ??parseReviewCount(amazonText(html,[/id=["']acrCustomerReviewText["'][^>]*>([\s\S]*?)<\/span>/i]));
+    ??parseReviewCount(amazonText(html,[/id=["']acrCustomerReviewText["'][^>]*>([\s\S]*?)<\/span>/i,/([0-9][0-9,.]*)\\s+(?:global ratings|ratings|reviews)/i]));
   const availability=htmlText(offers.availability||'')
     ||amazonText(html,[/id=["']availability["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,/id=["']outOfStock["'][^>]*>([\s\S]*?)<\/div>/i]);
   const shippingText=amazonText(html,[/id=["']mir-layout-DELIVERY_BLOCK-slot-PRIMARY_DELIVERY_MESSAGE_LARGE["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,/id=["']deliveryBlockMessage["'][^>]*>([\s\S]*?)<\/span>/i]);
@@ -313,7 +313,7 @@ function genericImages(html,ld){
   const xs=Array.isArray(ld.image)?ld.image:(ld.image?[ld.image]:[]);xs.forEach(add);
   add(metaValue(html,'og:image'));add(metaValue(html,'twitter:image'));
   for(const m of String(html||'').matchAll(/(?:data-src|data-lazy-src|src)=["'](https?:\/\/[^"']+)["']/gi))add(m[1]);
-  return out.slice(0,30);
+  return dedupeImages(out,60);
 }
 function genericNumber(v){const m=String(v??'').replace(/,/g,'').match(/(?:[$€£₦]|USD|EUR|GBP|NGN|US\$)?\s*([0-9]+(?:\.[0-9]{1,2})?)/);return m?Number(m[1]):null}
 async function scrapeGenericSource(sourceUrl,retailer){
@@ -391,7 +391,7 @@ async function ingestSourceProduct(sourceUrl){
               amazon_deal_text:retailer==='Amazon'?(listing.deal_text||null):null,amazon_rating:listing.rating??null,amazon_review_count:listing.review_count??null,
               amazon_bought_past_month:listing.bought_past_month||null,amazon_shipping_text:listing.shipping_text||null,
               availability:listing.availability||null,source_sku:listing.sku||sourceId,amazon_tax_text:listing.tax_text||null,
-              amazon_variations:Array.isArray(listing.variations)?listing.variations:[],source_related_products:Array.isArray(listing.related_products)?listing.related_products:[],published:false,amazon_last_synced:new Date().toISOString()
+              amazon_variations:Array.isArray(listing.variations)?listing.variations:[],source_related_products:Array.isArray(listing.related_products)?listing.related_products:[],source_image_urls:images,published:false,amazon_last_synced:new Date().toISOString()
             };
             const slugBase=title.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,120);
             product.slug=(slugBase||'product')+'-'+Date.now().toString(36);
@@ -441,10 +441,12 @@ async function ingestSourceProduct(sourceUrl){
           availability:listing.availability||null,
           source_sku:listing.sku||current.source_sku||null,
           amazon_variations:Array.isArray(listing.variations)?listing.variations:[],
+          source_related_products:Array.isArray(listing.related_products)?listing.related_products:[],
+          source_image_urls:images,
           amazon_last_synced:new Date().toISOString()
         };
         // Source sync intentionally does not overwrite Nuvora's editable presentation fields: title, display price, and images.
-        if(images.length && (!Array.isArray(current.image_urls)||!current.image_urls.length)) { patch.image_url=images[0]; patch.image_urls=images; }
+        const oldSource=Array.isArray(current.source_image_urls)?dedupeImages(current.source_image_urls,60):[];const currentImages=Array.isArray(current.image_urls)?dedupeImages(current.image_urls,60):[];const galleryIsSource=!currentImages.length||(!oldSource.length&&currentImages.length===1&&currentImages[0]===current.image_url)||oldSource.length===currentImages.length&&oldSource.every((u,i)=>u===currentImages[i]);if(images.length&&galleryIsSource){patch.image_url=images[0];patch.image_urls=images;}
         const saved=await supabaseProductWrite(env,'PATCH',patch,'?id=eq.'+encodeURIComponent(id));
         if(!saved.ok)return json({error:(await saved.text()).slice(0,2000)},400);
         return json({ok:true,product:(await saved.json())?.[0]||null,source:{asin:listing.asin||asin,fieldsCaptured:{images:images.length,description:!!listing.description,features:Array.isArray(listing.features)?listing.features.length:0,price:listing.current_price!=null,listPrice:listing.list_price!=null,discount:listing.discount_percent!=null,rating:listing.rating!=null,reviews:listing.review_count!=null,availability:!!listing.availability,shipping:!!listing.shipping_text,variants:Array.isArray(listing.variations)?listing.variations.length:0}}});
