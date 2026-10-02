@@ -200,6 +200,7 @@ function normalizeAmazonProduct(product={}){
               amazon_list_price:listing.list_price??null,amazon_discount_percent:listing.discount_percent??null,
               amazon_deal_text:listing.deal_text||null,amazon_rating:listing.rating??null,amazon_review_count:listing.review_count??null,
               amazon_bought_past_month:listing.bought_past_month||listing.sold_count_text||null,amazon_shipping_text:listing.shipping_text||null,
+              availability:listing.availability||null,source_sku:listing.sku||null,
               amazon_tax_text:listing.tax_text||null,amazon_variations:Array.isArray(listing.variations)?listing.variations:[],
               published:false
             };
