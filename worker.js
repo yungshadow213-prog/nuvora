@@ -834,9 +834,17 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         if(request.method==='PATCH'){
           const patch=await body(request);
           if(patch.name)patch.name=String(patch.name).trim().slice(0,180);
-          if(patch.slug||patch.name)patch.slug=makeProductSlug(patch.slug||patch.name);
-          const validation=validateProduct({...patch,name:patch.name||'placeholder',slug:patch.slug||'placeholder',kind:patch.kind||'shop'});
-          if(validation && (patch.name||patch.slug||patch.kind||patch.display_price||patch.destination_url||patch.image_url||patch.image_urls))return json({error:validation},400);
+          // Preserve an existing product slug unless the caller explicitly changes it.
+          // Changing slugs during ordinary edits breaks saved/shared product URLs.
+          if(patch.slug)patch.slug=String(patch.slug).trim().toLowerCase();
+          const existing=await supabaseRest(env,'GET','products',undefined,'?select=*&id=eq.'+encodeURIComponent(id)+'&limit=1');
+          if(!existing.ok)return json({error:'Could not load the product before editing.'},500);
+          const current=(await existing.json())?.[0];
+          if(!current)return json({error:'Product not found.'},404);
+          const merged={...current,...patch};
+          if(patch.published===true)merged.published=true;
+          const validation=validateProduct({...merged,name:merged.name,slug:merged.slug,kind:merged.kind});
+          if(validation)return json({error:validation},400);
           if(typeof patch.description==='string')patch.description=cleanMultilineText(patch.description,12000);
           if(typeof patch.features==='string')patch.features=cleanMultilineText(patch.features,12000);
           if(typeof patch.brand==='string')patch.brand=cleanText(patch.brand,180);
@@ -998,6 +1006,11 @@ function validateProduct(product){
   if(!slug||slug==='placeholder'||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))return 'A valid product slug is required.';
   if(!['shop','find','learn'].includes(kind))return 'Product type must be shop, find, or learn.';
   if(product.display_price!==undefined&&product.display_price!==null&&(!Number.isFinite(Number(product.display_price))||Number(product.display_price)<0))return 'Product price is invalid.';
+  if(product.published===true){
+    const images=Array.isArray(product.image_urls)?product.image_urls.filter(validUrl):(validUrl(product.image_url)?[product.image_url]:[]);
+    if(!images.length)return 'A published product needs at least one valid product image.';
+    if(!validUrl(product.destination_url))return 'A published product needs a valid destination or affiliate URL.';
+  }
   return null;
 }
 function sbHeaders(env,service=false){
