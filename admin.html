@@ -696,7 +696,7 @@ function setSmartSource(source){
   const mode=document.getElementById('smartImportMode'); if(mode)mode.textContent=smartImportSource==='temu'?'Temu':'Amazon';
   const box=document.getElementById('smartImportUrls'); if(box)box.placeholder=smartImportSource==='temu'?'https://www.temu.com/...\nhttps://www.temu.com/...':'https://www.amazon.com/dp/B0XXXXXXXXXX\nhttps://www.amazon.com/dp/B0YYYYYYYYYY\nhttps://link.amazon/B0XXXXXXXXH';
 }
-async function normalizeImportUrls(value){
+function normalizeImportUrls(value){
   const matches=String(value||'').match(/https?:\/\/[^\s<>"'\]\[),;]+/gi)||[];
   return [...new Set(matches.map(x=>x.replace(/[.,;]+$/,'').trim()).filter(Boolean))];
 }
