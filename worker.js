@@ -68,7 +68,17 @@ function extractUrls(value){ const m=String(value||'').match(/https?:\/\/[^\s<>]
 async function resolveAmazonUrl(sourceUrl){let current=String(sourceUrl||'').trim();for(let i=0;i<5;i++){const host=new URL(current).hostname.toLowerCase().replace(/^www\./,'');if(host!=='link.amazon'&&host!=='amzn.to')return current;const r=await fetch(current,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 Nuvora importer'}});if(r.url&&r.url!==current){current=r.url;continue;}break;}return current;}
 function asinFromUrl(url){ const s=String(url||''); const m=s.match(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|\/product\/|\/dp%2F)([A-Z0-9]{10})(?:[/?#]|$)/i); if(m)return m[1].toUpperCase(); const q=s.match(/[?&](?:asin|ASIN)=([A-Z0-9]{10})(?:&|$)/i); return q?q[1].toUpperCase():null; }
 function htmlText(v){ return String(v||'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/\s+/g,' ').trim(); }
-function metaValue(html,name){const n=String(name).replace(/[.*+?^$()|[\\]\\]/g,'\\$&');const r1=new RegExp('<meta[^>]+(?:name|property)=["\\']'+n+'["\\'][^>]+content=["\\']([^"\\']+)["\\']','i');const r2=new RegExp('<meta[^>]+content=["\\']([^"\\']+)["\\'][^>]+(?:name|property)=["\\']'+n+'["\\']','i');const m=html.match(r1)||html.match(r2);return m?htmlText(m[1]):'';}
+function metaValue(html,name){
+  const wanted=String(name||'').toLowerCase();
+  const tags=String(html||'').match(/<meta\b[^>]*>/gi)||[];
+  for(const tag of tags){
+    const nm=tag.match(/\b(?:name|property)\s*=\s*["']([^"']+)["']/i);
+    if(!nm||nm[1].toLowerCase()!==wanted)continue;
+    const cm=tag.match(/\bcontent\s*=\s*["']([^"']*)["']/i);
+    if(cm)return htmlText(cm[1]);
+  }
+  return '';
+}
 function parseMoney(v){ const m=String(v||'').replace(/,/g,'').match(/([0-9]+(?:\.[0-9]{1,2})?)/); return m?Number(m[1]):null; }
 function parseRating(v){ const m=String(v||'').match(/([0-5](?:\.[0-9])?)/); return m?Number(m[1]):null; }
 function parseReviewCount(v){ const m=String(v||'').replace(/,/g,'').match(/([0-9]{1,9})/); return m?Number(m[1]):null; }
