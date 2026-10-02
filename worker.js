@@ -1087,6 +1087,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const prompt=cleanText(form.get('prompt'),5000);
         const size=String(form.get('size')||'1024x1024');
         const source=form.get('image');
+        const imageUrl=String(form.get('image_url')||'').trim();
         if(!prompt)return json({error:'An image prompt is required.'},400);
         if(!env.AI)return json({error:'Nuvora AI is unavailable because the Cloudflare Workers AI binding is not active on this deployment. Deploy the current Nuvora Worker.'},503);
         const dimensions={'1024x1024':[1024,1024],'1536x1024':[1536,1024],'1024x1536':[1024,1536]};
@@ -1095,6 +1096,15 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           let imageB64=null;
           if(source&&typeof source.arrayBuffer==='function'){
             const bytes=new Uint8Array(await source.arrayBuffer());
+            if(bytes.byteLength>6*1024*1024)return json({error:'Reference image must be 6 MB or smaller for Nuvora AI.'},400);
+            imageB64=bytesToBase64(bytes);
+          } else if(imageUrl){
+            let referenceResponse;
+            try{referenceResponse=await fetch(imageUrl,{redirect:'follow',headers:{accept:'image/avif,image/webp,image/apng,image/*,*/*;q=0.8'}})}catch(fetchError){return json({error:'Nuvora could not fetch the product image from its source. Upload the image to Nuvora first, then generate again.'},422)}
+            if(!referenceResponse.ok)return json({error:'Nuvora could not fetch the product image from its source (HTTP '+referenceResponse.status+'). Upload the image to Nuvora first, then generate again.'},422);
+            const contentType=referenceResponse.headers.get('content-type')||'';
+            if(!contentType.toLowerCase().startsWith('image/'))return json({error:'The product image URL did not return an image. Upload the image to Nuvora first, then generate again.'},422);
+            const bytes=new Uint8Array(await referenceResponse.arrayBuffer());
             if(bytes.byteLength>6*1024*1024)return json({error:'Reference image must be 6 MB or smaller for Nuvora AI.'},400);
             imageB64=bytesToBase64(bytes);
           }
