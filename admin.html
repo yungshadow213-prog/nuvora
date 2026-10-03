@@ -1146,7 +1146,7 @@ async function healthCheck(){
       const state=value?'Connected':(optional.has(k)?'Not configured':'Failed');
       return '<div class="row"><span>'+esc(label)+'</span><span class="status"><i class="dot '+(value?'':'off')+'"></i>'+state+'</span></div>';
     }).join('');
-    if(box)const schemaNote=j?.productSchemaError||j?.settingsSchemaError?'<br><strong>Database schema:</strong> '+esc((j.productSchemaError||j.settingsSchemaError).slice(0,450)):'';
+    const schemaNote=j?.productSchemaError||j?.settingsSchemaError?'<br><strong>Database schema:</strong> '+esc((j.productSchemaError||j.settingsSchemaError).slice(0,450)):'';
     if(box)box.innerHTML=rows+'<div class="notice" style="margin-top:10px">'+(j?.ok?'All required admin connections and schema checks passed.':'One or more required admin connections or schema checks need attention.')+schemaNote+'</div>';
     const connectionBox=document.getElementById('connectionRows');
     if(connectionBox)connectionBox.innerHTML=rows;
