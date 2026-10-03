@@ -668,12 +668,27 @@ function closeAIStudio(){document.getElementById('aiStudioModal').classList.remo
 function aiProductData(){return {name:document.getElementById('pfName').value.trim(),brand:document.getElementById('pfBrand').value.trim(),description:document.getElementById('pfDescription').value.trim(),features:document.getElementById('pfFeatures').value.trim(),category:document.getElementById('pfCategory').value.trim(),price:document.getElementById('pfPrice').value,currency:document.getElementById('pfCurrency').value};}
 async function getAIReferenceFile(){
   const manual=document.getElementById('aiReference').files?.[0];
-  if(manual)return manual;
-  const first=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)[0];
-  if(!first)throw new Error('Add at least one product image first, or upload a reference image.');
-  const res=await fetch(first,{mode:'cors'});if(!res.ok)throw new Error('The first product image could not be read. Upload it manually as the reference image.');
-  const blob=await res.blob();if(blob.size>6*1024*1024)throw new Error('Reference image must be 6 MB or smaller.');
-  return new File([blob],'nuvora-product-reference.'+((blob.type.split('/')[1]||'png').replace(/[^a-z0-9]/gi,'')),{type:blob.type||'image/png'});
+  let file=manual||null;
+  if(!file){
+    const first=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)[0];
+    if(!first)throw new Error('Add at least one product image first, or upload a reference image.');
+    const res=await fetch(first,{mode:'cors'});if(!res.ok)throw new Error('The first product image could not be read. Upload it manually as the reference image.');
+    const blob=await res.blob();file=new File([blob],'nuvora-product-reference.png',{type:blob.type||'image/png'});
+  }
+  if(!file.type.startsWith('image/'))throw new Error('Reference file must be an image.');
+  if(file.size>6*1024*1024)throw new Error('Reference image must be 6 MB or smaller.');
+  const url=URL.createObjectURL(file);
+  try{
+    const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('Reference image could not be decoded.'));img.src=url;});
+    const max=511,scale=Math.min(1,max/Math.max(image.naturalWidth||image.width,image.naturalHeight||image.height)),w=Math.max(1,Math.round((image.naturalWidth||image.width)*scale)),h=Math.max(1,Math.round((image.naturalHeight||image.height)*scale));
+    if(w===image.naturalWidth&&h===image.naturalHeight)return file;
+    const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext('2d');if(!ctx)throw new Error('Your browser cannot prepare the reference image.');
+    ctx.drawImage(image,0,0,w,h);
+    const out=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+    if(!out)throw new Error('The reference image could not be prepared.');
+    return new File([out],'nuvora-product-reference.png',{type:'image/png'});
+  }finally{URL.revokeObjectURL(url);}
 }
 async function generateAIProductImage(){
   const btn=document.getElementById('aiGenerateBtn'),status=document.getElementById('aiImageStatus');
