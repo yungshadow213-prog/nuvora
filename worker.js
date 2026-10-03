@@ -1275,6 +1275,13 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         return json({ok:results.every(x=>x.ok),results,imported:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length});
       }
 
+      if(url.pathname==='/api/settings'&&request.method==='GET'){
+        const r=await supabaseRest(env,'GET','store_settings',undefined,'?select=store_name,store_description,support_email,currency,timezone,default_region,affiliate_disclosure,shipping_policy,returns_policy&limit=1');
+        if(!r.ok)return json({error:'Store settings could not be loaded.'},502);
+        const rows=await r.json();
+        return json(rows[0]||{store_name:'Nuvora'});
+      }
+
       if(url.pathname==='/api/products'&&request.method==='GET'){
         // Keep the public catalog independent of Supabase relationship embeds.
         // A broken/missing category or collection relationship must not blank the store.
