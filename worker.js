@@ -1441,7 +1441,17 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             negative_prompt:'fake logos, watermarks, misleading text, extra products, distorted product, duplicate product, low quality',
             width,height,num_steps:20,guidance:7.5
           };
-          if(imageB64){input.image_b64=imageB64;input.strength=0.72;}
+          if(imageB64){
+            // Workers AI's SDXL binding accepts img2img input as raw 8-bit image
+            // bytes. Passing only image_b64 can produce "input tensor image is not
+            // present" on some current Workers AI inference paths, so provide the
+            // documented byte-array input as well.
+            const binary=atob(imageB64);
+            const imageBytes=new Array(binary.length);
+            for(let i=0;i<binary.length;i++)imageBytes[i]=binary.charCodeAt(i);
+            input.image=imageBytes;
+            input.strength=0.72;
+          }
           const result=await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0',input);
           const bytes=await aiResultBytes(result);
           return json({ok:true,provider:'cloudflare',image:'data:image/png;base64,'+bytesToBase64(bytes)});
