@@ -188,15 +188,15 @@ async function scrapeAmazonListing(sourceUrl,asin){
     return m?Number(m[1]):null;
   };
   const extractRating=(value)=>{
-    const m=String(value||'').match(/(?:^|\\s)([0-5](?:\\.[0-9])?)\\s*(?:out of 5 stars?|\\/\\s*5|stars?)(?:\\s|$)/i)
-      ||String(value||'').match(/\\b([0-5](?:\\.[0-9])?)\\b/);
+    const s=String(value||'');
+    const m=s.match(/([0-5](?:\.[0-9])?)/);
     const n=m?Number(m[1]):null;
     return n!=null&&n<=5?n:null;
   };
   const extractPrice=(value)=>{
-    const s=String(value||'').replace(/\\u00a0/g,' ');
-    const m=s.match(/(?:[$€£₦]|USD|US\\$|EUR|GBP|NGN)?\\s*([0-9]{1,7}(?:,[0-9]{3})*(?:\\.[0-9]{1,2})?)/);
-    return m?Number(m[1].replace(/,/g,'')):null;
+    const s=String(value||'').replace(/,/g,' ');
+    const m=s.match(/([0-9]+(?:\.[0-9]{1,2})?)/);
+    return m?Number(m[1]):null;
   };
 
   const titleCandidates=[
