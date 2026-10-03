@@ -41,7 +41,7 @@ export default {
       }
 
       if(url.pathname==='/api/admin/diagnostics'&&request.method==='GET'){
-        const cfg=configured(env)||{}; const checks={environment:!!cfg.supabase,auth:false,admin:false,products:false,settings:false,social:false,analytics:false,workersAI:!!cfg.workersAI,shopifyStorefront:!!cfg.shopifyStorefront,shopifyEnvironment:!!cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
+        const cfg=configured(env)||{}; const checks={environment:!!cfg.supabase,auth:false,admin:false,products:false,productSchema:false,settings:false,settingsSchema:false,social:false,analytics:false,workersAI:!!cfg.workersAI,shopifyStorefront:!!cfg.shopifyStorefront,shopifyEnvironment:!!cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
         let shopifyError='';
         const shopifyMissing=[]; const aiMissing=[]; if(!env.AI)aiMissing.push('Workers AI binding');
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))shopifyMissing.push('SHOPIFY_SHOP');
@@ -51,6 +51,20 @@ export default {
         if(u&&env.SUPABASE_SERVICE_ROLE_KEY){
           const pr=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});
           if(pr.ok){const rows=await pr.json();const p=rows[0];checks.admin=!!p&&(p.is_admin===true||p.role==='admin');}
+          const expectedProductColumns=['id','name','slug','kind','description','features','brand','image_url','image_urls','availability','display_price','currency','destination_url','retailer','provider','region','category_id','collection_id','why_we_picked_it','best_for','skip_if','last_checked_at','featured','trending','top_pick','published','shopify_product_id','shopify_variant_id','amazon_asin','amazon_source_url','source_type','source_sku','sourcinbox_product_url','sourcinbox_product_id','supplier_cost','amazon_last_synced','amazon_current_price','amazon_list_price','amazon_discount_percent','amazon_deal_text','amazon_rating','amazon_review_count','amazon_bought_past_month','amazon_badges','amazon_shipping_text','amazon_tax_text','amazon_variations','source_related_products','source_image_urls','shopify_variants'];
+          const expectedSettingsColumns=['id','store_name','store_description','support_email','currency','timezone','default_region','affiliate_disclosure','shipping_policy','returns_policy','maintenance_mode','updated_at'];
+          checks.productSchema=false;checks.settingsSchema=false;
+          let productSchemaError='',settingsSchemaError='';
+          try{
+            const rr=await supabaseRest(env,'GET','products',undefined,'?select='+expectedProductColumns.join(',')+'&limit=1');
+            checks.productSchema=rr.ok;
+            if(!rr.ok)productSchemaError=(await rr.text()).slice(0,500);
+          }catch(e){productSchemaError=String(e?.message||e).slice(0,500);}
+          try{
+            const rr=await supabaseRest(env,'GET','store_settings',undefined,'?select='+expectedSettingsColumns.join(',')+'&limit=1');
+            checks.settingsSchema=rr.ok;
+            if(!rr.ok)settingsSchemaError=(await rr.text()).slice(0,500);
+          }catch(e){settingsSchemaError=String(e?.message||e).slice(0,500);}
           for(const t of ['products','store_settings','social_posts','analytics_events']){
             const rr=await supabaseRest(env,'GET',t,undefined,'?select=*&limit=1');
             checks[t==='store_settings'?'settings':t==='social_posts'?'social':t==='analytics_events'?'analytics':'products']=rr.ok;
@@ -63,8 +77,8 @@ export default {
             }catch(e){shopifyError=String(e?.message||'Shopify authentication failed').slice(0,500);}
           }
         }
-        const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.settings&&checks.social;
-        return json({ok,checks,shopifyError,shopifyMissing,aiMissing});
+        const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.productSchema&&checks.settings&&checks.settingsSchema&&checks.social;
+        return json({ok,checks,shopifyError,shopifyMissing,aiMissing,productSchemaError,settingsSchemaError});
       }
 
 /* Amazon link/import hardening */
