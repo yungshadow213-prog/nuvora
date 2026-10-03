@@ -919,17 +919,21 @@ async function editProduct(id){
 function openProductForm(){openProductModal(false)}
 async function createProduct(product){openProductModal(false);setProductForm(product)}
 async function amazonImport(){showImportPage('amazon')}
-async function togglePublish(id){
+async async function togglePublish(id){
   try{
     const p=adminProducts.find(x=>x.id===id);
     if(!p)throw new Error('Product not found.');
     const publishing=!p.published;
     const destination=retailerDestination(p);
     const body={published:publishing,updated_at:new Date().toISOString()};
-    if(publishing&&destination)body.destination_url=destination;
+    if(publishing){
+      if(!destination)throw new Error('This product has no valid Amazon destination URL.');
+      body.destination_url=destination;
+    }
     await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body});
     await liveAdminProducts();
-  }catch(e){setAdminStatus(e.message)}
+    setAdminStatus(publishing?'Product published successfully.':'Product moved back to draft.');
+  }catch(e){setAdminStatus(e.message) }
 }
 async function discoverAmazonProducts(){
   const input=document.getElementById('amazonSearchUrlInput');
