@@ -1380,7 +1380,19 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const current=(await existing.json())?.[0];
           if(!current)return json({error:'Product not found.'},404);
           const merged={...current,...patch};
-          if(patch.published===true)merged.published=true;
+          if(patch.published===true){
+            merged.published=true;
+            // Publishing must never fail just because an older/imported row has a malformed
+            // destination field when a valid Amazon source URL or ASIN is already present.
+            const candidates=[patch.destination_url,current.destination_url,patch.amazon_source_url,current.amazon_source_url];
+            let repaired=candidates.find(validUrl)||null;
+            if(!repaired&&/amazon/i.test(String(merged.retailer||merged.source_type||''))&&/^[A-Z0-9]{10}$/i.test(String(merged.amazon_asin||''))){
+              repaired='https://www.amazon.com/dp/'+String(merged.amazon_asin).toUpperCase();
+            }
+            if(repaired)merged.destination_url=repaired;
+            if(!validUrl(merged.destination_url))return json({error:'This product has no valid retailer URL. Add or import a valid Amazon destination URL before publishing.'},400);
+            patch.destination_url=merged.destination_url;
+          }
           const validation=validateProduct({...merged,name:merged.name,slug:merged.slug,kind:merged.kind});
           if(validation)return json({error:validation},400);
           if(typeof patch.description==='string')patch.description=cleanMultilineText(patch.description,12000);
