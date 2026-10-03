@@ -71,7 +71,28 @@ function amazonHost(host){ const h=String(host||'').toLowerCase().replace(/^www\
 function extractUrls(value){ const m=String(value||'').match(/https?:\/\/[^\s<>]+/gi)||[]; return [...new Set(m.map(x=>x.replace(/[.,;]+$/,'').trim()).filter(Boolean))]; }
 async function resolveAmazonUrl(sourceUrl){let current=String(sourceUrl||'').trim();for(let i=0;i<5;i++){const host=new URL(current).hostname.toLowerCase().replace(/^www\./,'');if(host!=='link.amazon'&&host!=='amzn.to')return current;const r=await fetch(current,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 Nuvora importer'}});if(r.url&&r.url!==current){current=r.url;continue;}break;}return current;}
 function asinFromUrl(url){ const s=String(url||''); const m=s.match(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|\/product\/|\/dp%2F)([A-Z0-9]{10})(?:[/?#]|$)/i); if(m)return m[1].toUpperCase(); const q=s.match(/[?&](?:asin|ASIN)=([A-Z0-9]{10})(?:&|$)/i); return q?q[1].toUpperCase():null; }
-function htmlText(v){ return String(v||'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/\s+/g,' ').trim(); }
+function decodeHtmlEntities(value){
+  let s=String(value??'');
+  const named={
+    '&nbsp;':' ','&amp;':'&','&quot;':'"',"&#39;":"'",'&apos;':"'",
+    '&lt;':'<','&gt;':'>','&ndash;':'–','&mdash;':'—','&hellip;':'…',
+    '&ldquo;':'“','&rdquo;':'”','&lsquo;':'‘','&rsquo;':'’','&bull;':'•','&trade;':'™','&reg;':'®','&copy;':'©'
+  };
+  s=s.replace(/&(?:nbsp|amp|quot|apos|lt|gt|ndash|mdash|hellip|ldquo|rdquo|lsquo|rsquo|bull|trade|reg|copy);/gi,m=>named[m.toLowerCase()]??m);
+  s=s.replace(/&#(x[0-9a-f]+|[0-9]+);/gi,(_,n)=>{
+    const cp=String(n).toLowerCase().startsWith('x')?parseInt(String(n).slice(1),16):parseInt(n,10);
+    return Number.isFinite(cp)&&cp>0&&cp<=0x10ffff?String.fromCodePoint(cp):'';
+  });
+  return s;
+}
+function htmlText(v){
+  let s=String(v??'');
+  // Remove markup without inserting spaces inside words split by inline Amazon spans.
+  s=s.replace(/<(?:br|p|div|li|tr|td|th|h[1-6]|section|article|ul|ol)[^>]*>/gi,' ');
+  s=s.replace(/<[^>]+>/g,'');
+  s=decodeHtmlEntities(s);
+  return s.replace(/[\\u0000-\\u001F\\u007F]/g,' ').replace(/\\s+/g,' ').trim();
+}
 function metaValue(html,name){
   const wanted=String(name||'').toLowerCase();
   const tags=String(html||'').match(/<meta\b[^>]*>/gi)||[];
