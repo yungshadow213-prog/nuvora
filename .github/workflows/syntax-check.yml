@@ -76,6 +76,18 @@ jobs:
           worker=Path("worker.js").read_text(encoding="utf-8")
           if re.search(r"async\\s+async\\s+function", worker):
               failures.append("worker.js: malformed duplicated async function declaration")
+          required_helpers=["configured","randHex","buildProductOptions","getAmazonToken","amazonGetItem","shopifyGraphql","makeProductSlug","validateProduct","supabaseRest","adminUser"]
+          for helper in required_helpers:
+              if not re.search(r"(?:async\\s+)?function\\s+"+re.escape(helper)+r"\\s*\\(", worker):
+                  failures.append(f"worker.js: required runtime helper missing: {helper}")
+          products_start=worker.find("if(url.pathname==='/api/products'&&request.method==='GET')")
+          products_end=worker.find("async function supabaseProductWrite",products_start)
+          if products_start>=0 and products_end>products_start:
+              public_block=worker[products_start:products_end]
+              if "...source" in public_block:
+                  failures.append("worker.js: public /api/products response must not spread private product rows")
+          if "if (url.pathname === '/api/health')" in worker and "configured(env)" not in worker:
+              failures.append("worker.js: health route does not use configured(env)")
           admin=Path("admin.html").read_text(encoding="utf-8")
           if re.search(r"function\s+togglePublish\s*\([^)]*\)\s*\{[^}]*await", admin, re.S):
               failures.append("admin.html: await inside non-async togglePublish")
