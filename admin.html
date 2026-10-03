@@ -1142,19 +1142,17 @@ async function healthCheck(){
   if(box)box.innerHTML='<div class="health-loading"><i></i>Checking live Nuvora connections…</div>';
   try{
     const j=await api('/api/admin/diagnostics');
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Social posts',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
-    const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','shopifyProducts','analytics']);
+    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Core product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
+    const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','analytics']);
     const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
     const rows=Object.entries(labels).map(([k,label])=>{
       const value=checks[k]===true;
       const state=value?'Connected':(optional.has(k)?'Not configured':'Failed');
       return '<div class="row"><span>'+esc(label)+'</span><span class="status"><i class="dot '+(value?'':'off')+'"></i>'+state+'</span></div>';
     }).join('');
-    const productSchemaError=String(j?.productSchemaError||'');
-    const settingsSchemaError=String(j?.settingsSchemaError||'');
-    const schemaError=productSchemaError||settingsSchemaError;
-    const schemaNote=schemaError?'<br><strong>Database schema:</strong> '+esc(schemaError.slice(0,450)):'';
-    if(box)box.innerHTML=rows+'<div class="notice" style="margin-top:10px">'+(j?.ok?'All required admin connections and schema checks passed.':'One or more required admin connections or schema checks need attention.')+schemaNote+'</div>';
+    const missing=Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[];
+    const schemaNote=missing.length?'<br><strong>Optional product fields not yet in this Supabase schema:</strong> '+esc(missing.join(', ')):((j?.productSchemaError||j?.settingsSchemaError)?'<br><strong>Schema:</strong> '+esc(String(j.productSchemaError||j.settingsSchemaError).slice(0,450)):'');
+    if(box)box.innerHTML=rows+'<div class="notice" style="margin-top:10px">'+(j?.ok?'All required admin connections are healthy.':'One or more required admin connections need attention.')+schemaNote+'</div>';
     const connectionBox=document.getElementById('connectionRows');
     if(connectionBox)connectionBox.innerHTML=rows;
   }catch(e){
@@ -1162,61 +1160,19 @@ async function healthCheck(){
     setAdminStatus(e.message||'System status failed.');
   }
 }
-async function uploadProductImages(){
-  const input=document.getElementById('pfUpload'); const files=[...(input?.files||[])]; if(!files.length)return setAdminStatus('Select one or more image files first.');
-  if(!adminSB) return setAdminStatus('Supabase is not connected.');
-  const status=document.getElementById('uploadStatus'); status.textContent='Uploading…';
-  const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-  try{
-    for(const file of files){
-      if(!file.type.startsWith('image/'))throw new Error(`${file.name} is not an image.`);
-      if(file.size>6*1024*1024)throw new Error(`${file.name} is larger than 6 MB.`);
-      const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
-      const path=`products/${crypto.randomUUID()}.${ext}`;
-      const {error}=await adminSB.storage.from('product-images').upload(path,file,{cacheControl:'31536000',contentType:file.type,upsert:false});
-      if(error)throw error;
-      const {data}=adminSB.storage.from('product-images').getPublicUrl(path); if(data?.publicUrl)urls.push(data.publicUrl);
-    }
-    document.getElementById('pfImages').value=[...new Set(urls)].join('\n'); renderProductImages(); input.value=''; status.textContent=`Uploaded ${files.length} image${files.length===1?'':'s'}.`;
-  }catch(e){status.textContent='Upload failed.';setAdminStatus(e.message||'Image upload failed.');}
-}
-function parseCsvLine(line){const out=[];let cur='',quoted=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(quoted&&line[i+1]==='"'){cur+='"';i++;}else quoted=!quoted;}else if(ch===','&&!quoted){out.push(cur);cur='';}else cur+=ch;}out.push(cur);return out;}
-function parseCsvText(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());if(!lines.length)return [];const headers=parseCsvLine(lines[0]).map(x=>x.trim().toLowerCase());return lines.slice(1).map(line=>{const vals=parseCsvLine(line);const row={};headers.forEach((h,i)=>row[h]=(vals[i]??'').trim());return row;}).filter(r=>Object.values(r).some(Boolean));}
-let csvRows=[];
-function downloadCsvTemplate(){const csv='name,kind,description,features,brand,image_url,image_urls,display_price,currency,destination_url,retailer,provider,region,category_id,collection_id\nGaming Mouse,shop,Short description,Feature 1|Feature 2,Brand,https://example.com/mouse.jpg,,29999,NGN,https://example.com/product,Example Retailer,,,,';const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='nuvora-products-template.csv';a.click();URL.revokeObjectURL(a.href);}
-async function previewCsv(){const f=document.getElementById('csvFile')?.files?.[0];if(!f)return setAdminStatus('Choose a CSV file first.');if(f.size>2*1024*1024)return setAdminStatus('CSV must be 2 MB or smaller.');try{csvRows=parseCsvText(await f.text());if(csvRows.length>500)return setAdminStatus('CSV imports are limited to 500 rows.');const box=document.getElementById('csvPreview');box.style.display='block';box.innerHTML=`<b>${csvRows.length} row${csvRows.length===1?'':'s'} ready.</b><div class="muted" style="margin-top:5px">Columns found: ${esc(Object.keys(csvRows[0]||{}).join(', '))}. All rows will be imported as drafts.</div>`;}catch(e){setAdminStatus('Could not read this CSV.');}}
-async function importCsv(){if(!csvRows.length){await previewCsv();if(!csvRows.length)return;}const items=csvRows.map(r=>({name:r.name||r.title||'',kind:(r.kind||r.type||'shop').toLowerCase(),description:r.description||null,features:r.features||r.key_points||null,brand:r.brand||null,image_url:r.image_url||r.image||null,image_urls:r.image_urls?r.image_urls.split('|').map(x=>x.trim()).filter(Boolean):undefined,display_price:r.display_price||r.price||null,currency:r.currency||'NGN',destination_url:r.destination_url||r.url||null,retailer:r.retailer||null,provider:r.provider||null,region:r.region||null,category_id:r.category_id||null,collection_id:r.collection_id||null}));try{const j=await api('/api/admin/products/bulk',{method:'POST',body:{items}});setAdminStatus(`Import complete. ${j.imported} imported as drafts, ${j.failed} failed.`);csvRows=[];document.getElementById('csvFile').value='';document.getElementById('csvPreview').style.display='none';await liveAdminProducts();}catch(e){setAdminStatus(e.message)}}
-async function loadAnalytics(){try{const j=await api('/api/admin/analytics');const rows=Object.entries(j.counts||{}).sort((a,b)=>b[1]-a[1]);document.getElementById('analyticsRows').innerHTML=rows.length?rows.map(([name,count])=>`<div class="row"><span>${esc(name)}</span><span class="tag">${count}</span></div>`).join(''):'<div class="empty" style="text-align:center">No events recorded yet.</div>';}catch(e){document.getElementById('analyticsRows').innerHTML=`<div class="muted">${esc(e.message)}</div>`;}}
-async function loadSettings(){
-  try{
-    const s=await api('/api/admin/settings');
-    document.getElementById('setName').value=s.store_name||'Nuvora';
-    document.getElementById('setEmail').value=s.support_email||'';
-    document.getElementById('setCurrency').value=s.currency||'NGN';
-    document.getElementById('setTimezone').value=s.timezone||'Africa/Lagos';
-    document.getElementById('setRegion').value=s.default_region||'NG';
-    document.getElementById('setMaintenance').value=String(!!s.maintenance_mode);
-    document.getElementById('setDescription').value=s.store_description||'';
-    document.getElementById('setDisclosure').value=s.affiliate_disclosure||'';
-    document.getElementById('setShipping').value=s.shipping_policy||'';
-    document.getElementById('setReturns').value=s.returns_policy||'';
-    document.getElementById('adminEmail').textContent='Signed in as '+(adminSession.user?.email||'admin');
-    const j=await api('/api/admin/diagnostics');
-    const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Social posts',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
-    const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','shopifyProducts','analytics']);
-    document.getElementById('connectionRows').innerHTML=Object.entries(labels).map(([k,label])=>'<div class="row"><span>'+esc(label)+'</span><span class="status"><i class="dot '+(checks[k]?'':'off')+'"></i>'+(checks[k]?'Connected':(optional.has(k)?'Not configured':'Failed'))+'</span></div>').join('');
-  }catch(e){setAdminStatus(e.message)}
-}
 async function runDiagnostics(){
   const box=document.getElementById('diagnosticRows');
   box.innerHTML='<div class="muted">Running diagnostics…</div>';
   try{
     const j=await api('/api/admin/diagnostics');
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',settings:'Store settings',social:'Social posts',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
-    const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','shopifyProducts']);
-    box.innerHTML=Object.entries(labels).map(([k,label])=>{const value=!!j.checks?.[k],state=value?'Passed':(optional.has(k)?'Not configured':'Failed');return `<div class="row"><span>${esc(label)}</span><span class="status"><i class="dot ${value?'':'off'}"></i>${state}</span></div>`}).join('')+`<div class="notice" style="margin-top:12px">${j.ok?'Core Nuvora diagnostics passed.': 'One or more core diagnostics failed. Check the failed item above.'}${j.shopifyMissing?.length?'<br><strong>Shopify configuration missing:</strong> '+esc(j.shopifyMissing.join(', ')):'' }${j.aiMissing?.length?'<br><strong>AI configuration missing:</strong> '+esc(j.aiMissing.join(', ')):''}${j.shopifyError?'<br><strong>Shopify:</strong> '+esc(j.shopifyError):''}</div>`;
-  }catch(e){box.innerHTML=`<div class="notice">${esc(e.message||'Diagnostics failed.')}</div>`;}
+    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Core product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
+    const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','shopifyProducts','analytics']);
+    const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
+    box.innerHTML=Object.entries(labels).map(([k,label])=>{const value=checks[k]===true;const state=value?'Passed':(optional.has(k)?'Not configured':'Failed');return '<div class="row"><span>'+esc(label)+'</span><span class="status"><i class="dot '+(value?'':'off')+'"></i>'+state+'</span></div>'}).join('');
+    const missing=Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[];
+    const notice=(j?.ok?'Core Nuvora diagnostics passed.':'One or more core diagnostics failed.')+(missing.length?' <br><strong>Optional product fields missing:</strong> '+esc(missing.join(', ')):'')+(j?.shopifyMissing?.length?'<br><strong>Shopify configuration missing:</strong> '+esc(j.shopifyMissing.join(', ')):'')+(j?.aiMissing?.length?'<br><strong>AI configuration missing:</strong> '+esc(j.aiMissing.join(', ')):'')+(j?.shopifyError?'<br><strong>Shopify:</strong> '+esc(j.shopifyError):'');
+    box.innerHTML+=`<div class="notice" style="margin-top:12px">${notice}</div>`;
+  }catch(e){box.innerHTML='<div class="notice">'+esc(e.message||'Diagnostics failed.')+'</div>';}
 }
 async function saveSettings(){try{await api('/api/admin/settings',{method:'PATCH',body:{store_name:document.getElementById('setName').value.trim()||'Nuvora',support_email:document.getElementById('setEmail').value.trim()||null,currency:document.getElementById('setCurrency').value,timezone:document.getElementById('setTimezone').value.trim()||'Africa/Lagos',default_region:document.getElementById('setRegion').value.trim()||'NG',maintenance_mode:document.getElementById('setMaintenance').value==='true',store_description:document.getElementById('setDescription').value,affiliate_disclosure:document.getElementById('setDisclosure').value,shipping_policy:document.getElementById('setShipping').value,returns_policy:document.getElementById('setReturns').value}});setAdminStatus('Settings saved.');}catch(e){setAdminStatus(e.message)}}
 async function loadCategories(){try{categories=await api('/api/admin/categories');renderProductTaxonomy();document.getElementById('categoryRows').innerHTML=categories.length?categories.map(c=>`<div class="row"><span><b>${esc(c.name)}</b><div class="muted">${esc(c.slug)}</div></span><span class="tag">Category</span></div>`).join(''):'<div class="muted">No categories yet.</div>'}catch(e){setAdminStatus(e.message)}}
