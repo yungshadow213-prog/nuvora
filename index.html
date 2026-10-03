@@ -786,8 +786,8 @@ function renderProductPage(p){
   const featureLines=cleanProductText(p.features||'').split(/\n|•|\r/).map(x=>cleanProductText(x)).filter(Boolean).slice(0,12);
   const specs=extractSpecs(p.desc||'');
   const ratingMarkup=rating>0
-    ?'<span class="nv-stars">'+('★'.repeat(Math.max(0,Math.min(5,Math.round(rating))))+'☆'.repeat(Math.max(0,5-Math.round(rating))))+'</span><strong>'+rating.toFixed(1)+'</strong><a href="#productReviews">'+(reviewCount?reviewCount.toLocaleString()+' Amazon reviews':'Reviews')+'</a>'
-    :'<span style="color:var(--muted)">Rating not available</span>';
+    ?'<span class="nv-stars">'+('★'.repeat(Math.max(0,Math.min(5,Math.round(rating))))+'☆'.repeat(Math.max(0,5-Math.round(rating))))+'</span><strong>'+rating.toFixed(1)+'</strong><a href="#productReviews">'+(reviewCount?reviewCount.toLocaleString()+' customer reviews':'Reviews')+'</a>'
+    :'<span style="color:var(--muted)">No Nuvora rating yet</span>';
   const imageMarkup=images.length?'<img id="productMainImage" src="'+htmlEsc(images[0])+'" alt="'+htmlEsc(p.name)+'">':'<span class="nv-image-empty">'+htmlEsc(p.icon||'✦')+'</span>';
   const optionGroups=Array.isArray(p.options)?p.options.filter(g=>g&&g.name&&Array.isArray(g.values)&&g.values.length):[];
   const optionMarkup=optionGroups.length
@@ -799,8 +799,9 @@ function renderProductPage(p){
   const detailsRows=[];
   if(p.brand)detailsRows.push(['Brand',p.brand]);
   if(p.cat)detailsRows.push(['Category',p.cat]);
-  if(p.amazonRating)detailsRows.push(['Amazon rating',Number(p.amazonRating).toFixed(1)+' / 5']);
-  if(p.amazonReviews)detailsRows.push(['Amazon reviews',Number(p.amazonReviews).toLocaleString()]);
+  const externalRetailer=/amazon/i.test(String(p.retailer||''))||!!p.amazon_asin||!!p.amazon_source_url;
+  if(!externalRetailer&&p.rating)detailsRows.push(['Rating',Number(p.rating).toFixed(1)+' / 5']);
+  if(!externalRetailer&&p.reviews)detailsRows.push(['Reviews',Number(p.reviews).toLocaleString()]);
   if(p.amazonBought)detailsRows.push(['Bought recently',p.amazonBought]);if(p.lastChecked)detailsRows.push(['Last checked',new Date(p.lastChecked).toLocaleDateString()]);
   if(p.currency)detailsRows.push(['Currency',p.currency]);
   if(p.amazonDeal)detailsRows.push(['Deal',p.amazonDeal]);
