@@ -654,7 +654,7 @@ async function scrapeGenericSource(sourceUrl,retailer){
     return {title:title||retailer+' product',description:description||null,brand:brand||null,images:genericImages(html,ld),features,current_price:current,list_price:listPrice,discount_percent:discount,deal_text:null,rating,review_count:reviews,availability,shipping_text:null,tax_text:null,variations:[],sku,destination_url:resolved,resolved_url:resolved,retailer};
   }catch(e){return {error:String(e?.message||e).slice(0,500)}}
 }
-async async function ingestSourceProduct(sourceUrl){
+async function ingestSourceProduct(sourceUrl){
   const retailer=detectRetailer(sourceUrl);
   if(retailer==='Amazon'){
     const resolved=await resolveAmazonUrl(sourceUrl),asin=asinFromUrl(resolved)||asinFromUrl(sourceUrl);
