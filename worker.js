@@ -250,10 +250,11 @@ function normalizeAmazonListing(listing={}){
   if(x.specifications.length)x.features=[...x.features,...x.specifications.map(([k,v])=>k+': '+v)].slice(0,50);
   const sourceDescription=cleanMultilineText(x.description,12000)||'';
   const badDescription=/^(?:visit the|shop the|brand:\s|about this item|product description|click to|see more|read more|customer questions|make sure this fits)/i.test(sourceDescription);
-  const featureLines=Array.isArray(x.features)?x.features.map(v=>cleanMultilineText(v,700)).filter(v=>v&&!/^visit the .*store/i.test(v)).slice(0,12):[];
+  const fragmented=looksFragmentedText(sourceDescription);
+  const featureLines=Array.isArray(x.features)?x.features.map(v=>cleanMultilineText(v,700)).filter(v=>v&&!/^visit the .*store/i.test(v)&&!looksFragmentedText(v)).slice(0,12):[];
   const specLines=Array.isArray(x.specifications)?x.specifications.map(([k,v])=>cleanMultilineText(String(k)+': '+String(v),700)).filter(Boolean).slice(0,20):[];
-  if(!sourceDescription||sourceDescription.length<80||badDescription){
-    const intro=featureLines.length?'Key features include: '+featureLines.slice(0,5).join(', ')+'.':'';
+  if(!sourceDescription||sourceDescription.length<120||badDescription||fragmented){
+    const intro=featureLines.length?'Key features include: '+featureLines.slice(0,6).join(', ')+'.':'';
     const details=specLines.length?'Product details: '+specLines.slice(0,12).join('; ')+'.':'';
     x.description=cleanMultilineText([intro,details].filter(Boolean).join('\n\n'),12000)||null;
   }else x.description=sourceDescription;
@@ -302,18 +303,25 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const brandHint=typeof jsonld.brand==='string'?jsonld.brand:String(jsonld.brand?.name||'');
 
   const escapeRegex=(value)=>String(value).replace(/[.*+?^{}()|[\]\\$]/g,'\\$&');
-  const textById=(id)=>{
+    const elementInnerHtmlById=(id)=>{
     const esc=escapeRegex(id);
-    const re=new RegExp("id=[\"']"+esc+"[\"'][^>]*>([\\s\\S]*?)(?:<\\/div>|<\\/span>|<\\/h1>)","i");
-    const m=String(html).match(re);
-    return m?clean(m[1]):'';
+    const openRe=new RegExp("<([a-z][a-z0-9:-]*)\\b[^>]*\\bid=[\"']"+esc+"[\"'][^>]*>","i");
+    const open=String(html).match(openRe);
+    if(!open||open.index==null)return '';
+    const tag=open[1],contentStart=open.index+open[0].length;
+    const tagRe=new RegExp("<\\/?"+escapeRegex(tag)+"\\b[^>]*>","gi");
+    tagRe.lastIndex=contentStart;
+    let depth=1,match;
+    while((match=tagRe.exec(html))){
+      const token=match[0];
+      if(/^<\\//.test(token))depth--;
+      else if(!/\\/\\s*>$/.test(token))depth++;
+      if(depth===0)return String(html).slice(contentStart,match.index);
+    }
+    return String(html).slice(contentStart);
   };
-  const blockById=(id)=>{
-    const esc=escapeRegex(id);
-    const re=new RegExp("id=[\"']"+esc+"[\"'][^>]*>([\\s\\S]*?)<\\/","i");
-    const m=String(html).match(re);
-    return m?clean(m[1]):'';
-  };
+  const textById=(id)=>{const inner=elementInnerHtmlById(id);return inner?clean(inner):'';};
+  const blockById=(id)=>{const inner=elementInnerHtmlById(id);return inner?clean(inner):'';};
   const extractFirst=(patterns)=>{
     for(const re of patterns){
       const m=String(html).match(re);
@@ -734,10 +742,11 @@ async function ingestSourceProduct(sourceUrl){
         if(!response.ok)return json({error:'Amazon search returned HTTP '+response.status+'.'},502);
         const html=await response.text();
         const found=[],seen=new Set();
+        const marketplaceHost=parsed.hostname.toLowerCase().replace(/^www\./,'');
         const add=(asin)=>{
           const id=String(asin||'').toUpperCase();
           if(!/^[A-Z0-9]{10}$/.test(id)||seen.has(id))return;
-          seen.add(id);found.push('https://www.amazon.com/dp/'+id);
+          seen.add(id);found.push('https://'+marketplaceHost+'/dp/'+id);
         };
         for(const m of html.matchAll(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/)([A-Z0-9]{10})(?:[/?#"'&]|$)/gi))add(m[1]);
         for(const m of html.matchAll(/(?:asin|data-asin)=["':= ]+([A-Z0-9]{10})/gi))add(m[1]);
@@ -1676,24 +1685,17 @@ async function aiResultBytes(result){
 }
 function bytesToBase64(bytes){let out='';const step=0x8000;for(let i=0;i<bytes.length;i+=step)out+=String.fromCharCode(...bytes.subarray(i,i+step));return btoa(out);}
 function repairFragmentedText(value){
-  let s=decodeHtmlEntities(String(value??'')).replace(/\\s+/g,' ').trim();
-  // Amazon sometimes returns inline text in broken single-character fragments.
-  // Rejoin fragments only when the leading fragment is not a legitimate standalone
-  // English word, avoiding changes to normal words such as "a lamp" and "I am".
-  for(let pass=0;pass<4;pass++){
-    const next=s.replace(/\\b([A-Za-z])\\s+([A-Za-z]{2,})\\b/g,(all,a,b)=>{
-      if(a==='a'||a==='A'||a==='i'||a==='I')return all;
-      return a+b;
-    });
-    if(next===s)break;
-    s=next;
-  }
-  // Handle common one-letter breaks that occur repeatedly inside a product sentence.
-  s=s.replace(/\\b([A-Za-z]{2,})\\s+([A-Za-z])\\b/g,(all,a,b)=>{
-    if(b==='a'||b==='A'||b==='i'||b==='I')return all;
-    return a+b;
-  });
-  return s.replace(/\\s+/g,' ').trim();
+  return decodeHtmlEntities(String(value??''))
+    .replace(/[\\u0000-\\u001F\\u007F]/g,' ')
+    .replace(/\\s+/g,' ')
+    .trim();
+}
+function looksFragmentedText(value){
+  const s=String(value||'').trim(); if(!s)return false;
+  const words=s.split(/\\s+/).filter(Boolean); if(words.length<12)return false;
+  const singleLetters=words.filter(w=>/^[A-Za-z]$/.test(w)).length;
+  const suspicious=(s.match(/\\b[A-Za-z]{2,}\\s+[A-Za-z]\\b/g)||[]).length;
+  return singleLetters>=Math.max(4,Math.ceil(words.length*0.08))||suspicious>=5;
 }
 function cleanText(value,max=10000){
   const text=String(value??'')
