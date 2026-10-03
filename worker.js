@@ -41,56 +41,51 @@ export default {
       }
 
       if(url.pathname==='/api/admin/diagnostics'&&request.method==='GET'){
-        const cfg=configured(env)||{}; const checks={environment:!!cfg.supabase,auth:false,admin:false,products:false,productSchema:false,settings:false,settingsSchema:false,social:false,analytics:false,workersAI:!!cfg.workersAI,shopifyStorefront:!!cfg.shopifyStorefront,shopifyEnvironment:!!cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
-        let shopifyError='';
-        const shopifyMissing=[]; const aiMissing=[]; if(!env.AI)aiMissing.push('Workers AI binding');
+        const cfg=configured(env)||{};
+        const checks={environment:!!cfg.supabase,auth:false,admin:false,products:false,productSchema:false,settings:false,settingsSchema:false,social:false,analytics:false,workersAI:!!cfg.workersAI,shopifyStorefront:!!cfg.shopifyStorefront,shopifyEnvironment:!!cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
+        const missingProductColumns=[];
+        let productSchemaError=''; let shopifyError='';
+        const shopifyMissing=[]; const aiMissing=[];
+        if(!env.AI)aiMissing.push('Workers AI binding');
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))shopifyMissing.push('SHOPIFY_SHOP');
         if(!env.SHOPIFY_CLIENT_ID)shopifyMissing.push('SHOPIFY_CLIENT_ID');
         if(!env.SHOPIFY_CLIENT_SECRET)shopifyMissing.push('SHOPIFY_CLIENT_SECRET');
-        let productSchemaError='',settingsSchemaError='';
-        let missingProductColumns=[];
         const u=await supabaseUser(request,env); checks.auth=!!u;
         if(u&&env.SUPABASE_SERVICE_ROLE_KEY){
-          const pr=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});
-          if(pr.ok){const rows=await pr.json();const p=rows[0];checks.admin=!!p&&(p.is_admin===true||p.role==='admin');}
-          const requiredProductColumns=['id','name','slug','kind','image_url','image_urls','display_price','currency','destination_url','retailer','published','created_at','updated_at'];
-          const optionalProductColumns=['description','features','brand','availability','provider','region','category_id','collection_id','why_we_picked_it','best_for','skip_if','last_checked_at','featured','trending','top_pick','shopify_product_id','shopify_variant_id','amazon_asin','amazon_source_url','source_type','source_sku','sourcinbox_product_url','sourcinbox_product_id','supplier_cost','amazon_last_synced','amazon_current_price','amazon_list_price','amazon_discount_percent','amazon_deal_text','amazon_rating','amazon_review_count','amazon_bought_past_month','amazon_badges','amazon_shipping_text','amazon_tax_text','amazon_variations','source_related_products','source_image_urls','shopify_variants'];
-          const expectedSettingsColumns=['id','store_name','store_description','support_email','currency','timezone','default_region','affiliate_disclosure','shipping_policy','returns_policy','maintenance_mode','updated_at'];
-          checks.productSchema=false;checks.settingsSchema=false;
           try{
-            const rr=await supabaseRest(env,'GET','products',undefined,'?select='+requiredProductColumns.join(',')+'&limit=1');
-            checks.productSchema=rr.ok;
-            if(!rr.ok)productSchemaError=(await rr.text()).slice(0,500);
-          }catch(e){productSchemaError=String(e?.message||e).slice(0,500);}
-          if(checks.productSchema){
-            for(const column of optionalProductColumns){
-              const rr=await supabaseRest(env,'GET','products',undefined,'?select='+encodeURIComponent(column)+'&limit=1');
-              if(!rr.ok)missingProductColumns.push(column);
-            }
-          }
-          try{
-            const rr=await supabaseRest(env,'GET','store_settings',undefined,'?select='+expectedSettingsColumns.join(',')+'&limit=1');
-            checks.settingsSchema=rr.ok;
-            if(!rr.ok)settingsSchemaError=(await rr.text()).slice(0,500);
-          }catch(e){settingsSchemaError=String(e?.message||e).slice(0,500);}
-          for(const t of ['products','store_settings','social_posts','analytics_events']){
-            const rr=await supabaseRest(env,'GET',t,undefined,'?select=*&limit=1');
-            checks[t==='store_settings'?'settings':t==='social_posts'?'social':t==='analytics_events'?'analytics':'products']=rr.ok;
-          }
-          if(checks.admin&&checks.shopifyEnvironment){
+            const pr=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=id,is_admin,role&limit=1`,{headers:sbHeaders(env,true)});
+            if(pr.ok){const rows=await pr.json();const p=rows[0];checks.admin=!!p&&(p.is_admin===true||p.role==='admin');}
+          }catch(e){}
+          const tableChecks=[['products','products'],['store_settings','settings'],['social_posts','social'],['analytics_events','analytics']];
+          for(const [table,key] of tableChecks){
             try{
-              const data=await shopifyGraphql(env,'{ products(first: 1) { edges { node { id title } } } }',{},true);
-              checks.shopifyAuth=true;
-              checks.shopifyProducts=!!data?.products;
-            }catch(e){shopifyError=String(e?.message||'Shopify authentication failed').slice(0,500);}
+              const rr=await supabaseRest(env,'GET',table,undefined,'?select=*&limit=1');
+              checks[key]=rr.ok;
+              if(table==='products'&&!rr.ok){productSchemaError=(await rr.text()).slice(0,1200);const m=productSchemaError.match(/column products\.([A-Za-z0-9_]+) does not exist/gi)||[];m.forEach(x=>{const mm=x.match(/products\.([A-Za-z0-9_]+)/i);if(mm&&!missingProductColumns.includes(mm[1]))missingProductColumns.push(mm[1]);});}
+            }catch(e){if(table==='products')productSchemaError=String(e?.message||e);}
+          }
+          const schema=await inspectProductSchema(env).catch(e=>({ok:false,missing:[],message:String(e?.message||e)}));
+          if(schema.ok){checks.productSchema=true;}else{productSchemaError=schema.message||productSchemaError;(schema.missing||[]).forEach(x=>{if(!missingProductColumns.includes(x))missingProductColumns.push(x);});}
+          checks.settingsSchema=checks.settings;
+          if(checks.admin&&checks.shopifyEnvironment){
+            try{const data=await shopifyGraphql(env,'{ products(first: 1) { edges { node { id title } } } }',{},true);checks.shopifyAuth=true;checks.shopifyProducts=!!data?.products;}
+            catch(e){shopifyError=String(e?.message||'Shopify authentication failed').slice(0,500);}
           }
         }
         const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.productSchema&&checks.settings&&checks.settingsSchema&&checks.social;
-        return json({ok,checks,shopifyError,shopifyMissing,aiMissing,productSchemaError,settingsSchemaError,missingProductColumns});
+        return json({ok,checks,missingProductColumns,productSchemaError,shopifyError,shopifyMissing,aiMissing});
       }
 
 /* Amazon link/import hardening */
 // Runtime integration helpers. These live in the Worker so health, diagnostics, Shopify, and legacy Amazon routes never depend on the old Node server.
+async function inspectProductSchema(env){
+  const required=['id','name','slug','kind','description','features','brand','image_url','image_urls','availability','display_price','currency','destination_url','retailer','provider','region','category_id','collection_id','why_we_picked_it','best_for','skip_if','featured','trending','top_pick','published','amazon_asin','amazon_source_url','source_type','sourcinbox_product_url','sourcinbox_product_id','supplier_cost','created_at','updated_at','amazon_last_synced','amazon_current_price','amazon_list_price','amazon_discount_percent','amazon_deal_text','amazon_rating','amazon_review_count','amazon_bought_past_month','amazon_badges','amazon_shipping_text','amazon_tax_text','amazon_variations','source_related_products','source_image_urls'];
+  const r=await supabaseRest(env,'GET','products',undefined,'?select=*%26limit=0');
+  if(r.ok)return {ok:true,missing:[]};
+  const raw=await r.text();
+  const missing=[...raw.matchAll(/column products\.([A-Za-z0-9_]+) does not exist/gi)].map(m=>m[1]);
+  return {ok:false,missing:[...new Set(missing)],message:raw.slice(0,800)};
+}
 function configured(env){
   const e=env||{};
   const shopDomain=String(e.SHOPIFY_SHOP||e.SHOPIFY_STORE_DOMAIN||'').trim();
@@ -136,6 +131,7 @@ async function shopifyGraphql(env,query,variables={},admin=false){
   if(!response.ok||Array.isArray(data?.errors)&&data.errors.length)throw new Error(data?.errors?.[0]?.message||'Shopify GraphQL request failed (HTTP '+response.status+').');return data?.data||{};
 }
 function validUrl(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
+function validURL(value){return validUrl(value);}
 function resolveProductDestination(current={},patch={}){
   const merged={...current,...patch};
   const candidates=[
