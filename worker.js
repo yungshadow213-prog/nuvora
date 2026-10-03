@@ -147,15 +147,16 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const states=amazonStateObjects(html);
   const brandHint=typeof jsonld.brand==='string'?jsonld.brand:String(jsonld.brand?.name||'');
 
+  const escapeRegex=(value)=>String(value).replace(/[.*+?^{}()|[\]\\$]/g,'\\$&');
   const textById=(id)=>{
-    const esc=String(id).replace(/[.*+?^{}()|[\]\\]/g,'\\$&');
-    const re=new RegExp('id=["\\\\\\']'+esc+'["\\\\\\'][^>]*>([\\s\\S]*?)(?:<\\/div>|<\\/span>|<\\/h1>)','i');
+    const esc=escapeRegex(id);
+    const re=new RegExp("id=[\"']"+esc+"[\"'][^>]*>([\\s\\S]*?)(?:<\\/div>|<\\/span>|<\\/h1>)","i");
     const m=String(html).match(re);
     return m?clean(m[1]):'';
   };
   const blockById=(id)=>{
-    const esc=String(id).replace(/[.*+?^{}()|[\\]\\]/g,'\\$&');
-    const re=new RegExp('id=["\\\\\\']'+esc+'["\\\\\\'][^>]*>([\\s\\S]*?)<\\/','i');
+    const esc=escapeRegex(id);
+    const re=new RegExp("id=[\"']"+esc+"[\"'][^>]*>([\\s\\S]*?)<\\/","i");
     const m=String(html).match(re);
     return m?clean(m[1]):'';
   };
