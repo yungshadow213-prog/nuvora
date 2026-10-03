@@ -215,7 +215,7 @@ async function aiPolishAmazonListing(env,listing){
   const key=String(env?.OPENAI_API_KEY||'').trim();if(!key||!listing?.title)return listing;
   try{
     const facts={title:listing.title,brand:listing.brand,description:listing.description,features:listing.features,specifications:listing.specifications,current_price:listing.current_price,list_price:listing.list_price,discount_percent:listing.discount_percent,rating:listing.rating,review_count:listing.review_count,availability:listing.availability,shipping_text:listing.shipping_text,category_path:listing.category_path};
-    const system='You normalize Nuvora product data. Return JSON with only title and description. Remove keyword spam and retailer boilerplate. Never invent, infer, change, or omit factual product claims. Preserve measurements, materials, compatibility, prices, ratings and counts. Title under 120 characters. Description factual and readable from supplied facts only.';
+    const system='You normalize Nuvora product data. Return JSON with only title and description. The source may contain severe extraction corruption: missing first letters, stray spaces, or broken fragments. Repair obvious word corruption from the surrounding sentence and supplied facts. Remove keyword spam and retailer boilerplate. Never invent product features, measurements, materials, compatibility, prices, ratings, or counts. Preserve all factual claims that can be recovered. Title under 120 characters. Description factual and readable from supplied facts only.';
     const resp=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+key},body:JSON.stringify({model:'gpt-4o-mini',temperature:0,response_format:{type:'json_object'},messages:[{role:'system',content:system},{role:'user',content:JSON.stringify(facts).slice(0,18000)}]})});
     if(!resp.ok)return listing;const data=await resp.json();const raw=data?.choices?.[0]?.message?.content||'';const p=JSON.parse(raw);
     if(typeof p.title==='string'&&p.title.trim())listing.title=smartProductTitle(p.title,listing.brand||'');
@@ -1603,24 +1603,22 @@ async function aiResultBytes(result){
 }
 function bytesToBase64(bytes){let out='';const step=0x8000;for(let i=0;i<bytes.length;i+=step)out+=String.fromCharCode(...bytes.subarray(i,i+step));return btoa(out);}
 function repairFragmentedText(value){
-  let s=decodeHtmlEntities(String(value??'')).replace(/\\s+/g,' ').trim();
-  // Amazon sometimes returns inline text in broken single-character fragments.
-  // Rejoin fragments only when the leading fragment is not a legitimate standalone
-  // English word, avoiding changes to normal words such as "a lamp" and "I am".
-  for(let pass=0;pass<4;pass++){
-    const next=s.replace(/\\b([A-Za-z])\\s+([A-Za-z]{2,})\\b/g,(all,a,b)=>{
-      if(a==='a'||a==='A'||a==='i'||a==='I')return all;
-      return a+b;
-    });
-    if(next===s)break;
-    s=next;
-  }
-  // Handle common one-letter breaks that occur repeatedly inside a product sentence.
-  s=s.replace(/\\b([A-Za-z]{2,})\\s+([A-Za-z])\\b/g,(all,a,b)=>{
-    if(b==='a'||b==='A'||b==='i'||b==='I')return all;
-    return a+b;
-  });
-  return s.replace(/\\s+/g,' ').trim();
+  let s=decodeHtmlEntities(String(value??'')).replace(/\s+/g,' ').trim();
+  const safeJoins=[
+    [/\b([sS])\s+tyle\b/g,'$1tyle'],[/\b([fF])\s+unctionality\b/g,'$1unctionality'],
+    [/\b([fF])\s+lexible\b/g,'$1lexible'],[/\b([gG])\s+ooseneck\b/g,'$1ooseneck'],
+    [/\b([rR])\s+otatable\b/g,'$1otatable'],[/\b([sS])\s+hade\b/g,'$1hade'],
+    [/\b([sS])\s+ocket\b/g,'$1ocket'],[/\b([bB])\s+ase\b/g,'$1ase'],
+    [/\b([rR])\s+eading\b/g,'$1eading'],[/\b([bB])\s+edside\b/g,'$1edside'],
+    [/\b([lL])\s+iving\b/g,'$1iving'],[/\b([rR])\s+oom\b/g,'$1oom'],
+    [/\b([bB])\s+rushed\b/g,'$1rushed'],[/\b([nN])\s+ickel\b/g,'$1ickel'],
+    [/\b([dD])\s+iscover\b/g,'$1iscover'],[/\b([pP])\s+recision\b/g,'$1recision'],
+    [/\b([cC])\s+rafted\b/g,'$1rafted'],[/\b([lL])\s+ight\b/g,'$1ight'],
+    [/\b([aA])\s+ddition\b/g,'$1ddition'],[/\b([mM])\s+aintain\b/g,'$1aintain'],
+    [/\b([mM])\s+eet\b/g,'$1eet']
+  ];
+  for(const [re,sub] of safeJoins)s=s.replace(re,sub);
+  return s.replace(/\s+/g,' ').trim();
 }
 function cleanText(value,max=10000){
   const text=String(value??'')
@@ -1632,7 +1630,7 @@ function cleanText(value,max=10000){
   return text;
 }
 function cleanMultilineText(value,max=12000){
-  const text=String(value??'')
+  const text=repairFragmentedText(String(value??'')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g,'')
     .replace(/(?:sale_list_token|order_receipt_token|refund_detail_token|bg_mail_token|payment_detail_token|email_token|[a-z0-9_]+_token)/gi,' ')
     .replace(/\\r/g,'')
