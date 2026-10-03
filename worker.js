@@ -48,6 +48,7 @@ export default {
         if(!env.SHOPIFY_CLIENT_ID)shopifyMissing.push('SHOPIFY_CLIENT_ID');
         if(!env.SHOPIFY_CLIENT_SECRET)shopifyMissing.push('SHOPIFY_CLIENT_SECRET');
         let productSchemaError='',settingsSchemaError='';
+        let missingProductColumns=[];
         const u=await supabaseUser(request,env); checks.auth=!!u;
         if(u&&env.SUPABASE_SERVICE_ROLE_KEY){
           const pr=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});
@@ -55,7 +56,6 @@ export default {
           const requiredProductColumns=['id','name','slug','kind','image_url','image_urls','display_price','currency','destination_url','retailer','published','created_at','updated_at'];
           const optionalProductColumns=['description','features','brand','availability','provider','region','category_id','collection_id','why_we_picked_it','best_for','skip_if','last_checked_at','featured','trending','top_pick','shopify_product_id','shopify_variant_id','amazon_asin','amazon_source_url','source_type','source_sku','sourcinbox_product_url','sourcinbox_product_id','supplier_cost','amazon_last_synced','amazon_current_price','amazon_list_price','amazon_discount_percent','amazon_deal_text','amazon_rating','amazon_review_count','amazon_bought_past_month','amazon_badges','amazon_shipping_text','amazon_tax_text','amazon_variations','source_related_products','source_image_urls','shopify_variants'];
           const expectedSettingsColumns=['id','store_name','store_description','support_email','currency','timezone','default_region','affiliate_disclosure','shipping_policy','returns_policy','maintenance_mode','updated_at'];
-          let missingProductColumns=[];
           checks.productSchema=false;checks.settingsSchema=false;
           try{
             const rr=await supabaseRest(env,'GET','products',undefined,'?select='+requiredProductColumns.join(',')+'&limit=1');
