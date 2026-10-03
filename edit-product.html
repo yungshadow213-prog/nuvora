@@ -56,7 +56,19 @@ let sb=null,session=null,product=null,images=[],selected=0,generated=null;
 const $=id=>document.getElementById(id);
 function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function msg(t,error=false){const e=$('message');e.textContent=t;e.className='message show'+(error?' error':'');clearTimeout(window._msg);window._msg=setTimeout(()=>e.className='message',3500);}
-async function api(path,options={}){options.headers={...(options.headers||{}),Authorization:'Bearer '+session.access_token};if(options.body&&typeof options.body!=='string'&&!(options.body instanceof FormData)){options.headers['content-type']='application/json';options.body=JSON.stringify(options.body)}const r=await fetch(path,options);let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||'Request failed');return j;}
+async function api(path,options={},retry=true){
+  if(!session)throw new Error('Admin session required.');
+  const requestOptions={...options,headers:{...(options.headers||{}),Authorization:'Bearer '+session.access_token}};
+  if(requestOptions.body&&typeof requestOptions.body!=='string'&&!(requestOptions.body instanceof FormData)){requestOptions.headers['content-type']='application/json';requestOptions.body=JSON.stringify(requestOptions.body);}
+  let r;
+  try{r=await fetch(path,requestOptions)}catch(e){throw new Error('Cannot reach Nuvora.');}
+  if(r.status===401&&retry&&sb){
+    try{const refreshed=await sb.auth.refreshSession();if(refreshed.data?.session){session=refreshed.data.session;return api(path,options,false);}}catch(e){}
+  }
+  let j={};try{j=await r.json()}catch{}
+  if(!r.ok)throw new Error(j.error||j.detail||'Request failed');
+  return j;
+}
 function val(x){return x===null||x===undefined||x===''?'Not provided by source':String(x);}
 function render(){
  $('pageTitle').firstChild.textContent=(product.name||'Product')+' ';
@@ -91,8 +103,9 @@ async function syncSource(){
  const btn=$('syncBtn');btn.disabled=true;btn.textContent='Syncing…';
  try{
    const result=await api('/api/admin/products/'+encodeURIComponent(product.id)+'/sync',{method:'POST',body:{}});
-   product=result.product||product; render(); msg('Amazon source synced. Your store title, price and images were preserved.');
- }finally{btn.disabled=false;btn.textContent='Sync source';}
+   product=result.product||product; render(); msg('Amazon source synced. Source facts refreshed and your editable store fields preserved.');
+ }catch(e){msg(e.message||'Source sync failed.',true);}
+ finally{btn.disabled=false;btn.textContent='Sync source';}
 }
 async function publish(){const next=!product.published;const body={published:next,updated_at:new Date().toISOString()};product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body});render();msg(next?'Product published to the storefront.':'Product unpublished.');}
 async function upload(){
