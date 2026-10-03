@@ -728,7 +728,7 @@ async function ingestSourceProduct(sourceUrl){
     if(!asin)return {error:'Could not identify the Amazon product ID (ASIN).'};
     let listing=await scrapeAmazonListing(resolved,asin);
     if(!listing?.error){listing=normalizeAmazonListing(listing);listing=await aiPolishAmazonListing(env,listing);}
-    return listing?.error?listing:{...listing,retailer,source_id:asin,resolved_url:resolved};
+    return listing?.error?listing:{...listing,retailer,source_id:asin,source_url:sourceUrl,resolved_url:resolved};
   }
   if(retailer==='Temu'){
     const listing=await scrapeTemuListing(sourceUrl);
@@ -806,8 +806,8 @@ async function ingestSourceProduct(sourceUrl){
             const product={
               name:title,kind:'find',brand:listing.brand||null,description,features:features.join('\n')||null,
               image_url:images[0]||null,image_urls:images,display_price:listing.current_price??null,currency:listing.currency||'USD',
-              destination_url:listing.resolved_url||sourceUrl,retailer,category_id,amazon_asin:retailer==='Amazon'?sourceId:null,
-              amazon_source_url:retailer==='Amazon'?(listing.resolved_url||sourceUrl):null,source_type:retailer.toLowerCase().replace(/\s+/g,'_'),
+              destination_url:listing.source_url||sourceUrl,retailer,category_id,amazon_asin:retailer==='Amazon'?sourceId:null,
+              amazon_source_url:retailer==='Amazon'?(listing.source_url||sourceUrl):null,source_type:retailer.toLowerCase().replace(/\s+/g,'_'),
               amazon_current_price:retailer==='Amazon'?(listing.current_price??null):null,
               amazon_list_price:retailer==='Amazon'?(listing.list_price??null):null,amazon_discount_percent:retailer==='Amazon'?(listing.discount_percent??null):null,
               amazon_deal_text:retailer==='Amazon'?(listing.deal_text||null):null,amazon_rating:listing.rating??null,amazon_review_count:listing.review_count??null,
