@@ -328,8 +328,9 @@ async function scrapeAmazonListing(sourceUrl,asin){
     let depth=1,match;
     while((match=tagRe.exec(html))){
       const token=match[0];
-      if(/^<\//.test(token))depth--;
-      else if(!/\/\s*>$/.test(token))depth++;
+      if(token.indexOf("</")===0)depth--;
+      else if(token.indexOf("/>")===token.length-2)continue;
+      else depth++;
       if(depth===0)return String(html).slice(contentStart,match.index);
     }
     return String(html).slice(contentStart);
