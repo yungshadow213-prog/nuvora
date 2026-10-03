@@ -87,7 +87,7 @@ function buildProductOptions(text){
   const add=(name,value)=>{const n=String(name||'').trim(),v=String(value||'').trim();if(!n||!v||v.length>120)return;let g=groups.find(x=>x.name.toLowerCase()===n.toLowerCase());if(!g){g={name:n,values:[]};groups.push(g);}if(!g.values.includes(v))g.values.push(v);};
   for(const label of ['color','colour','size','style','pattern','material','flavor','flavour','configuration','capacity']){
     const re=new RegExp('\\b'+label+'\\s*[:：]\\s*([^\\n;|]+)','gi');
-    for(const m of raw.matchAll(re)){m[1].split(/,|\\s+\\/\\s+/).map(v=>v.trim()).filter(Boolean).slice(0,40).forEach(v=>add(label[0].toUpperCase()+label.slice(1),v));}
+    for(const m of raw.matchAll(re)){m[1].split(/,|\s+\/\s+/).map(v=>v.trim()).filter(Boolean).slice(0,40).forEach(v=>add(label[0].toUpperCase()+label.slice(1),v));}
   }
   return groups.filter(g=>g.values.length).slice(0,12);
 }
