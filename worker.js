@@ -1467,13 +1467,14 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const negative='fake logos, watermarks, misleading text, extra products, distorted product, duplicate product, low quality';
           let result;
           if(referenceBytes){
-            // Use Cloudflare's dedicated img2img model for reference-image generation.
-            // This avoids the intermittent SDXL tensor-input failure seen on the live route.
+            // Keep reference-image generation on SDXL because the account is not
+            // permitted to access Cloudflare's RunwayML private/beta img2img model.
+            // Cloudflare documents SDXL as supporting img2img with image[] bytes.
             const input={
               prompt,negative_prompt:negative,width,height,num_steps:20,guidance:7.5,
               image:Array.from(referenceBytes),strength:0.72
             };
-            result=await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img',input);
+            result=await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0',input);
           }else{
             result=await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0',{
               prompt,negative_prompt:negative,width,height,num_steps:20,guidance:7.5
@@ -1490,6 +1491,9 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           }
           if(code==='3040'||status===429){
             return json({error:'Cloudflare Workers AI is temporarily at capacity. Please try the image again later.'},429);
+          }
+          if(code==='5018'||/not allowed to access.*runwayml\/stable-diffusion-v1-5-img2img/i.test(message)){
+            return json({error:'Nuvora AI reference-image generation is unavailable on this Cloudflare account because the RunwayML img2img model is access-restricted. Nuvora has been configured to use the account-available SDXL img2img path instead.'},403);
           }
           return json({error:'Nuvora AI image generation failed: '+(message||'Cloudflare Workers AI returned an unknown error.')},502);
         }
