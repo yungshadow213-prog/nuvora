@@ -15,7 +15,10 @@ export default {
       if(editPageMatch){
         return serveAsset(env,new Request(new URL('/edit-product.html',request.url), {method:'GET',headers:request.headers}));
       }
-      if (url.pathname === '/api/health') return json({ok:true,configured:configured(env)});
+      if (url.pathname === '/api/health') {
+        const cfg=configured(env)||{};
+        return json({ok:true,configured:cfg&&typeof cfg==='object'?cfg:{}});
+      }
       if (url.pathname === '/api/config') return json({supabaseUrl:env.SUPABASE_URL||'',supabaseAnonKey:env.SUPABASE_ANON_KEY||''});
 
       if (url.pathname === '/api/analytics/events' && request.method === 'POST') {
