@@ -179,6 +179,14 @@ jobs:
           for route in ["/api/config","/api/health","/api/admin/products","/api/admin/import/bulk","/api/admin/import/amazon-search","/api/admin/diagnostics","/api/admin/settings","/api/amazon/prepare"]:
               if route not in worker:
                   failures.append("worker.js missing "+route)
+          if not re.search(r"(?:let|const|var)\s+missingProductColumns\s*=", admin):
+              failures.append("admin.html missing missingProductColumns declaration")
+          if not re.search(r"(?:let|const|var)\s+productSchemaError\s*=", admin):
+              failures.append("admin.html missing productSchemaError declaration")
+          if "async function togglePublish" not in admin:
+              failures.append("admin.html missing publish toggle handler")
+          if "publishProductRecord" not in worker or "/api/admin/products/" not in worker or "/publish$/" not in worker:
+              failures.append("worker.js missing authoritative product publish route")
           if "function discoverAmazonProducts" not in admin:
               failures.append("admin.html missing Discover 20 handler")
           if "function retailerDestination" not in admin:
