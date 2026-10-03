@@ -36,3 +36,5 @@
 - Fabricated order/payment confirmation
 - Fake analytics numbers
 - Automatic social-platform publishing without the platform credentials/API permissions
+
+<!-- CI storefront validation branch -->
