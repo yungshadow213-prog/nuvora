@@ -399,7 +399,7 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
         <div class="ai-grid">
           <div class="field"><label>Creative style</label><select id="aiStyle"><option value="premium ecommerce">Premium ecommerce</option><option value="clean studio">Clean studio</option><option value="luxury editorial">Luxury editorial</option><option value="modern lifestyle">Modern lifestyle</option><option value="social media ad">Social media ad</option><option value="minimal catalog">Minimal catalog</option></select></div>
           <div class="field"><label>Format</label><select id="aiSize"><option value="1024x1024">Square · 1:1</option><option value="1536x1024">Landscape · 3:2</option><option value="1024x1536">Portrait · 2:3</option></select></div>
-          <div class="field full"><label>Reference image <span class="muted">(optional)</span></label><input id="aiReference" type="file" accept="image/*"><div class="muted">If you leave this empty, Nuvora AI automatically uses the first image already attached to the product. Upload one only when you want a different reference. Max 10 MB.</div></div>
+          <div class="field full"><label>Reference image <span class="muted">(optional)</span></label><input id="aiReference" type="file" accept="image/*"><div class="muted">If you leave this empty, Nuvora AI automatically uses the first image already attached to the product. Upload one only when you want a different reference. Max 6 MB.</div></div>
           <div class="field full"><label>Creative direction</label><textarea id="aiPrompt" placeholder="Optional: soft neutral background, subtle shadows, premium lighting…"></textarea></div>
         </div>
         <div class="ai-actions"><button class="btn primary" id="aiGenerateBtn" onclick="generateAIProductImage()">Generate advertising image</button></div>
@@ -662,8 +662,7 @@ async function openAIStudio(){
   document.getElementById('aiPreview').style.display='none';
   document.getElementById('aiReference').value='';
   page.scrollIntoView({behavior:'smooth',block:'start'});
-  await generateAIProductCopy();
-  await generateAIProductImage();
+  // AI generation is manual so merely opening the workspace never consumes an AI request.
 }
 function closeAIStudio(){document.getElementById('aiStudioModal').classList.remove('open');document.body.classList.remove('admin-workspace-open');}
 function aiProductData(){return {name:document.getElementById('pfName').value.trim(),brand:document.getElementById('pfBrand').value.trim(),description:document.getElementById('pfDescription').value.trim(),features:document.getElementById('pfFeatures').value.trim(),category:document.getElementById('pfCategory').value.trim(),price:document.getElementById('pfPrice').value,currency:document.getElementById('pfCurrency').value};}
@@ -673,7 +672,7 @@ async function getAIReferenceFile(){
   const first=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)[0];
   if(!first)throw new Error('Add at least one product image first, or upload a reference image.');
   const res=await fetch(first,{mode:'cors'});if(!res.ok)throw new Error('The first product image could not be read. Upload it manually as the reference image.');
-  const blob=await res.blob();if(blob.size>10*1024*1024)throw new Error('Reference image must be 10 MB or smaller.');
+  const blob=await res.blob();if(blob.size>6*1024*1024)throw new Error('Reference image must be 6 MB or smaller.');
   return new File([blob],'nuvora-product-reference.'+((blob.type.split('/')[1]||'png').replace(/[^a-z0-9]/gi,'')),{type:blob.type||'image/png'});
 }
 async function generateAIProductImage(){
@@ -682,7 +681,7 @@ async function generateAIProductImage(){
   btn.disabled=true;btn.textContent='Preparing…';status.textContent='Using the product image as the reference…';
   try{
     const file=await getAIReferenceFile();
-    if(file.size>10*1024*1024)throw new Error('Reference image must be 10 MB or smaller.');
+    if(file.size>6*1024*1024)throw new Error('Reference image must be 6 MB or smaller.');
     btn.textContent='Generating…';status.textContent='Creating your advertising image…';
     const fd=new FormData();
     const style=document.getElementById('aiStyle').value,size=document.getElementById('aiSize').value,custom=document.getElementById('aiPrompt').value.trim();
@@ -928,11 +927,17 @@ async function saveProductDraft(){
     published:window.editingProductId?!!adminProducts.find(x=>x.id===window.editingProductId)?.published:false
   };
   try{
+    const existingId=window.editingProductId||null;
+    const existing=existingId?adminProducts.find(x=>String(x.id)===String(existingId)):null;
     const slugSource = name || document.getElementById('pfAsin').value.trim() || 'product';
-    const slugBase = slugSource.toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-+/g,'-').slice(0,140);
-    const slug = (slugBase || 'product') + '-' + Date.now().toString(36);
-    if(window.editingProductId){
-      await api('/api/admin/products/'+encodeURIComponent(window.editingProductId),{method:'PATCH',body:{...product,slug}});
+    let slug;
+    if(existing?.slug&&/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(String(existing.slug))) slug=String(existing.slug);
+    else{
+      const slugBase=slugSource.toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-+/g,'-').slice(0,140);
+      slug=(slugBase||'product')+'-'+Date.now().toString(36);
+    }
+    if(existingId){
+      await api('/api/admin/products/'+encodeURIComponent(existingId),{method:'PATCH',body:{...product,slug}});
     }else{
       await api('/api/admin/products',{method:'POST',body:{...product,slug}});
     }
@@ -1027,7 +1032,7 @@ async function deleteDiscoveredProducts(){
   }
 }
 function selectValidDiscovered(){
-  document.querySelectorAll('.bulk-discovered-check').forEach(x=>{const p=adminProducts.find(v=>v.id===x.value);x.checked=!!p&&!!retailerDestination(p)&&!!p.name&&!!p.image_url;});
+  document.querySelectorAll('.bulk-discovered-check').forEach(x=>{const p=adminProducts.find(v=>v.id===x.value);x.checked=!!p&&!!retailerDestination(p)&&!!p.name&&!!(p.image_url||(Array.isArray(p.image_urls)&&p.image_urls.length));});
   const all=document.getElementById('bulkReviewSelectAll');if(all)all.checked=false;
 }
 async function publishOneDiscovered(id){
@@ -1041,7 +1046,7 @@ async function publishDiscoveredProducts(){
   if(!ids.length)return setAdminStatus('Select at least one product.');
   const selected=ids.map(id=>adminProducts.find(p=>p.id===id)).filter(Boolean).filter(p=>!p.published);
   if(!selected.length)return setAdminStatus('All selected products are already published.');
-  const invalid=selected.filter(p=>!p.name||!p.image_url);if(invalid.length)return setAdminStatus(invalid.length+' selected product'+(invalid.length===1?'':'s')+' need a valid title and image. Edit them first.');
+  const invalid=selected.filter(p=>!p.name||!(p.image_url||(Array.isArray(p.image_urls)&&p.image_urls.length)));if(invalid.length)return setAdminStatus(invalid.length+' selected product'+(invalid.length===1?'':'s')+' need a valid title and image. Edit them first.');
   setAdminStatus('Publishing '+selected.length+' products…');let published=0;
   try{for(const p of selected){await api('/api/admin/products/'+encodeURIComponent(p.id),{method:'PATCH',body:{published:true,destination_url:retailerDestination(p)||null,amazon_source_url:p.amazon_source_url||p.source_url||null,updated_at:new Date().toISOString()}});published++;}await liveAdminProducts();renderDiscoveredProducts();setAdminStatus(published+' product'+(published===1?'':'s')+' published successfully.');}catch(e){await liveAdminProducts();renderDiscoveredProducts();setAdminStatus('Published '+published+' product'+(published===1?'':'s')+'. '+(e.message||'The remaining products were not published.'));}}
 function openBulkReview(ids){lastDiscoveredProductIds=[...new Set((ids||[]).filter(Boolean))];document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById('bulkReview').classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));document.getElementById('title').textContent=meta.bulkReview[0];document.getElementById('sub').textContent=meta.bulkReview[1];const all=document.getElementById('bulkReviewSelectAll');if(all)all.checked=true;renderDiscoveredProducts();}
@@ -1122,7 +1127,7 @@ function downloadCsvTemplate(){const csv='name,kind,description,features,brand,i
 async function previewCsv(){const f=document.getElementById('csvFile')?.files?.[0];if(!f)return setAdminStatus('Choose a CSV file first.');if(f.size>2*1024*1024)return setAdminStatus('CSV must be 2 MB or smaller.');try{csvRows=parseCsvText(await f.text());if(csvRows.length>500)return setAdminStatus('CSV imports are limited to 500 rows.');const box=document.getElementById('csvPreview');box.style.display='block';box.innerHTML=`<b>${csvRows.length} row${csvRows.length===1?'':'s'} ready.</b><div class="muted" style="margin-top:5px">Columns found: ${esc(Object.keys(csvRows[0]||{}).join(', '))}. All rows will be imported as drafts.</div>`;}catch(e){setAdminStatus('Could not read this CSV.');}}
 async function importCsv(){if(!csvRows.length){await previewCsv();if(!csvRows.length)return;}const items=csvRows.map(r=>({name:r.name||r.title||'',kind:(r.kind||r.type||'shop').toLowerCase(),description:r.description||null,features:r.features||r.key_points||null,brand:r.brand||null,image_url:r.image_url||r.image||null,image_urls:r.image_urls?r.image_urls.split('|').map(x=>x.trim()).filter(Boolean):undefined,display_price:r.display_price||r.price||null,currency:r.currency||'NGN',destination_url:r.destination_url||r.url||null,retailer:r.retailer||null,provider:r.provider||null,region:r.region||null,category_id:r.category_id||null,collection_id:r.collection_id||null}));try{const j=await api('/api/admin/products/bulk',{method:'POST',body:{items}});setAdminStatus(`Import complete. ${j.imported} imported as drafts, ${j.failed} failed.`);csvRows=[];document.getElementById('csvFile').value='';document.getElementById('csvPreview').style.display='none';await liveAdminProducts();}catch(e){setAdminStatus(e.message)}}
 async function loadAnalytics(){try{const j=await api('/api/admin/analytics');const rows=Object.entries(j.counts||{}).sort((a,b)=>b[1]-a[1]);document.getElementById('analyticsRows').innerHTML=rows.length?rows.map(([name,count])=>`<div class="row"><span>${esc(name)}</span><span class="tag">${count}</span></div>`).join(''):'<div class="empty" style="text-align:center">No events recorded yet.</div>';}catch(e){document.getElementById('analyticsRows').innerHTML=`<div class="muted">${esc(e.message)}</div>`;}}
-async function loadSettings(){try{const s=await api('/api/admin/settings');document.getElementById('setName').value=s.store_name||'Nuvora';document.getElementById('setEmail').value=s.support_email||'';document.getElementById('setCurrency').value=s.currency||'NGN';document.getElementById('setTimezone').value=s.timezone||'Africa/Lagos';document.getElementById('setRegion').value=s.default_region||'NG';document.getElementById('setMaintenance').value=String(!!s.maintenance_mode);document.getElementById('setDescription').value=s.store_description||'';document.getElementById('setDisclosure').value=s.affiliate_disclosure||'';document.getElementById('setShipping').value=s.shipping_policy||'';document.getElementById('setReturns').value=s.returns_policy||'';document.getElementById('adminEmail').textContent='Signed in as '+(adminSession.user?.email||'admin');const h=await fetch('/api/health').then(r=>r.json());document.getElementById('connectionRows').innerHTML=Object.entries(h.configured).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Connected':'Not configured'}</span></div>`).join('');}catch(e){setAdminStatus(e.message)}}
+async function loadSettings(){try{const s=await api('/api/admin/settings');document.getElementById('setName').value=s.store_name||'Nuvora';document.getElementById('setEmail').value=s.support_email||'';document.getElementById('setCurrency').value=s.currency||'NGN';document.getElementById('setTimezone').value=s.timezone||'Africa/Lagos';document.getElementById('setRegion').value=s.default_region||'NG';document.getElementById('setMaintenance').value=String(!!s.maintenance_mode);document.getElementById('setDescription').value=s.store_description||'';document.getElementById('setDisclosure').value=s.affiliate_disclosure||'';document.getElementById('setShipping').value=s.shipping_policy||'';document.getElementById('setReturns').value=s.returns_policy||'';document.getElementById('adminEmail').textContent='Signed in as '+(adminSession.user?.email||'admin');const h=await fetch('/api/health',{cache:'no-store'}).then(r=>r.json()).catch(()=>({}));const cfg=(h&&h.configured&&typeof h.configured==='object')?h.configured:{};const rows=Object.entries(cfg);document.getElementById('connectionRows').innerHTML=rows.length?rows.map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Configured':'Not configured'}</span></div>`).join(''):'<div class="notice">No configuration status was returned. Run full diagnostics to test the live connections.</div>';}catch(e){setAdminStatus(e.message)}}
 async function runDiagnostics(){
   const box=document.getElementById('diagnosticRows');
   box.innerHTML='<div class="muted">Running diagnostics…</div>';
