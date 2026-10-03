@@ -1016,14 +1016,22 @@ async function togglePublish(id){
       body.destination_url=destination||null;
       body.amazon_source_url=p.amazon_source_url||p.source_url||null;
     }
+    const path='/api/admin/products/'+encodeURIComponent(id);
     if(publishing){
-      await api('/api/admin/products/'+encodeURIComponent(id)+'/publish',{method:'POST',body});
+      try{
+        await api(path+'/publish',{method:'POST',body});
+      }catch(primaryError){
+        const message=String(primaryError?.message||'');
+        if(/API route not found|404|publish route/i.test(message)){
+          await api(path,{method:'PATCH',body});
+        }else throw primaryError;
+      }
     }else{
-      await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body});
+      await api(path,{method:'PATCH',body});
     }
     await liveAdminProducts();
-    setAdminStatus(publishing?'Product published successfully.':'Product moved back to draft.');
-  }catch(e){setAdminStatus(e.message) }
+    setAdminStatus(publishing?'Product published successfully — now visible in the storefront.':'Product moved back to draft.');
+  }catch(e){setAdminStatus(e.message||'Publish failed.')}
 }
 let lastDiscoveredProductIds=[];
 function discoveredMetric(p){
@@ -1167,18 +1175,18 @@ async function runDiagnostics(){
   box.innerHTML='<div class="muted">Running diagnostics…</div>';
   try{
     const j=await api('/api/admin/diagnostics');
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Social posts',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
+    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
     const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','shopifyProducts','analytics']);
     const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
-    missingProductColumns=Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[];
-    productSchemaError=String(j?.productSchemaError||'');
+    const missing=Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[];
+    const schemaError=String(j?.productSchemaError||'');
     box.innerHTML=Object.entries(labels).map(([k,label])=>{
       const value=checks[k]===true;
       const state=value?'Connected':(optional.has(k)?'Not configured':'Failed');
       return '<div class="row"><span>'+esc(label)+'</span><span class="status"><i class="dot '+(value?'':'off')+'"></i>'+state+'</span></div>';
     }).join('')+
-    (missingProductColumns.length?'<div class="notice" style="margin-top:12px"><strong>Database schema:</strong> Missing product columns: '+esc(missingProductColumns.join(', '))+'</div>':'')+
-    (productSchemaError&&!missingProductColumns.length?'<div class="notice" style="margin-top:12px"><strong>Database schema:</strong> '+esc(productSchemaError)+'</div>':'');
+    (missing.length?'<div class="notice" style="margin-top:12px"><strong>Database schema:</strong> Missing optional product columns: '+esc(missing.join(', '))+'</div>':'')+
+    (schemaError&&!missing.length?'<div class="notice" style="margin-top:12px"><strong>Database schema:</strong> '+esc(schemaError)+'</div>':'');
   }catch(e){box.innerHTML='<div class="notice">'+esc(e.message||'Diagnostics failed.')+'</div>';}
 }
 async function saveSettings(){try{await api('/api/admin/settings',{method:'PATCH',body:{store_name:document.getElementById('setName').value.trim()||'Nuvora',support_email:document.getElementById('setEmail').value.trim()||null,currency:document.getElementById('setCurrency').value,timezone:document.getElementById('setTimezone').value.trim()||'Africa/Lagos',default_region:document.getElementById('setRegion').value.trim()||'NG',maintenance_mode:document.getElementById('setMaintenance').value==='true',store_description:document.getElementById('setDescription').value,affiliate_disclosure:document.getElementById('setDisclosure').value,shipping_policy:document.getElementById('setShipping').value,returns_policy:document.getElementById('setReturns').value}});setAdminStatus('Settings saved.');}catch(e){setAdminStatus(e.message)}}
