@@ -107,7 +107,16 @@ async function syncSource(){
  }catch(e){msg(e.message||'Source sync failed.',true);}
  finally{btn.disabled=false;btn.textContent='Sync source';}
 }
-async function publish(){const next=!product.published;const body={published:next,updated_at:new Date().toISOString()};product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body});render();msg(next?'Product published to the storefront.':'Product unpublished.');}
+async function publish(){
+  const next=!product.published;
+  if(next){
+    product=await api('/api/admin/products/'+encodeURIComponent(product.id)+'/publish',{method:'POST',body:{destination_url:product.destination_url||product.amazon_source_url||null,amazon_source_url:product.amazon_source_url||null}});
+  }else{
+    product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body:{published:false,updated_at:new Date().toISOString()}});
+  }
+  render();
+  msg(next?'Product published to the storefront.':'Product unpublished.');
+}
 async function upload(){
  const files=[...$('imageFiles').files];if(!files.length)return msg('Choose one or more images first.',true);if(!sb)return msg('Supabase is not connected.',true);
  for(const file of files){if(!file.type.startsWith('image/'))throw new Error(file.name+' is not an image.');if(file.size>6*1024*1024)throw new Error(file.name+' is larger than 6 MB.');
