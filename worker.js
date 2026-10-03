@@ -79,22 +79,32 @@ export default {
 /* Amazon link/import hardening */
 // Runtime integration helpers. These live in the Worker so health, diagnostics, Shopify, and legacy Amazon routes never depend on the old Node server.
 async function inspectProductSchema(env){
-  // Core columns are the contract required for the catalog, editing and publishing.
-  // Enrichment fields are optional so an older Supabase schema cannot break the store.
+  // Publishing/editing only require the stable catalog columns below.
+  // Enrichment fields are optional so a partially migrated Supabase database
+  // cannot take down the catalog or the admin publish workflow.
   const core=['id','name','slug','kind','image_url','image_urls','display_price','currency','destination_url','published','created_at','updated_at'];
-  const optional=['features','brand','availability','provider','region','category_id','collection_id','collection_id','why_we_picked_it','best_for','skip_if','featured','trending','top_pick','amazon_asin','amazon_source_url','source_type','sourcinbox_product_url','sourcinbox_product_id','supplier_cost','amazon_last_synced','amazon_current_price','amazon_list_price','amazon_discount_percent','amazon_deal_text','amazon_rating','amazon_review_count','amazon_bought_past_month','amazon_badges','amazon_shipping_text','amazon_tax_text','amazon_variations','source_related_products','source_image_urls'];
-  const query=(fields)=>'?select='+fields.join(',')+'&limit=0';
+  const optional=['features','brand','availability','provider','region','category_id','collection_id','why_we_picked_it','best_for','skip_if','featured','trending','top_pick','amazon_asin','amazon_source_url','source_type','sourcinbox_product_url','sourcinbox_product_id','supplier_cost','amazon_last_synced','amazon_current_price','amazon_list_price','amazon_discount_percent','amazon_deal_text','amazon_rating','amazon_review_count','amazon_bought_past_month','amazon_badges','amazon_shipping_text','amazon_tax_text','amazon_variations','source_related_products','source_image_urls'];
+  const query=(fields)=>'?select='+fields.join(',')+'&limit=1';
   const coreRes=await supabaseRest(env,'GET','products',undefined,query(core));
   if(!coreRes.ok){
     const raw=await coreRes.text();
     const missing=[...raw.matchAll(/column products\.([A-Za-z0-9_]+) does not exist/gi)].map(m=>m[1]);
-    return {ok:false,missing:[...new Set(missing)],message:raw.slice(0,800),core:true};
+    return {ok:false,core:false,missing:[...new Set(missing)],message:raw.slice(0,800)};
   }
-  const optionalRes=await supabaseRest(env,'GET','products',undefined,query(optional));
-  if(optionalRes.ok)return {ok:true,missing:[]};
-  const raw=await optionalRes.text();
-  const missing=[...raw.matchAll(/column products\.([A-Za-z0-9_]+) does not exist/gi)].map(m=>m[1]);
-  return {ok:true,missing:[...new Set(missing)],message:raw.slice(0,800),core:false};
+
+  // Probe optional fields individually. One absent enrichment field should be
+  // reported, not treated as a broken product schema.
+  const missing=[];
+  let firstOptionalError='';
+  for(const field of optional){
+    const rr=await supabaseRest(env,'GET','products',undefined,'?select='+encodeURIComponent(field)+'&limit=1');
+    if(rr.ok)continue;
+    const raw=await rr.text();
+    const m=raw.match(/column products\.([A-Za-z0-9_]+) does not exist/i);
+    if(m){if(!missing.includes(m[1]))missing.push(m[1]);if(!firstOptionalError)firstOptionalError=raw.slice(0,800);}
+    else if(!firstOptionalError)firstOptionalError=raw.slice(0,800);
+  }
+  return {ok:true,core:true,missing,message:firstOptionalError};
 }
 function configured(env){
   const e=env||{};
@@ -173,23 +183,36 @@ function resolveProductDestination(current={},patch={}){
   return '';
 }
 async function publishProductRecord(env,id,patch={}){
-  const currentRes=await supabaseRest(env,'GET','products',undefined,'?select=*&id=eq.'+encodeURIComponent(id)+'&limit=1');
+  // Read the existing row using only fields required to safely publish. This
+  // avoids optional/missing enrichment columns from breaking publication.
+  const select='id,name,slug,kind,image_url,image_urls,display_price,currency,destination_url,retailer,source_type,amazon_asin,amazon_source_url,source_url,resolved_url,published';
+  const currentRes=await supabaseRest(env,'GET','products',undefined,'?select='+select+'&id=eq.'+encodeURIComponent(id)+'&limit=1');
   if(!currentRes.ok)return {ok:false,status:500,error:'Could not load the product before publishing.'};
   const current=(await currentRes.json())?.[0];
   if(!current)return {ok:false,status:404,error:'Product not found.'};
+
   const destination=resolveProductDestination(current,patch);
   const merged={...current,...patch,published:true,destination_url:destination};
   if(!merged.slug||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(String(merged.slug))){
     merged.slug=makeProductSlug(merged.name||'product');
   }
   if(!merged.destination_url)return {ok:false,status:400,error:'This product has no valid retailer URL. Import the retailer link or provide a destination URL before publishing.'};
+
   const validation=validateProduct(merged);
   if(validation)return {ok:false,status:400,error:validation};
-  const write={...patch,published:true,slug:merged.slug,destination_url:destination,updated_at:new Date().toISOString()};
-  if(merged.amazon_source_url&&!write.amazon_source_url)write.amazon_source_url=merged.amazon_source_url;
+
+  const write={
+    published:true,
+    slug:merged.slug,
+    destination_url:destination,
+    updated_at:new Date().toISOString()
+  };
+  if(patch.amazon_source_url||current.amazon_source_url)write.amazon_source_url=patch.amazon_source_url||current.amazon_source_url;
+
   const result=await supabaseProductWrite(env,'PATCH',write,'?id=eq.'+encodeURIComponent(id));
   if(!result.ok)return {ok:false,status:400,error:await result.text()};
-  let rows=await result.json().catch(()=>[]);
+
+  const rows=await result.json().catch(()=>[]);
   let product=rows[0]||null;
   if(!product||product.published!==true){
     const verify=await supabaseRest(env,'GET','products',undefined,'?select=id,published,slug,destination_url,amazon_source_url&id=eq.'+encodeURIComponent(id)+'&limit=1');
@@ -199,7 +222,6 @@ async function publishProductRecord(env,id,patch={}){
   if(!product||product.published!==true)return {ok:false,status:409,error:'Nuvora saved the product but could not confirm it is published. Please try publish again.'};
   return {ok:true,product};
 }
-
 function amazonDecode(value){return String(value||'').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/&nbsp;/gi,' ');}
 function amazonHost(host){ const h=String(host||'').toLowerCase().replace(/^www\./,''); return h==='link.amazon'||h==='amzn.to'||/(^|\.)amazon\.[a-z.]+$/.test(h); }
 function extractUrls(value){ const m=String(value||'').match(/https?:\/\/[^\s<>]+/gi)||[]; return [...new Set(m.map(x=>x.replace(/[.,;]+$/,'').trim()).filter(Boolean))]; }
