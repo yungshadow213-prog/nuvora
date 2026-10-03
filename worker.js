@@ -1602,6 +1602,26 @@ async function aiResultBytes(result){
   throw new Error('Cloudflare AI returned no image bytes.');
 }
 function bytesToBase64(bytes){let out='';const step=0x8000;for(let i=0;i<bytes.length;i+=step)out+=String.fromCharCode(...bytes.subarray(i,i+step));return btoa(out);}
+function repairFragmentedText(value){
+  let s=decodeHtmlEntities(String(value??'')).replace(/\\s+/g,' ').trim();
+  // Amazon sometimes returns inline text in broken single-character fragments.
+  // Rejoin fragments only when the leading fragment is not a legitimate standalone
+  // English word, avoiding changes to normal words such as "a lamp" and "I am".
+  for(let pass=0;pass<4;pass++){
+    const next=s.replace(/\\b([A-Za-z])\\s+([A-Za-z]{2,})\\b/g,(all,a,b)=>{
+      if(a==='a'||a==='A'||a==='i'||a==='I')return all;
+      return a+b;
+    });
+    if(next===s)break;
+    s=next;
+  }
+  // Handle common one-letter breaks that occur repeatedly inside a product sentence.
+  s=s.replace(/\\b([A-Za-z]{2,})\\s+([A-Za-z])\\b/g,(all,a,b)=>{
+    if(b==='a'||b==='A'||b==='i'||b==='I')return all;
+    return a+b;
+  });
+  return s.replace(/\\s+/g,' ').trim();
+}
 function cleanText(value,max=10000){
   const text=String(value??'')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g,'')
