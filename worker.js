@@ -725,7 +725,15 @@ async function ingestSourceProduct(sourceUrl){
             const title=smartProductTitle(listing.title||retailer+' product',listing.brand||'');
             const images=dedupeImages(listing.images,60);
             const features=Array.isArray(listing.features)?listing.features.filter(Boolean).slice(0,20):[];
-            const description=String(listing.description||'').trim().slice(0,12000)||null;
+            let description=cleanMultilineText(listing.description,12000)||'';
+            if(description.length<120){
+              const detailParts=[];
+              if(Array.isArray(listing.features))detailParts.push(...listing.features.map(v=>cleanMultilineText(v,500)).filter(v=>v&&v.length>10).slice(0,10));
+              if(Array.isArray(listing.specifications))detailParts.push(...listing.specifications.map(x=>cleanMultilineText(Array.isArray(x)?String(x[0])+': '+String(x[1]):String(x),500)).filter(v=>v&&v.length>4).slice(0,10));
+              const intro=listing.brand?String(listing.brand)+' presents '+String(title)+'.':'This product, '+String(title)+', is described by the following source details.';
+              description=cleanMultilineText(intro+(detailParts.length?'\n\nKey details: '+detailParts.join(' • '):''),12000);
+            }
+            description=description||null;
             const category_id=autoCategory(title,description,listing.brand,categories);
             const product={
               name:title,kind:'find',brand:listing.brand||null,description,features:features.join('\n')||null,
@@ -1437,6 +1445,10 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           // Preserve an existing product slug unless the caller explicitly changes it.
           // Changing slugs during ordinary edits breaks saved/shared product URLs.
           if(patch.slug)patch.slug=String(patch.slug).trim().toLowerCase();
+          // Never let legacy/broken slugs block an edit or publish.
+          // Keep a valid existing slug; regenerate only when the stored value is malformed.
+          if(patch.slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(patch.slug))patch.slug=makeProductSlug(patch.name||'product');
+
           const existing=await supabaseRest(env,'GET','products',undefined,'?select=*&id=eq.'+encodeURIComponent(id)+'&limit=1');
           if(!existing.ok)return json({error:'Could not load the product before editing.'},500);
           const current=(await existing.json())?.[0];
@@ -1446,9 +1458,10 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             merged.published=true;
             // Publishing must never fail just because an older/imported row has a malformed
             // destination field when a valid Amazon source URL or ASIN is already present.
-            const candidates=[patch.destination_url,current.destination_url,patch.amazon_source_url,current.amazon_source_url];
+            const candidates=[patch.destination_url,current.destination_url,patch.amazon_source_url,current.amazon_source_url,patch.source_url,current.source_url,patch.resolved_url,current.resolved_url];
             let repaired=candidates.find(validUrl)||null;
-            if(!repaired&&/amazon/i.test(String(merged.retailer||merged.source_type||''))&&/^[A-Z0-9]{10}$/i.test(String(merged.amazon_asin||''))){
+            const amazonLike=/amazon/i.test(String(merged.retailer||merged.source_type||''))||!!merged.amazon_asin||!!merged.amazon_source_url;
+            if(!repaired&&amazonLike&&/^[A-Z0-9]{10}$/i.test(String(merged.amazon_asin||''))){
               repaired='https://www.amazon.com/dp/'+String(merged.amazon_asin).toUpperCase();
             }
             if(repaired)merged.destination_url=repaired;
