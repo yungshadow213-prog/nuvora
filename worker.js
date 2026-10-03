@@ -869,7 +869,7 @@ async function ingestSourceProduct(sourceUrl){
         let category_id=null;
         try{const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cats.ok){const categories=await cats.json();category_id=autoCategory(titleHint,'','',categories);}}catch(e){}
         let listing=null; try{listing=await scrapeAmazonListing(resolved,asin);if(!listing?.error){listing=normalizeAmazonListing(listing);listing=await aiPolishAmazonListing(env,listing);}}catch(e){listing={error:String(e?.message||e).slice(0,300)};}
-        return json({ok:true,asin,destination_url:resolved,title_hint:listing?.title||titleHint||'Amazon product',retailer:'Amazon',kind:'find',category_id,duplicate,listing:listing||null});
+        return json({ok:true,asin,destination_url:amazonUrl,resolved_url:resolved,title_hint:listing?.title||titleHint||'Amazon product',retailer:'Amazon',kind:'find',category_id,duplicate,listing:listing||null});
       }
 
 async function scrapeTemuListing(temuUrl){
@@ -1416,30 +1416,27 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const normalized=normalizeAmazonProduct(source);
           const safeText=v=>cleanMultilineText(v,12000)||null;
           const isAmazonSource=/amazon/i.test(String(source.retailer||source.source_type||''))||!!source.amazon_asin||!!source.amazon_source_url;
-          return {
-            ...source,
-            name:normalized.name,
-            brand:normalized.brand,
-            description:normalized.description,
-            features:normalized.features,
-            image_url:normalized.image_url,
-            image_urls:normalized.image_urls,
-            display_price:normalized.display_price,
-            currency:normalized.currency,
-            // Amazon review/rating content is kept out of the public API unless it is
-            // sourced through the compliant Amazon API path. Nuvora's own reviews remain public.
-            amazon_rating:isAmazonSource?null:normalized.rating,
-            amazon_review_count:isAmazonSource?null:normalized.review_count,
-            rating:isAmazonSource?null:source.rating,
-            review_count:isAmazonSource?null:source.review_count,
-            amazon_deal_text:safeText(normalized.deal),
-            deal_text:safeText(source.deal_text)||safeText(normalized.deal),
-            temu_deal_text:safeText(source.temu_deal_text),
-            amazon_shipping_text:safeText(source.amazon_shipping_text),
-            amazon_tax_text:safeText(source.amazon_tax_text),
-            category:source.category_id?categoryMap.get(String(source.category_id))||null:null,
-            collection:source.collection_id?collectionMap.get(String(source.collection_id))||null:null
+          const publicProduct={
+            id:source.id,name:normalized.name,slug:source.slug,kind:source.kind,brand:normalized.brand,
+            description:normalized.description,store_description:source.store_description||null,features:normalized.features,
+            image_url:normalized.image_url,image_urls:normalized.image_urls,display_price:normalized.display_price,currency:normalized.currency,
+            destination_url:(isAmazonSource?(source.amazon_source_url||source.destination_url):(source.destination_url||source.source_url))||null,
+            retailer:source.retailer||null,provider:source.provider||null,source_type:source.source_type||null,region:source.region||null,
+            category_id:source.category_id||null,collection_id:source.collection_id||null,category:source.category_id?categoryMap.get(String(source.category_id))||null:null,
+            collection:source.collection_id?collectionMap.get(String(source.collection_id))||null:null,availability:source.availability||null,
+            featured:!!source.featured,trending:!!source.trending,top_pick:!!source.top_pick,why_we_picked_it:source.why_we_picked_it||null,
+            best_for:source.best_for||null,skip_if:source.skip_if||null,deal_text:safeText(source.deal_text)||safeText(normalized.deal),
+            amazon_deal_text:safeText(normalized.deal),amazon_list_price:isAmazonSource?source.amazon_list_price??null:null,
+            amazon_discount_percent:isAmazonSource?source.amazon_discount_percent??null:null,amazon_shipping_text:isAmazonSource?source.amazon_shipping_text??null:null,
+            amazon_tax_text:isAmazonSource?source.amazon_tax_text??null:null,amazon_variations:isAmazonSource&&Array.isArray(source.amazon_variations)?source.amazon_variations:[],
+            amazon_rating:isAmazonSource?null:normalized.rating,amazon_review_count:isAmazonSource?null:normalized.review_count,
+            rating:isAmazonSource?null:source.rating,review_count:isAmazonSource?null:source.review_count,
+            temu_deal_text:safeText(source.temu_deal_text),temu_list_price:source.temu_list_price??null,temu_discount_percent:source.temu_discount_percent??null,
+            temu_rating:source.temu_rating??null,temu_review_count:source.temu_review_count??null,
+            shopify_product_id:source.shopify_product_id||null,shopify_variant_id:source.shopify_variant_id||null,
+            shopify_variants:Array.isArray(source.shopify_variants)?source.shopify_variants:[],
           };
+          return publicProduct;
         }));
       }
       async function supabaseProductWrite(env,method,product,query=''){
@@ -1509,7 +1506,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             merged.published=true;
             // Publishing must never fail just because an older/imported row has a malformed
             // destination field when a valid Amazon source URL or ASIN is already present.
-            const candidates=[patch.destination_url,current.destination_url,patch.amazon_source_url,current.amazon_source_url,patch.source_url,current.source_url,patch.resolved_url,current.resolved_url];
+            const candidates=[patch.amazon_source_url,current.amazon_source_url,patch.destination_url,current.destination_url,patch.source_url,current.source_url,patch.resolved_url,current.resolved_url];
             let repaired=candidates.find(validUrl)||null;
             const amazonLike=/amazon/i.test(String(merged.retailer||merged.source_type||''))||!!merged.amazon_asin||!!merged.amazon_source_url;
             if(!repaired&&amazonLike&&/^[A-Z0-9]{10}$/i.test(String(merged.amazon_asin||''))){
