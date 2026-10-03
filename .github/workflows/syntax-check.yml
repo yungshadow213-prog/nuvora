@@ -77,9 +77,10 @@ jobs:
           admin=Path("admin.html").read_text(encoding="utf-8")
           if re.search(r"function\s+togglePublish\s*\([^)]*\)\s*\{[^}]*await", admin, re.S):
               failures.append("admin.html: await inside non-async togglePublish")
-          routes=re.findall(r"url\.pathname\s*===\s*['\"]([^'\"]+)['\"]", worker)
-          if len(routes)!=len(set(routes)):
-              failures.append("worker.js: duplicate exact pathname handlers detected")
+          route_methods=re.findall(r"url\.pathname\s*===\s*['"]([^'"]+)['"][^\n]{0,180}request\.method\s*===\s*['"]([A-Z]+)['"]", worker)
+          route_keys=[p+" "+m for p,m in route_methods]
+          if len(route_keys)!=len(set(route_keys)):
+              failures.append("worker.js: duplicate exact pathname+method handlers detected")
           for required in ["/api/health","/api/config","/api/settings"]:
               if required not in worker:
                   failures.append(f"worker.js: missing required endpoint {required}")
