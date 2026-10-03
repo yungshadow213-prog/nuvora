@@ -1138,7 +1138,7 @@ async function healthCheck(){
   if(box)box.innerHTML='<div class="health-loading"><i></i>Checking live Nuvora connections…</div>';
   try{
     const j=await api('/api/admin/diagnostics');
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',settings:'Store settings',social:'Social posts',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
+    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Social posts',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
     const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','shopifyProducts','analytics']);
     const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
     const rows=Object.entries(labels).map(([k,label])=>{
@@ -1146,7 +1146,8 @@ async function healthCheck(){
       const state=value?'Connected':(optional.has(k)?'Not configured':'Failed');
       return '<div class="row"><span>'+esc(label)+'</span><span class="status"><i class="dot '+(value?'':'off')+'"></i>'+state+'</span></div>';
     }).join('');
-    if(box)box.innerHTML=rows+'<div class="notice" style="margin-top:10px">'+(j?.ok?'All required admin connections passed.':'One or more required admin connections need attention.')+'</div>';
+    if(box)const schemaNote=j?.productSchemaError||j?.settingsSchemaError?'<br><strong>Database schema:</strong> '+esc((j.productSchemaError||j.settingsSchemaError).slice(0,450)):'';
+    if(box)box.innerHTML=rows+'<div class="notice" style="margin-top:10px">'+(j?.ok?'All required admin connections and schema checks passed.':'One or more required admin connections or schema checks need attention.')+schemaNote+'</div>';
     const connectionBox=document.getElementById('connectionRows');
     if(connectionBox)connectionBox.innerHTML=rows;
   }catch(e){
@@ -1195,7 +1196,7 @@ async function loadSettings(){
     document.getElementById('adminEmail').textContent='Signed in as '+(adminSession.user?.email||'admin');
     const j=await api('/api/admin/diagnostics');
     const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',settings:'Store settings',social:'Social posts',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
+    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Social posts',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
     const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','shopifyProducts','analytics']);
     document.getElementById('connectionRows').innerHTML=Object.entries(labels).map(([k,label])=>'<div class="row"><span>'+esc(label)+'</span><span class="status"><i class="dot '+(checks[k]?'':'off')+'"></i>'+(checks[k]?'Connected':(optional.has(k)?'Not configured':'Failed'))+'</span></div>').join('');
   }catch(e){setAdminStatus(e.message)}
