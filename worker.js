@@ -52,14 +52,22 @@ export default {
         if(u&&env.SUPABASE_SERVICE_ROLE_KEY){
           const pr=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});
           if(pr.ok){const rows=await pr.json();const p=rows[0];checks.admin=!!p&&(p.is_admin===true||p.role==='admin');}
-          const expectedProductColumns=['id','name','slug','kind','description','features','brand','image_url','image_urls','availability','display_price','currency','destination_url','retailer','provider','region','category_id','collection_id','why_we_picked_it','best_for','skip_if','last_checked_at','featured','trending','top_pick','published','shopify_product_id','shopify_variant_id','amazon_asin','amazon_source_url','source_type','source_sku','sourcinbox_product_url','sourcinbox_product_id','supplier_cost','amazon_last_synced','amazon_current_price','amazon_list_price','amazon_discount_percent','amazon_deal_text','amazon_rating','amazon_review_count','amazon_bought_past_month','amazon_badges','amazon_shipping_text','amazon_tax_text','amazon_variations','source_related_products','source_image_urls','shopify_variants'];
+          const requiredProductColumns=['id','name','slug','kind','image_url','image_urls','display_price','currency','destination_url','retailer','published','created_at','updated_at'];
+          const optionalProductColumns=['description','features','brand','availability','provider','region','category_id','collection_id','why_we_picked_it','best_for','skip_if','last_checked_at','featured','trending','top_pick','shopify_product_id','shopify_variant_id','amazon_asin','amazon_source_url','source_type','source_sku','sourcinbox_product_url','sourcinbox_product_id','supplier_cost','amazon_last_synced','amazon_current_price','amazon_list_price','amazon_discount_percent','amazon_deal_text','amazon_rating','amazon_review_count','amazon_bought_past_month','amazon_badges','amazon_shipping_text','amazon_tax_text','amazon_variations','source_related_products','source_image_urls','shopify_variants'];
           const expectedSettingsColumns=['id','store_name','store_description','support_email','currency','timezone','default_region','affiliate_disclosure','shipping_policy','returns_policy','maintenance_mode','updated_at'];
+          let missingProductColumns=[];
           checks.productSchema=false;checks.settingsSchema=false;
           try{
-            const rr=await supabaseRest(env,'GET','products',undefined,'?select='+expectedProductColumns.join(',')+'&limit=1');
+            const rr=await supabaseRest(env,'GET','products',undefined,'?select='+requiredProductColumns.join(',')+'&limit=1');
             checks.productSchema=rr.ok;
             if(!rr.ok)productSchemaError=(await rr.text()).slice(0,500);
           }catch(e){productSchemaError=String(e?.message||e).slice(0,500);}
+          if(checks.productSchema){
+            for(const column of optionalProductColumns){
+              const rr=await supabaseRest(env,'GET','products',undefined,'?select='+encodeURIComponent(column)+'&limit=1');
+              if(!rr.ok)missingProductColumns.push(column);
+            }
+          }
           try{
             const rr=await supabaseRest(env,'GET','store_settings',undefined,'?select='+expectedSettingsColumns.join(',')+'&limit=1');
             checks.settingsSchema=rr.ok;
@@ -78,7 +86,7 @@ export default {
           }
         }
         const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.productSchema&&checks.settings&&checks.settingsSchema&&checks.social;
-        return json({ok,checks,shopifyError,shopifyMissing,aiMissing,productSchemaError,settingsSchemaError});
+        return json({ok,checks,shopifyError,shopifyMissing,aiMissing,productSchemaError,settingsSchemaError,missingProductColumns});
       }
 
 /* Amazon link/import hardening */
@@ -136,11 +144,25 @@ function resolveProductDestination(current={},patch={}){
     patch.source_url,current.source_url,
     patch.resolved_url,current.resolved_url
   ];
-  const found=candidates.find(validUrl);
-  if(found)return String(found).trim();
-  const amazonLike=/amazon/i.test(String(merged.retailer||merged.source_type||''))||!!merged.amazon_asin||!!merged.amazon_source_url;
-  if(amazonLike&&/^[A-Z0-9]{10}$/i.test(String(merged.amazon_asin||''))){
-    return 'https://www.amazon.com/dp/'+String(merged.amazon_asin).toUpperCase();
+  for(const value of candidates){
+    const raw=String(value||'').trim();
+    if(!raw)continue;
+    if(validUrl(raw))return raw;
+    try{
+      const normalized=/^(?:amazon(?:\.\w+)?|www\.amazon\.[a-z.]+|amzn\.to|link\.amazon)\//i.test(raw)?'https://'+raw:'';
+      if(normalized&&validUrl(normalized))return normalized;
+    }catch(e){}
+    const asin=asinFromUrl(raw);
+    if(asin)return 'https://www.amazon.com/dp/'+asin;
+  }
+  const amazonLike=/amazon/i.test(String(merged.retailer||merged.source_type||''))||!!merged.amazon_asin||!!merged.amazon_source_url||/azon/i.test(String(merged.retailer||''));
+  const possibleAsin=merged.amazon_asin||merged.asin||merged.source_sku||merged.source_id;
+  if(amazonLike&&/^[A-Z0-9]{10}$/i.test(String(possibleAsin||''))){
+    return 'https://www.amazon.com/dp/'+String(possibleAsin).toUpperCase();
+  }
+  for(const value of [merged.name,merged.source_url,merged.resolved_url]){
+    const asin=asinFromUrl(value);
+    if(asin&&amazonLike)return 'https://www.amazon.com/dp/'+asin;
   }
   return '';
 }
