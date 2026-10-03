@@ -23,7 +23,7 @@ create table if not exists public.products (
   kind text not null check (kind in ('shop','find','learn')), description text, features text, brand text, image_url text, image_urls jsonb not null default '[]'::jsonb, availability text,
   display_price numeric, currency text default 'NGN', destination_url text, retailer text, provider text, region text,
   category_id uuid references public.categories(id), collection_id uuid references public.collections(id), why_we_picked_it text, best_for text, skip_if text, last_checked_at timestamptz,
-  featured boolean not null default false, trending boolean not null default false, top_pick boolean not null default false,
+  featured boolean not null default false, trending boolean not null default false, top_pick boolean not null default false, shopify_variants jsonb not null default '[]'::jsonb,
   published boolean not null default false, shopify_product_id text, shopify_variant_id text,
   amazon_asin text, amazon_source_url text,
   source_type text not null default 'manual',
@@ -43,6 +43,7 @@ alter table public.products add column if not exists source_type text not null d
 alter table public.products add column if not exists sourcinbox_product_url text;
 alter table public.products add column if not exists sourcinbox_product_id text;
 alter table public.products add column if not exists supplier_cost numeric;
+alter table public.products add column if not exists shopify_variants jsonb not null default '[]'::jsonb;
 
 -- Amazon merchandising fields captured by the best-effort product-page importer.
 alter table public.products add column if not exists amazon_current_price numeric;
@@ -87,7 +88,7 @@ create table if not exists public.saved_products (
 );
 create table if not exists public.cart_items (
   user_id uuid references auth.users(id) on delete cascade, product_id uuid references public.products(id) on delete cascade,
-  quantity integer not null default 1 check(quantity>0), created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
+  variant_id text, quantity integer not null default 1 check(quantity>0), created_at timestamptz not null default now(), updated_at timestamptz not null default now(),
   primary key(user_id,product_id)
 );
 
@@ -96,6 +97,7 @@ alter table public.categories enable row level security;
 alter table public.collections enable row level security;
 alter table public.products enable row level security;
 alter table public.saved_products enable row level security;
+alter table public.cart_items add column if not exists variant_id text;
 alter table public.cart_items enable row level security;
 
 create policy "published products public" on public.products for select using (published=true);
@@ -157,11 +159,11 @@ on conflict (id) do update set public=true;
 
 drop policy if exists "nuvora product images admin insert" on storage.objects;
 create policy "nuvora product images admin insert" on storage.objects for insert to authenticated
-with check (bucket_id='product-images' and exists (select 1 from public.profiles p where p.id=auth.uid() and p.is_admin=true));
+with check (bucket_id='product-images' and exists (select 1 from public.profiles p where p.id=auth.uid() and (p.is_admin=true or coalesce(p.role,'')='admin')));
 drop policy if exists "nuvora product images admin update" on storage.objects;
 create policy "nuvora product images admin update" on storage.objects for update to authenticated
-using (bucket_id='product-images' and exists (select 1 from public.profiles p where p.id=auth.uid() and p.is_admin=true))
-with check (bucket_id='product-images' and exists (select 1 from public.profiles p where p.id=auth.uid() and p.is_admin=true));
+using (bucket_id='product-images' and exists (select 1 from public.profiles p where p.id=auth.uid() and (p.is_admin=true or coalesce(p.role,'')='admin')))
+with check (bucket_id='product-images' and exists (select 1 from public.profiles p where p.id=auth.uid() and (p.is_admin=true or coalesce(p.role,'')='admin')));
 drop policy if exists "nuvora product images admin delete" on storage.objects;
 create policy "nuvora product images admin delete" on storage.objects for delete to authenticated
 using (bucket_id='product-images' and exists (select 1 from public.profiles p where p.id=auth.uid() and p.is_admin=true));
