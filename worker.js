@@ -1632,14 +1632,15 @@ function cleanText(value,max=10000){
   return text;
 }
 function cleanMultilineText(value,max=12000){
-  const text=String(value??'')
+  const raw=String(value??'')
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g,'')
     .replace(/(?:sale_list_token|order_receipt_token|refund_detail_token|bg_mail_token|payment_detail_token|email_token|[a-z0-9_]+_token)/gi,' ')
     .replace(/\\r/g,'')
     .replace(/[ \\t]+/g,' ')
     .replace(/\n[ \\t]+/g,'\n')
     .replace(/\n{3,}/g,'\n\n')
-    .trim().slice(0,max);
+    .trim();
+  const text=repairFragmentedText(raw).slice(0,max);
   if(/^[\s✦★☆•*"',;:._-]*(?:ema(?:il)?)?[\s✦★☆•*"',;:._-]*$/i.test(text))return '';
   return text;
 }
