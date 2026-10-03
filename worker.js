@@ -79,12 +79,22 @@ export default {
 /* Amazon link/import hardening */
 // Runtime integration helpers. These live in the Worker so health, diagnostics, Shopify, and legacy Amazon routes never depend on the old Node server.
 async function inspectProductSchema(env){
-  const required=['id','name','slug','kind','description','features','brand','image_url','image_urls','availability','display_price','currency','destination_url','retailer','provider','region','category_id','collection_id','why_we_picked_it','best_for','skip_if','featured','trending','top_pick','published','amazon_asin','amazon_source_url','source_type','sourcinbox_product_url','sourcinbox_product_id','supplier_cost','created_at','updated_at','amazon_last_synced','amazon_current_price','amazon_list_price','amazon_discount_percent','amazon_deal_text','amazon_rating','amazon_review_count','amazon_bought_past_month','amazon_badges','amazon_shipping_text','amazon_tax_text','amazon_variations','source_related_products','source_image_urls'];
-  const r=await supabaseRest(env,'GET','products',undefined,'?select=*%26limit=0');
-  if(r.ok)return {ok:true,missing:[]};
-  const raw=await r.text();
+  // Core columns are the contract required for the catalog, editing and publishing.
+  // Enrichment fields are optional so an older Supabase schema cannot break the store.
+  const core=['id','name','slug','kind','image_url','image_urls','display_price','currency','destination_url','published','created_at','updated_at'];
+  const optional=['features','brand','availability','provider','region','category_id','collection_id','collection_id','why_we_picked_it','best_for','skip_if','featured','trending','top_pick','amazon_asin','amazon_source_url','source_type','sourcinbox_product_url','sourcinbox_product_id','supplier_cost','amazon_last_synced','amazon_current_price','amazon_list_price','amazon_discount_percent','amazon_deal_text','amazon_rating','amazon_review_count','amazon_bought_past_month','amazon_badges','amazon_shipping_text','amazon_tax_text','amazon_variations','source_related_products','source_image_urls'];
+  const query=(fields)=>'?select='+fields.join(',')+'&limit=0';
+  const coreRes=await supabaseRest(env,'GET','products',undefined,query(core));
+  if(!coreRes.ok){
+    const raw=await coreRes.text();
+    const missing=[...raw.matchAll(/column products\.([A-Za-z0-9_]+) does not exist/gi)].map(m=>m[1]);
+    return {ok:false,missing:[...new Set(missing)],message:raw.slice(0,800),core:true};
+  }
+  const optionalRes=await supabaseRest(env,'GET','products',undefined,query(optional));
+  if(optionalRes.ok)return {ok:true,missing:[]};
+  const raw=await optionalRes.text();
   const missing=[...raw.matchAll(/column products\.([A-Za-z0-9_]+) does not exist/gi)].map(m=>m[1]);
-  return {ok:false,missing:[...new Set(missing)],message:raw.slice(0,800)};
+  return {ok:true,missing:[...new Set(missing)],message:raw.slice(0,800),core:false};
 }
 function configured(env){
   const e=env||{};
