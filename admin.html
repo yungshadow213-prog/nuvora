@@ -919,7 +919,7 @@ async function editProduct(id){
 function openProductForm(){openProductModal(false)}
 async function createProduct(product){openProductModal(false);setProductForm(product)}
 async function amazonImport(){showImportPage('amazon')}
-async async function togglePublish(id){
+async function togglePublish(id){
   try{
     const p=adminProducts.find(x=>x.id===id);
     if(!p)throw new Error('Product not found.');
