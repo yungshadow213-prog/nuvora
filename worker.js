@@ -95,9 +95,9 @@ function decodeJsonHtml(value){
     .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
 }
 function firstJsonLd(html){
-  const blocks=String(html||'').match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>[\\s\\S]*?<\/script>/gi)||[];
+  const blocks=String(html||'').match(/<script[^>]+type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi)||[];
   for(const block of blocks){
-    const raw=block.replace(/^.*?>/,'').replace(/<\/script>\\s*$/i,'').trim();
+    const raw=block.replace(/^.*?>/,'').replace(/<\/script>\s*$/i,'').trim();
     try{
       const data=JSON.parse(raw);
       const list=Array.isArray(data)?data:[data];
@@ -144,13 +144,31 @@ async function scrapeAmazonListing(sourceUrl,asin){
 
   const jsonld=firstJsonLd(html)||{};
   const states=amazonStateObjects(html);
-  const title=String(jsonld.name||'').trim()
-    ||metaValue(html,'og:title')||metaValue(html,'twitter:title')
-    ||amazonText(html,[/id=["']productTitle["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,/id=["']productTitle["'][^>]*>([\s\S]*?)<\/h1>/i])
-    ||htmlText((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)||[])[1]||'');
-  const description=htmlText(jsonld.description||'')
-    ||metaValue(html,'og:description')||metaValue(html,'description')
-    ||amazonText(html,[/id=["']feature-bullets["'][^>]*>[\s\S]*?<li[^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i]);
+  const brandHint=typeof jsonld.brand==='string'?jsonld.brand:String(jsonld.brand?.name||'');
+  const titleCandidates=[
+    amazonText(html,[
+      /id=["']productTitle["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,
+      /id=["']productTitle["'][^>]*>([\s\S]*?)<\/h1>/i
+    ]),
+    amazonText(html,[/id=["']title["'][^>]*>([\s\S]*?)<\/span>/i]),
+    String(jsonld.name||'').trim(),
+    metaValue(html,'og:title'),
+    metaValue(html,'twitter:title'),
+    htmlText((html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)||[])[1]||''),
+    htmlText((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)||[])[1]||'')
+  ].map(htmlText).filter(Boolean);
+  const title=titleCandidates.find(v=>v.length>brandHint.length+8&&!/^amazon(?:\.com)?$/i.test(v))||titleCandidates[0]||'';
+  const descriptionCandidates=[
+    amazonText(html,[/id=["']productDescription["'][^>]*>[\s\S]*?<div[^>]*>([\s\S]*?)<\/div>/i]),
+    amazonText(html,[/id=["']feature-bullets["'][^>]*>[\s\S]*?<ul[^>]*>([\s\S]*?)<\/ul>/i]),
+    htmlText(jsonld.description||''),
+    metaValue(html,'og:description'),
+    metaValue(html,'description')
+  ].map(htmlText).filter(v=>v&&v.length>12);
+  const description=descriptionCandidates.find(v=>{
+    const x=v.toLowerCase(), b=brandHint.toLowerCase(), t=title.toLowerCase();
+    return x!==b&&x!==t&&!x.startsWith(b+' ')&&x.length>20;
+  })||descriptionCandidates[0]||null;
   const imageCandidates=[];
   const addImage=v=>{if(typeof v==='string'&&validUrl(v)&&!imageCandidates.includes(v))imageCandidates.push(v);};
   if(Array.isArray(jsonld.image))jsonld.image.forEach(addImage); else addImage(jsonld.image);
@@ -174,7 +192,7 @@ async function scrapeAmazonListing(sourceUrl,asin){
     ??parseRating(amazonText(html,[/id=["']acrPopover["'][^>]*title=["']([^"']+)["']/i]));
   const reviewCount=parseReviewCount(jsonld.aggregateRating?.reviewCount||jsonld.aggregateRating?.ratingCount)
     ??parseReviewCount(metaValue(html,'reviewCount')||metaValue(html,'ratingCount'))
-    ??parseReviewCount(amazonText(html,[/id=["']acrCustomerReviewText["'][^>]*>([\s\S]*?)<\/span>/i,/([0-9][0-9,.]*)\\s+(?:global ratings|ratings|reviews)/i]));
+    ??parseReviewCount(amazonText(html,[/id=["']acrCustomerReviewText["'][^>]*>([\s\S]*?)<\/span>/i,/([0-9][0-9,.]*)\s+(?:global ratings|ratings|reviews)/i]));
   const availability=htmlText(offers.availability||'')
     ||amazonText(html,[/id=["']availability["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,/id=["']outOfStock["'][^>]*>([\s\S]*?)<\/div>/i]);
   const shippingText=amazonText(html,[/id=["']mir-layout-DELIVERY_BLOCK-slot-PRIMARY_DELIVERY_MESSAGE_LARGE["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,/id=["']deliveryBlockMessage["'][^>]*>([\s\S]*?)<\/span>/i]);
