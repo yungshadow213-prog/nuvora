@@ -501,7 +501,7 @@ function retailerDestination(p){
   const amazon=rawRetailer.includes('amazon')||!!p?.amazon_asin||!!p?.amazon_source_url||/azon/i.test(rawRetailer);
   const temu=rawRetailer.includes('temu')||!!p?.temu_source_url;
   const candidates=amazon
-    ? [p?.destination_url,p?.amazon_source_url,p?.source_url,p?.resolved_url,p?.asin&&'https://www.amazon.com/dp/'+p.asin,p?.amazon_asin&&'https://www.amazon.com/dp/'+p.amazon_asin]
+    ? [p?.amazon_source_url,p?.destination_url,p?.source_url,p?.resolved_url,p?.asin&&'https://www.amazon.com/dp/'+p.asin,p?.amazon_asin&&'https://www.amazon.com/dp/'+p.amazon_asin]
     : temu
       ? [p?.destination_url,p?.temu_source_url,p?.source_url,p?.resolved_url]
       : [p?.destination_url,p?.source_url,p?.resolved_url];
