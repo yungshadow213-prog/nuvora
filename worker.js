@@ -637,6 +637,35 @@ async function ingestSourceProduct(sourceUrl){
   return await scrapeGenericSource(sourceUrl,retailer);
 }
 
+      if(url.pathname==='/api/admin/import/amazon-search'&&request.method==='POST'){
+        const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        const payload=await body(request,256*1024);
+        const searchUrl=String(payload?.url||'').trim();
+        const limit=Math.min(Math.max(Number(payload?.limit||20),1),20);
+        if(!validUrl(searchUrl))return json({error:'A valid Amazon search or category URL is required.'},400);
+        let parsed; try{parsed=new URL(searchUrl);}catch{return json({error:'That URL is not valid.'},400);}
+        if(!amazonHost(parsed.hostname))return json({error:'Please paste an Amazon search or category URL.'},400);
+        let response;
+        try{
+          response=await fetch(searchUrl,{redirect:'follow',headers:{
+            'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36',
+            'accept':'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'accept-language':'en-US,en;q=0.9'
+          }});
+        }catch(e){return json({error:'Amazon search could not be reached: '+String(e?.message||e)},502);}
+        if(!response.ok)return json({error:'Amazon search returned HTTP '+response.status+'.'},502);
+        const html=await response.text();
+        const found=[],seen=new Set();
+        const add=(asin)=>{
+          const id=String(asin||'').toUpperCase();
+          if(!/^[A-Z0-9]{10}$/.test(id)||seen.has(id))return;
+          seen.add(id);found.push('https://www.amazon.com/dp/'+id);
+        };
+        for(const m of html.matchAll(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/)([A-Z0-9]{10})(?:[/?#"'&]|$)/gi))add(m[1]);
+        for(const m of html.matchAll(/(?:asin|data-asin)=["':= ]+([A-Z0-9]{10})/gi))add(m[1]);
+        return json({ok:true,source_url:searchUrl,requested:limit,found:found.slice(0,limit),count:Math.min(found.length,limit)});
+      }
+
       if(url.pathname==='/api/admin/import/bulk'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const payload=await body(request,512*1024);
