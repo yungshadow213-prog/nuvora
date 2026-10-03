@@ -148,12 +148,14 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const brandHint=typeof jsonld.brand==='string'?jsonld.brand:String(jsonld.brand?.name||'');
 
   const textById=(id)=>{
-    const re=new RegExp('id=["\\\\']'+id+'["\\\\'][^>]*>([\\\\s\\\\S]*?)(?:<\\\\/div>|<\\\\/span>|<\\\\/h1>)','i');
+    const esc=String(id).replace(/[.*+?^{}()|[\]\\]/g,'\\$&');
+    const re=new RegExp('id=["\\\\\\']'+esc+'["\\\\\\'][^>]*>([\\s\\S]*?)(?:<\\/div>|<\\/span>|<\\/h1>)','i');
     const m=String(html).match(re);
     return m?clean(m[1]):'';
   };
   const blockById=(id)=>{
-    const re=new RegExp('id=["\\\\']'+id+'["\\\\'][^>]*>([\\\\s\\\\S]*?)<\\\\/','i');
+    const esc=String(id).replace(/[.*+?^{}()|[\\]\\]/g,'\\$&');
+    const re=new RegExp('id=["\\\\\\']'+esc+'["\\\\\\'][^>]*>([\\s\\S]*?)<\\/','i');
     const m=String(html).match(re);
     return m?clean(m[1]):'';
   };
