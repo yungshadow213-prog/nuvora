@@ -1450,38 +1450,35 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const dimensions={'1024x1024':[1024,1024],'1536x1024':[1536,1024],'1024x1536':[1024,1536]};
         const [width,height]=dimensions[size]||dimensions['1024x1024'];
         try{
-          let imageB64=null;
+          let referenceBytes=null;
           if(source&&typeof source.arrayBuffer==='function'){
-            const bytes=new Uint8Array(await source.arrayBuffer());
-            if(bytes.byteLength>6*1024*1024)return json({error:'Reference image must be 6 MB or smaller for Nuvora AI.'},400);
-            imageB64=bytesToBase64(bytes);
-          } else if(imageUrl){
+            referenceBytes=new Uint8Array(await source.arrayBuffer());
+          }else if(imageUrl){
             let referenceResponse;
-            try{referenceResponse=await fetch(imageUrl,{redirect:'follow',headers:{accept:'image/avif,image/webp,image/apng,image/*,*/*;q=0.8'}})}catch(fetchError){return json({error:'Nuvora could not fetch the product image from its source. Upload the image to Nuvora first, then generate again.'},422)}
+            try{referenceResponse=await fetch(imageUrl,{redirect:'follow',headers:{accept:'image/avif,image/webp,image/apng,image/*,*/*;q=0.8'}})}
+            catch(fetchError){return json({error:'Nuvora could not fetch the product image from its source. Upload the image to Nuvora first, then generate again.'},422)}
             if(!referenceResponse.ok)return json({error:'Nuvora could not fetch the product image from its source (HTTP '+referenceResponse.status+'). Upload the image to Nuvora first, then generate again.'},422);
             const contentType=referenceResponse.headers.get('content-type')||'';
             if(!contentType.toLowerCase().startsWith('image/'))return json({error:'The product image URL did not return an image. Upload the image to Nuvora first, then generate again.'},422);
-            const bytes=new Uint8Array(await referenceResponse.arrayBuffer());
-            if(bytes.byteLength>6*1024*1024)return json({error:'Reference image must be 6 MB or smaller for Nuvora AI.'},400);
-            imageB64=bytesToBase64(bytes);
+            referenceBytes=new Uint8Array(await referenceResponse.arrayBuffer());
           }
-          const input={
-            prompt,
-            negative_prompt:'fake logos, watermarks, misleading text, extra products, distorted product, duplicate product, low quality',
-            width,height,num_steps:20,guidance:7.5
-          };
-          if(imageB64){
-            // Workers AI's SDXL binding accepts img2img input as raw 8-bit image
-            // bytes. Passing only image_b64 can produce "input tensor image is not
-            // present" on some current Workers AI inference paths, so provide the
-            // documented byte-array input as well.
-            const binary=atob(imageB64);
-            const imageBytes=new Array(binary.length);
-            for(let i=0;i<binary.length;i++)imageBytes[i]=binary.charCodeAt(i);
-            input.image=imageBytes;
-            input.strength=0.72;
+          if(referenceBytes&&referenceBytes.byteLength>6*1024*1024)return json({error:'Reference image must be 6 MB or smaller for Nuvora AI.'},400);
+
+          const negative='fake logos, watermarks, misleading text, extra products, distorted product, duplicate product, low quality';
+          let result;
+          if(referenceBytes){
+            // Use Cloudflare's dedicated img2img model for reference-image generation.
+            // This avoids the intermittent SDXL tensor-input failure seen on the live route.
+            const input={
+              prompt,negative_prompt:negative,width,height,num_steps:20,guidance:7.5,
+              image:Array.from(referenceBytes),strength:0.72
+            };
+            result=await env.AI.run('@cf/runwayml/stable-diffusion-v1-5-img2img',input);
+          }else{
+            result=await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0',{
+              prompt,negative_prompt:negative,width,height,num_steps:20,guidance:7.5
+            });
           }
-          const result=await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0',input);
           const bytes=await aiResultBytes(result);
           return json({ok:true,provider:'cloudflare',image:'data:image/png;base64,'+bytesToBase64(bytes)});
         }catch(e){
@@ -1489,7 +1486,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const status=Number(e?.status||e?.error?.status||0);
           const message=String(e?.message||e?.error?.message||'');
           if(code==='3036'||status===429&&/daily|allocation|neurons/i.test(message)){
-            return json({error:'Nuvora AI has reached Cloudflare’s free daily AI allocation. The free allowance resets daily; no OpenAI credits are required for this feature.'},429);
+            return json({error:'Nuvora AI has reached Cloudflare’s AI allocation. Please try again after the allowance resets.'},429);
           }
           if(code==='3040'||status===429){
             return json({error:'Cloudflare Workers AI is temporarily at capacity. Please try the image again later.'},429);
