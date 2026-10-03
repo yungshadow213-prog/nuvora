@@ -491,7 +491,8 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],bulkReview:['Import Review','Review, edit and publish the products from your latest bulk discovery.'],products:['Products','Manage Shop, Finds, and Learn listings.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['Settings','Connections and store configuration.']};
-let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[],collections=[],socialPosts=[];let missingProductColumns=[];let productSchemaError='';
+let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[],collections=[],socialPosts=[];
+window.__nuvoraSchemaState=window.__nuvoraSchemaState||{missingProductColumns:[],productSchemaError:''};
 function validURL(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
 
 function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=meta[id][0];document.getElementById('sub').textContent=meta[id][1];if(id==='settings')loadSettings();if(id==='categories')loadCategories();if(id==='collections')loadCollections();if(id==='social')loadSocial();if(id==='analytics')loadAnalytics();}
@@ -1160,7 +1161,7 @@ async function healthCheck(){
       const state=value?'Connected':(optional.has(k)?'Not configured':'Failed');
       return '<div class="row"><span>'+esc(label)+'</span><span class="status"><i class="dot '+(value?'':'off')+'"></i>'+state+'</span></div>';
     }).join('');
-    const missing=Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[];
+    const missing=Array.isArray(j?.missingProductColumns)?j.missingProductColumns:(Array.isArray(window.__nuvoraSchemaState?.missingProductColumns)?window.__nuvoraSchemaState.missingProductColumns:[]);
     const schemaNote=missing.length?'<br><strong>Optional product fields not yet in this Supabase schema:</strong> '+esc(missing.join(', ')):((j?.productSchemaError||j?.settingsSchemaError)?'<br><strong>Schema:</strong> '+esc(String(j.productSchemaError||j.settingsSchemaError).slice(0,450)):'');
     if(box)box.innerHTML=rows+'<div class="notice" style="margin-top:10px">'+(j?.ok?'All required admin connections are healthy.':'One or more required admin connections need attention.')+schemaNote+'</div>';
     const connectionBox=document.getElementById('connectionRows');
@@ -1179,7 +1180,7 @@ async function runDiagnostics(){
     const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','shopifyProducts','analytics']);
     const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
     const missing=Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[];
-    const schemaError=String(j?.productSchemaError||'');
+    const schemaError=String(j?.productSchemaError||window.__nuvoraSchemaState?.productSchemaError||'');
     box.innerHTML=Object.entries(labels).map(([k,label])=>{
       const value=checks[k]===true;
       const state=value?'Connected':(optional.has(k)?'Not configured':'Failed');
