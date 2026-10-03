@@ -1415,6 +1415,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const source=p;
           const normalized=normalizeAmazonProduct(source);
           const safeText=v=>cleanMultilineText(v,12000)||null;
+          const isAmazonSource=/amazon/i.test(String(source.retailer||source.source_type||''))||!!source.amazon_asin||!!source.amazon_source_url;
           return {
             ...source,
             name:normalized.name,
@@ -1425,8 +1426,12 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             image_urls:normalized.image_urls,
             display_price:normalized.display_price,
             currency:normalized.currency,
-            amazon_rating:normalized.rating,
-            amazon_review_count:normalized.review_count,
+            // Amazon review/rating content is kept out of the public API unless it is
+            // sourced through the compliant Amazon API path. Nuvora's own reviews remain public.
+            amazon_rating:isAmazonSource?null:normalized.rating,
+            amazon_review_count:isAmazonSource?null:normalized.review_count,
+            rating:isAmazonSource?null:source.rating,
+            review_count:isAmazonSource?null:source.review_count,
             amazon_deal_text:safeText(normalized.deal),
             deal_text:safeText(source.deal_text)||safeText(normalized.deal),
             temu_deal_text:safeText(source.temu_deal_text),
