@@ -67,7 +67,7 @@ export default {
 /* Amazon link/import hardening */
 function validUrl(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
 function amazonDecode(value){return String(value||'').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/&nbsp;/gi,' ');}
-function amazonHost(host){ const h=String(host||'').toLowerCase().replace(/^www\./,''); return h==='link.amazon'||h==='amzn.to'||h.includes('amazon.'); }
+function amazonHost(host){ const h=String(host||'').toLowerCase().replace(/^www\./,''); return h==='link.amazon'||h==='amzn.to'||/(^|\.)amazon\.[a-z.]+$/.test(h); }
 function extractUrls(value){ const m=String(value||'').match(/https?:\/\/[^\s<>]+/gi)||[]; return [...new Set(m.map(x=>x.replace(/[.,;]+$/,'').trim()).filter(Boolean))]; }
 async function resolveAmazonUrl(sourceUrl){let current=String(sourceUrl||'').trim();for(let i=0;i<5;i++){const host=new URL(current).hostname.toLowerCase().replace(/^www\./,'');if(host!=='link.amazon'&&host!=='amzn.to')return current;const r=await fetch(current,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 Nuvora importer'}});if(r.url&&r.url!==current){current=r.url;continue;}break;}return current;}
 function asinFromUrl(url){ const s=String(url||''); const m=s.match(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|\/product\/|\/dp%2F)([A-Z0-9]{10})(?:[/?#]|$)/i); if(m)return m[1].toUpperCase(); const q=s.match(/[?&](?:asin|ASIN)=([A-Z0-9]{10})(?:&|$)/i); return q?q[1].toUpperCase():null; }
@@ -283,7 +283,8 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const discountText=extractFirst([
     /id=["']couponText["'][^>]*>([\s\S]*?)<\/span>/i,
     /class=["'][^"']*savingsPercentage[^"']*["'][^>]*>([\s\S]*?)<\/span>/i,
-    /class=["'][^"']*dealBadge[^"']*["'][^>]*>([\s\S]*?)<\//i
+    /class=["'][^"']*dealBadge[^"']*["'][^>]*>([\s\S]*?)<\//i,
+    /(?:limited\s+time\s+deal|deal\s+of\s+the\s+day|coupon)[^<]{0,120}/i
   ]);
   let discountPercent=discountText?parsePercent(discountText):null;
   if(listPrice==null&&currentPrice!=null&&discountPercent!=null&&discountPercent>0&&discountPercent<100){
@@ -306,7 +307,9 @@ async function scrapeAmazonListing(sourceUrl,asin){
     /id=["']acrCustomerReviewText["'][^>]*>([\s\S]*?)<\/span>/i,
     /data-hook=["']total-review-count["'][^>]*>([\s\S]*?)<\//i
   ]);
-  const reviewCount=extractReviewCount(reviewText)
+  const aggregateReviewCount=firstNumber(jsonld.aggregateRating?.reviewCount ?? jsonld.aggregateRating?.ratingCount);
+  const reviewCount=aggregateReviewCount
+    ??extractReviewCount(reviewText)
     ??extractReviewCount(String(html).match(/([0-9][0-9,.]*)\s+(?:global ratings|ratings|reviews)/i)?.[0]||'');
 
   const availability=clean(offers.availability||'')
