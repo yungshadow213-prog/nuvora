@@ -41,7 +41,7 @@ export default {
       }
 
       if(url.pathname==='/api/admin/diagnostics'&&request.method==='GET'){
-        const cfg=configured(env); const checks={environment:cfg.supabase,auth:false,admin:false,products:false,settings:false,social:false,analytics:false,workersAI:cfg.workersAI,shopifyStorefront:cfg.shopifyStorefront,shopifyEnvironment:cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
+        const cfg=configured(env)||{}; const checks={environment:!!cfg.supabase,auth:false,admin:false,products:false,settings:false,social:false,analytics:false,workersAI:!!cfg.workersAI,shopifyStorefront:!!cfg.shopifyStorefront,shopifyEnvironment:!!cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
         let shopifyError='';
         const shopifyMissing=[]; const aiMissing=[]; if(!env.AI)aiMissing.push('Workers AI binding');
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))shopifyMissing.push('SHOPIFY_SHOP');
@@ -68,6 +68,51 @@ export default {
       }
 
 /* Amazon link/import hardening */
+// Runtime integration helpers. These live in the Worker so health, diagnostics, Shopify, and legacy Amazon routes never depend on the old Node server.
+function configured(env){
+  const e=env||{};
+  const shopDomain=String(e.SHOPIFY_SHOP||e.SHOPIFY_STORE_DOMAIN||'').trim();
+  return {
+    supabase:!!e.SUPABASE_URL&&!!e.SUPABASE_ANON_KEY&&!!e.SUPABASE_SERVICE_ROLE_KEY,
+    shopify:!!shopDomain&&!!e.SHOPIFY_STOREFRONT_ACCESS_TOKEN,
+    shopifyStorefront:!!shopDomain&&!!e.SHOPIFY_STOREFRONT_ACCESS_TOKEN,
+    shopifyAdmin:!!shopDomain&&!!e.SHOPIFY_ADMIN_ACCESS_TOKEN,
+    amazon:!!e.AMAZON_CLIENT_ID&&!!e.AMAZON_CLIENT_SECRET&&!!e.AMAZON_PARTNER_TAG,
+    workersAI:!!e.AI
+  };
+}
+function randHex(length=6){const bytes=new Uint8Array(Math.max(1,Math.ceil(length/2)));crypto.getRandomValues(bytes);return [...bytes].map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,length);}
+function buildProductOptions(text){
+  const raw=String(text||''),groups=[];
+  const add=(name,value)=>{const n=String(name||'').trim(),v=String(value||'').trim();if(!n||!v||v.length>120)return;let g=groups.find(x=>x.name.toLowerCase()===n.toLowerCase());if(!g){g={name:n,values:[]};groups.push(g);}if(!g.values.includes(v))g.values.push(v);};
+  for(const label of ['color','colour','size','style','pattern','material','flavor','flavour','configuration','capacity']){
+    const re=new RegExp('\\b'+label+'\\s*[:：]\\s*([^\\n;|]+)','gi');
+    for(const m of raw.matchAll(re)){m[1].split(/,|\\s+\\/\\s+/).map(v=>v.trim()).filter(Boolean).slice(0,40).forEach(v=>add(label[0].toUpperCase()+label.slice(1),v));}
+  }
+  return groups.filter(g=>g.values.length).slice(0,12);
+}
+let amazonTokenCache={value:null,expires:0};
+async function getAmazonToken(env){
+  const e=env||{};if(amazonTokenCache.value&&Date.now()<amazonTokenCache.expires)return amazonTokenCache.value;
+  const endpoint=e.AMAZON_TOKEN_ENDPOINT||'https://api.amazon.com/auth/o2/token';
+  const response=await fetch(endpoint,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({grant_type:'client_credentials',client_id:e.AMAZON_CLIENT_ID,client_secret:e.AMAZON_CLIENT_SECRET,scope:'creatorsapi::default'})});
+  const payload=await response.json().catch(()=>({}));if(!response.ok||!payload.access_token)throw new Error('Amazon authentication failed.');
+  const ttl=Math.max(60,Number(payload.expires_in)||3600);amazonTokenCache={value:payload.access_token,expires:Date.now()+(ttl-60)*1000};return amazonTokenCache.value;
+}
+async function amazonGetItem(env,asin){
+  const token=await getAmazonToken(env), marketplace=env.AMAZON_MARKETPLACE||'www.amazon.com';
+  const payload={itemIds:[String(asin).toUpperCase()],itemIdType:'ASIN',partnerTag:env.AMAZON_PARTNER_TAG,marketplace,resources:['images.primary.large','images.primary.medium','images.variants.large','itemInfo.title','itemInfo.features','itemInfo.byLineInfo','itemInfo.productInfo','offersV2.listings.price','offersV2.listings.availability']};
+  const response=await fetch('https://creatorsapi.amazon/catalog/v1/getItems',{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json','x-marketplace':marketplace},body:JSON.stringify(payload)});
+  const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error('Amazon Creators API returned HTTP '+response.status+'.');return data?.itemsResult?.items?.[0]||null;
+}
+async function shopifyGraphql(env,query,variables={},admin=false){
+  const e=env||{},domain=String(e.SHOPIFY_SHOP||e.SHOPIFY_STORE_DOMAIN||'').trim(),token=admin?String(e.SHOPIFY_ADMIN_ACCESS_TOKEN||''):String(e.SHOPIFY_STOREFRONT_ACCESS_TOKEN||'');
+  if(!domain||!token)throw new Error(admin?'Shopify Admin API is not configured.':'Shopify Storefront API is not configured.');
+  const version=e.SHOPIFY_API_VERSION||'2026-07',endpoint=(admin?'https://':'https://')+domain+(admin?'/admin/api/':'/api/')+version+'/graphql.json';
+  const headers={'content-type':'application/json'};headers[admin?'X-Shopify-Access-Token':'X-Shopify-Storefront-Access-Token']=token;
+  const response=await fetch(endpoint,{method:'POST',headers,body:JSON.stringify({query,variables})});const data=await response.json().catch(()=>({}));
+  if(!response.ok||Array.isArray(data?.errors)&&data.errors.length)throw new Error(data?.errors?.[0]?.message||'Shopify GraphQL request failed (HTTP '+response.status+').');return data?.data||{};
+}
 function validUrl(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
 function amazonDecode(value){return String(value||'').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/&nbsp;/gi,' ');}
 function amazonHost(host){ const h=String(host||'').toLowerCase().replace(/^www\./,''); return h==='link.amazon'||h==='amzn.to'||/(^|\.)amazon\.[a-z.]+$/.test(h); }
@@ -1454,6 +1499,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const current=(await existing.json())?.[0];
           if(!current)return json({error:'Product not found.'},404);
           const merged={...current,...patch};
+          if(!merged.slug||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(String(merged.slug))){merged.slug=makeProductSlug(merged.name||'product');patch.slug=merged.slug;}
           if(patch.published===true){
             merged.published=true;
             // Publishing must never fail just because an older/imported row has a malformed
@@ -1548,7 +1594,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             return json({error:'Cloudflare Workers AI is temporarily at capacity. Please try the image again later.'},429);
           }
           if(code==='5018'||/not allowed to access.*runwayml\/stable-diffusion-v1-5-img2img/i.test(message)){
-            return json({error:'Nuvora AI reference-image generation is unavailable on this Cloudflare account because the RunwayML img2img model is access-restricted. Nuvora has been configured to use the account-available SDXL img2img path instead.'},403);
+            return json({error:'Nuvora AI reference-image generation is unavailable for the configured Cloudflare model on this deployment. The current image workflow uses FLUX.2 Klein.'},403);
           }
           return json({error:'Nuvora AI image generation failed: '+(message||'Cloudflare Workers AI returned an unknown error.')},502);
         }
