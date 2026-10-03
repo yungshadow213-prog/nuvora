@@ -103,3 +103,76 @@ jobs:
               sys.exit(1)
           print("Deep runtime audit checks passed.")
           PY
+
+
+  admin-editor-javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Check inline admin and editor JavaScript
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          for name in ["admin.html","edit-product.html"]:
+              html=Path(name).read_text(encoding="utf-8")
+              scripts=re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>", html, flags=re.I)
+              inline=[s for s in scripts if s.strip()]
+              if not inline:
+                  raise SystemExit(f"No inline scripts found in {name}")
+              for i,src in enumerate(inline,1):
+                  Path(f"/tmp/nuvora-{name}-{i}.js").write_text(src,encoding="utf-8")
+              print(f"{name}: extracted {len(inline)} inline script block(s).")
+          PY
+          for file in /tmp/nuvora-admin.html-*.js /tmp/nuvora-edit-product.html-*.js; do
+            node --check "$file"
+          done
+
+  release-contract-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify critical Nuvora contracts
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re, sys
+          worker=Path("worker.js").read_text(encoding="utf-8")
+          admin=Path("admin.html").read_text(encoding="utf-8")
+          editor=Path("edit-product.html").read_text(encoding="utf-8")
+          failures=[]
+          forbidden=[
+              r"async\s+async\s+function",
+              r"re\.replace\(/\\b\(\[A-Za-z\]\)\\s\+",
+          ]
+          for pat in forbidden:
+              if re.search(pat,worker):
+                  failures.append("worker.js contains a forbidden regression pattern: "+pat)
+          for helper in ["configured","validUrl","asinFromUrl","ingestSourceProduct","normalizeAmazonListing","makeProductSlug","validateProduct","supabaseProductWrite"]:
+              if not re.search(r"(?:async\s+)?function\s+"+re.escape(helper)+r"\s*\(",worker):
+                  failures.append("worker.js missing "+helper)
+          for route in ["/api/config","/api/health","/api/admin/products","/api/admin/import/bulk","/api/admin/import/amazon-search","/api/admin/diagnostics","/api/admin/settings","/api/amazon/prepare"]:
+              if route not in worker:
+                  failures.append("worker.js missing "+route)
+          if "function discoverAmazonProducts" not in admin:
+              failures.append("admin.html missing Discover 20 handler")
+          if "function retailerDestination" not in admin:
+              failures.append("admin.html missing retailer destination resolver")
+          if "function healthCheck" not in admin:
+              failures.append("admin.html missing System Status handler")
+          if "async function publish" not in editor:
+              failures.append("edit-product.html missing publish handler")
+          if "async function save" not in editor:
+              failures.append("edit-product.html missing save handler")
+          if failures:
+              print("\n".join(failures));sys.exit(1)
+          print("Critical Nuvora release contracts passed.")
+          PY
