@@ -76,12 +76,11 @@ function metaValue(html,name){
   const wanted=String(name||'').toLowerCase();
   const tags=String(html||'').match(/<meta\b[^>]*>/gi)||[];
   for(const tag of tags){
-    const attrs=tag.match(/(?:name|property)\s*=\s*([^ >]+)/i);
+    const attrs=tag.match(/(?:name|property)\s*=\s*(["'])(.*?)\1/i);
     if(!attrs)continue;
-    const attrName=String(attrs[1]).replaceAll('"','').replaceAll("'","").toLowerCase();
-    if(attrName!==wanted)continue;
-    const content=tag.match(/content\s*=\s*([^ >]+)/i);
-    if(content)return htmlText(String(content[1]).replaceAll('"','').replaceAll("'",""));
+    if(String(attrs[2]).toLowerCase()!==wanted)continue;
+    const content=tag.match(/content\s*=\s*(["'])([\s\S]*?)\1/i)||tag.match(/content\s*=\s*([^ >]+)/i);
+    if(content)return htmlText(String(content[2]??content[1]).replaceAll('"','').replaceAll("'",""));
   }
   return '';
 }
