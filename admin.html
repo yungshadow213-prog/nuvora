@@ -1014,7 +1014,11 @@ async function togglePublish(id){
       body.destination_url=destination||null;
       body.amazon_source_url=p.amazon_source_url||p.source_url||null;
     }
-    await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body});
+    if(publishing){
+      await api('/api/admin/products/'+encodeURIComponent(id)+'/publish',{method:'POST',body});
+    }else{
+      await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body});
+    }
     await liveAdminProducts();
     setAdminStatus(publishing?'Product published successfully.':'Product moved back to draft.');
   }catch(e){setAdminStatus(e.message) }
@@ -1091,7 +1095,7 @@ async function publishOneDiscovered(id){
   const p=adminProducts.find(x=>x.id===id);if(!p)return setAdminStatus('Product not found.');
   if(p.published)return setAdminStatus('Product is already published.');
   const destination=retailerDestination(p);
-  try{await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body:{published:true,destination_url:destination||null,amazon_source_url:p.amazon_source_url||p.source_url||null,updated_at:new Date().toISOString()}});await liveAdminProducts();renderDiscoveredProducts();setAdminStatus('Product published.');}catch(e){setAdminStatus(e.message)}
+  try{await api('/api/admin/products/'+encodeURIComponent(id)+'/publish',{method:'POST',body:{destination_url:destination||null,amazon_source_url:p.amazon_source_url||p.source_url||null}});await liveAdminProducts();renderDiscoveredProducts();setAdminStatus('Product published.');}catch(e){setAdminStatus(e.message)}
 }
 async function publishDiscoveredProducts(){
   const ids=[...document.querySelectorAll('.bulk-discovered-check:checked')].map(x=>x.value);
@@ -1100,7 +1104,7 @@ async function publishDiscoveredProducts(){
   if(!selected.length)return setAdminStatus('All selected products are already published.');
   const invalid=selected.filter(p=>!p.name||!(p.image_url||(Array.isArray(p.image_urls)&&p.image_urls.length)));if(invalid.length)return setAdminStatus(invalid.length+' selected product'+(invalid.length===1?'':'s')+' need a valid title and image. Edit them first.');
   setAdminStatus('Publishing '+selected.length+' products…');let published=0;
-  try{for(const p of selected){await api('/api/admin/products/'+encodeURIComponent(p.id),{method:'PATCH',body:{published:true,destination_url:retailerDestination(p)||null,amazon_source_url:p.amazon_source_url||p.source_url||null,updated_at:new Date().toISOString()}});published++;}await liveAdminProducts();renderDiscoveredProducts();setAdminStatus(published+' product'+(published===1?'':'s')+' published successfully.');}catch(e){await liveAdminProducts();renderDiscoveredProducts();setAdminStatus('Published '+published+' product'+(published===1?'':'s')+'. '+(e.message||'The remaining products were not published.'));}}
+  try{for(const p of selected){await api('/api/admin/products/'+encodeURIComponent(p.id)+'/publish',{method:'POST',body:{destination_url:retailerDestination(p)||null,amazon_source_url:p.amazon_source_url||p.source_url||null}});published++;}await liveAdminProducts();renderDiscoveredProducts();setAdminStatus(published+' product'+(published===1?'':'s')+' published successfully.');}catch(e){await liveAdminProducts();renderDiscoveredProducts();setAdminStatus('Published '+published+' product'+(published===1?'':'s')+'. '+(e.message||'The remaining products were not published.'));}}
 function openBulkReview(ids){lastDiscoveredProductIds=[...new Set((ids||[]).filter(Boolean))];document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById('bulkReview').classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));document.getElementById('title').textContent=meta.bulkReview[0];document.getElementById('sub').textContent=meta.bulkReview[1];const all=document.getElementById('bulkReviewSelectAll');if(all)all.checked=true;renderDiscoveredProducts();}
 async function discoverAmazonProducts(){
   const input=document.getElementById('amazonSearchUrlInput'),status=document.getElementById('amazonDiscoveryStatus'),searchUrl=String(input?.value||'').trim();
@@ -1146,7 +1150,10 @@ async function healthCheck(){
       const state=value?'Connected':(optional.has(k)?'Not configured':'Failed');
       return '<div class="row"><span>'+esc(label)+'</span><span class="status"><i class="dot '+(value?'':'off')+'"></i>'+state+'</span></div>';
     }).join('');
-    const schemaNote=j?.productSchemaError||j?.settingsSchemaError?'<br><strong>Database schema:</strong> '+esc((j.productSchemaError||j.settingsSchemaError).slice(0,450)):'';
+    const productSchemaError=String(j?.productSchemaError||'');
+    const settingsSchemaError=String(j?.settingsSchemaError||'');
+    const schemaError=productSchemaError||settingsSchemaError;
+    const schemaNote=schemaError?'<br><strong>Database schema:</strong> '+esc(schemaError.slice(0,450)):'';
     if(box)box.innerHTML=rows+'<div class="notice" style="margin-top:10px">'+(j?.ok?'All required admin connections and schema checks passed.':'One or more required admin connections or schema checks need attention.')+schemaNote+'</div>';
     const connectionBox=document.getElementById('connectionRows');
     if(connectionBox)connectionBox.innerHTML=rows;
