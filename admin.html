@@ -491,7 +491,9 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],bulkReview:['Import Review','Review, edit and publish the products from your latest bulk discovery.'],products:['Products','Manage Shop, Finds, and Learn listings.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['Settings','Connections and store configuration.']};
-let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[],collections=[],socialPosts=[];
+let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[],collections=[],socialPosts=[];let missingProductColumns=[];let productSchemaError='';
+function validURL(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
+
 function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=meta[id][0];document.getElementById('sub').textContent=meta[id][1];if(id==='settings')loadSettings();if(id==='categories')loadCategories();if(id==='collections')loadCollections();if(id==='social')loadSocial();if(id==='analytics')loadAnalytics();}
 function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function setAdminStatus(message,type='info'){const ids=['globalAdminStatus','importStatus','shopifyImportStatus','aiImageStatus','aiCopyStatus','uploadStatus'];for(const id of ids){const el=document.getElementById(id);if(el&&message){el.textContent=String(message);el.dataset.status=type;}}} 
@@ -1165,13 +1167,18 @@ async function runDiagnostics(){
   box.innerHTML='<div class="muted">Running diagnostics…</div>';
   try{
     const j=await api('/api/admin/diagnostics');
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Core product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
+    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Social posts',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
     const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','shopifyProducts','analytics']);
     const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
-    box.innerHTML=Object.entries(labels).map(([k,label])=>{const value=checks[k]===true;const state=value?'Passed':(optional.has(k)?'Not configured':'Failed');return '<div class="row"><span>'+esc(label)+'</span><span class="status"><i class="dot '+(value?'':'off')+'"></i>'+state+'</span></div>'}).join('');
-    const missing=Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[];
-    const notice=(j?.ok?'Core Nuvora diagnostics passed.':'One or more core diagnostics failed.')+(missing.length?' <br><strong>Optional product fields missing:</strong> '+esc(missing.join(', ')):'')+(j?.shopifyMissing?.length?'<br><strong>Shopify configuration missing:</strong> '+esc(j.shopifyMissing.join(', ')):'')+(j?.aiMissing?.length?'<br><strong>AI configuration missing:</strong> '+esc(j.aiMissing.join(', ')):'')+(j?.shopifyError?'<br><strong>Shopify:</strong> '+esc(j.shopifyError):'');
-    box.innerHTML+=`<div class="notice" style="margin-top:12px">${notice}</div>`;
+    missingProductColumns=Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[];
+    productSchemaError=String(j?.productSchemaError||'');
+    box.innerHTML=Object.entries(labels).map(([k,label])=>{
+      const value=checks[k]===true;
+      const state=value?'Connected':(optional.has(k)?'Not configured':'Failed');
+      return '<div class="row"><span>'+esc(label)+'</span><span class="status"><i class="dot '+(value?'':'off')+'"></i>'+state+'</span></div>';
+    }).join('')+
+    (missingProductColumns.length?'<div class="notice" style="margin-top:12px"><strong>Database schema:</strong> Missing product columns: '+esc(missingProductColumns.join(', '))+'</div>':'')+
+    (productSchemaError&&!missingProductColumns.length?'<div class="notice" style="margin-top:12px"><strong>Database schema:</strong> '+esc(productSchemaError)+'</div>':'');
   }catch(e){box.innerHTML='<div class="notice">'+esc(e.message||'Diagnostics failed.')+'</div>';}
 }
 async function saveSettings(){try{await api('/api/admin/settings',{method:'PATCH',body:{store_name:document.getElementById('setName').value.trim()||'Nuvora',support_email:document.getElementById('setEmail').value.trim()||null,currency:document.getElementById('setCurrency').value,timezone:document.getElementById('setTimezone').value.trim()||'Africa/Lagos',default_region:document.getElementById('setRegion').value.trim()||'NG',maintenance_mode:document.getElementById('setMaintenance').value==='true',store_description:document.getElementById('setDescription').value,affiliate_disclosure:document.getElementById('setDisclosure').value,shipping_policy:document.getElementById('setShipping').value,returns_policy:document.getElementById('setReturns').value}});setAdminStatus('Settings saved.');}catch(e){setAdminStatus(e.message)}}
