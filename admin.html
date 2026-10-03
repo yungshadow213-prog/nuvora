@@ -498,9 +498,16 @@ function setAdminStatus(message,type='info'){const ids=['globalAdminStatus','imp
 async function api(path,options={}){if(!adminSession)throw new Error('Admin session required.');options.headers={...(options.headers||{}),Authorization:'Bearer '+adminSession.access_token};if(options.body&&typeof options.body!=='string'&&!(options.body instanceof FormData)){options.headers['content-type']='application/json';options.body=JSON.stringify(options.body)}let r;try{r=await fetch(path,options)}catch(e){throw new Error('Cannot reach Nuvora. Check the Cloudflare deployment and try again.')}let j={};try{j=await r.json()}catch{}if(!r.ok){const detail=j.detail?` ${j.detail}`:'';throw new Error((j.error||`Request failed (${r.status})`)+detail)}return j;}
 function retailerDestination(p){
   const r=String(p?.retailer||p?.source_type||'').toLowerCase();
-  if(r.includes('temu')||String(p?.source_type||'').toLowerCase()==='temu') return p?.destination_url||p?.temu_source_url||'';
-  if(r.includes('amazon')||p?.amazon_asin||p?.amazon_source_url||String(p?.source_type||'').toLowerCase()==='amazon') return p?.destination_url||p?.amazon_source_url||'';
-  return p?.destination_url||'';
+  const candidates=r.includes('temu')||String(p?.source_type||'').toLowerCase()==='temu'
+    ? [p?.destination_url,p?.temu_source_url]
+    : (r.includes('amazon')||p?.amazon_asin||p?.amazon_source_url||String(p?.source_type||'').toLowerCase()==='amazon'
+      ? [p?.destination_url,p?.amazon_source_url,p?.source_url,p?.resolved_url,p?.asin||p?.amazon_asin?('https://www.amazon.com/dp/'+(p?.asin||p?.amazon_asin)):'']
+      : [p?.destination_url,p?.source_url]);
+  for(const value of candidates){
+    const url=String(value||'').trim();
+    try{const u=new URL(url);if(u.protocol==='http:'||u.protocol==='https:')return u.toString();}catch{}
+  }
+  return '';
 }
 function retailerLabel(p){
   const r=String(p?.retailer||p?.source_type||'').toLowerCase();
