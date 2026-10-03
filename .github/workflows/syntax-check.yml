@@ -189,3 +189,12 @@ jobs:
           node-version: 24
       - name: Validate the real Cloudflare bundle
         run: npx --yes wrangler@4.145.0 deploy --dry-run --outdir /tmp/nuvora-worker-bundle
+
+
+  cloudflare-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Verify Wrangler bundle
+        run: npx wrangler@4.145.0 deploy --dry-run --outdir /tmp/nuvora-dist
