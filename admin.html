@@ -365,6 +365,17 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
     <div class="actions bulk-actions"><button class="btn" onclick="downloadCsvTemplate()">CSV template</button><button class="btn" onclick="previewCsv()">Preview CSV</button><button class="btn primary" onclick="importCsv()">Import as drafts</button></div>
   </div>
 </section>
+<section id="bulkReview" class="view">
+  <div class="catalog-head">
+    <div><span class="eyebrow">Bulk import workspace</span><h2>Review discovered products</h2><p id="bulkReviewSub">Review the products Nuvora just discovered from Amazon. They remain private drafts until you publish them.</p></div>
+    <div class="catalog-actions"><button class="btn" onclick="show('import',document.querySelectorAll('.nav button')[1])">Back to Smart Import</button><button class="btn primary" onclick="publishDiscoveredProducts()">Publish selected</button></div>
+  </div>
+  <div class="panel catalog-panel">
+    <div class="catalog-panel-head"><div><span class="section-kicker">Latest discovery</span><h2 id="bulkReviewCount">0 products</h2></div><label style="display:flex;gap:8px;align-items:center;font-size:13px"><input id="bulkReviewSelectAll" type="checkbox" onchange="toggleDiscoveredSelection(this.checked)"> Select all</label></div>
+    <div id="bulkReviewRows" class="product-library"></div>
+  </div>
+  <div class="notice" style="margin-top:14px"><b>Workflow:</b> Discovery → draft → review/edit → publish. Use <b>Edit</b> on any product to open its full product editor. Publishing requires a valid retailer destination URL.</div>
+</section>
 <section id="categories" class="view"><div class="panel"><h2>Categories</h2><p class="muted">Categories are stored in Supabase and can be used by products and storefront filters.</p><div class="formgrid"><div class="field"><label>Name</label><input id="catName" placeholder="Gaming Setup"></div><div class="field"><label>Slug</label><input id="catSlug" placeholder="gaming-setup"></div><div class="field full"><label>Description</label><textarea id="catDesc" placeholder="Optional category description"></textarea></div></div><div class="actions"><button class="btn primary" onclick="createCategory()">Create category</button></div><div id="categoryRows" style="margin-top:16px"></div></div></section>
 <section id="collections" class="view"><div class="panel"><h2>Collections</h2><p class="muted">Create curated groups that can later be attached to products.</p><div class="formgrid"><div class="field"><label>Name</label><input id="colName" placeholder="Gaming Setup"></div><div class="field"><label>Slug</label><input id="colSlug" placeholder="gaming-setup"></div><div class="field full"><label>Description</label><textarea id="colDesc"></textarea></div></div><div class="actions"><button class="btn primary" onclick="createCollection()">Create collection</button></div><div id="collectionRows" style="margin-top:16px"></div></div></section>
 <section id="orders" class="view"><div class="panel"><h2>Orders</h2><p class="muted">Shopify orders are not mirrored into Supabase yet. The storefront checkout can hand customers to Shopify once Shopify is configured.</p><button class="btn" onclick="show('settings',document.querySelectorAll('.nav button')[7])">Configure Shopify</button></div></section>
@@ -476,7 +487,7 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
-const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],products:['Products','Manage Shop, Finds, and Learn listings.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['Settings','Connections and store configuration.']};
+const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],bulkReview:['Import Review','Review, edit and publish the products from your latest bulk discovery.'],products:['Products','Manage Shop, Finds, and Learn listings.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['Settings','Connections and store configuration.']};
 let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[],collections=[],socialPosts=[];
 function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=meta[id][0];document.getElementById('sub').textContent=meta[id][1];if(id==='settings')loadSettings();if(id==='categories')loadCategories();if(id==='collections')loadCollections();if(id==='social')loadSocial();if(id==='analytics')loadAnalytics();}
 function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
@@ -935,25 +946,60 @@ async function togglePublish(id){
     setAdminStatus(publishing?'Product published successfully.':'Product moved back to draft.');
   }catch(e){setAdminStatus(e.message) }
 }
+let lastDiscoveredProductIds=[];
+function renderDiscoveredProducts(){
+  const box=document.getElementById('bulkReviewRows'),count=document.getElementById('bulkReviewCount');
+  const selected=lastDiscoveredProductIds.map(id=>adminProducts.find(p=>p.id===id)).filter(Boolean);
+  if(count)count.textContent=selected.length+' product'+(selected.length===1?'':'s');
+  if(!box)return;
+  if(!selected.length){box.innerHTML='<div class="empty" style="padding:30px;text-align:center">No products from this discovery are available. Return to Smart Import and run Discover 20 again.</div>';return;}
+  box.innerHTML=selected.map(p=>{
+    const dest=retailerDestination(p),label=retailerLabel(p),image=Array.isArray(p.image_urls)&&p.image_urls[0]?p.image_urls[0]:p.image_url||'';
+    return '<div class="row" style="align-items:center"><label style="display:flex;gap:10px;align-items:center;min-width:0;flex:1"><input class="bulk-discovered-check" type="checkbox" value="'+esc(p.id)+'" checked><span style="width:58px;height:58px;border-radius:10px;overflow:hidden;background:var(--panel-2);display:block;flex:none">'+(image?'<img src="'+esc(image)+'" alt="" style="width:100%;height:100%;object-fit:cover">':'')+'</span><span style="min-width:0"><b style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(p.name)+'</b><span class="muted">'+esc(label)+' · '+(p.published?'Published':'Draft')+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</span></span></label><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+JSON.stringify(dest)+')">Source</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit</button><button class="btn primary" onclick="publishOneDiscovered(\''+p.id+'\')">'+(p.published?'Published':'Publish')+'</button></div></div>';
+  }).join('');
+}
+function toggleDiscoveredSelection(checked){document.querySelectorAll('.bulk-discovered-check').forEach(x=>x.checked=checked);}
+async function publishOneDiscovered(id){
+  const p=adminProducts.find(x=>x.id===id); if(!p)return setAdminStatus('Product not found.');
+  if(p.published)return setAdminStatus('Product is already published.');
+  const destination=retailerDestination(p); if(!destination)return setAdminStatus('This product has no valid Amazon destination URL.');
+  try{await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body:{published:true,destination_url:destination,updated_at:new Date().toISOString()}});await liveAdminProducts();renderDiscoveredProducts();setAdminStatus('Product published.');}catch(e){setAdminStatus(e.message)}
+}
+async function publishDiscoveredProducts(){
+  const ids=[...document.querySelectorAll('.bulk-discovered-check:checked')].map(x=>x.value);
+  if(!ids.length)return setAdminStatus('Select at least one product.');
+  const selected=ids.map(id=>adminProducts.find(p=>p.id===id)).filter(Boolean).filter(p=>!p.published);
+  if(!selected.length)return setAdminStatus('All selected products are already published.');
+  const invalid=selected.filter(p=>!retailerDestination(p)); if(invalid.length)return setAdminStatus(invalid.length+' selected product'+(invalid.length===1?'':'s')+' have no valid destination URL. Edit them first.');
+  setAdminStatus('Publishing '+selected.length+' products…'); let published=0;
+  try{
+    for(const p of selected){await api('/api/admin/products/'+encodeURIComponent(p.id),{method:'PATCH',body:{published:true,destination_url:retailerDestination(p),updated_at:new Date().toISOString()}});published++;}
+    await liveAdminProducts();renderDiscoveredProducts();setAdminStatus(published+' product'+(published===1?'':'s')+' published successfully.');
+  }catch(e){await liveAdminProducts();renderDiscoveredProducts();setAdminStatus('Published '+published+' product'+(published===1?'':'s')+'. '+(e.message||'The remaining products were not published.');}
+}
+function openBulkReview(ids){
+  lastDiscoveredProductIds=[...new Set((ids||[]).filter(Boolean))];
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById('bulkReview').classList.add('active');
+  document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
+  document.getElementById('title').textContent=meta.bulkReview[0];document.getElementById('sub').textContent=meta.bulkReview[1];
+  const all=document.getElementById('bulkReviewSelectAll');if(all)all.checked=true;renderDiscoveredProducts();
+}
 async function discoverAmazonProducts(){
-  const input=document.getElementById('amazonSearchUrlInput');
-  const status=document.getElementById('amazonDiscoveryStatus');
-  const searchUrl=String(input?.value||'').trim();
+  const input=document.getElementById('amazonSearchUrlInput'),status=document.getElementById('amazonDiscoveryStatus'),searchUrl=String(input?.value||'').trim();
   if(!searchUrl)return setAdminStatus('Paste an Amazon search or category URL first.');
-  if(status)status.textContent='Discovering up to 20 Amazon products…';
+  const button=document.querySelector('button[onclick="discoverAmazonProducts()"]');if(button){button.disabled=true;button.textContent='Discovering…';}
+  if(status)status.textContent='Finding up to 20 Amazon product links…';
   try{
     const discovered=await api('/api/admin/import/amazon-search',{method:'POST',body:{url:searchUrl,limit:20}});
-    const urls=Array.isArray(discovered.found)?discovered.found:[];
-    if(!urls.length)throw new Error('Amazon did not expose any product links from that search page.');
-    if(status)status.textContent='Found '+urls.length+' products. Importing them as drafts…';
+    const urls=Array.isArray(discovered.found)?discovered.found:[];if(!urls.length)throw new Error('Amazon did not expose any product links from that search page.');
+    if(status)status.textContent='Found '+urls.length+' products. Importing and preparing your review page…';
     const result=await api('/api/admin/import/bulk',{method:'POST',body:{urls}});
+    const ids=(Array.isArray(result.results)?result.results:[]).map(x=>x.id).filter(Boolean);
     const ok=Number(result.imported||0),skipped=Number(result.skipped||0),failed=Number(result.failed||0);
-    if(status)status.textContent='Discovery complete: '+ok+' imported, '+skipped+' already existed, '+failed+' failed.';
-    await liveAdminProducts();
-  }catch(e){
-    if(status)status.textContent='';
-    setAdminStatus(e.message);
-  }
+    await liveAdminProducts();if(!ids.length)throw new Error('Nuvora found the links but could not create or locate any product records. '+failed+' failed.');
+    if(status)status.textContent='Ready: '+(ok+skipped)+' products. Opening review workspace…';openBulkReview(ids);
+  }catch(e){if(status)status.textContent='';setAdminStatus(e.message);}
+  finally{if(button){button.disabled=false;button.textContent='Discover 20';}}
 }
 async function removeProduct(id){try{await api('/api/admin/products/'+encodeURIComponent(id),{method:'DELETE'});await liveAdminProducts();}catch(e){setAdminStatus(e.message)}}
 async function healthCheck(){try{const j=await fetch('/api/health').then(r=>r.json());document.getElementById('systemStatus').innerHTML=Object.entries(j.configured).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Configured':'Not configured'}</span></div>`).join('')}catch(e){setAdminStatus(e.message)}}
