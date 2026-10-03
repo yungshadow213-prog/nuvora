@@ -123,6 +123,86 @@ function amazonText(html,patterns){
   }
   return '';
 }
+function extractAmazonSpecs(html){
+  const specs=[],seen=new Set();
+  const add=(label,value)=>{
+    const l=cleanText(htmlText(label),120),v=cleanText(htmlText(value),600);
+    if(!l||!v||v===l||seen.has(l.toLowerCase()))return;
+    if(/^(?:customer reviews|customer ratings|product details|feedback|questions)$/i.test(l))return;
+    seen.add(l.toLowerCase());specs.push([l,v]);
+  };
+  const tables=String(html||'').match(/<table[^>]*>[\s\S]*?<\/table>/gi)||[];
+  for(const table of tables){
+    if(!/(productDetails|technical|detail|asin|brand|material|dimension|model)/i.test(table))continue;
+    for(const row of table.matchAll(/<tr[^>]*>[\s\S]*?<th[^>]*>([\s\S]*?)<\/th>[\s\S]*?<td[^>]*>([\s\S]*?)<\/td>[\s\S]*?<\/tr>/gi))add(row[1],row[2]);
+  }
+  const detail=String(html||'').match(/id=["']detailBullets_feature_div["'][^>]*>[\s\S]*?<\/div>/i)?.[0]||'';
+  for(const li of detail.matchAll(/<li[^>]*>[\s\S]*?<span[^>]*class=["'][^"']*a-text-bold[^"']*["'][^>]*>([\s\S]*?)<\/span>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>[\s\S]*?<\/li>/gi))add(String(li[1]).replace(/[:：]\s*$/,''),li[2]);
+  return specs.slice(0,40);
+}
+function extractAmazonVariations(html,states){
+  const out=[],seen=new Set();
+  const add=(name,values)=>{
+    const n=cleanText(name,80),vs=[...new Set((Array.isArray(values)?values:[values]).map(v=>cleanText(typeof v==='object'?(v?.displayName||v?.name||v?.value):v,100)).filter(Boolean))].slice(0,40);
+    if(!n||!vs.length||seen.has(n.toLowerCase()))return;
+    seen.add(n.toLowerCase());out.push({name:n,values:vs});
+  };
+  const visit=obj=>{
+    if(!obj||typeof obj!=='object')return;
+    if(Array.isArray(obj)){obj.slice(0,100).forEach(visit);return;}
+    for(const [k,v] of Object.entries(obj)){
+      if(/dimensionValuesDisplayData|variationValuesDisplayData/i.test(k)&&v&&typeof v==='object'){
+        if(Array.isArray(v))add(k,v); else for(const [name,vals] of Object.entries(v))if(Array.isArray(vals))add(name,vals);
+      }
+      visit(v);
+    }
+  };
+  (Array.isArray(states)?states:[]).forEach(visit);
+  for(const m of String(html||'').matchAll(/<(?:select|div)[^>]*(?:id|name)=["']variation_([^"']+)["'][^>]*>[\s\S]*?<\/(?:select|div)>/gi)){
+    const vals=[...m[0].matchAll(/<option[^>]*>([\s\S]*?)<\/option>/gi)].map(x=>htmlText(x[1])).filter(x=>x&&!/select|choose/i.test(x));
+    add(m[1].replace(/[_-]+/g,' '),vals);
+  }
+  return out.slice(0,20);
+}
+function extractAmazonSeller(html,jsonld){
+  const seller=String(jsonld?.offers?.seller?.name||'').trim();
+  return cleanText(seller,180)||amazonText(html,[/id=["']sellerProfileTriggerId["'][^>]*>([\s\S]*?)<\//i,/id=["']sellerName["'][^>]*>([\s\S]*?)<\//i])||null;
+}
+function extractAmazonBreadcrumb(html){
+  const block=String(html||'').match(/id=["']wayfinding-breadcrumbs_feature_div["'][^>]*>[\s\S]*?<\/div>/i)?.[0]||'';
+  return [...block.matchAll(/<a[^>]*>([\s\S]*?)<\/a>/gi)].map(m=>htmlText(m[1])).filter(Boolean).slice(0,12);
+}
+function normalizeAmazonListing(listing={}){
+  const x={...listing};
+  x.title=smartProductTitle(x.title||'Nuvora product',x.brand||'');
+  x.images=dedupeImages(x.images,60);
+  x.features=Array.isArray(x.features)?[...new Set(x.features.map(v=>cleanText(v,700)).filter(Boolean))].slice(0,30):[];
+  x.specifications=Array.isArray(x.specifications)?x.specifications.slice(0,40):[];
+  if(x.specifications.length)x.features=[...x.features,...x.specifications.map(([k,v])=>k+': '+v)].slice(0,50);
+  if(!x.description||x.description.length<40){
+    const chunks=[];if(x.features.length)chunks.push(x.features.slice(0,10).join('\n'));if(x.specifications.length)chunks.push(x.specifications.slice(0,20).map(([k,v])=>k+': '+v).join('\n'));
+    x.description=cleanMultilineText(chunks.join('\n\n'),12000)||null;
+  }else x.description=cleanMultilineText(x.description,12000)||null;
+  if(x.list_price!=null&&x.current_price!=null&&x.list_price>x.current_price&&x.discount_percent==null)x.discount_percent=Number((((x.list_price-x.current_price)/x.list_price)*100).toFixed(1));
+  if(x.discount_percent!=null&&x.discount_percent>0&&x.discount_percent<100&&!x.list_price&&x.current_price)x.list_price=Number((x.current_price/(1-x.discount_percent/100)).toFixed(2));
+  x.brand=cleanText(x.brand,180)||null;x.seller=cleanText(x.seller,180)||null;x.deal_text=cleanText(x.deal_text,240)||null;x.shipping_text=cleanText(x.shipping_text,500)||null;x.tax_text=cleanText(x.tax_text,300)||null;x.availability=cleanText(x.availability,240)||null;
+  x.category_path=Array.isArray(x.category_path)?x.category_path.slice(0,12):[];
+  x.quality={title:!!x.title,images:x.images.length,description:!!x.description,brand:!!x.brand,price:x.current_price!=null,list_price:x.list_price!=null,discount:x.discount_percent!=null,rating:x.rating!=null,reviews:x.review_count!=null,availability:!!x.availability,shipping:!!x.shipping_text,variants:Array.isArray(x.variations)?x.variations.length:0,specifications:x.specifications.length};
+  return x;
+}
+async function aiPolishAmazonListing(env,listing){
+  const key=String(env?.OPENAI_API_KEY||'').trim();if(!key||!listing?.title)return listing;
+  try{
+    const facts={title:listing.title,brand:listing.brand,description:listing.description,features:listing.features,specifications:listing.specifications,current_price:listing.current_price,list_price:listing.list_price,discount_percent:listing.discount_percent,rating:listing.rating,review_count:listing.review_count,availability:listing.availability,shipping_text:listing.shipping_text,category_path:listing.category_path};
+    const system='You normalize Nuvora product data. Return JSON with only title and description. Remove keyword spam and retailer boilerplate. Never invent, infer, change, or omit factual product claims. Preserve measurements, materials, compatibility, prices, ratings and counts. Title under 120 characters. Description factual and readable from supplied facts only.';
+    const resp=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+key},body:JSON.stringify({model:'gpt-4o-mini',temperature:0,response_format:{type:'json_object'},messages:[{role:'system',content:system},{role:'user',content:JSON.stringify(facts).slice(0,18000)}]})});
+    if(!resp.ok)return listing;const data=await resp.json();const raw=data?.choices?.[0]?.message?.content||'';const p=JSON.parse(raw);
+    if(typeof p.title==='string'&&p.title.trim())listing.title=smartProductTitle(p.title,listing.brand||'');
+    if(typeof p.description==='string'&&p.description.trim())listing.description=cleanMultilineText(p.description,12000);
+  }catch(e){}
+  return listing;
+}
+
 async function scrapeAmazonListing(sourceUrl,asin){
   const resolved=await resolveAmazonUrl(sourceUrl);
   const finalAsin=asinFromUrl(resolved)||asin;
@@ -367,7 +447,11 @@ async function scrapeAmazonListing(sourceUrl,asin){
     destination_url:resolved,
     resolved_url:resolved,
     asin:finalAsin,
-    related_products:extractRelatedAmazonProducts(html,finalAsin)
+    related_products:extractRelatedAmazonProducts(html,finalAsin),
+    specifications:extractAmazonSpecs(html),
+    variations:extractAmazonVariations(html,states),
+    seller:extractAmazonSeller(html,jsonld),
+    category_path:extractAmazonBreadcrumb(html)
   };
 }
 function autoCategory(title='',description='',brand='',categories=[]){
@@ -542,7 +626,8 @@ async function ingestSourceProduct(sourceUrl){
   if(retailer==='Amazon'){
     const resolved=await resolveAmazonUrl(sourceUrl),asin=asinFromUrl(resolved)||asinFromUrl(sourceUrl);
     if(!asin)return {error:'Could not identify the Amazon product ID (ASIN).'};
-    const listing=await scrapeAmazonListing(resolved,asin);
+    let listing=await scrapeAmazonListing(resolved,asin);
+    if(!listing?.error){listing=normalizeAmazonListing(listing);listing=await aiPolishAmazonListing(env,listing);}
     return listing?.error?listing:{...listing,retailer,source_id:asin,resolved_url:resolved};
   }
   if(retailer==='Temu'){
@@ -668,7 +753,7 @@ async function ingestSourceProduct(sourceUrl){
         try{const dup=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published,amazon_asin&amazon_asin=eq.'+encodeURIComponent(asin)+'&limit=5');if(dup.ok){const rows=await dup.json();duplicate=rows[0]||null;}}catch(e){}
         let category_id=null;
         try{const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cats.ok){const categories=await cats.json();category_id=autoCategory(titleHint,'','',categories);}}catch(e){}
-        let listing=null; try{listing=await scrapeAmazonListing(resolved,asin);}catch(e){listing={error:String(e?.message||e).slice(0,300)};}
+        let listing=null; try{listing=await scrapeAmazonListing(resolved,asin);if(!listing?.error){listing=normalizeAmazonListing(listing);listing=await aiPolishAmazonListing(env,listing);}}catch(e){listing={error:String(e?.message||e).slice(0,300)};}
         return json({ok:true,asin,destination_url:resolved,title_hint:listing?.title||titleHint||'Amazon product',retailer:'Amazon',kind:'find',category_id,duplicate,listing:listing||null});
       }
 
