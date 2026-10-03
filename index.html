@@ -890,7 +890,7 @@ window.addEventListener('popstate',()=>{const p=findProductFromPath();if(p)rende
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* LIVE INTEGRATION LAYER — sits under the existing Little Films-style UI. */
-async function loadPublicStoreSettings(){try{const r=await fetch('/api/settings',{cache:'no-store'});if(!r.ok)return;const s=await r.json();const email=document.getElementById('contactEmail');if(email&&s?.support_email)email.textContent=s.support_email;}catch(e){}
+async function loadPublicStoreSettings(){try{const r=await fetch('/api/settings',{cache:'no-store'});if(!r.ok)return;const s=await r.json();const email=document.getElementById('contactEmail');if(email&&s?.support_email)email.textContent=s.support_email;}catch(e){}}
 async function bootNuvora(){
   try{
     // The public catalog must not depend on the Supabase browser SDK/CDN.
