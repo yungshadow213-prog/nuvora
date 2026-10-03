@@ -20,6 +20,9 @@ jobs:
 
       - name: Check Worker syntax
         run: node --check worker.js
+      - name: Check Cloudflare Wrangler bundle
+        run: npx wrangler@4.145.0 deploy --dry-run --outdir /tmp/nuvora-dist
+
 
 
   storefront-javascript:
