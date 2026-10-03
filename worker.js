@@ -47,6 +47,7 @@ export default {
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))shopifyMissing.push('SHOPIFY_SHOP');
         if(!env.SHOPIFY_CLIENT_ID)shopifyMissing.push('SHOPIFY_CLIENT_ID');
         if(!env.SHOPIFY_CLIENT_SECRET)shopifyMissing.push('SHOPIFY_CLIENT_SECRET');
+        let productSchemaError='',settingsSchemaError='';
         const u=await supabaseUser(request,env); checks.auth=!!u;
         if(u&&env.SUPABASE_SERVICE_ROLE_KEY){
           const pr=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=*`,{headers:sbHeaders(env,true)});
@@ -54,7 +55,6 @@ export default {
           const expectedProductColumns=['id','name','slug','kind','description','features','brand','image_url','image_urls','availability','display_price','currency','destination_url','retailer','provider','region','category_id','collection_id','why_we_picked_it','best_for','skip_if','last_checked_at','featured','trending','top_pick','published','shopify_product_id','shopify_variant_id','amazon_asin','amazon_source_url','source_type','source_sku','sourcinbox_product_url','sourcinbox_product_id','supplier_cost','amazon_last_synced','amazon_current_price','amazon_list_price','amazon_discount_percent','amazon_deal_text','amazon_rating','amazon_review_count','amazon_bought_past_month','amazon_badges','amazon_shipping_text','amazon_tax_text','amazon_variations','source_related_products','source_image_urls','shopify_variants'];
           const expectedSettingsColumns=['id','store_name','store_description','support_email','currency','timezone','default_region','affiliate_disclosure','shipping_policy','returns_policy','maintenance_mode','updated_at'];
           checks.productSchema=false;checks.settingsSchema=false;
-          let productSchemaError='',settingsSchemaError='';
           try{
             const rr=await supabaseRest(env,'GET','products',undefined,'?select='+expectedProductColumns.join(',')+'&limit=1');
             checks.productSchema=rr.ok;
@@ -161,8 +161,15 @@ async function publishProductRecord(env,id,patch={}){
   if(merged.amazon_source_url&&!write.amazon_source_url)write.amazon_source_url=merged.amazon_source_url;
   const result=await supabaseProductWrite(env,'PATCH',write,'?id=eq.'+encodeURIComponent(id));
   if(!result.ok)return {ok:false,status:400,error:await result.text()};
-  const rows=await result.json().catch(()=>[]);
-  return {ok:true,product:rows[0]||{...current,...write}};
+  let rows=await result.json().catch(()=>[]);
+  let product=rows[0]||null;
+  if(!product||product.published!==true){
+    const verify=await supabaseRest(env,'GET','products',undefined,'?select=id,published,slug,destination_url,amazon_source_url&id=eq.'+encodeURIComponent(id)+'&limit=1');
+    if(!verify.ok)return {ok:false,status:502,error:'Publish was sent, but Nuvora could not verify the updated product.'};
+    product=(await verify.json())?.[0]||null;
+  }
+  if(!product||product.published!==true)return {ok:false,status:409,error:'Nuvora saved the product but could not confirm it is published. Please try publish again.'};
+  return {ok:true,product};
 }
 
 function amazonDecode(value){return String(value||'').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/&nbsp;/gi,' ');}
