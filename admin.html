@@ -373,7 +373,7 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
   <div class="panel catalog-panel">
     <div class="catalog-panel-head">
       <div><span class="section-kicker">Import results</span><h2 id="bulkReviewCount">0 products</h2><p id="bulkReviewStats" class="muted">Checking captured data…</p></div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn" onclick="selectValidDiscovered()">Select valid</button><label style="display:flex;gap:8px;align-items:center;font-size:13px"><input id="bulkReviewSelectAll" type="checkbox" onchange="toggleDiscoveredSelection(this.checked)"> Select all</label></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn" onclick="selectValidDiscovered()">Select valid</button><button class="btn danger" onclick="deleteDiscoveredProducts()">Delete selected</button><label style="display:flex;gap:8px;align-items:center;font-size:13px"><input id="bulkReviewSelectAll" type="checkbox" onchange="toggleDiscoveredSelection(this.checked)"> Select all</label></div>
     </div>
     <div id="bulkReviewRows" class="product-library"></div>
   </div>
@@ -977,10 +977,42 @@ function renderDiscoveredProducts(){
       p.availability?esc(String(p.availability)):'Availability not captured',
       vars?esc(String(vars))+' variants':'No variants'
     ];
-    return '<div class="row" style="align-items:flex-start;gap:14px;padding:16px 0"><input class="bulk-discovered-check" type="checkbox" value="'+esc(p.id)+'" checked style="margin-top:8px"><span style="width:86px;height:86px;border-radius:12px;overflow:hidden;background:var(--panel-2);display:block;flex:none">'+(image?'<img src="'+esc(image)+'" alt="" style="width:100%;height:100%;object-fit:cover">':'')+'</span><div style="min-width:0;flex:1"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div style="min-width:220px;flex:1"><b style="display:block;font-size:15px;line-height:1.35">'+esc(p.name||'Untitled product')+'</b><span class="muted">'+esc(p.brand||'Brand not captured')+' · '+esc(label)+(p.amazon_asin?' · ASIN '+esc(p.amazon_asin):'')+'</span></div><span class="tag">'+(p.published?'Published':'Draft')+'</span></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin:10px 0">'+dataBits.map(x=>'<span class="tag">'+x+'</span>').join('')+'</div><div class="muted" style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px"><span>Data captured: <b>'+discoveredMetric(p)+'</b></span><span>'+(p.amazon_shipping_text?esc(p.amazon_shipping_text):'Shipping not captured')+'</span><span>'+(p.description?'Description ready':'Description missing')+'</span></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:11px">'+(dest?'<button class="btn" onclick="openRetailerLink('+JSON.stringify(dest)+')">Source</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit full listing</button><button class="btn primary" onclick="publishOneDiscovered(\''+p.id+'\')">'+(p.published?'Published':'Publish')+'</button></div></div></div>';
+    return '<div class="row" style="align-items:flex-start;gap:14px;padding:16px 0"><input class="bulk-discovered-check" type="checkbox" value="'+esc(p.id)+'" checked style="margin-top:8px"><span style="width:86px;height:86px;border-radius:12px;overflow:hidden;background:var(--panel-2);display:block;flex:none">'+(image?'<img src="'+esc(image)+'" alt="" style="width:100%;height:100%;object-fit:cover">':'')+'</span><div style="min-width:0;flex:1"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div style="min-width:220px;flex:1"><b style="display:block;font-size:15px;line-height:1.35">'+esc(p.name||'Untitled product')+'</b><span class="muted">'+esc(p.brand||'Brand not captured')+' · '+esc(label)+(p.amazon_asin?' · ASIN '+esc(p.amazon_asin):'')+'</span></div><span class="tag">'+(p.published?'Published':'Draft')+'</span></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin:10px 0">'+dataBits.map(x=>'<span class="tag">'+x+'</span>').join('')+'</div><div class="muted" style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px"><span>Data captured: <b>'+discoveredMetric(p)+'</b></span><span>'+(p.amazon_shipping_text?esc(p.amazon_shipping_text):'Shipping not captured')+'</span><span>'+(p.description?'Description ready':'Description missing')+'</span></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:11px">'+(dest?'<button class="btn" onclick="openRetailerLink('+JSON.stringify(dest)+')">Source</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit full listing</button><button class="btn danger" onclick="deleteOneDiscovered(\''+p.id+'\')">Delete</button><button class="btn primary" onclick="publishOneDiscovered(\''+p.id+'\')">'+(p.published?'Published':'Publish')+'</button></div></div></div>';
   }).join('');
 }
 function toggleDiscoveredSelection(checked){document.querySelectorAll('.bulk-discovered-check').forEach(x=>x.checked=checked);}
+function selectedDiscoveredIds(){return [...document.querySelectorAll('.bulk-discovered-check:checked')].map(x=>x.value).filter(Boolean);}
+async function deleteOneDiscovered(id){
+  if(!id)return;
+  try{
+    await api('/api/admin/products/'+encodeURIComponent(id),{method:'DELETE'});
+    lastDiscoveredProductIds=lastDiscoveredProductIds.filter(x=>x!==id);
+    await liveAdminProducts();
+    renderDiscoveredProducts();
+    setAdminStatus('Product deleted.');
+  }catch(e){setAdminStatus(e.message||'Could not delete product.');}
+}
+async function deleteDiscoveredProducts(){
+  const ids=selectedDiscoveredIds();
+  if(!ids.length)return setAdminStatus('Select at least one product to delete.');
+  if(!confirm('Delete '+ids.length+' selected product'+(ids.length===1?'':'s')+'? This cannot be undone.'))return;
+  let deleted=0;
+  try{
+    for(const id of ids){
+      await api('/api/admin/products/'+encodeURIComponent(id),{method:'DELETE'});
+      deleted++;
+    }
+    lastDiscoveredProductIds=lastDiscoveredProductIds.filter(id=>!ids.includes(id));
+    await liveAdminProducts();
+    renderDiscoveredProducts();
+    setAdminStatus(deleted+' product'+(deleted===1?'':'s')+' deleted.');
+  }catch(e){
+    lastDiscoveredProductIds=lastDiscoveredProductIds.filter(id=>!ids.slice(0,deleted).includes(id));
+    await liveAdminProducts();
+    renderDiscoveredProducts();
+    setAdminStatus('Deleted '+deleted+' product'+(deleted===1?'':'s')+'. '+(e.message||'The remaining products were not deleted.'));
+  }
+}
 function selectValidDiscovered(){
   document.querySelectorAll('.bulk-discovered-check').forEach(x=>{const p=adminProducts.find(v=>v.id===x.value);x.checked=!!p&&!!retailerDestination(p)&&!!p.name&&!!p.image_url;});
   const all=document.getElementById('bulkReviewSelectAll');if(all)all.checked=false;
