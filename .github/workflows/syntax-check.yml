@@ -20,3 +20,32 @@ jobs:
 
       - name: Check Worker syntax
         run: node --check worker.js
+
+
+  storefront-javascript:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Check inline storefront JavaScript
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          html=Path("index.html").read_text(encoding="utf-8")
+          scripts=re.findall(r"<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>", html, flags=re.I)
+          inline=[s for s in scripts if s.strip()]
+          if not inline:
+              raise SystemExit("No inline scripts found in index.html")
+          for i,src in enumerate(inline,1):
+              Path(f"/tmp/nuvora-index-{i}.js").write_text(src,encoding="utf-8")
+          print(f"Extracted {len(inline)} inline script block(s).")
+          PY
+          for file in /tmp/nuvora-index-*.js; do
+            node --check "$file"
+          done
