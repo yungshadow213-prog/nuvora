@@ -303,7 +303,7 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const brandHint=typeof jsonld.brand==='string'?jsonld.brand:String(jsonld.brand?.name||'');
 
   const escapeRegex=(value)=>String(value).replace(/[.*+?^{}()|[\]\\$]/g,'\\$&');
-    const elementInnerHtmlById=(id)=>{
+      const elementInnerHtmlById=(id)=>{
     const esc=escapeRegex(id);
     const openRe=new RegExp("<([a-z][a-z0-9:-]*)\\b[^>]*\\bid=[\"']"+esc+"[\"'][^>]*>","i");
     const open=String(html).match(openRe);
@@ -314,8 +314,8 @@ async function scrapeAmazonListing(sourceUrl,asin){
     let depth=1,match;
     while((match=tagRe.exec(html))){
       const token=match[0];
-      if(/^<\\//.test(token))depth--;
-      else if(!/\\/\\s*>$/.test(token))depth++;
+      if(/^<\//.test(token))depth--;
+      else if(!/\/\s*>$/.test(token))depth++;
       if(depth===0)return String(html).slice(contentStart,match.index);
     }
     return String(html).slice(contentStart);
