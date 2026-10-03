@@ -6,7 +6,7 @@
 - Supabase product catalog and admin authentication
 - Product drafts, editing, publish/unpublish, delete
 - Manual product entry
-- Amazon importer when valid Amazon Creators API credentials are configured
+- Amazon product importer with URL/ASIN resolution, structured extraction, normalization, and optional AI copy cleanup
 - Product image URL gallery
 - Custom product image upload to Supabase Storage
 - Storefront search, category/type filtering, sorting
@@ -27,12 +27,12 @@
 1. Run `backend/NUVORA-NEXT-MIGRATION.sql` in Supabase if the earlier Nuvora migration is already installed.
 2. For a fresh project, run `backend/schema.sql`.
 3. Ensure the admin user's `profiles.is_admin` is true.
-4. Amazon importer requires legitimate Amazon Creators API access and credentials.
+4. Amazon importing must be used only with the Amazon permissions/authorization applicable to this Nuvora deployment.
 5. Shopify checkout requires Storefront API credentials and products linked to Shopify variant IDs.
 
 ## Not implemented / intentionally not faked
 
-- Amazon scraping to bypass Associates/Creators API access
+- Do not use the importer to bypass Amazon permissions or access controls
 - Fabricated order/payment confirmation
 - Fake analytics numbers
 - Automatic social-platform publishing without the platform credentials/API permissions
