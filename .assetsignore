@@ -15,3 +15,4 @@ README.md
 SETUP-NOTES.txt
 OPEN-ENV.bat
 START-NUVORA.bat
+\n.github/\npackage.json\n.assetsignore\n*.sql\n*.md\n*.txt\n*.bat\n*.yml\n*.yaml
