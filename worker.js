@@ -128,6 +128,43 @@ async function shopifyGraphql(env,query,variables={},admin=false){
   if(!response.ok||Array.isArray(data?.errors)&&data.errors.length)throw new Error(data?.errors?.[0]?.message||'Shopify GraphQL request failed (HTTP '+response.status+').');return data?.data||{};
 }
 function validUrl(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
+function resolveProductDestination(current={},patch={}){
+  const merged={...current,...patch};
+  const candidates=[
+    patch.amazon_source_url,current.amazon_source_url,
+    patch.destination_url,current.destination_url,
+    patch.source_url,current.source_url,
+    patch.resolved_url,current.resolved_url
+  ];
+  const found=candidates.find(validUrl);
+  if(found)return String(found).trim();
+  const amazonLike=/amazon/i.test(String(merged.retailer||merged.source_type||''))||!!merged.amazon_asin||!!merged.amazon_source_url;
+  if(amazonLike&&/^[A-Z0-9]{10}$/i.test(String(merged.amazon_asin||''))){
+    return 'https://www.amazon.com/dp/'+String(merged.amazon_asin).toUpperCase();
+  }
+  return '';
+}
+async function publishProductRecord(env,id,patch={}){
+  const currentRes=await supabaseRest(env,'GET','products',undefined,'?select=*&id=eq.'+encodeURIComponent(id)+'&limit=1');
+  if(!currentRes.ok)return {ok:false,status:500,error:'Could not load the product before publishing.'};
+  const current=(await currentRes.json())?.[0];
+  if(!current)return {ok:false,status:404,error:'Product not found.'};
+  const destination=resolveProductDestination(current,patch);
+  const merged={...current,...patch,published:true,destination_url:destination};
+  if(!merged.slug||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(String(merged.slug))){
+    merged.slug=makeProductSlug(merged.name||'product');
+  }
+  if(!merged.destination_url)return {ok:false,status:400,error:'This product has no valid retailer URL. Import the retailer link or provide a destination URL before publishing.'};
+  const validation=validateProduct(merged);
+  if(validation)return {ok:false,status:400,error:validation};
+  const write={...patch,published:true,slug:merged.slug,destination_url:destination,updated_at:new Date().toISOString()};
+  if(merged.amazon_source_url&&!write.amazon_source_url)write.amazon_source_url=merged.amazon_source_url;
+  const result=await supabaseProductWrite(env,'PATCH',write,'?id=eq.'+encodeURIComponent(id));
+  if(!result.ok)return {ok:false,status:400,error:await result.text()};
+  const rows=await result.json().catch(()=>[]);
+  return {ok:true,product:rows[0]||{...current,...write}};
+}
+
 function amazonDecode(value){return String(value||'').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/&nbsp;/gi,' ');}
 function amazonHost(host){ const h=String(host||'').toLowerCase().replace(/^www\./,''); return h==='link.amazon'||h==='amzn.to'||/(^|\.)amazon\.[a-z.]+$/.test(h); }
 function extractUrls(value){ const m=String(value||'').match(/https?:\/\/[^\s<>]+/gi)||[]; return [...new Set(m.map(x=>x.replace(/[.,;]+$/,'').trim()).filter(Boolean))]; }
@@ -1499,6 +1536,16 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         return json((await r.json())[0]);
       }
 
+      const publishMatch=url.pathname.match(/^\/api\/admin\/products\/([^/]+)\/publish$/);
+      if(publishMatch&&request.method==='POST'){
+        const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        const id=decodeURIComponent(publishMatch[1]);
+        const patch=await body(request,128*1024);
+        const result=await publishProductRecord(env,id,patch||{});
+        if(!result.ok)return json({error:result.error},result.status||400);
+        return json({ok:true,product:result.product});
+      }
+
       const productMatch=url.pathname.match(/^\/api\/admin\/products\/([^/]+)$/);
       if(productMatch&&(request.method==='GET'||request.method==='PATCH'||request.method==='DELETE')){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
@@ -1527,18 +1574,9 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const merged={...current,...patch};
           if(!merged.slug||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(String(merged.slug))){merged.slug=makeProductSlug(merged.name||'product');patch.slug=merged.slug;}
           if(patch.published===true){
-            merged.published=true;
-            // Publishing must never fail just because an older/imported row has a malformed
-            // destination field when a valid Amazon source URL or ASIN is already present.
-            const candidates=[patch.amazon_source_url,current.amazon_source_url,patch.destination_url,current.destination_url,patch.source_url,current.source_url,patch.resolved_url,current.resolved_url];
-            let repaired=candidates.find(validUrl)||null;
-            const amazonLike=/amazon/i.test(String(merged.retailer||merged.source_type||''))||!!merged.amazon_asin||!!merged.amazon_source_url;
-            if(!repaired&&amazonLike&&/^[A-Z0-9]{10}$/i.test(String(merged.amazon_asin||''))){
-              repaired='https://www.amazon.com/dp/'+String(merged.amazon_asin).toUpperCase();
-            }
-            if(repaired)merged.destination_url=repaired;
-            if(!validUrl(merged.destination_url))return json({error:'This product has no valid retailer URL. Add or import a valid Amazon destination URL before publishing.'},400);
-            patch.destination_url=merged.destination_url;
+            const result=await publishProductRecord(env,id,patch);
+            if(!result.ok)return json({error:result.error},result.status||400);
+            return json(result.product);
           }
           const validation=validateProduct({...merged,name:merged.name,slug:merged.slug,kind:merged.kind});
           if(validation)return json({error:validation},400);
