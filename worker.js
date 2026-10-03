@@ -200,10 +200,15 @@ function normalizeAmazonListing(listing={}){
   x.features=Array.isArray(x.features)?[...new Set(x.features.map(v=>cleanText(v,700)).filter(Boolean))].slice(0,30):[];
   x.specifications=Array.isArray(x.specifications)?x.specifications.slice(0,40):[];
   if(x.specifications.length)x.features=[...x.features,...x.specifications.map(([k,v])=>k+': '+v)].slice(0,50);
-  if(!x.description||x.description.length<40){
-    const chunks=[];if(x.features.length)chunks.push(x.features.slice(0,10).join('\n'));if(x.specifications.length)chunks.push(x.specifications.slice(0,20).map(([k,v])=>k+': '+v).join('\n'));
-    x.description=cleanMultilineText(chunks.join('\n\n'),12000)||null;
-  }else x.description=cleanMultilineText(x.description,12000)||null;
+  const sourceDescription=cleanMultilineText(x.description,12000)||'';
+  const badDescription=/^(?:visit the|shop the|brand:\s|about this item|product description|click to|see more|read more|customer questions|make sure this fits)/i.test(sourceDescription);
+  const featureLines=Array.isArray(x.features)?x.features.map(v=>cleanMultilineText(v,700)).filter(v=>v&&!/^visit the .*store/i.test(v)).slice(0,12):[];
+  const specLines=Array.isArray(x.specifications)?x.specifications.map(([k,v])=>cleanMultilineText(String(k)+': '+String(v),700)).filter(Boolean).slice(0,20):[];
+  if(!sourceDescription||sourceDescription.length<80||badDescription){
+    const intro=featureLines.length?'Key features include: '+featureLines.slice(0,5).join(', ')+'.':'';
+    const details=specLines.length?'Product details: '+specLines.slice(0,12).join('; ')+'.':'';
+    x.description=cleanMultilineText([intro,details].filter(Boolean).join('\n\n'),12000)||null;
+  }else x.description=sourceDescription;
   if(x.list_price!=null&&x.current_price!=null&&x.list_price>x.current_price&&x.discount_percent==null)x.discount_percent=Number((((x.list_price-x.current_price)/x.list_price)*100).toFixed(1));
   if(x.discount_percent!=null&&x.discount_percent>0&&x.discount_percent<100&&!x.list_price&&x.current_price)x.list_price=Number((x.current_price/(1-x.discount_percent/100)).toFixed(2));
   x.brand=cleanText(x.brand,180)||null;x.seller=cleanText(x.seller,180)||null;x.deal_text=cleanText(x.deal_text,240)||null;x.shipping_text=cleanText(x.shipping_text,500)||null;x.tax_text=cleanText(x.tax_text,300)||null;x.availability=cleanText(x.availability,240)||null;
@@ -322,11 +327,15 @@ async function scrapeAmazonListing(sourceUrl,asin){
     clean(jsonld.description||''),
     metaValue(html,'og:description'),
     metaValue(html,'description'),
-    features.length?features.join('\n'):'' 
+    features.length?features.join('\n'):''
   ].map(clean).filter(v=>v&&v.length>20);
+  const boilerplate=/^(?:visit the|shop the|brand:\s|about this item|product description|click to|see more|read more|customer questions|make sure this fits)/i;
+  const normalizedTitle=String(title||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  const normalizedBrand=String(brandHint||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
   const description=descriptionCandidates.find(v=>{
-    const x=v.toLowerCase(),b=brandHint.toLowerCase(),t=title.toLowerCase();
-    return x!==b&&x!==t&&!x.startsWith(b+' ')&&!/^visit the .*store/i.test(x);
+    const x=v.toLowerCase().replace(/\s+/g,' ').trim();
+    const compact=x.replace(/[^a-z0-9]+/g,' ').trim();
+    return compact!==normalizedBrand&&compact!==normalizedTitle&&!x.startsWith(normalizedBrand+' ')&&!boilerplate.test(x)&&x.length>=40;
   })||null;
 
   const imageCandidates=[];
@@ -642,7 +651,7 @@ async function scrapeGenericSource(sourceUrl,retailer){
     return {title:title||retailer+' product',description:description||null,brand:brand||null,images:genericImages(html,ld),features,current_price:current,list_price:listPrice,discount_percent:discount,deal_text:null,rating,review_count:reviews,availability,shipping_text:null,tax_text:null,variations:[],sku,destination_url:resolved,resolved_url:resolved,retailer};
   }catch(e){return {error:String(e?.message||e).slice(0,500)}}
 }
-async function ingestSourceProduct(sourceUrl){
+async async function ingestSourceProduct(sourceUrl){
   const retailer=detectRetailer(sourceUrl);
   if(retailer==='Amazon'){
     const resolved=await resolveAmazonUrl(sourceUrl),asin=asinFromUrl(resolved)||asinFromUrl(sourceUrl);
