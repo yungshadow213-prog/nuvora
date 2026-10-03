@@ -105,6 +105,20 @@ jobs:
           PY
 
 
+  wrangler-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install project dependencies
+        run: npm install
+      - name: Wrangler production bundle dry run
+        run: npx wrangler deploy --dry-run --outdir /tmp/nuvora-wrangler-dist
+
   admin-editor-javascript:
     runs-on: ubuntu-latest
     steps:
