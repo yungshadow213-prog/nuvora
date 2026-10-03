@@ -74,11 +74,11 @@ jobs:
               if re.search(r"https?://localhost(?::\d+)?", text, re.I):
                   failures.append(f"{name}: localhost URL reference found")
           worker=Path("worker.js").read_text(encoding="utf-8")
-          if re.search(r"async\\s+async\\s+function", worker):
+          if re.search(r"async\s+async\s+function", worker):
               failures.append("worker.js: malformed duplicated async function declaration")
           required_helpers=["configured","randHex","buildProductOptions","getAmazonToken","amazonGetItem","shopifyGraphql","makeProductSlug","validateProduct","supabaseRest","adminUser"]
           for helper in required_helpers:
-              if not re.search(r"(?:async\\s+)?function\\s+"+re.escape(helper)+r"\\s*\\(", worker):
+              if not re.search(r"(?:async\s+)?function\s+"+re.escape(helper)+r"\s*\(", worker):
                   failures.append(f"worker.js: required runtime helper missing: {helper}")
           products_start=worker.find("if(url.pathname==='/api/products'&&request.method==='GET')")
           products_end=worker.find("async function supabaseProductWrite",products_start)
