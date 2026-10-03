@@ -1052,7 +1052,13 @@ async function discoverAmazonProducts(){
   if(status)status.textContent='Finding up to 20 Amazon product links…';
   try{
     const discovered=await api('/api/admin/import/amazon-search',{method:'POST',body:{url:searchUrl,limit:20}});
-    const urls=Array.isArray(discovered.found)?discovered.found:[];if(!urls.length)throw new Error('Amazon did not expose any product links from that search page.');
+    let urls=Array.isArray(discovered.found)?discovered.found:[];
+    // A pasted product/short link should still enter the same bulk review flow.
+    if(!urls.length){
+      const direct=searchUrl.match(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|[?&]asin=)([A-Z0-9]{10})/i);
+      if(direct)urls=['https://www.amazon.com/dp/'+direct[1].toUpperCase()];
+    }
+    if(!urls.length)throw new Error(discovered.message||'Amazon did not expose any product links from that page. Check that this is an Amazon search/category URL and try again.');
     const combined=[];let totalImported=0,totalSkipped=0,totalFailed=0;
     for(let i=0;i<urls.length;i+=5){
       const batch=urls.slice(i,i+5);
@@ -1082,7 +1088,10 @@ async function healthCheck(){
       if(box)box.innerHTML='<div class="notice">Nuvora returned no connection configuration. The deployment is running, but its environment bindings need to be checked.</div>';
       return;
     }
-    if(box)box.innerHTML=entries.map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Connected':'Not connected'}</span></div>`).join('');
+    const markup=entries.map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Connected':'Not connected'}</span></div>`).join('');
+    if(box)box.innerHTML=markup;
+    const connectionBox=document.getElementById('connectionRows');
+    if(connectionBox)connectionBox.innerHTML=markup||'<div class="notice">No connection configuration was returned.</div>';
   }catch(e){
     if(box)box.innerHTML='<div class="notice">System status could not reach the Nuvora Worker. '+esc(e.message||'Connection failed.')+'</div>';
     setAdminStatus(e.message||'System status failed.');
