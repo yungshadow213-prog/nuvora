@@ -284,7 +284,7 @@ async function scrapeAmazonListing(sourceUrl,asin){
     /id=["']couponText["'][^>]*>([\s\S]*?)<\/span>/i,
     /class=["'][^"']*savingsPercentage[^"']*["'][^>]*>([\s\S]*?)<\/span>/i,
     /class=["'][^"']*dealBadge[^"']*["'][^>]*>([\s\S]*?)<\//i,
-    /(?:limited\s+time\s+deal|deal\s+of\s+the\s+day|coupon)[^<]{0,120}/i
+    /((?:limited\s+time\s+deal|deal\s+of\s+the\s+day|coupon)[^<]{0,120})/i
   ]);
   let discountPercent=discountText?parsePercent(discountText):null;
   if(listPrice==null&&currentPrice!=null&&discountPercent!=null&&discountPercent>0&&discountPercent<100){
