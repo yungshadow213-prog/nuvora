@@ -1108,7 +1108,7 @@ async function healthCheck(){
       if(box)box.innerHTML='<div class="notice">Nuvora returned no connection configuration. The deployment is running, but its environment bindings need to be checked.</div>';
       return;
     }
-    const markup=entries.map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Connected':'Not connected'}</span></div>`).join('');
+    const markup=entries.map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Configured':'Not configured'}</span></div>`).join('');
     if(box)box.innerHTML=markup;
     const connectionBox=document.getElementById('connectionRows');
     if(connectionBox)connectionBox.innerHTML=markup||'<div class="notice">No connection configuration was returned.</div>';
