@@ -1467,14 +1467,23 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const negative='fake logos, watermarks, misleading text, extra products, distorted product, duplicate product, low quality';
           let result;
           if(referenceBytes){
-            // Keep reference-image generation on SDXL because the account is not
-            // permitted to access Cloudflare's RunwayML private/beta img2img model.
-            // Cloudflare documents SDXL as supporting img2img with image[] bytes.
-            const input={
-              prompt,negative_prompt:negative,width,height,num_steps:20,guidance:7.5,
-              image:Array.from(referenceBytes),strength:0.72
-            };
-            result=await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0',input);
+            // Cloudflare's newer FLUX.2 models accept reference images through
+            // multipart form data. SDXL is intentionally not used for reference
+            // images here because the deployed account is returning 3030 for
+            // SDXL's image tensor input.
+            const form=new FormData();
+            form.append('prompt',prompt);
+            form.append('input_image_0',new Blob([referenceBytes],{type:'image/png'}),'reference.png');
+            form.append('width',String(width));
+            form.append('height',String(height));
+            form.append('guidance','3.5');
+            const formResponse=new Response(form);
+            result=await env.AI.run('@cf/black-forest-labs/flux-2-klein-4b',{
+              multipart:{
+                body:formResponse.body,
+                contentType:formResponse.headers.get('content-type')||'multipart/form-data'
+              }
+            });
           }else{
             result=await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0',{
               prompt,negative_prompt:negative,width,height,num_steps:20,guidance:7.5
