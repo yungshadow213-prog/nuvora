@@ -497,12 +497,14 @@ function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&l
 function setAdminStatus(message,type='info'){const ids=['globalAdminStatus','importStatus','shopifyImportStatus','aiImageStatus','aiCopyStatus','uploadStatus'];for(const id of ids){const el=document.getElementById(id);if(el&&message){el.textContent=String(message);el.dataset.status=type;}}} 
 async function api(path,options={}){if(!adminSession)throw new Error('Admin session required.');options.headers={...(options.headers||{}),Authorization:'Bearer '+adminSession.access_token};if(options.body&&typeof options.body!=='string'&&!(options.body instanceof FormData)){options.headers['content-type']='application/json';options.body=JSON.stringify(options.body)}let r;try{r=await fetch(path,options)}catch(e){throw new Error('Cannot reach Nuvora. Check the Cloudflare deployment and try again.')}let j={};try{j=await r.json()}catch{}if(!r.ok){const detail=j.detail?` ${j.detail}`:'';throw new Error((j.error||`Request failed (${r.status})`)+detail)}return j;}
 function retailerDestination(p){
-  const r=String(p?.retailer||p?.source_type||'').toLowerCase();
-  const candidates=r.includes('temu')||String(p?.source_type||'').toLowerCase()==='temu'
-    ? [p?.destination_url,p?.temu_source_url]
-    : (r.includes('amazon')||p?.amazon_asin||p?.amazon_source_url||String(p?.source_type||'').toLowerCase()==='amazon'
-      ? [p?.destination_url,p?.amazon_source_url,p?.source_url,p?.resolved_url,p?.asin||p?.amazon_asin?('https://www.amazon.com/dp/'+(p?.asin||p?.amazon_asin)):'']
-      : [p?.destination_url,p?.source_url]);
+  const rawRetailer=String(p?.retailer||p?.source_type||'').toLowerCase();
+  const amazon=rawRetailer.includes('amazon')||!!p?.amazon_asin||!!p?.amazon_source_url||/azon/i.test(rawRetailer);
+  const temu=rawRetailer.includes('temu')||!!p?.temu_source_url;
+  const candidates=amazon
+    ? [p?.destination_url,p?.amazon_source_url,p?.source_url,p?.resolved_url,p?.asin&&'https://www.amazon.com/dp/'+p.asin,p?.amazon_asin&&'https://www.amazon.com/dp/'+p.amazon_asin]
+    : temu
+      ? [p?.destination_url,p?.temu_source_url,p?.source_url,p?.resolved_url]
+      : [p?.destination_url,p?.source_url,p?.resolved_url];
   for(const value of candidates){
     const url=String(value||'').trim();
     try{const u=new URL(url);if(u.protocol==='http:'||u.protocol==='https:')return u.toString();}catch{}
@@ -527,7 +529,11 @@ function renderProducts(){
   }
   updateCounts();
 }
-function openRetailerLink(url){if(url)window.open(url,'_blank','noopener,noreferrer');}
+function openRetailerLink(url){
+  const value=String(url||'').trim();
+  if(!value)return setAdminStatus('No retailer URL is available for this product.');
+  try{const u=new URL(value);if(!/^https?:$/.test(u.protocol))throw new Error('Invalid retailer URL');const a=document.createElement('a');a.href=u.toString();a.target='_blank';a.rel='noopener noreferrer';a.click();}catch(e){setAdminStatus('The retailer URL is invalid.');}
+}
 function updateCounts(){document.getElementById('shopCount').textContent=adminProducts.filter(p=>p.kind==='shop'&&p.published).length;document.getElementById('findCount').textContent=adminProducts.filter(p=>p.kind==='find'&&p.published).length;document.getElementById('learnCount').textContent=adminProducts.filter(p=>p.kind==='learn'&&p.published).length;document.getElementById('draftCount').textContent=adminProducts.filter(p=>!p.published).length;}
 async function liveAdminProducts(){adminProducts=await api('/api/admin/products');renderProducts();fillSocialProducts();}
 let shopifyProducts=[];
@@ -948,8 +954,8 @@ async function togglePublish(id){
     const destination=retailerDestination(p);
     const body={published:publishing,updated_at:new Date().toISOString()};
     if(publishing){
-      if(!destination)throw new Error('This product has no valid Amazon destination URL.');
-      body.destination_url=destination;
+      body.destination_url=destination||null;
+      body.amazon_source_url=p.amazon_source_url||p.source_url||null;
     }
     await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body});
     await liveAdminProducts();
@@ -1027,17 +1033,17 @@ function selectValidDiscovered(){
 async function publishOneDiscovered(id){
   const p=adminProducts.find(x=>x.id===id);if(!p)return setAdminStatus('Product not found.');
   if(p.published)return setAdminStatus('Product is already published.');
-  const destination=retailerDestination(p);if(!destination)return setAdminStatus('This product has no valid Amazon destination URL.');
-  try{await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body:{published:true,destination_url:destination,updated_at:new Date().toISOString()}});await liveAdminProducts();renderDiscoveredProducts();setAdminStatus('Product published.');}catch(e){setAdminStatus(e.message)}
+  const destination=retailerDestination(p);
+  try{await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body:{published:true,destination_url:destination||null,amazon_source_url:p.amazon_source_url||p.source_url||null,updated_at:new Date().toISOString()}});await liveAdminProducts();renderDiscoveredProducts();setAdminStatus('Product published.');}catch(e){setAdminStatus(e.message)}
 }
 async function publishDiscoveredProducts(){
   const ids=[...document.querySelectorAll('.bulk-discovered-check:checked')].map(x=>x.value);
   if(!ids.length)return setAdminStatus('Select at least one product.');
   const selected=ids.map(id=>adminProducts.find(p=>p.id===id)).filter(Boolean).filter(p=>!p.published);
   if(!selected.length)return setAdminStatus('All selected products are already published.');
-  const invalid=selected.filter(p=>!retailerDestination(p)||!p.name||!p.image_url);if(invalid.length)return setAdminStatus(invalid.length+' selected product'+(invalid.length===1?'':'s')+' need a valid title, image and destination URL. Edit them first.');
+  const invalid=selected.filter(p=>!p.name||!p.image_url);if(invalid.length)return setAdminStatus(invalid.length+' selected product'+(invalid.length===1?'':'s')+' need a valid title and image. Edit them first.');
   setAdminStatus('Publishing '+selected.length+' products…');let published=0;
-  try{for(const p of selected){await api('/api/admin/products/'+encodeURIComponent(p.id),{method:'PATCH',body:{published:true,destination_url:retailerDestination(p),updated_at:new Date().toISOString()}});published++;}await liveAdminProducts();renderDiscoveredProducts();setAdminStatus(published+' product'+(published===1?'':'s')+' published successfully.');}catch(e){await liveAdminProducts();renderDiscoveredProducts();setAdminStatus('Published '+published+' product'+(published===1?'':'s')+'. '+(e.message||'The remaining products were not published.'));}}
+  try{for(const p of selected){await api('/api/admin/products/'+encodeURIComponent(p.id),{method:'PATCH',body:{published:true,destination_url:retailerDestination(p)||null,amazon_source_url:p.amazon_source_url||p.source_url||null,updated_at:new Date().toISOString()}});published++;}await liveAdminProducts();renderDiscoveredProducts();setAdminStatus(published+' product'+(published===1?'':'s')+' published successfully.');}catch(e){await liveAdminProducts();renderDiscoveredProducts();setAdminStatus('Published '+published+' product'+(published===1?'':'s')+'. '+(e.message||'The remaining products were not published.'));}}
 function openBulkReview(ids){lastDiscoveredProductIds=[...new Set((ids||[]).filter(Boolean))];document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById('bulkReview').classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));document.getElementById('title').textContent=meta.bulkReview[0];document.getElementById('sub').textContent=meta.bulkReview[1];const all=document.getElementById('bulkReviewSelectAll');if(all)all.checked=true;renderDiscoveredProducts();}
 async function discoverAmazonProducts(){
   const input=document.getElementById('amazonSearchUrlInput'),status=document.getElementById('amazonDiscoveryStatus'),searchUrl=String(input?.value||'').trim();
@@ -1064,7 +1070,24 @@ async function discoverAmazonProducts(){
   finally{if(button){button.disabled=false;button.textContent='Discover 20';}}
 }
 async function removeProduct(id){try{await api('/api/admin/products/'+encodeURIComponent(id),{method:'DELETE'});await liveAdminProducts();}catch(e){setAdminStatus(e.message)}}
-async function healthCheck(){try{const j=await fetch('/api/health').then(r=>r.json());document.getElementById('systemStatus').innerHTML=Object.entries(j.configured).map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Configured':'Not configured'}</span></div>`).join('')}catch(e){setAdminStatus(e.message)}}
+async function healthCheck(){
+  const box=document.getElementById('systemStatus');
+  if(box)box.innerHTML='<div class="health-loading"><i></i>Checking Nuvora connections…</div>';
+  try{
+    const r=await fetch('/api/health',{cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    const cfg=j&&j.configured&&typeof j.configured==='object'?j.configured:{};
+    const entries=Object.entries(cfg);
+    if(!entries.length){
+      if(box)box.innerHTML='<div class="notice">Nuvora returned no connection configuration. The deployment is running, but its environment bindings need to be checked.</div>';
+      return;
+    }
+    if(box)box.innerHTML=entries.map(([k,v])=>`<div class="row"><span>${esc(k)}</span><span class="status"><i class="dot ${v?'':'off'}"></i>${v?'Connected':'Not connected'}</span></div>`).join('');
+  }catch(e){
+    if(box)box.innerHTML='<div class="notice">System status could not reach the Nuvora Worker. '+esc(e.message||'Connection failed.')+'</div>';
+    setAdminStatus(e.message||'System status failed.');
+  }
+}
 async function uploadProductImages(){
   const input=document.getElementById('pfUpload'); const files=[...(input?.files||[])]; if(!files.length)return setAdminStatus('Select one or more image files first.');
   if(!adminSB) return setAdminStatus('Supabase is not connected.');
