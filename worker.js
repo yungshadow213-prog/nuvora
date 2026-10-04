@@ -223,9 +223,30 @@ async function publishProductRecord(env,id,patch={}){
   return {ok:true,product};
 }
 function amazonDecode(value){return String(value||'').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/&nbsp;/gi,' ');}
-function amazonHost(host){ const h=String(host||'').toLowerCase().replace(/^www\./,''); return h==='link.amazon'||h==='amzn.to'||/(^|\.)amazon\.[a-z.]+$/.test(h); }
+function amazonHost(host){
+  const h=String(host||'').toLowerCase().replace(/^www\./,'');
+  return h==='link.amazon'||h==='amzn.to'||h==='a.co'||h==='amzn.eu'||h==='amzn.in'||h==='amzn.to'||/(^|\.)amazon\.[a-z.]+$/.test(h);
+}
+function amazonShortHost(host){
+  const h=String(host||'').toLowerCase().replace(/^www\./,'');
+  return ['link.amazon','amzn.to','a.co','amzn.eu','amzn.in'].includes(h);
+}
 function extractUrls(value){ const m=String(value||'').match(/https?:\/\/[^\s<>]+/gi)||[]; return [...new Set(m.map(x=>x.replace(/[.,;]+$/,'').trim()).filter(Boolean))]; }
-async function resolveAmazonUrl(sourceUrl){let current=String(sourceUrl||'').trim();for(let i=0;i<5;i++){const host=new URL(current).hostname.toLowerCase().replace(/^www\./,'');if(host!=='link.amazon'&&host!=='amzn.to')return current;const r=await fetch(current,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 Nuvora importer'}});if(r.url&&r.url!==current){current=r.url;continue;}break;}return current;}
+async function resolveAmazonUrl(sourceUrl){
+  let current=String(sourceUrl||'').trim();
+  for(let i=0;i<5;i++){
+    let parsed;
+    try{parsed=new URL(current)}catch{break}
+    const host=parsed.hostname.toLowerCase().replace(/^www\./,'');
+    if(!amazonShortHost(host))return current;
+    try{
+      const r=await fetch(current,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 Nuvora importer','accept':'text/html,application/xhtml+xml,*/*;q=0.8'}});
+      if(r.url&&r.url!==current){current=r.url;continue;}
+      break;
+    }catch{break}
+  }
+  return current;
+}
 function asinFromUrl(url){ const s=String(url||''); const m=s.match(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|\/product\/|\/dp%2F)([A-Z0-9]{10})(?:[/?#]|$)/i); if(m)return m[1].toUpperCase(); const q=s.match(/[?&](?:asin|ASIN)=([A-Z0-9]{10})(?:&|$)/i); return q?q[1].toUpperCase():null; }
 function decodeHtmlEntities(value){
   let s=String(value??'');
@@ -297,8 +318,7 @@ function amazonText(html,patterns){
   for(const pattern of patterns){
     const m=String(html||'').match(pattern);
     if(m&&m[1]){const v=htmlText(decodeJsonHtml(m[1]));if(v)return v;}
-  }
-  return '';
+  }  return '';
 }
 function extractAmazonSpecs(html){
   const specs=[],seen=new Set();
@@ -386,6 +406,44 @@ async function aiPolishAmazonListing(env,listing){
   return listing;
 }
 
+async function amazonApiFallbackListing(env,asin,sourceUrl){
+  if(!configured(env).amazon)return null;
+  try{
+    const item=await amazonGetItem(env,asin);
+    if(!item)return null;
+    const listing=item.offersV2?.listings?.[0];
+    const money=listing?.price?.money;
+    const images=[
+      item.images?.primary?.large?.url,
+      item.images?.primary?.medium?.url,
+      ...(item.images?.variants||[]).flatMap(v=>[v?.large?.url,v?.medium?.url])
+    ].filter(Boolean);
+    const features=item.itemInfo?.features?.displayValues||[];
+    const brand=item.itemInfo?.byLineInfo?.brand?.displayValue||item.itemInfo?.byLineInfo?.manufacturer?.displayValue||'';
+    return normalizeAmazonListing({
+      title:item.itemInfo?.title?.displayValue||'Amazon product',
+      description:features.join('\n')||null,
+      brand,
+      images,
+      features,
+      current_price:money?.amount??null,
+      list_price:null,
+      discount_percent:null,
+      deal_text:null,
+      rating:null,
+      review_count:null,
+      availability:listing?.availability?.displayValue||listing?.availability?.type||null,
+      shipping_text:null,
+      tax_text:null,
+      variations:[],
+      sku:asin,
+      destination_url:item.detailPageURL||sourceUrl,
+      resolved_url:item.detailPageURL||sourceUrl,
+      asin
+    });
+  }catch{return null}
+}
+
 async function scrapeAmazonListing(sourceUrl,asin){
   const resolved=await resolveAmazonUrl(sourceUrl);
   const finalAsin=asinFromUrl(resolved)||asin;
@@ -402,6 +460,8 @@ async function scrapeAmazonListing(sourceUrl,asin){
     if(!r.ok)throw new Error('Amazon returned HTTP '+r.status);
     html=await r.text();
   }catch(e){
+    const fallback=await amazonApiFallbackListing(env,finalAsin,sourceUrl);
+    if(fallback)return fallback;
     return {error:'Amazon product page could not be read: '+String(e?.message||e)};
   }
 
@@ -597,8 +657,7 @@ async function scrapeAmazonListing(sourceUrl,asin){
     /id=["']mir-layout-DELIVERY_BLOCK-slot-PRIMARY_DELIVERY_MESSAGE_LARGE["'][^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/i,
     /id=["']deliveryBlockMessage["'][^>]*>([\s\S]*?)<\/span>/i,
     /data-csa-c-delivery-time=["']([^"']+)["']/i,
-    /class=["'][^"']*delivery-message[^"']*["'][^>]*>([\s\S]*?)<\//i
-  ])||null;
+    /class=["'][^"']*delivery-message[^"']*["'][^>]*>([\s\S]*?)<\//i  ])||null;
   const boughtPastMonth=extractFirst([
     /id=["']socialProofingAsinFacepileFeature["'][^>]*>[\s\S]*?([0-9,.]+\+?\s*(?:bought|purchased)[^<]*)/i,
     /([0-9,.]+\+?\s+bought in past month)/i
@@ -618,7 +677,11 @@ async function scrapeAmazonListing(sourceUrl,asin){
     if(/dimension|variation|size|color/i.test(raw)&&raw.length<100000)variantNames.push(state);
   }
 
-  if(!title&&!imageCandidates.length)return {error:'Amazon did not expose product data from this page.'};
+  if(!title&&!imageCandidates.length){
+    const fallback=await amazonApiFallbackListing(env,finalAsin,sourceUrl);
+    if(fallback)return fallback;
+    return {error:'Amazon did not expose product data from this page. Amazon may have served a bot-check page; try the direct product URL or configure the Amazon API as an optional fallback.'};
+  }
 
   return {
     title:title||'Amazon product',
@@ -897,8 +960,7 @@ async function ingestSourceProduct(sourceUrl){
               description=cleanMultilineText(intro+(detailParts.length?'\n\nKey details: '+detailParts.join(' • '):''),12000);
             }
             description=description||null;
-            const category_id=autoCategory(title,description,listing.brand,categories);
-            const product={
+            const category_id=autoCategory(title,description,listing.brand,categories);            const product={
               name:title,kind:'find',brand:listing.brand||null,description,features:features.join('\n')||null,
               image_url:images[0]||null,image_urls:images,display_price:listing.current_price??null,currency:listing.currency||'USD',
               destination_url:listing.source_url||sourceUrl,retailer,category_id,amazon_asin:retailer==='Amazon'?sourceId:null,
@@ -1197,8 +1259,7 @@ async function scrapeTemuListing(temuUrl){
     if(qi>=0){
       const raw=temuUrl.slice(qi+9).split('&')[0];
       if(raw&&/^[0-9]{10,18}$/.test(raw))productId=raw;
-    }
-  }
+    }  }
 
   return {
     id:productId,
@@ -1497,8 +1558,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const payload=await body(request,2*1024*1024),items=Array.isArray(payload.items)?payload.items:[];
         if(!items.length)return json({error:'No products supplied.'},400); if(items.length>500)return json({error:'CSV imports are limited to 500 rows per batch.'},400);
         const results=[];
-        for(const raw of items){
-          const product={...raw,published:false,slug:String(raw.slug||raw.name||'product').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,150)+'-'+randHex(6)};
+        for(const raw of items){          const product={...raw,published:false,slug:String(raw.slug||raw.name||'product').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,150)+'-'+randHex(6)};
           const validation=validateProduct(product); if(validation){results.push({ok:false,name:raw.name||'',error:validation});continue;}
           if(product.image_url&&!validUrl(product.image_url))product.image_url=null;
           const r=await supabaseRest(env,'POST','products',product);
@@ -1797,8 +1857,7 @@ function bytesToBase64(bytes){let out='';const step=0x8000;for(let i=0;i<bytes.l
 function repairFragmentedText(value){
   return decodeHtmlEntities(String(value??''))
     .replace(/[\\u0000-\\u001F\\u007F]/g,' ')
-    .replace(/\\s+/g,' ')
-    .trim();
+    .replace(/\\s+/g,' ')    .trim();
 }
 function looksFragmentedText(value){
   const s=String(value||'').trim(); if(!s)return false;
