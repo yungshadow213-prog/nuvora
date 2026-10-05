@@ -549,8 +549,8 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const features=[...new Set(featureMatches.map(x=>clean(x.replace(/^.*?<span[^>]*>/i,'').replace(/<\/span>[\s\S]*$/i,'')).trim()).filter(v=>v&&v.length>8&&!/^skip to/i.test(v)))].slice(0,20);
   const descriptionCandidates=[
     blockById('productDescription'),
-    clean((String(html).match(/id=["']productDescription_feature_div["'][^>]*>[\s\S]*?<div[^>]*id=["']productDescription["'][^>]*>([\s\S]*?)<\/?div>/i)||[])[1]||''),
-    clean((String(html).match(/id=["']aplus_feature_div["'][^>]*>[\s\S]*?<div[^>]*>([\s\S]*?)<\/?div>/i)||[])[1]||''),
+    blockById('productDescription_feature_div'),
+    blockById('aplus_feature_div'),
     clean(jsonld.description||''),
     metaValue(html,'og:description'),
     metaValue(html,'description')
