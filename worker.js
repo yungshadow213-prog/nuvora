@@ -123,7 +123,7 @@ function buildProductOptions(text){
   const raw=String(text||''),groups=[];
   const add=(name,value)=>{const n=String(name||'').trim(),v=String(value||'').trim();if(!n||!v||v.length>120)return;let g=groups.find(x=>x.name.toLowerCase()===n.toLowerCase());if(!g){g={name:n,values:[]};groups.push(g);}if(!g.values.includes(v))g.values.push(v);};
   for(const label of ['color','colour','size','style','pattern','material','flavor','flavour','configuration','capacity']){
-    const re=new RegExp('\\b'+label+'\\s*[:：]\\s*([^\\n;|]+)','gi');
+    const re=new RegExp('\b'+label+'\\s*[:：]\\s*([^\\n;|]+)','gi');
     for(const m of raw.matchAll(re)){m[1].split(/,|\s+\/\s+/).map(v=>v.trim()).filter(Boolean).slice(0,40).forEach(v=>add(label[0].toUpperCase()+label.slice(1),v));}
   }
   return groups.filter(g=>g.values.length).slice(0,12);
@@ -268,7 +268,7 @@ function htmlText(v){
   s=s.replace(/<(?:br|p|div|li|tr|td|th|h[1-6]|section|article|ul|ol)[^>]*>/gi,' ');
   s=s.replace(/<[^>]+>/g,'');
   s=decodeHtmlEntities(s);
-  return s.replace(/[\\u0000-\\u001F\\u007F]/g,' ').replace(/\\s+/g,' ').trim();
+  return s.replace(/[\\u0000-\\u001F\\u007F]/g,' ').replace(/\s+/g,' ').trim();
 }
 function metaValue(html,name){
   const wanted=String(name||'').toLowerCase();
@@ -473,11 +473,11 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const escapeRegex=(value)=>String(value).replace(/[.*+?^{}()|[\]\\$]/g,'\\$&');
       const elementInnerHtmlById=(id)=>{
     const esc=escapeRegex(id);
-    const openRe=new RegExp("<([a-z][a-z0-9:-]*)\\b[^>]*\\bid=[\"']"+esc+"[\"'][^>]*>","i");
+    const openRe=new RegExp("<([a-z][a-z0-9:-]*)\b[^>]*\bid=[\"']"+esc+"[\"'][^>]*>","i");
     const open=String(html).match(openRe);
     if(!open||open.index==null)return '';
     const tag=open[1],contentStart=open.index+open[0].length;
-    const tagRe=new RegExp("<\\/?"+escapeRegex(tag)+"\\b[^>]*>","gi");
+    const tagRe=new RegExp("<\\/?"+escapeRegex(tag)+"\b[^>]*>","gi");
     tagRe.lastIndex=contentStart;
     let depth=1,match;
     while((match=tagRe.exec(html))){
@@ -549,18 +549,18 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const features=[...new Set(featureMatches.map(x=>clean(x.replace(/^.*?<span[^>]*>/i,'').replace(/<\/span>[\s\S]*$/i,'')).trim()).filter(v=>v&&v.length>8&&!/^skip to/i.test(v)))].slice(0,20);
   const descriptionCandidates=[
     blockById('productDescription'),
-    clean((String(html).match(/id=["']productDescription_feature_div["'][^>]*>[\\s\\S]*?<div[^>]*id=["']productDescription["'][^>]*>([\\s\\S]*?)<\\/div>/i)||[])[1]||''),
-    clean((String(html).match(/id=["']aplus_feature_div["'][^>]*>[\\s\\S]*?<div[^>]*>([\\s\\S]*?)<\\/div>/i)||[])[1]||''),
+    clean((String(html).match(/id=["']productDescription_feature_div["'][^>]*>[\s\S]*?<div[^>]*id=["']productDescription["'][^>]*>([\s\S]*?)<\/div>/i)||[])[1]||''),
+    clean((String(html).match(/id=["']aplus_feature_div["'][^>]*>[\s\S]*?<div[^>]*>([\s\S]*?)<\/div>/i)||[])[1]||''),
     clean(jsonld.description||''),
     metaValue(html,'og:description'),
     metaValue(html,'description')
   ].map(clean).filter(v=>v&&v.length>20);
   const boilerplate=/^(?:visit the|shop the|brand:\s|about this item|product description|click to|see more|read more|customer questions|make sure this fits|customers say|frequently bought)/i;
-  const navigationJunk=/\\b(?:search|keyboard shortcuts|skip to|sign in|create account|orders|cart|today'?s deals|best sellers|new releases|customer service|gift cards|all departments|back to top|deliver to|update location|sponsored)\\b/i;
+  const navigationJunk=/\b(?:search|keyboard shortcuts|skip to|sign in|create account|orders|cart|today'?s deals|best sellers|new releases|customer service|gift cards|all departments|back to top|deliver to|update location|sponsored)\b/i;
   const normalizedTitle=String(title||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
   const normalizedBrand=String(brandHint||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
   const usableDescription=v=>{
-    const x=clean(v).toLowerCase().replace(/\\s+/g,' ').trim();
+    const x=clean(v).toLowerCase().replace(/\s+/g,' ').trim();
     const compact=x.replace(/[^a-z0-9]+/g,' ').trim();
     if(!x||x.length<40||compact===normalizedBrand||compact===normalizedTitle)return false;
     if(boilerplate.test(x)||navigationJunk.test(x))return false;
@@ -855,7 +855,7 @@ function sourceProductId(url,html=''){
 }
 function genericJsonLd(html){
   const out=[];
-  const re=/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\\s\\S]*?)<\/script>/gi;
+  const re=/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
   for(const m of String(html||'').matchAll(re)){try{const x=JSON.parse(m[1].trim());if(Array.isArray(x))out.push(...x);else out.push(x)}catch(e){}}
   return out.find(x=>{const t=x?.['@type'];return t==='Product'||(Array.isArray(t)&&t.some(v=>String(v).toLowerCase()==='product'))})||{};
 }
@@ -871,18 +871,18 @@ async function scrapeGenericSource(sourceUrl,retailer){
   let resolved=sourceUrl;
   try{const r=await fetch(sourceUrl,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 (compatible; NuvoraImporter/1.0)','accept':'text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8','accept-language':'en-US,en;q=0.9'}});resolved=r.url||sourceUrl;if(!r.ok)throw new Error('Source returned HTTP '+r.status);const html=await r.text();if(html.length<200)throw new Error('Source page returned too little data.');
     const ld=genericJsonLd(html),offers=Array.isArray(ld.offers)?(ld.offers[0]||{}):(ld.offers||{}),agg=ld.aggregateRating||{};
-    const title=htmlText(ld.name)||metaValue(html,'og:title')||metaValue(html,'twitter:title')||amazonText(html,[/<h1[^>]*>([\\s\\S]*?)<\/h1>/i])||htmlText((html.match(/<title[^>]*>([\\s\\S]*?)<\/title>/i)||[])[1]||'');
+    const title=htmlText(ld.name)||metaValue(html,'og:title')||metaValue(html,'twitter:title')||amazonText(html,[/<h1[^>]*>([\s\S]*?)<\/h1>/i])||htmlText((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)||[])[1]||'');
     const description=htmlText(ld.description)||metaValue(html,'og:description')||metaValue(html,'description');
     const brand=typeof ld.brand==='string'?ld.brand:ld.brand?.name||metaValue(html,'product:brand')||metaValue(html,'brand')||null;
-    const current=genericNumber(offers.price)??genericNumber(metaValue(html,'product:price:amount'))??genericNumber(amazonText(html,[/(?:class|id)=["'][^"']*(?:price|sale-price|current-price)[^"']*["'][^>]*>([\\s\\S]*?)<\//i]));
+    const current=genericNumber(offers.price)??genericNumber(metaValue(html,'product:price:amount'))??genericNumber(amazonText(html,[/(?:class|id)=["'][^"']*(?:price|sale-price|current-price)[^"']*["'][^>]*>([\s\S]*?)<\//i]));
     const currency=String(offers.priceCurrency||metaValue(html,'product:price:currency')||'USD').toUpperCase();
-    const list=genericNumber(metaValue(html,'product:original_price'))??genericNumber(amazonText(html,[/(?:class|id)=["'][^"']*(?:compare|original|regular)-price[^"']*["'][^>]*>([\\s\\S]*?)<\//i]));
+    const list=genericNumber(metaValue(html,'product:original_price'))??genericNumber(amazonText(html,[/(?:class|id)=["'][^"']*(?:compare|original|regular)-price[^"']*["'][^>]*>([\s\S]*?)<\//i]));
     const rating=parseRating(agg.ratingValue||metaValue(html,'ratingValue')||amazonText(html,[/(?:rating|stars)[^>]*>([0-5](?:\.[0-9])?)/i]));
     const reviews=parseReviewCount(agg.reviewCount||agg.ratingCount||metaValue(html,'reviewCount')||amazonText(html,[/([0-9][0-9,.]*)\s+(?:reviews|ratings)/i]));
-    const availability=htmlText(offers.availability)||metaValue(html,'product:availability')||amazonText(html,[/(?:availability|stock)[^>]*>([\\s\\S]*?)<\//i])||null;
+    const availability=htmlText(offers.availability)||metaValue(html,'product:availability')||amazonText(html,[/(?:availability|stock)[^>]*>([\s\S]*?)<\//i])||null;
     const sku=String(ld.sku||ld.mpn||sourceProductId(resolved,html)||'').trim()||null;
     const features=[];
-    for(const m of String(html).matchAll(/<li[^>]*>([\\s\\S]*?)<\/li>/gi)){const t=htmlText(m[1]);if(t&&t.length<500&&!features.includes(t))features.push(t);if(features.length>=20)break}
+    for(const m of String(html).matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)){const t=htmlText(m[1]);if(t&&t.length<500&&!features.includes(t))features.push(t);if(features.length>=20)break}
     const listPrice=list??(current!=null&&rating==null?null:list);
     const discount=listPrice&&current!=null&&listPrice>current?Number((((listPrice-current)/listPrice)*100).toFixed(1)):null;
     if(!title&&!genericImages(html,ld).length)throw new Error('No product data was exposed by the source page.');
@@ -1868,13 +1868,13 @@ function bytesToBase64(bytes){let out='';const step=0x8000;for(let i=0;i<bytes.l
 function repairFragmentedText(value){
   return decodeHtmlEntities(String(value??''))
     .replace(/[\\u0000-\\u001F\\u007F]/g,' ')
-    .replace(/\\s+/g,' ')    .trim();
+    .replace(/\s+/g,' ')    .trim();
 }
 function looksFragmentedText(value){
   const s=String(value||'').trim(); if(!s)return false;
-  const words=s.split(/\\s+/).filter(Boolean); if(words.length<12)return false;
+  const words=s.split(/\s+/).filter(Boolean); if(words.length<12)return false;
   const singleLetters=words.filter(w=>/^[A-Za-z]$/.test(w)).length;
-  const suspicious=(s.match(/\\b[A-Za-z]{2,}\\s+[A-Za-z]\\b/g)||[]).length;
+  const suspicious=(s.match(/\b[A-Za-z]{2,}\s+[A-Za-z]\b/g)||[]).length;
   return singleLetters>=Math.max(4,Math.ceil(words.length*0.08))||suspicious>=5;
 }
 function cleanText(value,max=10000){
