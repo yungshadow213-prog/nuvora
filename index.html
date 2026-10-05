@@ -418,7 +418,7 @@ button:hover,.btn:hover{transform:translateY(-1px)}
   .product-grid{gap:10px!important}
 }
 </style><style id="nuvora-zero-popup">
-#authModal,#detailModal,#cartModal{display:none!important}
+#authModal,#detailModal,#cartModal{display:none}
 .store-status{max-width:1180px;margin:0 auto;height:0;overflow:hidden;padding:0 14px;border-radius:12px;font-size:12px;line-height:1.4;transition:all .2s ease}.store-status.visible{height:auto;min-height:38px;margin-top:10px;padding:10px 14px;background:#f1f6f1;color:#31583e;border:1px solid #dce9dd}.store-status[data-status="error"]{background:#fff1f1;color:#9d4141;border-color:#f0d6d6}@media(max-width:700px){.store-status{margin-left:12px;margin-right:12px}.store-status.visible{margin-top:8px}}
 </style><style id="nuvora-storefront-polish">
 /* Nuvora storefront UI refresh */
@@ -609,6 +609,14 @@ button,input,select,textarea{max-width:100%}
   .nv-card .prodprice{font-size:12px!important}
   .nv-card .card-action{display:none}
 }
+</style><style id="nuvora-interaction-hardening">
+/* Keep storefront controls clickable and make state changes visible. */
+.view{pointer-events:auto}
+button,a,[role="button"],input,select,textarea{pointer-events:auto}
+.modal.open{display:flex!important}
+#authModal.open,#detailModal.open,#cartModal.open{display:flex!important}
+.product{cursor:pointer}
+.product .card-save,.product .nv-thumb,.product button{position:relative;z-index:3}
 </style></head>
 <body>
 <div class="announcement"><div class="shell"><b>Nuvora picks, made simple.</b> Browse curated products, save your favorites, and discover something worth finding.</div></div><header class="topbar"><div class="shell nav">
