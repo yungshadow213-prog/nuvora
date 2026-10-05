@@ -1,0 +1,83 @@
+name: Deploy Nuvora to Cloudflare
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+
+concurrency:
+  group: nuvora-production
+  cancel-in-progress: true
+
+jobs:
+  validate-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Check Worker syntax
+        run: node --check worker.js
+
+      - name: Check Wrangler production bundle
+        run: npx wrangler@4.145.0 deploy --dry-run --outdir /tmp/nuvora-dist
+
+      - name: Check storefront scripts
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re, subprocess, sys
+          failures=[]
+          for name in ["index.html","admin.html","edit-product.html"]:
+              html=Path(name).read_text(encoding="utf-8")
+              scripts=re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>",html,re.I)
+              for i,src in enumerate([x for x in scripts if x.strip()],1):
+                  p=Path("/tmp")/f"nuvora-{name}-{i}.js"
+                  p.write_text(src,encoding="utf-8")
+                  result=subprocess.run(["node","--check",str(p)],capture_output=True,text=True)
+                  if result.returncode:
+                      failures.append(f"{name} script {i}: {result.stderr.strip()}")
+          if failures:
+              print("\n".join(failures))
+              sys.exit(1)
+          print("Storefront/admin/editor JavaScript checks passed.")
+          PY
+
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler@4.145.0 deploy
+
+      - name: Smoke test production
+        env:
+          NUVORA_URL: https://nuvora.rayyung713.workers.dev
+        run: |
+          python - <<'PY'
+          import json, os, sys, urllib.request
+          base=os.environ["NUVORA_URL"].rstrip("/")
+          for path in ["/api/health","/api/config","/"]:
+              with urllib.request.urlopen(base+path,timeout=30) as r:
+                  body=r.read().decode("utf-8","replace")
+                  if r.status != 200:
+                      raise SystemExit(f"{path} returned HTTP {r.status}")
+                  if path.startswith("/api/") and not body:
+                      raise SystemExit(f"{path} returned an empty response")
+                  print(f"{path}: {r.status}")
+          health=json.load(urllib.request.urlopen(base+"/api/health",timeout=30))
+          if not health.get("ok"):
+              raise SystemExit("Production health endpoint reported ok=false")
+          print("Production smoke test passed.")
+          PY
