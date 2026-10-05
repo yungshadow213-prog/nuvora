@@ -549,19 +549,29 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const features=[...new Set(featureMatches.map(x=>clean(x.replace(/^.*?<span[^>]*>/i,'').replace(/<\/span>[\s\S]*$/i,'')).trim()).filter(v=>v&&v.length>8&&!/^skip to/i.test(v)))].slice(0,20);
   const descriptionCandidates=[
     blockById('productDescription'),
+    clean((String(html).match(/id=["']productDescription_feature_div["'][^>]*>[\\s\\S]*?<div[^>]*id=["']productDescription["'][^>]*>([\\s\\S]*?)<\\/div>/i)||[])[1]||''),
+    clean((String(html).match(/id=["']aplus_feature_div["'][^>]*>[\\s\\S]*?<div[^>]*>([\\s\\S]*?)<\\/div>/i)||[])[1]||''),
     clean(jsonld.description||''),
     metaValue(html,'og:description'),
-    metaValue(html,'description'),
-    features.length?features.join('\n'):''
+    metaValue(html,'description')
   ].map(clean).filter(v=>v&&v.length>20);
-  const boilerplate=/^(?:visit the|shop the|brand:\s|about this item|product description|click to|see more|read more|customer questions|make sure this fits)/i;
+  const boilerplate=/^(?:visit the|shop the|brand:\s|about this item|product description|click to|see more|read more|customer questions|make sure this fits|customers say|frequently bought)/i;
+  const navigationJunk=/\\b(?:search|keyboard shortcuts|skip to|sign in|create account|orders|cart|today'?s deals|best sellers|new releases|customer service|gift cards|all departments|back to top|deliver to|update location|sponsored)\\b/i;
   const normalizedTitle=String(title||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
   const normalizedBrand=String(brandHint||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
-  const description=descriptionCandidates.find(v=>{
-    const x=v.toLowerCase().replace(/\s+/g,' ').trim();
+  const usableDescription=v=>{
+    const x=clean(v).toLowerCase().replace(/\\s+/g,' ').trim();
     const compact=x.replace(/[^a-z0-9]+/g,' ').trim();
-    return compact!==normalizedBrand&&compact!==normalizedTitle&&!x.startsWith(normalizedBrand+' ')&&!boilerplate.test(x)&&x.length>=40;
-  })||null;
+    if(!x||x.length<40||compact===normalizedBrand||compact===normalizedTitle)return false;
+    if(boilerplate.test(x)||navigationJunk.test(x))return false;
+    if(x.split(' ').length<8)return false;
+    return true;
+  };
+  let description=descriptionCandidates.find(usableDescription)||null;
+  if(!description&&features.length){
+    const cleanFeatures=features.map(v=>clean(v)).filter(v=>v.length>=12&&!boilerplate.test(v)&&!navigationJunk.test(v)).slice(0,8);
+    if(cleanFeatures.length)description=cleanFeatures.join('\n');
+  }
 
   const imageCandidates=[];
   const addImage=v=>{
