@@ -185,7 +185,7 @@ function resolveProductDestination(current={},patch={}){
 async function publishProductRecord(env,id,patch={}){
   // Read the existing row using only fields required to safely publish. This
   // avoids optional/missing enrichment columns from breaking publication.
-  const select='id,name,slug,kind,image_url,image_urls,display_price,currency,destination_url,retailer,source_type,amazon_asin,amazon_source_url,source_url,resolved_url,published';
+  const select='*';
   const currentRes=await supabaseRest(env,'GET','products',undefined,'?select='+select+'&id=eq.'+encodeURIComponent(id)+'&limit=1');
   if(!currentRes.ok)return {ok:false,status:500,error:'Could not load the product before publishing.'};
   const current=(await currentRes.json())?.[0];
