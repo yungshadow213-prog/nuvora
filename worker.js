@@ -542,8 +542,8 @@ async function scrapeAmazonListing(sourceUrl,asin){
     clean((html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)||[])[1]||''),
     clean((html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)||[])[1]||'')
   ].map(clean).filter(Boolean);
-  const title=titleCandidates.find(v=>v.length>brandHint.length+8&&!/^amazon(?:\\.com)?$/i.test(v)&&!/sign in|page not found/i.test(v))
-    ||titleCandidates[0]||'';
+  const title=titleCandidates.find(v=>v.length>brandHint.length+8&&!/^amazon(?:\\.com)?$/i.test(v)&&!/sign in|page not found/i.test(v)&&!looksFragmentedText(v))
+    ||titleCandidates.find(v=>!looksFragmentedText(v)&&v.length>8)||'';
 
   const featureMatches=String(html).match(/id=["']feature-bullets["'][^>]*>[\s\S]*?<li[^>]*>[\s\S]*?<span[^>]*>([\s\S]*?)<\/span>/gi)||[];
   const features=[...new Set(featureMatches.map(x=>clean(x.replace(/^.*?<span[^>]*>/i,'').replace(/<\/span>[\s\S]*$/i,'')).trim()).filter(v=>v&&v.length>8&&!/^skip to/i.test(v)))].slice(0,20);
@@ -772,9 +772,10 @@ function normalizeImageUrl(value){
 }
 function dedupeImages(values,max=60){
   const out=[],seen=new Set();
+  const blocked=/(?:amazon-avatars-global|transparent-pixel|aax-[^/]+\/e\/is\/|\/nav[-_]|sprite|spacer|pixel\b|tracking)/i;
   for(const value of (Array.isArray(values)?values:[])){
     const url=normalizeImageUrl(value);
-    if(!isValidHttpUrl(url))continue;
+    if(!isValidHttpUrl(url)||blocked.test(url))continue;
     const key=url.toLowerCase().replace(/\.(?:jpe?g|png|webp)(?:$|[?#])/i,'');
     if(seen.has(key))continue;
     seen.add(key);out.push(url);
@@ -784,6 +785,7 @@ function dedupeImages(values,max=60){
 }
 function smartProductTitle(value,brand=''){
   let t=htmlText(amazonDecode(value)).replace(/\s+/g,' ').trim();
+  if(looksFragmentedText(t))return '';
   t=t.replace(/^(?:Amazon\.com|Amazon)\s*[:|-]\s*/i,'');
   t=t.replace(/\s*[|·]\s*(?:Amazon|Temu).*$/i,'');
   t=t.replace(/\b(?:official|best seller|#1 best seller|hot sale|trending|must have|new arrival)\b/gi,'');
@@ -958,8 +960,16 @@ async function ingestSourceProduct(sourceUrl){
             const dup=await supabaseRest(env,'GET','products',undefined,identityQuery);
             const rows=dup.ok?await dup.json():[];
             if(rows[0]){skipped++;results.push({ok:true,status:'skipped',retailer,source_url:sourceUrl,name:rows[0].name||'Existing product',reason:'Already imported',id:rows[0].id,duration_ms:Date.now()-started});continue;}
-            const title=smartProductTitle(listing.title||retailer+' product',listing.brand||'');
+            const title=smartProductTitle(listing.title||'',listing.brand||'') || (()=>{try{
+              const u=new URL(listing.resolved_url||sourceUrl);
+              const path=decodeURIComponent(u.pathname).split('/').filter(Boolean);
+              const dp=path.findIndex(x=>x.toLowerCase()==='dp');
+              const raw=dp>0?path[dp-1]:path[path.length-1];
+              return smartProductTitle(String(raw||'').replace(/[-_+]+/g,' '),listing.brand||'') || (retailer+' product');
+            }catch{return retailer+' product';}})();
+            if(title===retailer+' product'&&looksFragmentedText(String(listing.title||'')))throw new Error('The retailer returned unreadable product text. Try the direct product URL again or use the Amazon API fallback.');
             const images=dedupeImages(listing.images,60);
+            if(!images.length)throw new Error('The retailer did not expose a usable product image.');
             const features=Array.isArray(listing.features)?listing.features.filter(Boolean).slice(0,20):[];
             let description=cleanMultilineText(listing.description,12000)||'';
             if(description.length<120){
