@@ -7,7 +7,7 @@ export default {
         const limited = rateLimit(request, 'api', 120, 60000);
         if (limited) return json({error:'Too many requests. Please try again shortly.'},429,{'retry-after':String(limited)});
       }
-      if (request.method === 'OPTIONS') return new Response(null,{status:204});
+      if (request.method === 'OPTIONS') return securityResponse(new Response(null,{status:204}));
       if (url.pathname === '/admin' || url.pathname === '/admin/') {
         return serveAsset(env,new Request(new URL('/admin.html',request.url), {method:'GET',headers:request.headers}));
       }
@@ -1848,12 +1848,35 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
   }
 };
 
+function securityResponse(response){
+  const headers=new Headers(response.headers);
+  headers.set('Strict-Transport-Security','max-age=31536000; includeSubDomains');
+  headers.set('X-Content-Type-Options','nosniff');
+  headers.set('X-Frame-Options','DENY');
+  headers.set('Referrer-Policy','strict-origin-when-cross-origin');
+  headers.set('Permissions-Policy','camera=(), microphone=(), geolocation=(), payment=(self)');
+  headers.set('Cross-Origin-Opener-Policy','same-origin-allow-popups');
+  headers.set('Content-Security-Policy',[
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: blob: https:",
+    "connect-src 'self' https://*.supabase.co https://*.supabase.in https://*.supabase.com",
+    "frame-src 'self' https://accounts.google.com",
+    "form-action 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'"
+  ].join('; '));
+  return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+}
 async function serveAsset(env,request){
   const response=await env.ASSETS.fetch(request);
   const headers=new Headers(response.headers);
   const type=headers.get('content-type')||'';
   if(type.includes('text/html'))headers.set('cache-control','no-store, must-revalidate');
-  return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+  return securityResponse(new Response(response.body,{status:response.status,statusText:response.statusText,headers}));
 }
 function isValidHttpUrl(value){try{const u=new URL(String(value??'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
 const buckets = new Map();
@@ -1863,7 +1886,7 @@ function rateLimit(request,key,limit=120,windowMs=60000){
   if(!b||now-b.start>=windowMs){b={start:now,count:0};buckets.set(id,b);}
   b.count++; if(b.count>limit)return Math.max(1,Math.ceil((windowMs-(now-b.start))/1000)); return 0;
 }
-function json(payload,status=200,extra={}){return new Response(JSON.stringify(payload),{status,headers:{'content-type':'application/json','cache-control':'no-store',...extra}});}
+function json(payload,status=200,extra={}){return securityResponse(new Response(JSON.stringify(payload),{status,headers:{'content-type':'application/json','cache-control':'no-store',...extra}}));}
 async function body(request,limit=1024*1024){const len=Number(request.headers.get('content-length')||0);if(len>limit)throw new Error('Request body is too large.');const text=await request.text();if(text.length>limit)throw new Error('Request body is too large.');return text?JSON.parse(text):{};}
 function env(name){return globalThis.__ENV?.[name]||'';}
 async function aiResultBytes(result){
