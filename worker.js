@@ -150,8 +150,8 @@ async function shopifyGraphql(env,query,variables={},admin=false){
   const response=await fetch(endpoint,{method:'POST',headers,body:JSON.stringify({query,variables})});const data=await response.json().catch(()=>({}));
   if(!response.ok||Array.isArray(data?.errors)&&data.errors.length)throw new Error(data?.errors?.[0]?.message||'Shopify GraphQL request failed (HTTP '+response.status+').');return data?.data||{};
 }
-function validUrl(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
-function validURL(value){return validUrl(value);}
+function isValidHttpUrl(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
+function validURL(value){return isValidHttpUrl(value);}
 function resolveProductDestination(current={},patch={}){
   const merged={...current,...patch};
   const candidates=[
@@ -163,10 +163,10 @@ function resolveProductDestination(current={},patch={}){
   for(const value of candidates){
     const raw=String(value||'').trim();
     if(!raw)continue;
-    if(validUrl(raw))return raw;
+    if(isValidHttpUrl(raw))return raw;
     try{
       const normalized=/^(?:amazon(?:\.\w+)?|www\.amazon\.[a-z.]+|amzn\.to|link\.amazon)\//i.test(raw)?'https://'+raw:'';
-      if(normalized&&validUrl(normalized))return normalized;
+      if(normalized&&isValidHttpUrl(normalized))return normalized;
     }catch(e){}
     const asin=asinFromUrl(raw);
     if(asin)return 'https://www.amazon.com/dp/'+asin;
@@ -567,7 +567,7 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const addImage=v=>{
     if(typeof v!=='string')return;
     const decoded=decodeJsonHtml(v);
-    if(validUrl(decoded)&&!imageCandidates.includes(decoded))imageCandidates.push(decoded);
+    if(isValidHttpUrl(decoded)&&!imageCandidates.includes(decoded))imageCandidates.push(decoded);
   };
   if(Array.isArray(jsonld.image))jsonld.image.forEach(addImage); else addImage(jsonld.image);
   addImage(metaValue(html,'og:image'));
@@ -764,7 +764,7 @@ function dedupeImages(values,max=60){
   const out=[],seen=new Set();
   for(const value of (Array.isArray(values)?values:[])){
     const url=normalizeImageUrl(value);
-    if(!validUrl(url))continue;
+    if(!isValidHttpUrl(url))continue;
     const key=url.toLowerCase().replace(/\.(?:jpe?g|png|webp)(?:$|[?#])/i,'');
     if(seen.has(key))continue;
     seen.add(key);out.push(url);
@@ -802,7 +802,7 @@ function extractRelatedAmazonProducts(html,asin){
   return out.slice(0,20);
 }
 function normalizeAmazonProduct(product={}){
-  const images=dedupeImages(Array.isArray(product.image_urls)?product.image_urls:(validUrl(product.image_url)?[product.image_url]:[]),60);
+  const images=dedupeImages(Array.isArray(product.image_urls)?product.image_urls:(isValidHttpUrl(product.image_url)?[product.image_url]:[]),60);
   const rawName=smartProductTitle(product.name||'Nuvora product',product.brand||'');
   const description=cleanMultilineText(product.description,12000)||null;
   const features=cleanMultilineText(product.features,12000)||null;
@@ -850,7 +850,7 @@ function genericJsonLd(html){
   return out.find(x=>{const t=x?.['@type'];return t==='Product'||(Array.isArray(t)&&t.some(v=>String(v).toLowerCase()==='product'))})||{};
 }
 function genericImages(html,ld){
-  const out=[]; const add=v=>{if(typeof v==='string'&&validUrl(v)&&!out.includes(v))out.push(v)};
+  const out=[]; const add=v=>{if(typeof v==='string'&&isValidHttpUrl(v)&&!out.includes(v))out.push(v)};
   const xs=Array.isArray(ld.image)?ld.image:(ld.image?[ld.image]:[]);xs.forEach(add);
   add(metaValue(html,'og:image'));add(metaValue(html,'twitter:image'));
   for(const m of String(html||'').matchAll(/(?:data-src|data-lazy-src|src)=["'](https?:\/\/[^"']+)["']/gi))add(m[1]);
@@ -900,7 +900,7 @@ async function ingestSourceProduct(sourceUrl){
         const payload=await body(request,256*1024);
         const searchUrl=String(payload?.url||'').trim();
         const limit=Math.min(Math.max(Number(payload?.limit||20),1),20);
-        if(!validUrl(searchUrl))return json({error:'A valid Amazon search or category URL is required.'},400);
+        if(!isValidHttpUrl(searchUrl))return json({error:'A valid Amazon search or category URL is required.'},400);
         let parsed; try{parsed=new URL(searchUrl);}catch{return json({error:'That URL is not valid.'},400);}
         if(!amazonHost(parsed.hostname))return json({error:'Please paste an Amazon search or category URL.'},400);
         let response;
@@ -936,7 +936,7 @@ async function ingestSourceProduct(sourceUrl){
         for(const sourceUrl of urls){
           const started=Date.now();
           try{
-            if(!validUrl(sourceUrl))throw new Error('Invalid URL.');
+            if(!isValidHttpUrl(sourceUrl))throw new Error('Invalid URL.');
             const listing=await ingestSourceProduct(sourceUrl);
             if(!listing||listing.error)throw new Error(listing?.error||'Product data could not be read from the source.');
             const retailer=listing.retailer||detectRetailer(sourceUrl);
@@ -993,14 +993,14 @@ async function ingestSourceProduct(sourceUrl){
         if(!existingRes.ok)return json({error:'Could not load the product.'},500);
         const current=(await existingRes.json())?.[0]; if(!current)return json({error:'Product not found.'},404);
         const sourceUrl=current.amazon_source_url||current.destination_url||'';
-        if(!validUrl(sourceUrl))return json({error:'This product has no valid source URL to sync.'},400);
+        if(!isValidHttpUrl(sourceUrl))return json({error:'This product has no valid source URL to sync.'},400);
         const retailer=String(current.retailer||'').toLowerCase();
         if(retailer!=='amazon')return json({error:'Source sync currently supports Amazon products.'},400);
         const asin=asinFromUrl(sourceUrl)||current.amazon_asin;
         if(!asin)return json({error:'This product has no Amazon ASIN.'},400);
         const listing=await scrapeAmazonListing(sourceUrl,asin);
         if(!listing||listing.error)return json({error:listing?.error||'Amazon source could not be read.'},502);
-        const images=Array.isArray(listing.images)?listing.images.filter(validUrl).slice(0,30):[];
+        const images=Array.isArray(listing.images)?listing.images.filter(isValidHttpUrl).slice(0,30):[];
         const patch={
           amazon_asin:listing.asin||asin,
           amazon_source_url:sourceUrl,
@@ -1034,7 +1034,7 @@ async function ingestSourceProduct(sourceUrl){
       if(url.pathname==='/api/amazon/prepare'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const {url:amazonUrl}=await body(request,256*1024);
-        if(!amazonUrl||!validUrl(amazonUrl))return json({error:'A valid Amazon product URL is required'},400);
+        if(!amazonUrl||!isValidHttpUrl(amazonUrl))return json({error:'A valid Amazon product URL is required'},400);
         const parsed=new URL(amazonUrl);
         if(!amazonHost(parsed.hostname))return json({error:'Please paste an Amazon product URL.'},400);
         const resolved=await resolveAmazonUrl(amazonUrl);
@@ -1289,7 +1289,7 @@ async function scrapeTemuListing(temuUrl){
       if(url.pathname==='/api/temu/prepare'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const {url:temuUrl}=await body(request,256*1024);
-        if(!temuUrl||!validUrl(temuUrl))return json({error:'A valid Temu product URL is required'},400);
+        if(!temuUrl||!isValidHttpUrl(temuUrl))return json({error:'A valid Temu product URL is required'},400);
         const parsed=new URL(temuUrl);
         const host=parsed.hostname.toLowerCase().replace(/^www\./,'');
         if(host!=='temu.com'&&!host.endsWith('.temu.com')&&host!=='temu.to')return json({error:'Please paste a Temu product URL.'},400);
@@ -1308,7 +1308,7 @@ async function scrapeTemuListing(temuUrl){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         if(!configured(env).amazon)return json({error:'Amazon Creators API is not configured'},503);
         const {url:amazonUrl}=await body(request,256*1024);
-        if(!amazonUrl||!validUrl(amazonUrl))return json({error:'A valid Amazon product URL is required'},400);
+        if(!amazonUrl||!isValidHttpUrl(amazonUrl))return json({error:'A valid Amazon product URL is required'},400);
         const asin=asinFromUrl(amazonUrl); if(!asin)return json({error:'Could not find an ASIN in that Amazon URL'},400);
         const item=await amazonGetItem(env,asin); if(!item)return json({error:'Amazon returned no matching item'},404);
         const listing=item.offersV2?.listings?.[0]; const price=listing?.price?.money;
@@ -1560,7 +1560,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const results=[];
         for(const raw of items){          const product={...raw,published:false,slug:String(raw.slug||raw.name||'product').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,150)+'-'+randHex(6)};
           const validation=validateProduct(product); if(validation){results.push({ok:false,name:raw.name||'',error:validation});continue;}
-          if(product.image_url&&!validUrl(product.image_url))product.image_url=null;
+          if(product.image_url&&!isValidHttpUrl(product.image_url))product.image_url=null;
           const r=await supabaseRest(env,'POST','products',product);
           if(!r.ok){results.push({ok:false,name:raw.name||'',error:(await r.text()).slice(0,500)});continue;}
           results.push({ok:true,name:product.name});
@@ -1647,8 +1647,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const validation=validateProduct(product); if(validation)return json({error:validation},400);
         product.published=product.published===true;
         product.description=cleanMultilineText(product.description,12000); product.features=cleanMultilineText(product.features,12000); product.brand=cleanText(product.brand,180);
-        if(Array.isArray(product.image_urls))product.image_urls=product.image_urls.filter(validUrl).slice(0,30);
-        if(product.image_url&&!validUrl(product.image_url))product.image_url=null;
+        if(Array.isArray(product.image_urls))product.image_urls=product.image_urls.filter(isValidHttpUrl).slice(0,30);
+        if(product.image_url&&!isValidHttpUrl(product.image_url))product.image_url=null;
         const r=await supabaseProductWrite(env,'POST',product); if(!r.ok)return json({error:'Supabase rejected the product.',detail:(await r.text()).slice(0,2000)},400);
         return json((await r.json())[0]);
       }
@@ -1703,7 +1703,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           if(typeof patch.deal_text==='string')patch.deal_text=cleanText(patch.deal_text,500);
           if(typeof patch.amazon_deal_text==='string')patch.amazon_deal_text=cleanText(patch.amazon_deal_text,500);
           if(typeof patch.temu_deal_text==='string')patch.temu_deal_text=cleanText(patch.temu_deal_text,500);
-          if(Array.isArray(patch.image_urls))patch.image_urls=patch.image_urls.filter(validUrl).slice(0,30);
+          if(Array.isArray(patch.image_urls))patch.image_urls=patch.image_urls.filter(isValidHttpUrl).slice(0,30);
           const r=await supabaseProductWrite(env,'PATCH',patch,`?id=eq.${encodeURIComponent(id)}`); if(!r.ok)return json({error:await r.text()},400);
           const rows=await r.json(); return json(rows[0]||null);
         }
@@ -1835,6 +1835,7 @@ async function serveAsset(env,request){
   if(type.includes('text/html'))headers.set('cache-control','no-store, must-revalidate');
   return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
 }
+function isValidHttpUrl(value){try{const u=new URL(String(value??'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
 const buckets = new Map();
 function rateLimit(request,key,limit=120,windowMs=60000){
   const ip=(request.headers.get('cf-connecting-ip')||request.headers.get('x-forwarded-for')||'unknown').split(',')[0].trim();
@@ -1901,9 +1902,9 @@ function validateProduct(product){
   if(!['shop','find','learn'].includes(kind))return 'Product type must be shop, find, or learn.';
   if(product.display_price!==undefined&&product.display_price!==null&&(!Number.isFinite(Number(product.display_price))||Number(product.display_price)<0))return 'Product price is invalid.';
   if(product.published===true){
-    const images=Array.isArray(product.image_urls)?product.image_urls.filter(validUrl):(validUrl(product.image_url)?[product.image_url]:[]);
+    const images=Array.isArray(product.image_urls)?product.image_urls.filter(isValidHttpUrl):(isValidHttpUrl(product.image_url)?[product.image_url]:[]);
     if(!images.length)return 'A published product needs at least one valid product image.';
-    if(!validUrl(product.destination_url))return 'A published product needs a valid destination or affiliate URL.';
+    if(!isValidHttpUrl(product.destination_url))return 'A published product needs a valid destination or affiliate URL.';
   }
   return null;
 }
