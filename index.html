@@ -1163,4 +1163,82 @@ function checkout(trigger){
   beginCheckout(lines,trigger);
 }
 bootNuvora();
+</script><script id="nuvora-interaction-bridge">
+/* Failsafe storefront interaction layer. Keeps navigation usable even if an optional integration fails. */
+(function(){
+  function activate(name){
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    const target=document.getElementById('view-'+name);
+    if(target)target.classList.add('active');
+    window.scrollTo(0,0);
+    try{
+      if(name==='browse'&&typeof renderBrowse==='function')renderBrowse();
+      if(name==='shop'&&typeof renderList==='function')renderList('shopGrid','Shop');
+      if(name==='finds'&&typeof renderList==='function')renderList('findGrid','Find');
+      if(name==='learn'&&typeof renderLearn==='function')renderLearn();
+      if(name==='saved'&&typeof renderSaved==='function')renderSaved();
+      if(name==='cart'&&typeof renderCart==='function')renderCart();
+      if(name==='account'&&typeof renderAccount==='function')renderAccount();
+      if(name==='collections'&&typeof renderCollections==='function')renderCollections();
+    }catch(e){console.warn('Nuvora view refresh failed:',e);}
+    try{history.replaceState({view:name},'',name==='home'?'/':'/'+name);}catch(e){}
+  }
+  window.nuvoraActivate=activate;
+
+  document.addEventListener('click',function(e){
+    const el=e.target.closest('button,a,[role="button"]');
+    if(!el)return;
+
+    const id=el.id;
+    if(id==='menuBtn'){
+      e.preventDefault();e.stopImmediatePropagation();
+      document.getElementById('menuPanel')?.classList.toggle('open');
+      return;
+    }
+    if(id==='menuClose'){
+      e.preventDefault();e.stopImmediatePropagation();
+      document.getElementById('menuPanel')?.classList.remove('open');
+      return;
+    }
+    if(id==='favBtn'){e.preventDefault();e.stopImmediatePropagation();activate('saved');return;}
+    if(id==='cartBtn'){e.preventDefault();e.stopImmediatePropagation();activate('cart');return;}
+    if(id==='searchBtn'){e.preventDefault();e.stopImmediatePropagation();activate('browse');return;}
+    if(id==='accountBtn'){
+      e.preventDefault();e.stopImmediatePropagation();
+      if(typeof openAuth==='function' && window.user)openAuth('login');else activate('account');
+      return;
+    }
+
+    const onclick=String(el.getAttribute('onclick')||'');
+    const viewMatch=onclick.match(/showView\(['"]([^'"]+)['"]\)/);
+    if(viewMatch){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      activate(viewMatch[1]);
+      document.getElementById('menuPanel')?.classList.remove('open');
+      return;
+    }
+    const categoryMatch=onclick.match(/browseCategory\(['"]([^'"]+)['"]\)/);
+    if(categoryMatch){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      window.activeCat=categoryMatch[1];
+      window.activeCollection='All';
+      activate('browse');
+      if(typeof renderBrowse==='function')renderBrowse();
+      document.getElementById('menuPanel')?.classList.remove('open');
+      return;
+    }
+    if(el.matches('.brand')){
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      activate('home');
+      return;
+    }
+  },true);
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape')document.getElementById('menuPanel')?.classList.remove('open');
+  });
+})();
 </script></body></html>
