@@ -467,6 +467,148 @@ button:hover,.btn:hover{transform:translateY(-1px)}
 @media(max-width:900px){.nav{gap:10px!important}.store-search{flex:1;min-width:120px}.brand small{display:none}}
 @media(max-width:700px){.nav{height:68px!important}.store-search{display:none!important}.nav-search{display:grid!important}.nav-menu{width:40px!important;height:40px!important}.icon-btn,.avatar-btn{width:40px!important;height:40px!important}.nav-actions{gap:5px!important}}
 @media(max-width:420px){.nav{gap:6px!important}.nav-actions{gap:3px!important}.icon-btn,.avatar-btn{width:37px!important;height:37px!important}.nav-menu{width:37px!important;height:37px!important}.brand>span:last-child{font-size:17px!important}}
+</style><style id="nuvora-responsive-hardening">
+/* Responsive hardening: keep the existing Nuvora design, but make every storefront surface fit small screens cleanly. */
+html{max-width:100%;overflow-x:hidden}
+body{max-width:100%;overflow-x:hidden}
+img,svg,video,canvas{max-width:100%}
+button,input,select,textarea{max-width:100%}
+.shell{min-width:0}
+.nav{min-width:0}
+.brand{min-width:0}
+.brand>span:last-child{min-width:0}
+.nav-actions{min-width:0;flex-shrink:0}
+.store-search{min-width:0}
+.store-search input{min-width:0}
+.product-grid,.category-grid,.curated-grid,.discovery-grid,.commerce-strip,.confidence-grid,.nv-info-panels,.nv-check-list,.nv-footer-grid{min-width:0}
+.product,.nv-card,.cat,.confidence-card,.nv-section-card,.nv-info-box,.nv-spec{min-width:0}
+.prodtext,.nv-card .prodtext{min-width:0;overflow:hidden}
+.prodtext h4,.nv-card .prodtext h4{overflow-wrap:anywhere;word-break:break-word}
+.section-head{min-width:0}
+.section-head>div{min-width:0}
+.section-head p{overflow-wrap:anywhere}
+
+/* Tablet */
+@media(max-width:900px){
+  .hero-grid{grid-template-columns:1fr;gap:28px}
+  .hero-art{min-height:320px;max-width:680px;margin:0 auto;width:100%}
+  .category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .curated-grid,.discovery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .curated-grid .nv-card:first-child{grid-column:span 2}
+  .curated-grid .nv-card:first-child .thumb{height:340px;min-height:0}
+  .nv-quick-links{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .nv-quick-links button:nth-child(2){border-right:0}
+  .nv-quick-links button:nth-child(3){border-top:1px solid var(--line)}
+  .nv-quick-links button:nth-child(4){display:none}
+  .browse-layout{grid-template-columns:1fr}
+  .browse-sidebar{border-right:0;border-bottom:1px solid var(--line);padding:0 0 16px}
+  .browse-sidebar .chips{display:flex;flex-wrap:nowrap;overflow-x:auto}
+  .browse-sidebar .chip{white-space:nowrap;flex:0 0 auto}
+  .browse-toolbar{flex-direction:column}
+  .filter-select{width:100%;min-width:0!important}
+  .nv-product-top,.nv-explain{grid-template-columns:1fr}
+  .nv-gallery{order:0}
+  .nv-info{order:1}
+  .nv-image-card{height:min(72vw,620px);min-height:280px}
+  .nv-info h1{font-size:clamp(34px,7vw,52px)}
+}
+
+/* Phone */
+@media(max-width:600px){
+  .shell{width:calc(100% - 24px)}
+  .announcement{font-size:10px;line-height:1.4;padding:7px 10px}
+  .nav{height:62px!important;gap:6px!important}
+  .nav-menu,.icon-btn,.avatar-btn{width:38px!important;height:38px!important;flex:0 0 38px!important}
+  .brand{gap:7px}
+  .brandmark{width:32px!important;height:32px!important;flex:0 0 32px!important}
+  .brand>span:last-child{font-size:17px!important;white-space:nowrap}
+  .nav-actions{gap:4px!important}
+  .nav-search{display:grid!important}
+  .store-search{display:none!important}
+  .menu-panel{left:8px!important;top:70px!important;width:calc(100vw - 16px)!important;max-height:calc(100vh - 82px)!important}
+  .nv-hero-clean{padding:48px 0 30px}
+  .nv-hero-copy{width:100%}
+  .nv-hero-copy h1{font-size:clamp(42px,14vw,56px)!important;line-height:.94;overflow-wrap:anywhere}
+  .nv-hero-copy p{font-size:14px;line-height:1.6}
+  .home-search{width:100%;margin-top:22px}
+  .home-search input{min-width:0;font-size:14px;padding:12px}
+  .home-search button{flex:0 0 auto;padding:0 14px}
+  .home-tools{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto}
+  .nv-quick-nav{padding:12px 0 24px}
+  .nv-quick-links{grid-template-columns:1fr 1fr}
+  .nv-quick-links button{padding:14px 12px}
+  .nv-quick-links button:nth-child(3){grid-column:1/-1;border-right:0;border-top:1px solid var(--line)}
+  .section{padding:24px 0}
+  .section-head{align-items:flex-start;gap:8px}
+  .section-head h2{font-size:20px}
+  .section-head p{font-size:11px}
+  .section-head .link-btn{flex:0 0 auto;font-size:11px}
+  .product-grid,.category-grid,.curated-grid,.discovery-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px!important}
+  .curated-grid .nv-card:first-child{grid-column:1/-1}
+  .curated-grid .nv-card:first-child .thumb{height:240px!important;min-height:0}
+  .nv-card{border-radius:15px!important}
+  .nv-card .thumb{height:175px!important}
+  .nv-card .prodtext{padding:10px 10px 12px!important}
+  .nv-card .prodtext h4{font-size:12px!important;min-height:34px}
+  .nv-card .prodprice{font-size:13px!important}
+  .nv-card .card-source{font-size:8px}
+  .nv-card .card-action{font-size:9px;padding:5px 6px}
+  .nv-card .card-save{width:30px;height:30px;right:7px;top:7px}
+  .nv-card-badge{left:7px;top:7px;max-width:70%;font-size:8px}
+  .nv-editorial-break{padding:34px 0}
+  .nv-editorial-break .shell{padding:24px 18px!important}
+  .nv-editorial-break h2{font-size:32px}
+  .browse{padding:34px 0 58px}
+  .browse-heading h1{font-size:clamp(38px,11vw,52px)!important;line-height:1}
+  .browse-heading .hero-copy{font-size:14px}
+  .browse-toolbar{gap:8px}
+  .browse-search{min-width:0;width:100%}
+  .browse-search input{font-size:13px;min-width:0}
+  .nv-product-shell{width:100%}
+  .product-page{padding:16px 0 54px}
+  .product-breadcrumb{font-size:11px;margin-bottom:12px}
+  .nv-image-card{height:84vw;min-height:245px;border-radius:16px}
+  .nv-thumbs{gap:7px}
+  .nv-thumb{width:58px;height:58px;flex-basis:58px}
+  .nv-info h1{font-size:clamp(30px,9vw,40px)!important;line-height:1.02}
+  .nv-meta{font-size:11px}
+  .nv-buy-card{padding:14px;border-radius:15px}
+  .nv-current{font-size:26px}
+  .nv-cta{grid-template-columns:minmax(0,1fr) 48px}
+  .nv-cta .btn.primary{min-width:0}
+  .nv-info-boxes{grid-template-columns:1fr}
+  .nv-explain{gap:12px}
+  .nv-section-card{padding:14px;border-radius:15px}
+  .nv-feature-list li,.nv-detail-body,.nv-detail-body p,.nv-detail-body li{font-size:13px;line-height:1.65}
+  .nv-specs{grid-template-columns:1fr}
+  .nv-related{margin-top:30px}
+  .nv-related h2{font-size:19px}
+  .nv-info-panels,.nv-check-list{grid-template-columns:1fr}
+  .auth-wrap{padding:24px 0;min-height:60vh}
+  .auth-card{padding:20px;border-radius:20px}
+  .account-actions{display:grid;grid-template-columns:1fr 1fr}
+  .footer{padding:34px 0 24px}
+  .nv-footer-grid{grid-template-columns:1fr 1fr!important;gap:18px}
+  .nv-footer-grid>div:first-child{grid-column:1/-1}
+}
+
+/* Very small phones: prevent header/content compression and horizontal scroll. */
+@media(max-width:380px){
+  .shell{width:calc(100% - 16px)}
+  .nav{gap:4px!important}
+  .brandmark{width:30px!important;height:30px!important;flex-basis:30px!important}
+  .brand>span:last-child{font-size:16px!important}
+  .nav-actions{gap:2px!important}
+  .nav-menu,.icon-btn,.avatar-btn{width:35px!important;height:35px!important;flex-basis:35px!important}
+  .nv-hero-copy h1{font-size:40px!important}
+  .home-search button{padding:0 11px}
+  .product-grid,.category-grid,.curated-grid,.discovery-grid{gap:8px!important}
+  .nv-card .thumb{height:150px!important}
+  .nv-card .prodtext h4{font-size:11px!important}
+  .nv-card .prodprice{font-size:12px!important}
+  .nv-card .card-action{display:none}
+}
 </style></head>
 <body>
 <div class="announcement"><div class="shell"><b>Nuvora picks, made simple.</b> Browse curated products, save your favorites, and discover something worth finding.</div></div><header class="topbar"><div class="shell nav">
