@@ -1164,6 +1164,7 @@ async function loadLiveProducts(){
   }).join('');
   const renderSafe=(id,html)=>{const el=document.getElementById(id);if(el)el.innerHTML=html;};
   const empty='<div class="empty" style="grid-column:1/-1">No published products yet.</div>';
+  if(!cleanList.length)throw new Error('Catalog returned no renderable products.');
   renderSafe('newProducts',safeCards(cleanList.slice(0,8))||empty);
   renderSafe('randomPicks',safeCards([...cleanList].sort(()=>Math.random()-0.5).slice(0,8))||empty);
   try{renderBrowse()}catch(err){console.warn('Browse catalog render failed:',err);renderSafe('browseGrid',safeCards(cleanList)||empty);}
