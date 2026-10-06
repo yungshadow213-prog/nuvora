@@ -391,14 +391,30 @@ function normalizeAmazonListing(listing={}){
   return x;
 }
 async function aiPolishAmazonListing(env,listing){
-  const key=String(env?.OPENAI_API_KEY||'').trim();if(!key||!listing?.title)return listing;
+  if(!listing?.title)return listing;
+  const facts={title:listing.title,brand:listing.brand,description:listing.description,features:listing.features,specifications:listing.specifications,current_price:listing.current_price,list_price:listing.list_price,discount_percent:listing.discount_percent,rating:listing.rating,review_count:listing.review_count,availability:listing.availability,shipping_text:listing.shipping_text,category_path:listing.category_path};
+  const system='You clean ecommerce source data for Nuvora. Return ONLY valid JSON with title and description. Use ONLY facts present in the supplied data. Do not invent, infer, add specifications, compatibility, materials, sizes, guarantees, certifications, discounts, or performance claims. Preserve important measurements, model numbers, quantities and factual product attributes. Remove retailer boilerplate, keyword spam and broken wording. Make the title natural and specific, maximum 120 characters. Make the description clear, useful and 80-180 words when enough source facts exist. If the source lacks facts, keep the description short rather than inventing.';
   try{
-    const facts={title:listing.title,brand:listing.brand,description:listing.description,features:listing.features,specifications:listing.specifications,current_price:listing.current_price,list_price:listing.list_price,discount_percent:listing.discount_percent,rating:listing.rating,review_count:listing.review_count,availability:listing.availability,shipping_text:listing.shipping_text,category_path:listing.category_path};
-    const system='You normalize Nuvora product data. Return JSON with only title and description. Remove keyword spam and retailer boilerplate. Never invent, infer, change, or omit factual product claims. Preserve measurements, materials, compatibility, prices, ratings and counts. Title under 120 characters. Description factual and readable from supplied facts only.';
-    const resp=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+key},body:JSON.stringify({model:'gpt-4o-mini',temperature:0,response_format:{type:'json_object'},messages:[{role:'system',content:system},{role:'user',content:JSON.stringify(facts).slice(0,18000)}]})});
-    if(!resp.ok)return listing;const data=await resp.json();const raw=data?.choices?.[0]?.message?.content||'';const p=JSON.parse(raw);
-    if(typeof p.title==='string'&&p.title.trim())listing.title=smartProductTitle(p.title,listing.brand||'');
-    if(typeof p.description==='string'&&p.description.trim())listing.description=cleanMultilineText(p.description,12000);
+    const key=String(env?.OPENAI_API_KEY||'').trim();
+    let raw='';
+    if(key){
+      const resp=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+key},body:JSON.stringify({model:'gpt-4o-mini',temperature:0,response_format:{type:'json_object'},messages:[{role:'system',content:system},{role:'user',content:JSON.stringify(facts).slice(0,22000)}]})});
+      if(resp.ok){const data=await resp.json();raw=String(data?.choices?.[0]?.message?.content||'').trim();}
+    }else if(env?.AI){
+      const resp=await env.AI.run('@cf/google/gemma-4-26b-a4b-it',{messages:[{role:'system',content:system},{role:'user',content:JSON.stringify(facts).slice(0,18000)}],chat_template_kwargs:{enable_thinking:false}});
+      raw=String(resp?.response||resp?.choices?.[0]?.message?.content||'').trim();
+    }
+    if(!raw)return listing;
+    const clean=raw.replace(/^\`\`\`(?:json)?\s*/i,'').replace(/\s*\`\`\`$/,'').trim();
+    const p=JSON.parse(clean);
+    if(typeof p.title==='string'&&p.title.trim()&&!looksFragmentedText(p.title)){
+      const polished=smartProductTitle(p.title,listing.brand||'');
+      if(polished&&polished.length>=8)listing.title=polished;
+    }
+    if(typeof p.description==='string'&&p.description.trim()&&!looksFragmentedText(p.description)){
+      const desc=cleanMultilineText(p.description,12000);
+      if(desc.length>=40)listing.description=desc;
+    }
   }catch(e){}
   return listing;
 }
