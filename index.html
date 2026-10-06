@@ -1092,24 +1092,42 @@ function inferStoreCategory(p){
 }
 function mapProduct(p){let variants=[];try{variants=Array.isArray(p.shopify_variants)?p.shopify_variants:(typeof p.shopify_variants==='string'?JSON.parse(p.shopify_variants||'[]'):[])}catch(e){variants=[]}const source=String(p.source_type||p.retailer||'').toLowerCase();const retailer=source.includes('temu')?'Temu':(source.includes('amazon')||p.amazon_asin||p.amazon_source_url?'Amazon':(p.retailer||''));return {id:p.id,slug:p.slug||p.id,name:displayProductName(p.name),rawName:p.name,type:p.kind==='find'?'Find':p.kind==='learn'?'Learn':'Shop',cat:p.category?.name||inferStoreCategory(p),collection:p.collection?.name||'',desc:p.description||'',features:p.features||'',brand:p.brand||'',availability:p.availability||'',sourceSku:p.source_sku||'',price:formatPrice(p.display_price,p.currency),rawPrice:p.display_price,currency:p.currency||'',amazonListPrice:p.amazon_list_price,amazonDiscount:p.amazon_discount_percent,amazonDeal:p.amazon_deal_text,amazonRating:p.amazon_rating,amazonReviews:p.amazon_review_count,amazonBought:p.amazon_bought_past_month,amazonBadges:Array.isArray(p.amazon_badges)?p.amazon_badges:[],amazonShipping:p.amazon_shipping_text,amazonTax:p.amazon_tax_text,rating:p.temu_rating??p.rating??p.amazon_rating,reviews:p.temu_review_count??p.review_count??p.amazon_review_count,deal:p.temu_deal_text??p.deal_text??p.amazon_deal_text,listPrice:p.temu_list_price??p.list_price??p.amazon_list_price,discount:p.temu_discount_percent??p.discount_percent??p.amazon_discount_percent,icon:'✦',image:p.image_url,image_urls:Array.isArray(p.image_urls)?p.image_urls:[],variants,options:Array.isArray(p.amazon_variations)?p.amazon_variations:[],trend:p.trending,top:p.top_pick,featured:p.featured,whyPicked:p.why_we_picked_it||'',bestFor:p.best_for||'',skipIf:p.skip_if||'',lastChecked:p.last_checked_at||p.amazon_last_synced||null,destination:p.destination_url,variantId:p.shopify_variant_id,shopifyProductId:p.shopify_product_id,retailer};}
 async function loadLiveProducts(){
-  const response=await fetch('/api/products',{cache:'no-store',headers:{accept:'application/json'}});
-  const data=await response.json().catch(()=>null);
-  if(!response.ok)throw new Error(data?.error||'Products could not be loaded.');
-  if(!Array.isArray(data))throw new Error('The public product catalog returned an invalid response.');
-  products.length=0;
+  let lastError=null;
+  let data=null;
+  for(let attempt=0;attempt<2;attempt++){
+    try{
+      const response=await fetch('/api/products?catalog='+Date.now(),{
+        cache:'no-store',
+        headers:{accept:'application/json, text/plain, */*'}
+      });
+      const raw=await response.text();
+      let parsed=null;
+      try{parsed=raw?JSON.parse(raw):null}catch(parseErr){throw new Error('Catalog returned invalid JSON.');}
+      if(!response.ok)throw new Error(parsed?.error||('Catalog request failed ('+response.status+').'));
+      if(!Array.isArray(parsed))throw new Error('The public product catalog returned an invalid response.');
+      data=parsed;
+      break;
+    }catch(err){
+      lastError=err;
+      if(attempt===0)await new Promise(resolve=>setTimeout(resolve,250));
+    }
+  }
+  if(!Array.isArray(data))throw lastError||new Error('Products could not be loaded.');
+  const mappedProducts=[];
   for(const row of data){
     if(!row||!['shop','find','learn'].includes(String(row.kind||'').toLowerCase()))continue;
     try{
       const mapped=mapProduct(row);
-      if(mapped&&mapped.id)products.push(mapped);
-    }catch(err){
-      console.warn('Skipping malformed product',row?.id,err);
-    }
+      if(mapped&&mapped.id) mappedProducts.push(mapped);
+    }catch(err){console.warn('Skipping malformed product',row?.id,err);}
   }
+  products.length=0;
+  products.push(...mappedProducts);
   const cleanList=[];
   const seen=new Set();
   for(const p of products){
-    const key=normalizeSearchName(p.name)||String(p.id);
+    let key=String(p.id||'');
+    try{key=normalizeSearchName(p.name)||key}catch(e){}
     if(seen.has(key))continue;
     seen.add(key);
     cleanList.push(p);
@@ -1117,17 +1135,15 @@ async function loadLiveProducts(){
   const safeCards=list=>list.map(p=>{
     try{return card(p)}catch(err){
       console.warn('Product card render failed',p?.id,err);
-      return '<article class="product nv-card" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button"><div class="thumb"><span class="nv-image-mark">✦</span></div><div class="prodtext"><div class="card-source">'+htmlEsc(p.retailer||'Nuvora')+'</div><h4>'+htmlEsc(p.name||'Product')+'</h4><div class="card-bottom"><span class="prodprice">'+htmlEsc(p.price||'Price unavailable')+'</span><span class="card-action">View <span>→</span></span></div></div></article>';
+      return '<article class="product nv-card" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button"><div class="thumb">'+(p.image?'<img src="'+htmlEsc(p.image)+'" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover">':'<span class="nv-image-mark">✦</span>')+'</div><div class="prodtext"><div class="card-source">'+htmlEsc(p.retailer||'Nuvora')+'</div><h4>'+htmlEsc(p.name||'Product')+'</h4><div class="card-bottom"><span class="prodprice">'+htmlEsc(p.price||'Price unavailable')+'</span><span class="card-action">View <span>→</span></span></div></div></article>';
     }
   }).join('');
-  const shuffled=[...cleanList].sort(()=>Math.random()-0.5);
-  const renderSafe=(id,html)=>{
-    const el=document.getElementById(id);
-    if(el)el.innerHTML=html;
-  };
-  renderSafe('newProducts',safeCards(cleanList.slice(0,8))||'<div class="empty" style="grid-column:1/-1">No published products yet.</div>');
-  renderSafe('randomPicks',safeCards(shuffled.slice(0,8))||'<div class="empty" style="grid-column:1/-1">No published products yet.</div>');
-  try{renderBrowse()}catch(err){console.warn('Browse catalog render failed:',err);renderSafe('browseGrid',safeCards(cleanList)||'<div class="empty" style="grid-column:1/-1">No published products yet.</div>');}
+  const renderSafe=(id,html)=>{const el=document.getElementById(id);if(el)el.innerHTML=html;};
+  const empty='<div class="empty" style="grid-column:1/-1">No published products yet.</div>';
+  renderSafe('newProducts',safeCards(cleanList.slice(0,8))||empty);
+  renderSafe('randomPicks',safeCards([...cleanList].sort(()=>Math.random()-0.5).slice(0,8))||empty);
+  try{renderBrowse()}catch(err){console.warn('Browse catalog render failed:',err);renderSafe('browseGrid',safeCards(cleanList)||empty);}
+  try{renderList('shopGrid','Shop');renderList('findGrid','Find');renderLearn()}catch(err){console.warn('Secondary catalog render failed:',err);}
   try{renderSaved()}catch(err){console.warn('Saved catalog render failed:',err);}
   try{renderCart()}catch(err){console.warn('Cart catalog render failed:',err);}
 }
