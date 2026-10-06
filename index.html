@@ -850,8 +850,8 @@ function card(p){
     :'';
   const discountMarkup=discount!=null&&discount>0?'<span class="nv-card-discount">'+htmlEsc(String(discount).replace(/\.0$/,''))+'% OFF</span>':'';
   return '<article class="product nv-card" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button" aria-label="View '+htmlEsc(p.name)+'">'+
-    '<button class="card-save '+(savedNow?'saved':'')+'" aria-label="Save product" onclick="event.stopPropagation();toggleSave(this.closest(\\'.product\\').dataset.productId)">'+(savedNow?'♥':'♡')+'</button>'+
-    '<div class="prod-open"><div class="thumb">'+(image?'<img src="'+htmlEsc(image)+'" alt="'+htmlEsc(p.name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\\'none\\'">':'<span class="nv-image-mark">✦</span>')+discountMarkup+'</div>'+
+    '<button class="card-save '+(savedNow?'saved':'')+'" aria-label="Save product" onclick="event.stopPropagation();toggleSave(this.closest(\'.product\').dataset.productId)">'+(savedNow?'♥':'♡')+'</button>'+
+    '<div class="prod-open"><div class="thumb">'+(image?'<img src="'+htmlEsc(image)+'" alt="'+htmlEsc(p.name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\'">':'<span class="nv-image-mark">✦</span>')+discountMarkup+'</div>'+
     '<div class="prodtext"><div class="card-source">'+htmlEsc(source)+'</div><h4>'+htmlEsc(p.name)+'</h4>'+ratingMarkup+'<div class="card-bottom"><span class="prodprice">'+htmlEsc(p.price)+'</span><span class="card-action">View <span>→</span></span></div></div></div></article>';
 }
 function renderList(id,type){const el=document.getElementById(id);if(!el)return;el.innerHTML=products.filter(p=>p.type===type).map(card).join('')||'<div class="empty" style="grid-column:1/-1"><strong>No '+String(type).toLowerCase()+' products published yet.</strong><br><span>Add and publish '+String(type).toLowerCase()+' products from Admin.</span></div>'}
