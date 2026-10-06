@@ -1054,9 +1054,12 @@ async function bootNuvora(){
     const routeProduct=findProductFromPath();    if(routeProduct){renderProductPage(routeProduct);showView('product');}
   }catch(e){
     console.error('Nuvora catalog unavailable:',e);
-    const message='<div class="empty" style="grid-column:1/-1"><strong>Products could not be loaded.</strong><br><span>Please try again shortly.</span></div>';
-    const a=document.getElementById('newProducts'),b=document.getElementById('randomPicks'),g=document.getElementById('browseGrid');
-    if(a)a.innerHTML=message;if(b)b.innerHTML=message;if(g)g.innerHTML=message;
+    const recovered=await emergencyCatalogFallback();
+    if(!recovered){
+      const message='<div class="empty" style="grid-column:1/-1"><strong>Products could not be loaded.</strong><br><span>Please try again shortly.</span></div>';
+      const a=document.getElementById('newProducts'),b=document.getElementById('randomPicks'),g=document.getElementById('browseGrid');
+      if(a)a.innerHTML=message;if(b)b.innerHTML=message;if(g)g.innerHTML=message;
+    }
   }
   try{
     if(!window.supabase)return;
@@ -1073,6 +1076,27 @@ async function bootNuvora(){
       if(session) await syncUserData(session.user.id);
     });
   }catch(e){console.warn('Nuvora account backend unavailable:',e.message)}
+}
+async function emergencyCatalogFallback(){
+  try{
+    const r=await fetch('/api/products?emergency='+Date.now(),{cache:'no-store',headers:{accept:'application/json'}});
+    const raw=await r.text();
+    const rows=JSON.parse(raw);
+    if(!Array.isArray(rows))throw new Error('Invalid catalog');
+    const esc=v=>htmlEsc(String(v??''));
+    const safeRows=rows.filter(p=>p&&p.id&&['shop','find','learn'].includes(String(p.kind||'').toLowerCase()));
+    const make=p=>{
+      const img=String(p.image_url||p.image_urls?.[0]||'');
+      const name=displayProductName(p.name||'Product');
+      const retailer=p.retailer||'Nuvora';
+      const price=formatPrice(p.display_price,p.currency);
+      return '<article class="product nv-card" data-product-id="'+esc(p.id)+'" tabindex="0" role="button" aria-label="View '+esc(name)+'"><div class="prod-open"><div class="thumb">'+(isValidHttpUrl(img)?'<img src="'+esc(img)+'" alt="'+esc(name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\'">':'<span class="nv-image-mark">✦</span>')+'</div><div class="prodtext"><div class="card-source">'+esc(retailer)+'</div><h4>'+esc(name)+'</h4><div class="card-bottom"><span class="prodprice">'+esc(price)+'</span><span class="card-action">View <span>→</span></span></div></div></div></article>';
+    };
+    const html=safeRows.map(make).join('');
+    ['newProducts','randomPicks','browseGrid'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html||'<div class="empty" style="grid-column:1/-1">No published products yet.</div>';});
+    const count=document.getElementById('browseCount');if(count)count.textContent=safeRows.length+' '+(safeRows.length===1?'product':'products');
+    return true;
+  }catch(err){console.error('Emergency catalog fallback failed:',err);return false;}
 }
 function inferStoreCategory(p){
   const text=String([p.name,p.description,p.features,p.brand,p.category?.name].filter(Boolean).join(' ')).toLowerCase();
