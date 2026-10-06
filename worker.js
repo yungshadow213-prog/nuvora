@@ -373,24 +373,21 @@ function normalizeAmazonListing(listing={}){
   const x={...listing};
   x.title=smartProductTitle(x.title||'Nuvora product',x.brand||'');
   x.images=dedupeImages(x.images,60);
-  x.features=Array.isArray(x.features)?[...new Set(x.features.map(v=>cleanText(v,700)).filter(Boolean))].slice(0,30):[];
-  x.specifications=Array.isArray(x.specifications)?x.specifications.slice(0,40):[];
-  if(x.specifications.length)x.features=[...x.features,...x.specifications.map(([k,v])=>k+': '+v)].slice(0,50);
+  x.features=Array.isArray(x.features)?[...new Set(x.features.map(v=>cleanText(v,900)).filter(Boolean))].slice(0,40):[];
+  x.specifications=Array.isArray(x.specifications)?x.specifications.slice(0,60):[];
+  const specLines=x.specifications.map(item=>Array.isArray(item)?cleanMultilineText(String(item[0])+': '+String(item[1]),700):cleanMultilineText(String(item),700)).filter(Boolean).slice(0,30);
+  const featureLines=x.features.map(v=>cleanMultilineText(v,900)).filter(v=>v&&!looksFragmentedText(v)).slice(0,18);
   const sourceDescription=cleanMultilineText(x.description,12000)||'';
   const badDescription=/^(?:visit the|shop the|brand:\s|about this item|product description|click to|see more|read more|customer questions|make sure this fits)/i.test(sourceDescription);
-  const fragmented=looksFragmentedText(sourceDescription);
-  const featureLines=Array.isArray(x.features)?x.features.map(v=>cleanMultilineText(v,700)).filter(v=>v&&!/^visit the .*store/i.test(v)&&!looksFragmentedText(v)).slice(0,12):[];
-  const specLines=Array.isArray(x.specifications)?x.specifications.map(([k,v])=>cleanMultilineText(String(k)+': '+String(v),700)).filter(Boolean).slice(0,20):[];
-  if(!sourceDescription||sourceDescription.length<120||badDescription||fragmented){
-    const intro=featureLines.length?'Key features include: '+featureLines.slice(0,6).join(', ')+'.':'';
-    const details=specLines.length?'Product details: '+specLines.slice(0,12).join('; ')+'.':'';
-    x.description=cleanMultilineText([intro,details].filter(Boolean).join('\n\n'),12000)||null;
-  }else x.description=sourceDescription;
+  const parts=[];
+  if(sourceDescription&&sourceDescription.length>=80&&!badDescription&&!looksFragmentedText(sourceDescription))parts.push(sourceDescription);
+  if(featureLines.length)parts.push('Key features: '+featureLines.slice(0,12).join(' • '));
+  if(specLines.length)parts.push('Product details: '+specLines.slice(0,20).join(' • '));
+  x.features=[...featureLines,...specLines].slice(0,60);
+  x.description=cleanMultilineText(parts.join('\n\n'),12000)||null;
   if(x.list_price!=null&&x.current_price!=null&&x.list_price>x.current_price&&x.discount_percent==null)x.discount_percent=Number((((x.list_price-x.current_price)/x.list_price)*100).toFixed(1));
   if(x.discount_percent!=null&&x.discount_percent>0&&x.discount_percent<100&&!x.list_price&&x.current_price)x.list_price=Number((x.current_price/(1-x.discount_percent/100)).toFixed(2));
-  x.brand=cleanText(x.brand,180)||null;x.seller=cleanText(x.seller,180)||null;x.deal_text=cleanText(x.deal_text,240)||null;x.shipping_text=cleanText(x.shipping_text,500)||null;x.tax_text=cleanText(x.tax_text,300)||null;x.availability=cleanText(x.availability,240)||null;
-  x.category_path=Array.isArray(x.category_path)?x.category_path.slice(0,12):[];
-  x.quality={title:!!x.title,images:x.images.length,description:!!x.description,brand:!!x.brand,price:x.current_price!=null,list_price:x.list_price!=null,discount:x.discount_percent!=null,rating:x.rating!=null,reviews:x.review_count!=null,availability:!!x.availability,shipping:!!x.shipping_text,variants:Array.isArray(x.variations)?x.variations.length:0,specifications:x.specifications.length};
+  x.brand=cleanText(x.brand,180)||null;x.seller=cleanText(x.seller,300)||null;
   return x;
 }
 async function aiPolishAmazonListing(env,listing){
@@ -560,18 +557,23 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const normalizedTitle=String(title||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
   const normalizedBrand=String(brandHint||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
   const usableDescription=v=>{
-    const x=clean(v).toLowerCase().replace(/\s+/g,' ').trim();
+    const raw=clean(v).replace(/\s+/g,' ').trim();
+    const x=raw.toLowerCase();
     const compact=x.replace(/[^a-z0-9]+/g,' ').trim();
     if(!x||x.length<40||compact===normalizedBrand||compact===normalizedTitle)return false;
-    if(boilerplate.test(x)||navigationJunk.test(x))return false;
+    if(boilerplate.test(x)||navigationJunk.test(x.slice(0,180)))return false;
     if(x.split(' ').length<8)return false;
     return true;
   };
-  let description=descriptionCandidates.find(usableDescription)||null;
-  if(!description&&features.length){
-    const cleanFeatures=features.map(v=>clean(v)).filter(v=>v.length>=12&&!boilerplate.test(v)&&!navigationJunk.test(v)).slice(0,8);
-    if(cleanFeatures.length)description=cleanFeatures.join('\n');
+  const descriptionParts=[];
+  for(const candidate of descriptionCandidates){
+    if(!usableDescription(candidate))continue;
+    const cleaned=clean(candidate);
+    if(!descriptionParts.some(existing=>existing.toLowerCase()===cleaned.toLowerCase()))descriptionParts.push(cleaned);
   }
+  const cleanFeatures=features.map(v=>clean(v)).filter(v=>v.length>=12&&!boilerplate.test(v)&&!navigationJunk.test(v.slice(0,180))).slice(0,12);
+  if(cleanFeatures.length)descriptionParts.push('Key features: '+cleanFeatures.join(' • '));
+  let description=descriptionParts.join('\n\n').slice(0,12000)||null;
 
   const imageCandidates=[];
   const addImage=v=>{
@@ -980,14 +982,14 @@ async function ingestSourceProduct(sourceUrl){
               description=cleanMultilineText(intro+(detailParts.length?'\n\nKey details: '+detailParts.join(' • '):''),12000);
             }
             description=description||null;
-            const category_id=autoCategory(title,description,listing.brand,categories);            const product={
-              name:title,kind:'find',brand:listing.brand||null,description,features:features.join('\n')||null,
-              image_url:images[0]||null,image_urls:images,display_price:listing.current_price??null,currency:listing.currency||'USD',
+            const category_id=autoCategory(title,description,normalized.brand,categories);            const product={
+              name:title,kind:'find',brand:normalized.brand||null,description,features:features.join('\n')||null,
+              image_url:images[0]||null,image_urls:images,display_price:normalized.current_price??null,currency:normalized.currency||'USD',
               destination_url:listing.source_url||sourceUrl,retailer,category_id,amazon_asin:retailer==='Amazon'?sourceId:null,
               amazon_source_url:retailer==='Amazon'?(listing.source_url||sourceUrl):null,source_type:retailer.toLowerCase().replace(/\s+/g,'_'),
-              amazon_current_price:retailer==='Amazon'?(listing.current_price??null):null,
-              amazon_list_price:retailer==='Amazon'?(listing.list_price??null):null,amazon_discount_percent:retailer==='Amazon'?(listing.discount_percent??null):null,
-              amazon_deal_text:retailer==='Amazon'?(listing.deal_text||null):null,amazon_rating:listing.rating??null,amazon_review_count:listing.review_count??null,
+              amazon_current_price:retailer==='Amazon'?(normalized.current_price??null):null,
+              amazon_list_price:retailer==='Amazon'?(normalized.list_price??null):null,amazon_discount_percent:retailer==='Amazon'?(normalized.discount_percent??null):null,
+              amazon_deal_text:retailer==='Amazon'?(normalized.deal_text||null):null,amazon_rating:normalized.rating??null,amazon_review_count:normalized.review_count??null,
               amazon_bought_past_month:listing.bought_past_month||null,amazon_shipping_text:listing.shipping_text||null,
               availability:listing.availability||null,source_sku:listing.sku||sourceId,amazon_tax_text:listing.tax_text||null,
               amazon_variations:Array.isArray(listing.variations)?listing.variations:[],source_related_products:Array.isArray(listing.related_products)?listing.related_products:[],source_image_urls:images,published:false,amazon_last_synced:new Date().toISOString()
@@ -1020,32 +1022,37 @@ async function ingestSourceProduct(sourceUrl){
         if(!asin)return json({error:'This product has no Amazon ASIN.'},400);
         const listing=await scrapeAmazonListing(sourceUrl,asin);
         if(!listing||listing.error)return json({error:listing?.error||'Amazon source could not be read.'},502);
-        const images=Array.isArray(listing.images)?listing.images.filter(isValidHttpUrl).slice(0,30):[];
+        const normalized=normalizeAmazonListing(listing);
+        const images=Array.isArray(normalized.images)?normalized.images.filter(isValidHttpUrl).slice(0,40):[];
+        const syncedTitle=smartProductTitle(normalized.title||current.name||'',normalized.brand||current.brand||'')||current.name;
         const patch={
-          amazon_asin:listing.asin||asin,
+          amazon_asin:normalized.asin||asin,
           amazon_source_url:sourceUrl,
           source_type:'amazon',
-          brand:listing.brand||current.brand||null,
-          description:listing.description||current.description||null,
-          features:Array.isArray(listing.features)&&listing.features.length?listing.features.join('\\n'):current.features||null,
-          amazon_current_price:listing.current_price??null,
-          amazon_list_price:listing.list_price??null,
-          amazon_discount_percent:listing.discount_percent??null,
-          amazon_deal_text:listing.deal_text||null,
-          amazon_rating:listing.rating??null,
-          amazon_review_count:listing.review_count??null,
-          amazon_bought_past_month:listing.bought_past_month||null,
-          amazon_shipping_text:listing.shipping_text||null,
-          amazon_tax_text:listing.tax_text||null,
-          availability:listing.availability||null,
-          source_sku:listing.sku||current.source_sku||null,
-          amazon_variations:Array.isArray(listing.variations)?listing.variations:[],
-          source_related_products:Array.isArray(listing.related_products)?listing.related_products:[],
+          brand:normalized.brand||current.brand||null,
+          name:syncedTitle,
+          description:normalized.description||current.description||null,
+          features:Array.isArray(normalized.features)&&normalized.features.length?normalized.features.join('\n'):current.features||null,
+          amazon_current_price:normalized.current_price??null,
+          amazon_list_price:normalized.list_price??null,
+          amazon_discount_percent:normalized.discount_percent??null,
+          amazon_deal_text:normalized.deal_text||null,
+          amazon_rating:normalized.rating??null,
+          amazon_review_count:normalized.review_count??null,
+          amazon_bought_past_month:normalized.bought_past_month||null,
+          amazon_shipping_text:normalized.shipping_text||null,
+          amazon_tax_text:normalized.tax_text||null,
+          availability:normalized.availability||null,
+          source_sku:normalized.sku||current.source_sku||null,
+          amazon_variations:Array.isArray(normalized.variations)?normalized.variations:[],
+          source_related_products:Array.isArray(normalized.related_products)?normalized.related_products:[],
           source_image_urls:images,
           amazon_last_synced:new Date().toISOString()
         };
-        // Source sync intentionally does not overwrite Nuvora's editable presentation fields: title, display price, and images.
-        const oldSource=Array.isArray(current.source_image_urls)?dedupeImages(current.source_image_urls,60):[];const currentImages=Array.isArray(current.image_urls)?dedupeImages(current.image_urls,60):[];const galleryIsSource=!currentImages.length||(!oldSource.length&&currentImages.length===1&&currentImages[0]===current.image_url)||oldSource.length===currentImages.length&&oldSource.every((u,i)=>u===currentImages[i]);if(images.length&&galleryIsSource){patch.image_url=images[0];patch.image_urls=images;}
+        const oldSource=Array.isArray(current.source_image_urls)?dedupeImages(current.source_image_urls,60):[];
+        const currentImages=Array.isArray(current.image_urls)?dedupeImages(current.image_urls,60):[];
+        const galleryIsSource=!currentImages.length||(!oldSource.length&&currentImages.length===1&&currentImages[0]===current.image_url)||oldSource.length===currentImages.length&&oldSource.every((u,i)=>u===currentImages[i]);
+        if(images.length&&galleryIsSource){patch.image_url=images[0];patch.image_urls=images;}
         const saved=await supabaseProductWrite(env,'PATCH',patch,'?id=eq.'+encodeURIComponent(id));
         if(!saved.ok)return json({error:(await saved.text()).slice(0,2000)},400);
         return json({ok:true,product:(await saved.json())?.[0]||null,source:{asin:listing.asin||asin,fieldsCaptured:{images:images.length,description:!!listing.description,features:Array.isArray(listing.features)?listing.features.length:0,price:listing.current_price!=null,listPrice:listing.list_price!=null,discount:listing.discount_percent!=null,rating:listing.rating!=null,reviews:listing.review_count!=null,availability:!!listing.availability,shipping:!!listing.shipping_text,variants:Array.isArray(listing.variations)?listing.variations.length:0}}});
