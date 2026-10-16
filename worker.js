@@ -303,7 +303,7 @@ async function publishProductRecord(env,id,patch={}){
       break;
     }
     const raw=(await response.text().catch(()=>'' )).slice(0,900);
-    const match=raw.match(/Could not find the '([^']+)' column of 'products'|column\\s+products\\.([A-Za-z_][A-Za-z0-9_]*)\\s+does not exist/i);
+    const match=raw.match(/Could not find the '([^']+)' column of 'products'|column\s+products\.([A-Za-z_][A-Za-z0-9_]*)\s+does not exist/i);
     const missing=match?.[1]||match?.[2];
     if(missing&&optionalFields.includes(missing)&&fields.includes(missing)){
       fields.splice(fields.indexOf(missing),1);
