@@ -181,10 +181,14 @@ jobs:
                   failures.append("worker.js missing "+route)
           # Schema diagnostic state is owned by the Worker and returned as JSON;
           # it must not be declared as an accidental browser global.
-          if "const missingProductColumns=[]" not in worker:
-              failures.append("worker.js diagnostics missing missingProductColumns")
-          if "let productSchemaError=''" not in worker:
-              failures.append("worker.js diagnostics missing productSchemaError")
+          if "missingProductColumns:[]" not in worker:
+              failures.append("worker.js diagnostics missing safe missingProductColumns state")
+          if "productSchemaError:''" not in worker:
+              failures.append("worker.js diagnostics missing safe productSchemaError state")
+          if "return json({ok,checks,...diagnosticsState})" not in worker:
+              failures.append("worker.js diagnostics must return the scoped schema state")
+          if "?select=id,published,slug,destination_url,updated_at&id=eq." not in worker:
+              failures.append("worker.js publish verification must not depend on optional source columns")
           if "Array.isArray(j?.missingProductColumns)" not in admin:
               failures.append("admin.html must safely read missingProductColumns from diagnostics")
           if "window.__nuvoraSchemaState=window.__nuvoraSchemaState||{missingProductColumns:[],productSchemaError:''}" not in admin:
