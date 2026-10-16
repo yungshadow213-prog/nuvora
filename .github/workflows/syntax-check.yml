@@ -173,16 +173,22 @@ jobs:
           for pat in forbidden:
               if re.search(pat,worker):
                   failures.append("worker.js contains a forbidden regression pattern: "+pat)
-          for helper in ["configured","validUrl","asinFromUrl","ingestSourceProduct","normalizeAmazonListing","makeProductSlug","validateProduct","supabaseProductWrite"]:
+          for helper in ["configured","isValidHttpUrl","validURL","asinFromUrl","ingestSourceProduct","normalizeAmazonListing","makeProductSlug","validateProduct","supabaseProductWrite"]:
               if not re.search(r"(?:async\s+)?function\s+"+re.escape(helper)+r"\s*\(",worker):
                   failures.append("worker.js missing "+helper)
           for route in ["/api/config","/api/health","/api/admin/products","/api/admin/import/bulk","/api/admin/import/amazon-search","/api/admin/diagnostics","/api/admin/settings","/api/amazon/prepare"]:
               if route not in worker:
                   failures.append("worker.js missing "+route)
-          if not re.search(r"(?:let|const|var)\s+missingProductColumns\s*=", admin):
-              failures.append("admin.html missing missingProductColumns declaration")
-          if not re.search(r"(?:let|const|var)\s+productSchemaError\s*=", admin):
-              failures.append("admin.html missing productSchemaError declaration")
+          # Schema diagnostic state is owned by the Worker and returned as JSON;
+          # it must not be declared as an accidental browser global.
+          if "const missingProductColumns=[]" not in worker:
+              failures.append("worker.js diagnostics missing missingProductColumns")
+          if "let productSchemaError=''" not in worker:
+              failures.append("worker.js diagnostics missing productSchemaError")
+          if "Array.isArray(j?.missingProductColumns)" not in admin:
+              failures.append("admin.html must safely read missingProductColumns from diagnostics")
+          if "window.__nuvoraSchemaState=window.__nuvoraSchemaState||{missingProductColumns:[],productSchemaError:''}" not in admin:
+              failures.append("admin.html missing safe schema-state fallback")
           if "async function togglePublish" not in admin:
               failures.append("admin.html missing publish toggle handler")
           if "publishProductRecord" not in worker or "/api/admin/products/" not in worker or "/publish$/" not in worker:
