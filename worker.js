@@ -792,7 +792,6 @@ async function scrapeAmazonListing(sourceUrl,asin){
     tax_text:taxText,
     availability,
     sku,
-    variations:variantNames.slice(0,20),
     currency,
     destination_url:resolved,
     resolved_url:resolved,
