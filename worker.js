@@ -28,7 +28,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-16-schema-diagnostics-r6',
+          release:'nuvora-2026-10-16-skin-store-publish-compat-r7',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
