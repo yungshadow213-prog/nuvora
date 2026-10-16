@@ -42,38 +42,82 @@ export default {
 
       if(url.pathname==='/api/admin/diagnostics'&&request.method==='GET'){
         const cfg=configured(env)||{};
-        const checks={environment:!!cfg.supabase,auth:false,admin:false,products:false,productSchema:false,settings:false,settingsSchema:false,social:false,analytics:false,workersAI:!!cfg.workersAI,shopifyStorefront:!!cfg.shopifyStorefront,shopifyEnvironment:!!cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false};
-        const missingProductColumns=[];
-        let productSchemaError=''; let shopifyError='';
-        const shopifyMissing=[]; const aiMissing=[];
-        if(!env.AI)aiMissing.push('Workers AI binding');
-        if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))shopifyMissing.push('SHOPIFY_SHOP');
-        if(!env.SHOPIFY_CLIENT_ID)shopifyMissing.push('SHOPIFY_CLIENT_ID');
-        if(!env.SHOPIFY_CLIENT_SECRET)shopifyMissing.push('SHOPIFY_CLIENT_SECRET');
-        const u=await supabaseUser(request,env); checks.auth=!!u;
+        const checks={
+          environment:!!cfg.supabase,auth:false,admin:false,products:false,productSchema:false,
+          settings:false,settingsSchema:false,social:false,analytics:false,
+          workersAI:!!cfg.workersAI,shopifyStorefront:!!cfg.shopifyStorefront,
+          shopifyEnvironment:!!cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false
+        };
+        // Keep all diagnostic state in one declared object. The admin consumes
+        // these as response fields; no browser globals or undeclared variables.
+        const diagnosticsState={
+          missingProductColumns:[],
+          productSchemaError:'',
+          settingsSchemaError:'',
+          shopifyError:'',
+          shopifyMissing:[],
+          aiMissing:[]
+        };
+        if(!env.AI)diagnosticsState.aiMissing.push('Workers AI binding');
+        if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))diagnosticsState.shopifyMissing.push('SHOPIFY_SHOP');
+        if(!env.SHOPIFY_CLIENT_ID)diagnosticsState.shopifyMissing.push('SHOPIFY_CLIENT_ID');
+        if(!env.SHOPIFY_CLIENT_SECRET)diagnosticsState.shopifyMissing.push('SHOPIFY_CLIENT_SECRET');
+
+        const u=await supabaseUser(request,env);
+        checks.auth=!!u;
         if(u&&env.SUPABASE_SERVICE_ROLE_KEY){
           try{
             const pr=await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(u.id)}&select=id,is_admin,role&limit=1`,{headers:sbHeaders(env,true)});
-            if(pr.ok){const rows=await pr.json();const p=rows[0];checks.admin=!!p&&(p.is_admin===true||p.role==='admin');}
+            if(pr.ok){
+              const rows=await pr.json();
+              const profile=Array.isArray(rows)?rows[0]:null;
+              checks.admin=!!profile&&(profile.is_admin===true||profile.role==='admin');
+            }
           }catch(e){}
-          const tableChecks=[['products','products'],['store_settings','settings'],['social_posts','social'],['analytics_events','analytics']];
+
+          // Do not use select=* for the products health check: a legacy
+          // optional field such as best_for must not make the catalog look
+          // offline or block publish. inspectProductSchema checks core fields
+          // separately and reports missing optional fields as an advisory.
+          const tableChecks=[['store_settings','settings'],['social_posts','social'],['analytics_events','analytics']];
           for(const [table,key] of tableChecks){
             try{
               const rr=await supabaseRest(env,'GET',table,undefined,'?select=*&limit=1');
               checks[key]=rr.ok;
-              if(table==='products'&&!rr.ok){productSchemaError=(await rr.text()).slice(0,1200);const m=productSchemaError.match(/column products\.([A-Za-z0-9_]+) does not exist/gi)||[];m.forEach(x=>{const mm=x.match(/products\.([A-Za-z0-9_]+)/i);if(mm&&!missingProductColumns.includes(mm[1]))missingProductColumns.push(mm[1]);});}
-            }catch(e){if(table==='products')productSchemaError=String(e?.message||e);}
+              if(table==='store_settings'&&!rr.ok)diagnosticsState.settingsSchemaError=(await rr.text()).slice(0,800);
+            }catch(e){
+              if(table==='store_settings')diagnosticsState.settingsSchemaError=String(e?.message||e).slice(0,800);
+            }
           }
-          const schema=await inspectProductSchema(env).catch(e=>({ok:false,missing:[],message:String(e?.message||e)}));
-          if(schema.ok){checks.productSchema=true;}else{productSchemaError=schema.message||productSchemaError;(schema.missing||[]).forEach(x=>{if(!missingProductColumns.includes(x))missingProductColumns.push(x);});}
-          checks.settingsSchema=checks.settings;
+
+          const schema=await inspectProductSchema(env).catch(e=>({
+            ok:false,core:false,missing:[],message:String(e?.message||e).slice(0,800)
+          }));
+          checks.products=schema.core===true;
+          checks.productSchema=schema.core===true&&schema.ok===true;
+          diagnosticsState.missingProductColumns=Array.isArray(schema.missing)?[...new Set(schema.missing.filter(x=>typeof x==='string'))]:[];
+          if(!schema.core){
+            diagnosticsState.productSchemaError=String(schema.message||'Required product columns are missing or unavailable.').slice(0,800);
+          }else if(!schema.ok&&!diagnosticsState.missingProductColumns.length){
+            diagnosticsState.productSchemaError=String(schema.message||'Product schema inspection could not finish.').slice(0,800);
+          }
+
+          // Settings schema is required for the fields presented by the admin.
+          // The settings endpoint still provides detailed errors if this probe fails.
+          checks.settingsSchema=checks.settings===true;
           if(checks.admin&&checks.shopifyEnvironment){
-            try{const data=await shopifyGraphql(env,'{ products(first: 1) { edges { node { id title } } } }',{},true);checks.shopifyAuth=true;checks.shopifyProducts=!!data?.products;}
-            catch(e){shopifyError=String(e?.message||'Shopify authentication failed').slice(0,500);}
+            try{
+              const data=await shopifyGraphql(env,'{ products(first: 1) { edges { node { id title } } } }',{},true);
+              checks.shopifyAuth=true;
+              checks.shopifyProducts=!!data?.products;
+            }catch(e){
+              diagnosticsState.shopifyError=String(e?.message||'Shopify authentication failed').slice(0,500);
+            }
           }
         }
+
         const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.productSchema&&checks.settings&&checks.settingsSchema&&checks.social;
-        return json({ok,checks,missingProductColumns,productSchemaError,shopifyError,shopifyMissing,aiMissing});
+        return json({ok,checks,...diagnosticsState});
       }
 
 /* Amazon link/import hardening */
@@ -207,7 +251,7 @@ async function publishProductRecord(env,id,patch={}){
   // avoids optional/missing enrichment columns from breaking publication.
   const select='*';
   const currentRes=await supabaseRest(env,'GET','products',undefined,'?select='+select+'&id=eq.'+encodeURIComponent(id)+'&limit=1');
-  if(!currentRes.ok)return {ok:false,status:500,error:'Could not load the product before publishing.'};
+  if(!currentRes.ok){const detail=(await currentRes.text().catch(()=>'' )).slice(0,700);return {ok:false,status:500,error:'Could not load the product before publishing.'+(detail?' Database: '+detail:'')};}
   const current=(await currentRes.json())?.[0];
   if(!current)return {ok:false,status:404,error:'Product not found.'};
 
@@ -235,7 +279,7 @@ async function publishProductRecord(env,id,patch={}){
   const rows=await result.json().catch(()=>[]);
   let product=rows[0]||null;
   if(!product||product.published!==true){
-    const verify=await supabaseRest(env,'GET','products',undefined,'?select=id,published,slug,destination_url,amazon_source_url&id=eq.'+encodeURIComponent(id)+'&limit=1');
+    const verify=await supabaseRest(env,'GET','products',undefined,'?select=id,published,slug,destination_url,updated_at&id=eq.'+encodeURIComponent(id)+'&limit=1');
     if(!verify.ok)return {ok:false,status:502,error:'Publish was sent, but Nuvora could not verify the updated product.'};
     product=(await verify.json())?.[0]||null;
   }
