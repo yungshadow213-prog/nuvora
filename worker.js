@@ -131,7 +131,18 @@ export default {
         }
 
         const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.productSchema&&checks.settings&&checks.settingsSchema&&checks.social;
-        return json({ok,checks,missingProductColumns:diagnosticsState.missingProductColumns||[],productSchemaError:diagnosticsState.productSchemaError||'',settingsSchemaError:diagnosticsState.settingsSchemaError||'',shopifyError:diagnosticsState.shopifyError||'',shopifyMissing:diagnosticsState.shopifyMissing||[],aiMissing:diagnosticsState.aiMissing||[],...diagnosticsState});
+        // Return a single normalized diagnostic contract. Never rely on
+        // undeclared legacy variables (the previous UI error was caused by
+        // missingProductColumns/productSchemaError escaping their scope).
+        const diagnosticPayload={
+          missingProductColumns:Array.isArray(diagnosticsState?.missingProductColumns)?diagnosticsState.missingProductColumns:[],
+          productSchemaError:String(diagnosticsState?.productSchemaError||''),
+          settingsSchemaError:String(diagnosticsState?.settingsSchemaError||''),
+          shopifyError:String(diagnosticsState?.shopifyError||''),
+          shopifyMissing:Array.isArray(diagnosticsState?.shopifyMissing)?diagnosticsState.shopifyMissing:[],
+          aiMissing:Array.isArray(diagnosticsState?.aiMissing)?diagnosticsState.aiMissing:[]
+        };
+        return json({ok:!!ok,checks, ...diagnosticPayload});
       }
 
 /* Amazon link/import hardening */
@@ -1681,9 +1692,14 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         for(const raw of items){          const product={...raw,published:false,slug:String(raw.slug||raw.name||'product').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,150)+'-'+randHex(6)};
           const validation=validateProduct(product); if(validation){results.push({ok:false,name:raw.name||'',error:validation});continue;}
           if(product.image_url&&!isValidHttpUrl(product.image_url))product.image_url=null;
-          const r=await supabaseRest(env,'POST','products',product);
+          // Use the same schema-drift-compatible writer as single-product
+          // creation and Amazon imports. Keep ratings/reviews fields when the
+          // destination schema supports them; drop only explicitly missing
+          // optional columns when PostgREST reports a schema mismatch.
+          const r=await supabaseProductWrite(env,'POST',product);
           if(!r.ok){results.push({ok:false,name:raw.name||'',error:(await r.text()).slice(0,500)});continue;}
-          results.push({ok:true,name:product.name});
+          const saved=await r.json().catch(()=>[]);
+          results.push({ok:true,name:product.name,id:saved?.[0]?.id||null});
         }
         return json({ok:results.every(x=>x.ok),results,imported:results.filter(x=>x.ok).length,failed:results.filter(x=>!x.ok).length});
       }
