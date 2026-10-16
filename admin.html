@@ -196,6 +196,7 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
 <button data-icon="↥" onclick="show('import',this)">Import</button>
 <button data-icon="▣" onclick="show('products',this)">Products</button>
+<button data-icon="✿" onclick="show('skin-care',this)">Skin Care</button>
 <button data-icon="☷" onclick="show('categories',this)">Categories</button>
 <button data-icon="◫" onclick="show('collections',this)">Collections</button>
 <button data-icon="□" onclick="show('orders',this)">Orders</button>
@@ -379,6 +380,17 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
   </div>
   <div class="notice" style="margin-top:14px"><b>Full importer pipeline:</b> source URL → product extraction → title cleanup → description cleanup → image normalization → price/list-price/discount → rating/reviews → availability/shipping → variants → brand/category → duplicate detection → draft → edit → publish.</div>
 </section>
+<section id="skin-care" class="view">
+  <div class="catalog-head">
+    <div><span class="eyebrow">Dedicated storefront</span><h2>Nuvora Skin</h2><p>Manage skincare and beauty affiliate products separately from the main Nuvora catalog. Products in the <b>Skin Care</b> category appear on the dedicated skincare storefront.</p></div>
+    <div class="catalog-actions"><button class="btn" onclick="ensureSkinCategory(true)">Set up Skin Care category</button><button class="btn primary" onclick="openSkinProduct()">+ Add skincare product</button><button class="btn" onclick="window.open('/beauty','_blank')">View Nuvora Skin ↗</button></div>
+  </div>
+  <div class="panel catalog-panel">
+    <div class="catalog-panel-head"><div><span class="section-kicker">Separate catalog view</span><h2>Skin Care products</h2></div><span id="skinProductCount" class="library-note">0 products</span></div>
+    <div id="skinCategoryNotice" class="notice">Products are routed to Nuvora Skin by assigning them to the Skin Care category.</div>
+    <div id="skinProductRows" class="product-library"></div>
+  </div>
+</section>
 <section id="categories" class="view"><div class="panel"><h2>Categories</h2><p class="muted">Categories are stored in Supabase and can be used by products and storefront filters.</p><div class="formgrid"><div class="field"><label>Name</label><input id="catName" placeholder="Gaming Setup"></div><div class="field"><label>Slug</label><input id="catSlug" placeholder="gaming-setup"></div><div class="field full"><label>Description</label><textarea id="catDesc" placeholder="Optional category description"></textarea></div></div><div class="actions"><button class="btn primary" onclick="createCategory()">Create category</button></div><div id="categoryRows" style="margin-top:16px"></div></div></section>
 <section id="collections" class="view"><div class="panel"><h2>Collections</h2><p class="muted">Create curated groups that can later be attached to products.</p><div class="formgrid"><div class="field"><label>Name</label><input id="colName" placeholder="Gaming Setup"></div><div class="field"><label>Slug</label><input id="colSlug" placeholder="gaming-setup"></div><div class="field full"><label>Description</label><textarea id="colDesc"></textarea></div></div><div class="actions"><button class="btn primary" onclick="createCollection()">Create collection</button></div><div id="collectionRows" style="margin-top:16px"></div></div></section>
 <section id="orders" class="view"><div class="panel"><h2>Orders</h2><p class="muted">Shopify orders are not mirrored into Supabase yet. The storefront checkout can hand customers to Shopify once Shopify is configured.</p><button class="btn" onclick="show('settings',document.querySelectorAll('.nav button')[7])">Configure Shopify</button></div></section>
@@ -490,12 +502,12 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
-const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],bulkReview:['Import Review','Review, edit and publish the products from your latest bulk discovery.'],products:['Products','Manage Shop, Finds, and Learn listings.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['Settings','Connections and store configuration.']};
+const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],bulkReview:['Import Review','Review, edit and publish the products from your latest bulk discovery.'],products:['Products','Manage Shop, Finds, and Learn listings.'],'skin-care':['Skin Care','Manage the dedicated Nuvora Skin skincare and beauty storefront.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['Settings','Connections and store configuration.']};
 let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[],collections=[],socialPosts=[];
 window.__nuvoraSchemaState=window.__nuvoraSchemaState||{missingProductColumns:[],productSchemaError:''};
 function validURL(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
 
-function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=meta[id][0];document.getElementById('sub').textContent=meta[id][1];if(id==='settings')loadSettings();if(id==='categories')loadCategories();if(id==='collections')loadCollections();if(id==='social')loadSocial();if(id==='analytics')loadAnalytics();}
+function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=meta[id][0];document.getElementById('sub').textContent=meta[id][1];if(id==='settings')loadSettings();if(id==='skin-care'){loadCategories().then(renderSkinProducts);renderSkinProducts();}if(id==='categories')loadCategories();if(id==='collections')loadCollections();if(id==='social')loadSocial();if(id==='analytics')loadAnalytics();}
 function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function setAdminStatus(message,type='info'){const ids=['globalAdminStatus','importStatus','shopifyImportStatus','aiImageStatus','aiCopyStatus','uploadStatus'];for(const id of ids){const el=document.getElementById(id);if(el&&message){el.textContent=String(message);el.dataset.status=type;}}} 
 async function api(path,options={},retry=true){
@@ -544,6 +556,36 @@ function retailerLabel(p){
   if(r.includes('amazon')||p?.amazon_asin||p?.amazon_source_url||String(p?.source_type||'').toLowerCase()==='amazon') return 'Amazon';
   return p?.retailer||'Source';
 }
+function isSkinProduct(p){
+  const category=categories.find(x=>String(x.id)===String(p.category_id));
+  const label=String(category?.slug||'')+' '+String(category?.name||'');
+  return /skin[- ]?care|skincare|beauty|cosmetic/i.test(label);
+}
+function renderSkinProducts(){
+  const el=document.getElementById('skinProductRows');if(!el)return;
+  const rows=adminProducts.filter(isSkinProduct);
+  const count=document.getElementById('skinProductCount');if(count)count.textContent=rows.length+' product'+(rows.length===1?'':'s');
+  const notice=document.getElementById('skinCategoryNotice');
+  const cat=categories.find(x=>/^(skin-care|skincare|beauty)$/i.test(String(x.slug||''))||/skin care|skincare/i.test(String(x.name||'')));
+  if(notice)notice.textContent=cat?'Using category “'+cat.name+'”. Products assigned to this category are routed to Nuvora Skin.':'Create the Skin Care category first; the setup button will create it without changing existing products.';
+  if(!rows.length){el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No skincare products yet. Add one here or assign an existing product to the Skin Care category.</div>';return;}
+  el.innerHTML=rows.map(p=>{const dest=retailerDestination(p),label=retailerLabel(p);return '<div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+'</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+JSON.stringify(dest)+')">Open '+esc(label)+'</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit</button><button class="btn" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';}).join('');
+}
+async function ensureSkinCategory(openForm=false){
+  try{
+    await loadCategories();
+    let cat=categories.find(x=>/^(skin-care|skincare|beauty)$/i.test(String(x.slug||''))||/skin care|skincare/i.test(String(x.name||'')));
+    if(!cat){
+      cat=await api('/api/admin/categories',{method:'POST',body:{name:'Skin Care',slug:'skin-care',description:'Skincare and beauty finds curated for the Nuvora Skin storefront.'}});
+      await loadCategories();
+      cat=categories.find(x=>String(x.slug||'')==='skin-care')||cat;
+    }
+    setAdminStatus('Skin Care category is ready.');
+    if(openForm){openProductModal(false);document.getElementById('pfKind').value='shop';document.getElementById('pfCategory').value=cat.id;document.getElementById('pfSource').value='amazon';document.getElementById('pfRetailer').value='Amazon';document.getElementById('productModalTitle').textContent='Add skincare product';document.getElementById('productModalSub').textContent='This product will be routed to the Nuvora Skin storefront.';}
+    renderSkinProducts();return cat;
+  }catch(e){setAdminStatus('Could not set up Skin Care: '+(e.message||e));throw e;}
+}
+async function openSkinProduct(){await ensureSkinCategory(true);}
 function renderProducts(){
   const el=document.getElementById('productRows');
   if(!adminProducts.length){
@@ -562,7 +604,7 @@ function openRetailerLink(url){
   try{const u=new URL(value);if(!/^https?:$/.test(u.protocol))throw new Error('Invalid retailer URL');const a=document.createElement('a');a.href=u.toString();a.target='_blank';a.rel='noopener noreferrer';a.style.display='none';document.body.appendChild(a);a.click();a.remove();}catch(e){setAdminStatus('The retailer URL is invalid.');}
 }
 function updateCounts(){document.getElementById('shopCount').textContent=adminProducts.filter(p=>p.kind==='shop'&&p.published).length;document.getElementById('findCount').textContent=adminProducts.filter(p=>p.kind==='find'&&p.published).length;document.getElementById('learnCount').textContent=adminProducts.filter(p=>p.kind==='learn'&&p.published).length;document.getElementById('draftCount').textContent=adminProducts.filter(p=>!p.published).length;}
-async function liveAdminProducts(){adminProducts=await api('/api/admin/products');renderProducts();fillSocialProducts();}
+async function liveAdminProducts(){adminProducts=await api('/api/admin/products');renderProducts();renderSkinProducts();fillSocialProducts();}
 let shopifyProducts=[];
 function openShopifyImport(){
   document.body.classList.add('admin-workspace-open');
