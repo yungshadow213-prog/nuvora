@@ -11,6 +11,9 @@ export default {
       if (url.pathname === '/admin' || url.pathname === '/admin/') {
         return serveAsset(env,new Request(new URL('/admin.html',request.url), {method:'GET',headers:request.headers}));
       }
+      if(url.pathname==='/beauty'||url.pathname==='/beauty/'){
+        return serveAsset(env,new Request(new URL('/beauty.html',request.url),{method:'GET',headers:request.headers}));
+      }
       const editPageMatch=url.pathname.match(/^\/admin\/products\/([^/]+)\/edit\/?$/);
       if(editPageMatch){
         return serveAsset(env,new Request(new URL('/edit-product.html',request.url), {method:'GET',headers:request.headers}));
@@ -25,7 +28,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-16-schema-publish-r3',
+          release:'nuvora-2026-10-16-schema-publish-beauty-r4',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
