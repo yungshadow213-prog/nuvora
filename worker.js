@@ -79,12 +79,21 @@ export default {
 /* Amazon link/import hardening */
 // Runtime integration helpers. These live in the Worker so health, diagnostics, Shopify, and legacy Amazon routes never depend on the old Node server.
 async function inspectProductSchema(env){
-  // Publishing/editing only require the stable catalog columns below.
-  // Enrichment fields are optional so a partially migrated Supabase database
-  // cannot take down the catalog or the admin publish workflow.
+  // Probe core columns as a single query. Publishing cannot proceed without these.
   const core=['id','name','slug','kind','image_url','image_urls','display_price','currency','destination_url','published','created_at','updated_at'];
-  const optional=['features','brand','availability','provider','region','category_id','collection_id','why_we_picked_it','best_for','skip_if','featured','trending','top_pick','amazon_asin','amazon_source_url','source_type','sourcinbox_product_url','sourcinbox_product_id','supplier_cost','amazon_last_synced','amazon_current_price','amazon_list_price','amazon_discount_percent','amazon_deal_text','amazon_rating','amazon_review_count','amazon_bought_past_month','amazon_badges','amazon_shipping_text','amazon_tax_text','amazon_variations','source_related_products','source_image_urls'];
-  const query=(fields)=>'?select='+fields.join(',')+'&limit=1';
+  const optional=[
+    'features','brand','availability','provider','region','category_id','collection_id',
+    'why_we_picked_it','best_for','skip_if','last_checked_at','featured','trending','top_pick',
+    'amazon_asin','amazon_source_url','source_type','source_sku','sourcinbox_product_url',
+    'sourcinbox_product_id','supplier_cost','amazon_last_synced','amazon_current_price',
+    'amazon_list_price','amazon_discount_percent','amazon_deal_text','amazon_rating',
+    'amazon_review_count','amazon_bought_past_month','amazon_badges','amazon_shipping_text',
+    'amazon_tax_text','amazon_variations','source_related_products','source_image_urls',
+    'source_url','resolved_url','store_description','temu_source_url','temu_product_id',
+    'temu_deal_text','temu_list_price','temu_discount_percent','temu_rating','temu_review_count',
+    'deal_text','list_price','discount_percent','rating','review_count'
+  ];
+  const query=fields=>'?select='+fields.map(encodeURIComponent).join(',')+'&limit=1';
   const coreRes=await supabaseRest(env,'GET','products',undefined,query(core));
   if(!coreRes.ok){
     const raw=await coreRes.text();
@@ -92,17 +101,28 @@ async function inspectProductSchema(env){
     return {ok:false,core:false,missing:[...new Set(missing)],message:raw.slice(0,800)};
   }
 
-  // Probe optional fields individually. One absent enrichment field should be
-  // reported, not treated as a broken product schema.
-  const missing=[];
+  // Probe optional columns as one select and remove only the missing field named
+  // by Postgres/PostgREST. This keeps the diagnostic subrequest count low.
+  const remaining=[...optional],missing=[];
   let firstOptionalError='';
-  for(const field of optional){
-    const rr=await supabaseRest(env,'GET','products',undefined,'?select='+encodeURIComponent(field)+'&limit=1');
-    if(rr.ok)continue;
+  for(let attempt=0;remaining.length&&attempt<=optional.length;attempt++){
+    const rr=await supabaseRest(env,'GET','products',undefined,query(remaining));
+    if(rr.ok){firstOptionalError='';break;}
     const raw=await rr.text();
-    const m=raw.match(/column products\.([A-Za-z0-9_]+) does not exist/i);
-    if(m){if(!missing.includes(m[1]))missing.push(m[1]);if(!firstOptionalError)firstOptionalError=raw.slice(0,800);}
-    else if(!firstOptionalError)firstOptionalError=raw.slice(0,800);
+    const patterns=[
+      /Could not find the '([^']+)' column of 'products'/i,
+      /column\s+products\.([A-Za-z_][A-Za-z0-9_]*)\s+does not exist/i,
+      /column\s+["']?([A-Za-z_][A-Za-z0-9_]*)["']?\s+of relation\s+["']?products["']?\s+does not exist/i
+    ];
+    const match=patterns.map(re=>raw.match(re)).find(Boolean);
+    const field=match?.[1];
+    if(!field||!remaining.includes(field)){
+      firstOptionalError=raw.slice(0,800);
+      break;
+    }
+    missing.push(field);
+    remaining.splice(remaining.indexOf(field),1);
+    if(!firstOptionalError)firstOptionalError=raw.slice(0,800);
   }
   return {ok:true,core:true,missing,message:firstOptionalError};
 }
