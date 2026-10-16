@@ -289,35 +289,40 @@ function resolveProductDestination(current={},patch={}){
   return '';
 }
 async function publishProductRecord(env,id,patch={}){
-  // Read the existing row using only fields required to safely publish. This
-  // avoids optional/missing enrichment columns from breaking publication.
-  const select='*';
-  const currentRes=await supabaseRest(env,'GET','products',undefined,'?select='+select+'&id=eq.'+encodeURIComponent(id)+'&limit=1');
-  if(!currentRes.ok){const detail=(await currentRes.text().catch(()=>'' )).slice(0,700);return {ok:false,status:500,error:'Could not load the product before publishing.'+(detail?' Database: '+detail:'')};}
-  const current=(await currentRes.json())?.[0];
+  // Read only the core fields first so optional legacy columns never block publish.
+  const coreFields=['id','name','slug','kind','image_url','image_urls','display_price','currency','destination_url','published','created_at','updated_at'];
+  const optionalFields=['retailer','provider','source_type','source_sku','amazon_asin','amazon_source_url','source_url','resolved_url','sourcinbox_product_url','temu_source_url'];
+  const fields=[...coreFields,...optionalFields];
+  let current=null,readError='';
+  for(let attempt=0;attempt<=optionalFields.length;attempt++){
+    const q='?select='+fields.map(encodeURIComponent).join(',')+'&id=eq.'+encodeURIComponent(id)+'&limit=1';
+    const response=await supabaseRest(env,'GET','products',undefined,q);
+    if(response.ok){
+      current=(await response.json())?.[0]||null;
+      readError='';
+      break;
+    }
+    const raw=(await response.text().catch(()=>'' )).slice(0,900);
+    const match=raw.match(/Could not find the '([^']+)' column of 'products'|column\\s+products\\.([A-Za-z_][A-Za-z0-9_]*)\\s+does not exist/i);
+    const missing=match?.[1]||match?.[2];
+    if(missing&&optionalFields.includes(missing)&&fields.includes(missing)){
+      fields.splice(fields.indexOf(missing),1);
+      readError=raw;
+      continue;
+    }
+    return {ok:false,status:500,error:'Could not load the product before publishing.'+(raw?' Database: '+raw:'')};
+  }
   if(!current)return {ok:false,status:404,error:'Product not found.'};
-
   const destination=resolveProductDestination(current,patch);
   const merged={...current,...patch,published:true,destination_url:destination};
-  if(!merged.slug||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(String(merged.slug))){
-    merged.slug=makeProductSlug(merged.name||'product');
-  }
+  if(!merged.slug||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(String(merged.slug)))merged.slug=makeProductSlug(merged.name||'product');
   if(!merged.destination_url)return {ok:false,status:400,error:'This product has no valid retailer URL. Import the retailer link or provide a destination URL before publishing.'};
-
   const validation=validateProduct(merged);
   if(validation)return {ok:false,status:400,error:validation};
-
-  const write={
-    published:true,
-    slug:merged.slug,
-    destination_url:destination,
-    updated_at:new Date().toISOString()
-  };
+  const write={published:true,slug:merged.slug,destination_url:destination,updated_at:new Date().toISOString()};
   if(patch.amazon_source_url||current.amazon_source_url)write.amazon_source_url=patch.amazon_source_url||current.amazon_source_url;
-
   const result=await supabaseProductWrite(env,'PATCH',write,'?id=eq.'+encodeURIComponent(id));
   if(!result.ok)return {ok:false,status:400,error:await result.text()};
-
   const rows=await result.json().catch(()=>[]);
   let product=rows[0]||null;
   if(!product||product.published!==true){
@@ -328,6 +333,7 @@ async function publishProductRecord(env,id,patch={}){
   if(!product||product.published!==true)return {ok:false,status:409,error:'Nuvora saved the product but could not confirm it is published. Please try publish again.'};
   return {ok:true,product};
 }
+
 function amazonDecode(value){return String(value||'').replace(/&amp;/gi,'&').replace(/&quot;/gi,'"').replace(/&#39;/gi,"'").replace(/&nbsp;/gi,' ');}
 function amazonHost(host){
   const h=String(host||'').toLowerCase().replace(/^www\./,'');
