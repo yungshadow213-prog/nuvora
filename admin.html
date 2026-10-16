@@ -1156,6 +1156,11 @@ async function healthCheck(){
     const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Core product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
     const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','analytics']);
     const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
+    window.__nuvoraSchemaState={
+      missingProductColumns:Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[],
+      productSchemaError:String(j?.productSchemaError||''),
+      settingsSchemaError:String(j?.settingsSchemaError||'')
+    };
     const rows=Object.entries(labels).map(([k,label])=>{
       const value=checks[k]===true;
       const state=value?'Connected':(optional.has(k)?'Not configured':'Failed');
@@ -1180,7 +1185,12 @@ async function runDiagnostics(){
     const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','shopifyProducts','analytics']);
     const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
     const missing=Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[];
-    const schemaError=String(j?.productSchemaError||window.__nuvoraSchemaState?.productSchemaError||'');
+    const schemaError=String(j?.productSchemaError||j?.schema?.productSchemaError||window.__nuvoraSchemaState?.productSchemaError||'');
+    window.__nuvoraSchemaState={
+      missingProductColumns:missing,
+      productSchemaError:schemaError,
+      settingsSchemaError:String(j?.settingsSchemaError||'')
+    };
     box.innerHTML=Object.entries(labels).map(([k,label])=>{
       const value=checks[k]===true;
       const state=value?'Connected':(optional.has(k)?'Not configured':'Failed');
