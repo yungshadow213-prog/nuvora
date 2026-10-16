@@ -1684,8 +1684,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           let parsed={};try{parsed=JSON.parse(raw)||{}}catch(e){}
           const message=String(parsed.message||parsed.details||raw);
           const match=message.match(/Could not find the '([^']+)' column of 'products'/i)
-            ||message.match(/column\\s+products\\.([A-Za-z_][A-Za-z0-9_]*)\\s+does not exist/i)
-            ||message.match(/column\\s+["']?([A-Za-z_][A-Za-z0-9_]*)["']?\\s+of relation\\s+["']?products["']?\\s+does not exist/i);
+            ||message.match(/column\s+products\.([A-Za-z_][A-Za-z0-9_]*)\s+does not exist/i)
+            ||message.match(/column\s+["']?([A-Za-z_][A-Za-z0-9_]*)["']?\s+of relation\s+["']?products["']?\s+does not exist/i);
           const missing=match?.[1]||null;
           if(!missing||!(missing in payload)||!optionalColumns.has(missing)){
             return {ok:false,text:async()=>raw};
