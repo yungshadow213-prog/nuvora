@@ -1662,20 +1662,37 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
       }
       async function supabaseProductWrite(env,method,product,query=''){
         const payload={...product};
-        for(let attempt=0;attempt<12;attempt++){
-          const r=await supabaseRest(env,method,'products',payload,query);
-          if(r.ok)return r;
-          const raw=await r.text();
-          let bad=null;
-          try{
-            const j=JSON.parse(raw);
-            const m=String(j.message||'').match(/Could not find the '([^']+)' column of 'products'/i);
-            if(m)bad=m[1];
-          }catch(e){}
-          if(!bad || !(bad in payload)) return {ok:false,text:async()=>raw};
-          delete payload[bad];
+        // Missing optional columns can occur when a hosted Supabase project has
+        // drifted from the repository schema. Retry only for known optional
+        // product metadata; never silently discard identity/publishing fields.
+        const optionalColumns=new Set([
+          'features','brand','availability','provider','region','category_id','collection_id',
+          'why_we_picked_it','best_for','skip_if','last_checked_at','featured','trending','top_pick',
+          'shopify_product_id','shopify_variant_id','shopify_variants','amazon_asin','amazon_source_url',
+          'source_type','source_sku','sourcinbox_product_url','sourcinbox_product_id','supplier_cost',
+          'amazon_last_synced','amazon_current_price','amazon_list_price','amazon_discount_percent',
+          'amazon_deal_text','amazon_rating','amazon_review_count','amazon_bought_past_month',
+          'amazon_badges','amazon_shipping_text','amazon_tax_text','amazon_variations',
+          'source_related_products','source_image_urls','source_url','resolved_url','store_description',
+          'temu_source_url','temu_product_id','temu_deal_text','temu_list_price','temu_discount_percent',
+          'temu_rating','temu_review_count','deal_text','list_price','discount_percent','rating','review_count'
+        ]);
+        for(let attempt=0;attempt<40;attempt++){
+          const response=await supabaseRest(env,method,'products',payload,query);
+          if(response.ok)return response;
+          const raw=await response.text();
+          let parsed={};try{parsed=JSON.parse(raw)||{}}catch(e){}
+          const message=String(parsed.message||parsed.details||raw);
+          const match=message.match(/Could not find the '([^']+)' column of 'products'/i)
+            ||message.match(/column\\s+products\\.([A-Za-z_][A-Za-z0-9_]*)\\s+does not exist/i)
+            ||message.match(/column\\s+["']?([A-Za-z_][A-Za-z0-9_]*)["']?\\s+of relation\\s+["']?products["']?\\s+does not exist/i);
+          const missing=match?.[1]||null;
+          if(!missing||!(missing in payload)||!optionalColumns.has(missing)){
+            return {ok:false,text:async()=>raw};
+          }
+          delete payload[missing];
         }
-        return {ok:false,text:async()=>JSON.stringify({message:'Too many unsupported product fields'})};
+        return {ok:false,text:async()=>JSON.stringify({message:'Product write exceeded the optional-column compatibility retry limit.'})};
       }
 
       if(url.pathname==='/api/admin/products'&&request.method==='GET'){
