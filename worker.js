@@ -17,7 +17,18 @@ export default {
       }
       if (url.pathname === '/api/health') {
         const cfg=configured(env)||{};
-        return json({ok:true,configured:cfg&&typeof cfg==='object'?cfg:{}});
+        let supabaseProjectRef='';
+        try{
+          const host=new URL(String(env.SUPABASE_URL||'')).hostname.toLowerCase();
+          const match=host.match(/^([a-z0-9-]+)\.supabase\.co$/);
+          if(match)supabaseProjectRef=match[1];
+        }catch(e){}
+        return json({
+          ok:true,
+          release:'nuvora-2026-10-16-schema-publish-r3',
+          supabaseProjectRef,
+          configured:cfg&&typeof cfg==='object'?cfg:{}
+        });
       }
       if (url.pathname === '/api/config') return json({supabaseUrl:env.SUPABASE_URL||'',supabaseAnonKey:env.SUPABASE_ANON_KEY||''});
 
