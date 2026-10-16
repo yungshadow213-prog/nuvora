@@ -114,6 +114,10 @@ export default {
             diagnosticsState.productSchemaError=String(schema.message||'Required product columns are missing or unavailable.').slice(0,800);
           }else if(!schema.ok&&!diagnosticsState.missingProductColumns.length){
             diagnosticsState.productSchemaError=String(schema.message||'Product schema inspection could not finish.').slice(0,800);
+          }else{
+            // Optional enrichment columns (e.g. best_for) are advisory. Their
+            // absence must not mark the core schema unhealthy or block publish.
+            diagnosticsState.productSchemaError='';
           }
 
           // Settings schema is required for the fields presented by the admin.
