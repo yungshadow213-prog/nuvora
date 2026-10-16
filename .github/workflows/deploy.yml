@@ -54,13 +54,40 @@ jobs:
           print("Storefront/admin/editor JavaScript checks passed.")
           PY
 
+      - name: Check Cloudflare deployment credentials
+        id: cloudflare-creds
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [[ -n "$CLOUDFLARE_API_TOKEN" && -n "$CLOUDFLARE_ACCOUNT_ID" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Deploy
+        if: steps.cloudflare-creds.outputs.configured == 'true'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx wrangler@4.145.0 deploy
 
+      - name: Explain deployment handoff
+        if: steps.cloudflare-creds.outputs.configured != 'true'
+        shell: bash
+        run: |
+          echo "::notice::GitHub Actions validated Nuvora but did not deploy because Cloudflare credentials are not configured as repository secrets."
+          {
+            echo "## Deployment handoff"
+            echo "Worker syntax, asset bundling, and UI script checks passed."
+            echo "This workflow did not deploy because CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are not configured."
+            echo "If Cloudflare Workers Builds is connected to the main branch, it should deploy independently. Verify the Active Deployment in Cloudflare before treating the live site as updated."
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Smoke test production
+        if: steps.cloudflare-creds.outputs.configured == 'true'
         env:
           NUVORA_URL: https://nuvora.rayyung713.workers.dev
         run: |
