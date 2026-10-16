@@ -127,10 +127,13 @@ jobs:
                   with urllib.request.urlopen(req,timeout=15) as response:
                       health=json.load(response)
                   actual=str(health.get("release") or "")
-                  if health.get("ok") and actual==expected:
+                  supabase_ref=str(health.get("supabaseProjectRef") or "")
+                  expected_supabase_ref="ittxcfwuqbzfqkclcyla"
+                  if health.get("ok") and actual==expected and supabase_ref==expected_supabase_ref:
                       print(f"Live release confirmed: {actual}")
+                      print(f"Supabase project confirmed: {supabase_ref}")
                       break
-                  last_error=f"live release was {actual or 'missing'}, expected {expected}"
+                  last_error=f"live release was {actual or 'missing'} (expected {expected}); Supabase project was {supabase_ref or 'missing'} (expected {expected_supabase_ref})"
               except urllib.error.HTTPError as e:
                   response_body=e.read(500).decode("utf-8","replace").replace("\\n"," ")[:300]
                   detail=f"HTTP {e.code} {e.reason}; server={e.headers.get('server','unknown')}; cf-ray={e.headers.get('cf-ray','missing')}; body={response_body!r}"
@@ -144,7 +147,7 @@ jobs:
           else:
               raise SystemExit("Production deployment verification failed: "+last_error+". No claim of live fix should be made until Cloudflare's Active Deployment matches the current main release.")
 
-          for path in ["/api/config","/","/beauty"]:
+          for path in ["/api/config","/api/products","/api/settings","/","/beauty"]:
               headers={
                   "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
                   "Accept":"application/json,text/html,application/xhtml+xml,*/*;q=0.8",
@@ -160,6 +163,14 @@ jobs:
                           raise SystemExit(f"{path} returned HTTP {response.status}")
                       if path.startswith("/api/") and not body:
                           raise SystemExit(f"{path} returned an empty response")
+                      if path=="/api/products":
+                          payload=json.loads(body)
+                          if not isinstance(payload,list):
+                              raise SystemExit("/api/products returned a non-list payload")
+                      if path=="/api/settings":
+                          payload=json.loads(body)
+                          if not isinstance(payload,dict):
+                              raise SystemExit("/api/settings returned a non-object payload")
                       if path=="/beauty" and "Nuvora Skin" not in body:
                           raise SystemExit("/beauty did not serve the dedicated Nuvora Skin storefront")
                       print(f"{path}: {response.status}")
