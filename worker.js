@@ -1748,7 +1748,15 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const collections=collectionsRes.ok?await collectionsRes.json():[];
         const categoryMap=new Map(categories.map(x=>[String(x.id),x]));
         const collectionMap=new Map(collections.map(x=>[String(x.id),x]));
-        return json(products.map(p=>{
+        const storefront=String(url.searchParams.get('storefront')||'').toLowerCase();
+        const storefrontProducts=storefront==='beauty'
+          ?products.filter(p=>{
+            const category=categoryMap.get(String(p.category_id||''));
+            const label=String(category?.name||'');
+            return p.kind==='shop'&&/skin\\s*care|skincare|beauty|cosmetic/i.test(label);
+          })
+          :products;
+        return json(storefrontProducts.map(p=>{
           const source=p;
           const normalized=normalizeAmazonProduct(source);
           const safeText=v=>cleanMultilineText(v,12000)||null;
