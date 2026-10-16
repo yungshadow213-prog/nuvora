@@ -142,7 +142,17 @@ export default {
           shopifyMissing:Array.isArray(diagnosticsState?.shopifyMissing)?diagnosticsState.shopifyMissing:[],
           aiMissing:Array.isArray(diagnosticsState?.aiMissing)?diagnosticsState.aiMissing:[]
         };
-        return json({ok:!!ok,checks, ...diagnosticPayload});
+        return json({
+          ok:!!ok,
+          checks,
+          ...diagnosticPayload,
+          // Keep a namespaced alias for older admin builds and diagnostics UI.
+          schema:{
+            missingProductColumns:diagnosticPayload.missingProductColumns,
+            productSchemaError:diagnosticPayload.productSchemaError,
+            settingsSchemaError:diagnosticPayload.settingsSchemaError
+          }
+        });
       }
 
 /* Amazon link/import hardening */
