@@ -39,7 +39,7 @@ jobs:
           from pathlib import Path
           import re, subprocess, sys
           failures=[]
-          for name in ["index.html","admin.html","edit-product.html"]:
+          for name in ["index.html","admin.html","edit-product.html","beauty.html"]:
               html=Path(name).read_text(encoding="utf-8")
               scripts=re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>",html,re.I)
               for i,src in enumerate([x for x in scripts if x.strip()],1):
@@ -144,7 +144,7 @@ jobs:
           else:
               raise SystemExit("Production deployment verification failed: "+last_error+". No claim of live fix should be made until Cloudflare's Active Deployment matches the current main release.")
 
-          for path in ["/api/config","/"]:
+          for path in ["/api/config","/","/beauty"]:
               headers={
                   "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
                   "Accept":"application/json,text/html,application/xhtml+xml,*/*;q=0.8",
@@ -160,6 +160,8 @@ jobs:
                           raise SystemExit(f"{path} returned HTTP {response.status}")
                       if path.startswith("/api/") and not body:
                           raise SystemExit(f"{path} returned an empty response")
+                      if path=="/beauty" and "Nuvora Skin" not in body:
+                          raise SystemExit("/beauty did not serve the dedicated Nuvora Skin storefront")
                       print(f"{path}: {response.status}")
               except urllib.error.HTTPError as e:
                   if path=="/" and e.code==403:
