@@ -86,24 +86,59 @@ jobs:
             echo "If Cloudflare Workers Builds is connected to the main branch, it should deploy independently. Verify the Active Deployment in Cloudflare before treating the live site as updated."
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Smoke test production
-        if: steps.cloudflare-creds.outputs.configured == 'true'
-        env:
-          NUVORA_URL: https://nuvora.rayyung713.workers.dev
+      - name: Read expected release fingerprint
+        id: expected-release
         run: |
           python - <<'PY'
-          import json, os, sys, urllib.request
+          import os, pathlib, re, sys
+          source=pathlib.Path("worker.js").read_text(encoding="utf-8")
+          match=re.search(r"\brelease\s*:\s*['\"]([^'\"]+)['\"]", source)
+          if not match:
+              raise SystemExit("worker.js is missing its release fingerprint.")
+          with open(os.environ["GITHUB_OUTPUT"],"a",encoding="utf-8") as output:
+              output.write("value="+match.group(1)+"\n")
+          print("Expected release: "+match.group(1))
+          PY
+
+      - name: Smoke test active production release
+        if: steps.cloudflare-creds.outcome == 'success'
+        env:
+          NUVORA_URL: https://nuvora.rayyung713.workers.dev
+          EXPECTED_RELEASE: ${{ steps.expected-release.outputs.value }}
+        run: |
+          python - <<'PY'
+          import json, os, sys, time, urllib.error, urllib.request
           base=os.environ["NUVORA_URL"].rstrip("/")
-          for path in ["/api/health","/api/config","/"]:
-              with urllib.request.urlopen(base+path,timeout=30) as r:
-                  body=r.read().decode("utf-8","replace")
-                  if r.status != 200:
-                      raise SystemExit(f"{path} returned HTTP {r.status}")
+          expected=os.environ["EXPECTED_RELEASE"]
+          health=None
+          last_error="no response"
+          # Cloudflare Workers Builds may deploy in parallel with this GitHub run.
+          # Keep checking for up to three minutes, but never mark an older release green.
+          for attempt in range(90):
+              try:
+                  req=urllib.request.Request(base+"/api/health",headers={"Cache-Control":"no-cache","Pragma":"no-cache"})
+                  with urllib.request.urlopen(req,timeout=15) as response:
+                      health=json.load(response)
+                  actual=str(health.get("release") or "")
+                  if health.get("ok") and actual==expected:
+                      print(f"Live release confirmed: {actual}")
+                      break
+                  last_error=f"live release was {actual or 'missing'}, expected {expected}"
+              except Exception as e:
+                  last_error=str(e)
+              if attempt<89:
+                  time.sleep(2)
+          else:
+              raise SystemExit("Production deployment verification failed: "+last_error+". No claim of live fix should be made until Cloudflare's Active Deployment matches the current main release.")
+
+          for path in ["/api/config","/"]:
+              req=urllib.request.Request(base+path,headers={"Cache-Control":"no-cache"})
+              with urllib.request.urlopen(req,timeout=20) as response:
+                  body=response.read().decode("utf-8","replace")
+                  if response.status!=200:
+                      raise SystemExit(f"{path} returned HTTP {response.status}")
                   if path.startswith("/api/") and not body:
                       raise SystemExit(f"{path} returned an empty response")
-                  print(f"{path}: {r.status}")
-          health=json.load(urllib.request.urlopen(base+"/api/health",timeout=30))
-          if not health.get("ok"):
-              raise SystemExit("Production health endpoint reported ok=false")
-          print("Production smoke test passed.")
+                  print(f"{path}: {response.status}")
+          print("Production release smoke test passed.")
           PY
