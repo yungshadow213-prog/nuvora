@@ -145,6 +145,9 @@ export default {
         return json({
           ok:!!ok,
           checks,
+          missingProductColumns:diagnosticsState.missingProductColumns||[],
+          productSchemaError:diagnosticsState.productSchemaError||'',
+          settingsSchemaError:diagnosticsState.settingsSchemaError||'',
           ...diagnosticPayload,
           // Keep a namespaced alias for older admin builds and diagnostics UI.
           schema:{
