@@ -105,7 +105,7 @@ export default {
             ok:false,core:false,missing:[],message:String(e?.message||e).slice(0,800)
           }));
           checks.products=schema.core===true;
-          checks.productSchema=schema.core===true&&schema.ok===true;
+          checks.productSchema=schema.core===true;
           diagnosticsState.missingProductColumns=Array.isArray(schema.missing)?[...new Set(schema.missing.filter(x=>typeof x==='string'))]:[];
           if(!schema.core){
             diagnosticsState.productSchemaError=String(schema.message||'Required product columns are missing or unavailable.').slice(0,800);
@@ -128,7 +128,7 @@ export default {
         }
 
         const ok=checks.environment&&checks.auth&&checks.admin&&checks.products&&checks.productSchema&&checks.settings&&checks.settingsSchema&&checks.social;
-        return json({ok,checks,...diagnosticsState});
+        return json({ok,checks,missingProductColumns:diagnosticsState.missingProductColumns||[],productSchemaError:diagnosticsState.productSchemaError||'',settingsSchemaError:diagnosticsState.settingsSchemaError||'',shopifyError:diagnosticsState.shopifyError||'',shopifyMissing:diagnosticsState.shopifyMissing||[],aiMissing:diagnosticsState.aiMissing||[],...diagnosticsState});
       }
 
 /* Amazon link/import hardening */
