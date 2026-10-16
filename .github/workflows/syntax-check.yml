@@ -185,8 +185,10 @@ jobs:
               failures.append("worker.js diagnostics missing safe missingProductColumns state")
           if "productSchemaError:''" not in worker:
               failures.append("worker.js diagnostics missing safe productSchemaError state")
-          if "return json({ok,checks,...diagnosticsState})" not in worker:
-              failures.append("worker.js diagnostics must return the scoped schema state")
+          if "missingProductColumns:diagnosticsState.missingProductColumns||[]" not in worker or "productSchemaError:diagnosticsState.productSchemaError||''" not in worker:
+              failures.append("worker.js diagnostics must return defensive schema state aliases")
+          if "checks.productSchema=schema.core===true;" not in worker:
+              failures.append("worker.js optional product columns must not fail core product schema health")
           if "?select=id,published,slug,destination_url,updated_at&id=eq." not in worker:
               failures.append("worker.js publish verification must not depend on optional source columns")
           if "Array.isArray(j?.missingProductColumns)" not in admin:
