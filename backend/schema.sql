@@ -37,6 +37,25 @@ alter table public.products add column if not exists features text;
 alter table public.products add column if not exists brand text;
 alter table public.products add column if not exists image_urls jsonb not null default '[]'::jsonb;
 alter table public.products add column if not exists availability text;
+-- Keep legacy databases compatible with every optional catalog field used by
+-- the current admin/importer. These are idempotent and preserve existing data.
+alter table public.products add column if not exists why_we_picked_it text;
+alter table public.products add column if not exists best_for text;
+alter table public.products add column if not exists skip_if text;
+alter table public.products add column if not exists last_checked_at timestamptz;
+alter table public.products add column if not exists featured boolean not null default false;
+alter table public.products add column if not exists trending boolean not null default false;
+alter table public.products add column if not exists top_pick boolean not null default false;
+alter table public.products add column if not exists provider text;
+alter table public.products add column if not exists region text;
+alter table public.products add column if not exists destination_url text;
+alter table public.products add column if not exists category_id uuid;
+alter table public.products add column if not exists collection_id uuid;
+alter table public.products add column if not exists amazon_asin text;
+alter table public.products add column if not exists amazon_source_url text;
+alter table public.products add column if not exists sourcinbox_product_url text;
+alter table public.products add column if not exists sourcinbox_product_id text;
+alter table public.products add column if not exists supplier_cost numeric;
 alter table public.products add column if not exists source_sku text;
 alter table public.products add column if not exists amazon_last_synced timestamptz;
 alter table public.products add column if not exists source_type text not null default 'manual';
