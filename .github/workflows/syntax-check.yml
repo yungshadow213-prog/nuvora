@@ -233,3 +233,15 @@ jobs:
         uses: actions/checkout@v4
       - name: Verify Wrangler bundle
         run: npx wrangler@4.145.0 deploy --dry-run --outdir /tmp/nuvora-dist
+
+  cloudflare-wrangler-dry-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Bundle with the same Wrangler version as production
+        run: npx --yes wrangler@4.145.0 deploy --dry-run --outdir /tmp/nuvora-wrangler-dist
