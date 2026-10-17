@@ -1753,7 +1753,12 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           ?products.filter(p=>{
             const category=categoryMap.get(String(p.category_id||''));
             const label=String(category?.name||'');
-            return p.kind==='shop'&&/skin\\s*care|skincare|beauty|cosmetic/i.test(label);
+            const productText=[p.name,p.brand,p.description,p.features,p.store_description].filter(Boolean).join(' ');
+            // Nuvora Skin is a skincare editorial storefront, so include imported
+            // Amazon "find" products as well as shop products when their category
+            // or verified product text identifies them as skincare/beauty.
+            return /skin\\s*care|skincare|beauty|cosmetic/i.test(label)
+              ||(/skin\\s*care|skincare|beauty|cosmetic/i.test(String(p.kind||''))&&/skin\\s*care|skincare|beauty|cosmetic|cleanser|moisturi|serum|sunscreen|spf|face cream|toner/i.test(productText));
           })
           :products;
         return json(storefrontProducts.map(p=>{
