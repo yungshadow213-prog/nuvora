@@ -580,7 +580,7 @@ async function amazonApiFallbackListing(env,asin,sourceUrl){
   }catch{return null}
 }
 
-async function scrapeAmazonListing(sourceUrl,asin){
+async function scrapeAmazonListing(sourceUrl,asin,env){
   const resolved=await resolveAmazonUrl(sourceUrl);
   const finalAsin=asinFromUrl(resolved)||asin;
   if(!finalAsin)return {error:'Could not find an ASIN after resolving the Amazon link.'};
@@ -1036,7 +1036,7 @@ async function ingestSourceProduct(sourceUrl,env){
   if(retailer==='Amazon'){
     const resolved=await resolveAmazonUrl(sourceUrl),asin=asinFromUrl(resolved)||asinFromUrl(sourceUrl);
     if(!asin)return {error:'Could not identify the Amazon product ID (ASIN).'};
-    let listing=await scrapeAmazonListing(resolved,asin);
+    let listing=await scrapeAmazonListing(resolved,asin,env);
     if(!listing?.error){listing=normalizeAmazonListing(listing);listing=await aiPolishAmazonListing(env,listing);}
     return listing?.error?listing:{...listing,retailer,source_id:asin,source_url:sourceUrl,resolved_url:resolved};
   }
@@ -1160,7 +1160,7 @@ async function ingestSourceProduct(sourceUrl,env){
         if(retailer!=='amazon')return json({error:'Source sync currently supports Amazon products.'},400);
         const asin=asinFromUrl(sourceUrl)||current.amazon_asin;
         if(!asin)return json({error:'This product has no Amazon ASIN.'},400);
-        const listing=await scrapeAmazonListing(sourceUrl,asin);
+        const listing=await scrapeAmazonListing(sourceUrl,asin,env);
         if(!listing||listing.error)return json({error:listing?.error||'Amazon source could not be read.'},502);
         const normalized=normalizeAmazonListing(listing);
         const images=Array.isArray(normalized.images)?normalized.images.filter(isValidHttpUrl).slice(0,40):[];
