@@ -1771,7 +1771,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             // Amazon "find" products as well as shop products when their category
             // or verified product text identifies them as skincare/beauty.
             return /skin\s*care|skincare|beauty|cosmetic/i.test(label)
-              ||(/skin\s*care|skincare|beauty|cosmetic/i.test(String(p.kind||''))&&/skin\s*care|skincare|beauty|cosmetic|cleanser|moisturi|serum|sunscreen|spf|face cream|toner/i.test(productText));
+              ||/skin\s*care|skincare|beauty|cosmetic|cleanser|cleansing|face wash|moisturi|serum|sunscreen|sunblock|spf|face cream|toner|retinol|exfoliat|lip balm|facial oil|eye cream|face mask/i.test(productText);
           })
           :products;
         return json(storefrontProducts.map(p=>{
