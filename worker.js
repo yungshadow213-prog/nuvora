@@ -177,7 +177,8 @@ async function inspectProductSchema(env){
     'amazon_tax_text','amazon_variations','source_related_products','source_image_urls',
     'source_url','resolved_url','store_description','temu_source_url','temu_product_id',
     'temu_deal_text','temu_list_price','temu_discount_percent','temu_rating','temu_review_count',
-    'deal_text','list_price','discount_percent','rating','review_count'
+    'deal_text','list_price','discount_percent','rating','review_count',
+    'ingredients','usage_instructions','product_warnings','product_size'
   ];
   const query=fields=>'?select='+fields.map(encodeURIComponent).join(',')+'&limit=1';
   const coreRes=await supabaseRest(env,'GET','products',undefined,query(core));
@@ -499,6 +500,16 @@ function normalizeAmazonListing(listing={}){
   x.description=cleanMultilineText(parts.join('\n\n'),12000)||null;
   if(x.list_price!=null&&x.current_price!=null&&x.list_price>x.current_price&&x.discount_percent==null)x.discount_percent=Number((((x.list_price-x.current_price)/x.list_price)*100).toFixed(1));
   if(x.discount_percent!=null&&x.discount_percent>0&&x.discount_percent<100&&!x.list_price&&x.current_price)x.list_price=Number((x.current_price/(1-x.discount_percent/100)).toFixed(2));
+  // Preserve skincare facts only when the source explicitly provides them.
+  const sourceFacts=[sourceDescription,...featureLines,...specLines].filter(Boolean).join('\n');
+  const factAfter=labels=>{
+    const match=sourceFacts.match(new RegExp('(?:^|\\n|\\s)(?:'+labels.join('|')+')\\s*[:：-]\\s*([^\\n]{8,900})','i'));
+    return match?cleanMultilineText(match[1],900):null;
+  };
+  x.ingredients=x.ingredients||factAfter(['ingredients?','full ingredients?','active ingredients?','ingredient list']);
+  x.usage_instructions=x.usage_instructions||factAfter(['directions','how to use','suggested use','usage instructions','application']);
+  x.product_warnings=x.product_warnings||factAfter(['warnings?','caution','precautions','safety information']);
+  x.product_size=x.product_size||factAfter(['item volume','net content','size','product size','capacity','weight']);
   x.brand=cleanText(x.brand,180)||null;x.seller=cleanText(x.seller,300)||null;
   return x;
 }
@@ -1119,7 +1130,7 @@ async function ingestSourceProduct(sourceUrl){
               amazon_deal_text:retailer==='Amazon'?(normalized.deal_text||null):null,amazon_rating:normalized.rating??null,amazon_review_count:normalized.review_count??null,
               amazon_bought_past_month:listing.bought_past_month||null,amazon_shipping_text:listing.shipping_text||null,
               availability:listing.availability||null,source_sku:listing.sku||sourceId,amazon_tax_text:listing.tax_text||null,
-              amazon_variations:Array.isArray(listing.variations)?listing.variations:[],source_related_products:Array.isArray(listing.related_products)?listing.related_products:[],source_image_urls:images,published:false,amazon_last_synced:new Date().toISOString()
+              amazon_variations:Array.isArray(listing.variations)?listing.variations:[],source_related_products:Array.isArray(listing.related_products)?listing.related_products:[],source_image_urls:images,ingredients:listing.ingredients||null,usage_instructions:listing.usage_instructions||null,product_warnings:listing.product_warnings||null,product_size:listing.product_size||null,published:false,amazon_last_synced:new Date().toISOString()
             };
             const slugBase=title.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,120);
             product.slug=(slugBase||'product')+'-'+Date.now().toString(36);
