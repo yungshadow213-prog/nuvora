@@ -1031,7 +1031,7 @@ async function scrapeGenericSource(sourceUrl,retailer){
     return {title:title||retailer+' product',description:description||null,brand:brand||null,images:genericImages(html,ld),features,current_price:current,list_price:listPrice,discount_percent:discount,deal_text:null,rating,review_count:reviews,availability,shipping_text:null,tax_text:null,variations:[],sku,destination_url:resolved,resolved_url:resolved,retailer};
   }catch(e){return {error:String(e?.message||e).slice(0,500)}}
 }
-async function ingestSourceProduct(sourceUrl){
+async function ingestSourceProduct(sourceUrl,env){
   const retailer=detectRetailer(sourceUrl);
   if(retailer==='Amazon'){
     const resolved=await resolveAmazonUrl(sourceUrl),asin=asinFromUrl(resolved)||asinFromUrl(sourceUrl);
@@ -1089,7 +1089,7 @@ async function ingestSourceProduct(sourceUrl){
           const started=Date.now();
           try{
             if(!isValidHttpUrl(sourceUrl))throw new Error('Invalid URL.');
-            const listing=await ingestSourceProduct(sourceUrl);
+            const listing=await ingestSourceProduct(sourceUrl,env);
             if(!listing||listing.error)throw new Error(listing?.error||'Product data could not be read from the source.');
             const retailer=listing.retailer||detectRetailer(sourceUrl);
             const sourceId=listing.source_id||listing.asin||listing.id||listing.sku||sourceProductId(listing.resolved_url||sourceUrl);
@@ -1120,7 +1120,9 @@ async function ingestSourceProduct(sourceUrl){
               description=cleanMultilineText(intro+(detailParts.length?'\n\nKey details: '+detailParts.join(' • '):''),12000);
             }
             description=description||null;
-            const category_id=autoCategory(title,description,normalized.brand,categories);            const product={
+            const normalized=normalizeAmazonListing(listing);
+            const category_id=autoCategory(title,description,normalized.brand,categories);
+            const product={
               name:title,kind:'find',brand:normalized.brand||null,description,features:features.join('\n')||null,
               image_url:images[0]||null,image_urls:images,display_price:normalized.current_price??null,currency:normalized.currency||'USD',
               destination_url:listing.source_url||sourceUrl,retailer,category_id,amazon_asin:retailer==='Amazon'?sourceId:null,
@@ -1779,7 +1781,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const isAmazonSource=/amazon/i.test(String(source.retailer||source.source_type||''))||!!source.amazon_asin||!!source.amazon_source_url;
           const publicProduct={
             id:source.id,name:normalized.name,slug:source.slug,kind:source.kind,brand:normalized.brand,
-            description:normalized.description,store_description:source.store_description||null,features:normalized.features,\n            ingredients:source.ingredients||null,usage_instructions:source.usage_instructions||null,product_warnings:source.product_warnings||null,product_size:source.product_size||null,
+            description:normalized.description,store_description:source.store_description||null,features:normalized.features,
+            ingredients:source.ingredients||null,usage_instructions:source.usage_instructions||null,product_warnings:source.product_warnings||null,product_size:source.product_size||null,
             image_url:normalized.image_url,image_urls:normalized.image_urls,display_price:normalized.display_price,currency:normalized.currency,
             destination_url:(isAmazonSource?(source.amazon_source_url||source.destination_url):(source.destination_url||source.source_url))||null,
             retailer:source.retailer||null,provider:source.provider||null,source_type:source.source_type||null,region:source.region||null,
