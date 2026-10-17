@@ -20,7 +20,7 @@ create table if not exists public.collections (
 );
 create table if not exists public.products (
   id uuid primary key default gen_random_uuid(), name text not null, slug text not null unique,
-  kind text not null check (kind in ('shop','find','learn')), description text, features text, brand text, image_url text, image_urls jsonb not null default '[]'::jsonb, availability text,
+  kind text not null check (kind in ('shop','find','learn')), description text, features text, ingredients text, usage_instructions text, product_warnings text, product_size text, brand text, image_url text, image_urls jsonb not null default '[]'::jsonb, availability text,
   display_price numeric, currency text default 'NGN', destination_url text, retailer text, provider text, region text,
   category_id uuid references public.categories(id), collection_id uuid references public.collections(id), why_we_picked_it text, best_for text, skip_if text, last_checked_at timestamptz,
   featured boolean not null default false, trending boolean not null default false, top_pick boolean not null default false, shopify_variants jsonb not null default '[]'::jsonb,
@@ -34,6 +34,10 @@ create table if not exists public.products (
 );
 
 alter table public.products add column if not exists features text;
+alter table public.products add column if not exists ingredients text;
+alter table public.products add column if not exists usage_instructions text;
+alter table public.products add column if not exists product_warnings text;
+alter table public.products add column if not exists product_size text;
 alter table public.products add column if not exists brand text;
 alter table public.products add column if not exists image_urls jsonb not null default '[]'::jsonb;
 alter table public.products add column if not exists availability text;
