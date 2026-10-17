@@ -484,7 +484,7 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
         <div class="field"><label>Category</label><select id="pfCategory"><option value="">No category</option></select></div>
         <div class="field"><label>Collection</label><select id="pfCollection"><option value="">No collection</option></select></div>
         <div class="field full"><label>Description</label><textarea id="pfDescription" placeholder="Product description"></textarea></div>
-        <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div><div class="field full"><label>Product options</label><textarea id="pfVariations" placeholder="Size: X-Small, Small, Medium, Large&#10;Color: Black, Grey, White"></textarea><div class="muted">Nuvora shows these as product options when the retailer provides them.</div></div>
+        <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div><div class="field full"><label>Ingredients (source-verified)</label><textarea id="pfIngredients" placeholder="Only use ingredients confirmed by the source listing"></textarea></div><div class="field full"><label>Directions / how to use (source-verified)</label><textarea id="pfUsage" placeholder="Directions copied or summarized from the product source"></textarea></div><div class="field full"><label>Warnings / cautions (source-verified)</label><textarea id="pfWarnings" placeholder="Warnings stated by the manufacturer or source"></textarea></div><div class="field"><label>Product size / format</label><input id="pfProductSize" placeholder="e.g. 50 ml / 1.7 fl oz"></div><div class="field full"><label>Product options</label><textarea id="pfVariations" placeholder="Size: X-Small, Small, Medium, Large&#10;Color: Black, Grey, White"></textarea><div class="muted">Nuvora shows these as product options when the retailer provides them.</div></div>
         <div class="field full"><label>Destination / affiliate URL</label><input id="pfDestination" placeholder="https://..."></div>
         <div class="field"><label>Amazon ASIN</label><input id="pfAsin" placeholder="B0XXXXXXXX"></div>
         <div class="field"><label>Retailer / supplier</label><input id="pfRetailer" value="Amazon"></div>
@@ -674,7 +674,7 @@ function renderProductTaxonomy(){
 }
 function resetProductForm(){
   window.temuImportMode=false;
-  ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfFeatures','pfVariations','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfFeatures','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.getElementById('pfKind').value='shop'; document.getElementById('pfSource').value='manual'; document.getElementById('pfCurrency').value='NGN'; document.getElementById('pfRetailer').value='Amazon';
   document.getElementById('pfImageStrip').innerHTML='';
   document.getElementById('importStatus').textContent='You can enter a product manually or fetch an Amazon product below. Imported data stays editable and nothing becomes public until you publish it.';
@@ -713,7 +713,7 @@ function setProductForm(p){
   document.getElementById('pfCategory').value=p.category_id||'';
   document.getElementById('pfCollection').value=p.collection_id||'';
   document.getElementById('pfDescription').value=p.description||'';
-  document.getElementById('pfFeatures').value=p.features||'';try{const v=Array.isArray(p.amazon_variations)?p.amazon_variations:[];document.getElementById('pfVariations').value=v.map(x=>x.name+': '+(Array.isArray(x.values)?x.values.join(', '):'')).join('\n')}catch(e){document.getElementById('pfVariations').value='';}
+  document.getElementById('pfFeatures').value=p.features||'';document.getElementById('pfIngredients').value=p.ingredients||'';document.getElementById('pfUsage').value=p.usage_instructions||'';document.getElementById('pfWarnings').value=p.product_warnings||'';document.getElementById('pfProductSize').value=p.product_size||'';try{const v=Array.isArray(p.amazon_variations)?p.amazon_variations:[];document.getElementById('pfVariations').value=v.map(x=>x.name+': '+(Array.isArray(x.values)?x.values.join(', '):'')).join('\n')}catch(e){document.getElementById('pfVariations').value='';}
   document.getElementById('pfDestination').value=p.destination_url||'';
   document.getElementById('pfAsin').value=p.amazon_asin||'';
   document.getElementById('pfRetailer').value=p.retailer||'Amazon';
@@ -909,7 +909,7 @@ async function useTemuLink(){
     document.getElementById('pfKind').value=j.kind||'find';
     if(j.category_id)document.getElementById('pfCategory').value=j.category_id;
     const a=j.listing||{};
-    if(a.title)document.getElementById('pfName').value=a.title;
+    if(a.title)document.getElementById('pfName').value=a.title;\n    if(a.ingredients)document.getElementById('pfIngredients').value=a.ingredients;if(a.usage_instructions)document.getElementById('pfUsage').value=a.usage_instructions;if(a.product_warnings)document.getElementById('pfWarnings').value=a.product_warnings;if(a.product_size)document.getElementById('pfProductSize').value=a.product_size;
     if(a.brand)document.getElementById('pfBrand').value=a.brand;
     if(a.description)document.getElementById('pfDescription').value=a.description;
     if(a.current_price!=null)document.getElementById('pfPrice').value=a.current_price;
@@ -1006,7 +1006,7 @@ async function saveProductDraft(){
   const images=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   const product={
     name,kind:document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
-    description:document.getElementById('pfDescription').value.trim()||null,features:document.getElementById('pfFeatures').value.trim()||null,
+    description:document.getElementById('pfDescription').value.trim()||null,features:document.getElementById('pfFeatures').value.trim()||null,ingredients:document.getElementById('pfIngredients').value.trim()||null,usage_instructions:document.getElementById('pfUsage').value.trim()||null,product_warnings:document.getElementById('pfWarnings').value.trim()||null,product_size:document.getElementById('pfProductSize').value.trim()||null,
     image_url:images[0]||null,image_urls:images,display_price:document.getElementById('pfPrice').value===''?null:Number(document.getElementById('pfPrice').value),
     amazon_list_price:document.getElementById('pfListPrice').value===''?null:Number(document.getElementById('pfListPrice').value),
     amazon_discount_percent:document.getElementById('pfDiscount').value===''?null:Number(document.getElementById('pfDiscount').value),
