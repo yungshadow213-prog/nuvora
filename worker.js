@@ -598,17 +598,17 @@ async function scrapeAmazonListing(sourceUrl,asin){
   const escapeRegex=(value)=>String(value).replace(/[.*+?^{}()|[\]\\$]/g,'\\$&');
       const elementInnerHtmlById=(id)=>{
     const esc=escapeRegex(id);
-    const openRe=new RegExp("<([a-z][a-z0-9:-]*)\b[^>]*\bid=[\"']"+esc+"[\"'][^>]*>","i");
+    const openRe=new RegExp(String.raw`<([a-z][a-z0-9:-]*)\\b[^>]*\\bid=["']${esc}["'][^>]*>`,"i");
     const open=String(html).match(openRe);
     if(!open||open.index==null)return '';
     const tag=open[1],contentStart=open.index+open[0].length;
-    const tagRe=new RegExp("<\\/?"+escapeRegex(tag)+"\b[^>]*>","gi");
+    const tagRe=new RegExp(String.raw`<\\/?${escapeRegex(tag)}\\b[^>]*>`,"gi");
     tagRe.lastIndex=contentStart;
     let depth=1,match;
     while((match=tagRe.exec(html))){
       const token=match[0];
       if(token.indexOf("</")===0)depth--;
-      else if(token.indexOf("/>")===token.length-2)continue;
+      else if(token.endsWith("/>"))continue;
       else depth++;
       if(depth===0)return String(html).slice(contentStart,match.index);
     }
