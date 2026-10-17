@@ -909,7 +909,8 @@ async function useTemuLink(){
     document.getElementById('pfKind').value=j.kind||'find';
     if(j.category_id)document.getElementById('pfCategory').value=j.category_id;
     const a=j.listing||{};
-    if(a.title)document.getElementById('pfName').value=a.title;\n    if(a.ingredients)document.getElementById('pfIngredients').value=a.ingredients;if(a.usage_instructions)document.getElementById('pfUsage').value=a.usage_instructions;if(a.product_warnings)document.getElementById('pfWarnings').value=a.product_warnings;if(a.product_size)document.getElementById('pfProductSize').value=a.product_size;
+    if(a.title)document.getElementById('pfName').value=a.title;
+    if(a.ingredients)document.getElementById('pfIngredients').value=a.ingredients;if(a.usage_instructions)document.getElementById('pfUsage').value=a.usage_instructions;if(a.product_warnings)document.getElementById('pfWarnings').value=a.product_warnings;if(a.product_size)document.getElementById('pfProductSize').value=a.product_size;
     if(a.brand)document.getElementById('pfBrand').value=a.brand;
     if(a.description)document.getElementById('pfDescription').value=a.description;
     if(a.current_price!=null)document.getElementById('pfPrice').value=a.current_price;
