@@ -1815,7 +1815,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           'amazon_badges','amazon_shipping_text','amazon_tax_text','amazon_variations',
           'source_related_products','source_image_urls','source_url','resolved_url','store_description',
           'temu_source_url','temu_product_id','temu_deal_text','temu_list_price','temu_discount_percent',
-          'temu_rating','temu_review_count','deal_text','list_price','discount_percent','rating','review_count'
+          'temu_rating','temu_review_count','deal_text','list_price','discount_percent','rating','review_count',
+          'ingredients','usage_instructions','product_warnings','product_size'
         ]);
         for(let attempt=0;attempt<40;attempt++){
           const response=await supabaseRest(env,method,'products',payload,query);
