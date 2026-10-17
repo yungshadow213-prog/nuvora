@@ -1667,7 +1667,10 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           if(!r.ok)return json({error:await r.text()},500); return json(await r.json());
         }
         const item=await body(request); if(!item.name||!item.slug)return json({error:'Name and slug are required'},400);
-        const r=await supabaseRest(env,'POST',table,item); if(!r.ok)return json({error:await r.text()},400); return json((await r.json())[0]);
+        // The deployed categories table may not have an optional description column.
+        // Only send columns supported by the categories schema; collections retain their description.
+        const record=table==='categories'?{name:item.name,slug:item.slug}:item;
+        const r=await supabaseRest(env,'POST',table,record); if(!r.ok)return json({error:await r.text()},400); return json((await r.json())[0]);
       }
 
       if(url.pathname==='/api/admin/analytics'&&request.method==='GET'){
