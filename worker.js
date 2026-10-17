@@ -1779,7 +1779,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const isAmazonSource=/amazon/i.test(String(source.retailer||source.source_type||''))||!!source.amazon_asin||!!source.amazon_source_url;
           const publicProduct={
             id:source.id,name:normalized.name,slug:source.slug,kind:source.kind,brand:normalized.brand,
-            description:normalized.description,store_description:source.store_description||null,features:normalized.features,
+            description:normalized.description,store_description:source.store_description||null,features:normalized.features,\n            ingredients:source.ingredients||null,usage_instructions:source.usage_instructions||null,product_warnings:source.product_warnings||null,product_size:source.product_size||null,
             image_url:normalized.image_url,image_urls:normalized.image_urls,display_price:normalized.display_price,currency:normalized.currency,
             destination_url:(isAmazonSource?(source.amazon_source_url||source.destination_url):(source.destination_url||source.source_url))||null,
             retailer:source.retailer||null,provider:source.provider||null,source_type:source.source_type||null,region:source.region||null,
