@@ -585,7 +585,7 @@ async function ensureSkinCategory(openForm=false){
     renderSkinProducts();return cat;
   }catch(e){setAdminStatus('Could not set up Skin Care: '+(e.message||e));throw e;}
 }
-async function openSkinProduct(){await ensureSkinCategory(true);}
+async function openSkinProduct(){await ensureSkinCategory(true);window.skinCareImportMode=true;document.getElementById('productModalTitle').textContent='Import Amazon skincare';document.getElementById('productModalSub').textContent='Paste an Amazon skincare link. Nuvora will assign the Skin Care category and capture available listing details automatically.';document.getElementById('amazonUrlInput').placeholder='Paste an Amazon skincare product or affiliate link';}
 function renderProducts(){
   const el=document.getElementById('productRows');
   if(!adminProducts.length){
@@ -906,7 +906,8 @@ async function useTemuLink(){
     document.getElementById('pfDestination').value=j.destination_url||url;
     document.getElementById('pfRetailer').value='Temu';
     document.getElementById('pfAsin').value=j.product_id||'';
-    document.getElementById('pfKind').value=j.kind||'find';
+    document.getElementById('pfKind').value=skinMode?'shop':(j.kind||'find');
+    if(skinMode){document.getElementById('pfCategory').value=String(skinCategory.id);document.getElementById('pfRetailer').value='Amazon';document.getElementById('pfSource').value='amazon';}
     if(j.category_id)document.getElementById('pfCategory').value=j.category_id;
     const a=j.listing||{};
     if(a.title)document.getElementById('pfName').value=a.title;
@@ -945,8 +946,10 @@ async function useAmazonLink(){
   const status=document.getElementById('importStatus');
   const btn=document.querySelector('.importbar .btn.primary');
   if(btn){btn.disabled=true;btn.textContent='Reading link…';}
-  status.textContent='Checking the Amazon link and preparing the product form…';
+  const skinMode=!!window.skinCareImportMode;
+  status.textContent=skinMode?'Reading Amazon skincare listing and assigning Skin Care automatically…':'Checking the Amazon link and preparing the product form…';
   try{
+    const skinCategory=skinMode?await ensureSkinCategory(false):null;
     const j=await api('/api/amazon/prepare',{method:'POST',body:{url}});
     document.getElementById('pfDestination').value=j.destination_url||url;
     document.getElementById('pfRetailer').value=j.retailer||'Amazon';
@@ -972,8 +975,8 @@ async function useAmazonLink(){
     if(Array.isArray(a.images)&&a.images.length)document.getElementById('pfImages').value=a.images.join('\\n');
     if(a.features)document.getElementById('pfFeatures').value=Array.isArray(a.features)?a.features.join('\n'):a.features;
     renderProductImages();
-    document.getElementById('productModalTitle').textContent='Review Amazon product';
-    document.getElementById('productModalSub').textContent='Link recognized → review details → save as draft → publish when ready.';
+    document.getElementById('productModalTitle').textContent=skinMode?'Review Amazon skincare listing':'Review Amazon product';
+    document.getElementById('productModalSub').textContent=skinMode?'Skincare listing detected → Skin Care category assigned automatically → save as draft.':'Link recognized → review details → save as draft → publish when ready.';
     if(j.duplicate){
       status.innerHTML='<strong>⚠️ This ASIN is already in Nuvora.</strong> '+esc(j.duplicate.name||'Existing product')+' — you can close this form and edit the existing product instead.';
     }else{
@@ -984,7 +987,7 @@ async function useAmazonLink(){
       if(a.rating!=null)captured.push('rating');
       if(a.review_count!=null)captured.push('reviews');
       if(Array.isArray(a.images)&&a.images.length)captured.push(a.images.length+' images');
-      status.textContent='Amazon link recognized. ASIN '+j.asin+' detected. '+(captured.length?'Automatically captured: '+captured.join(' · ')+'. ':'')+'Review the imported product and save it as a draft.';
+      status.textContent=(skinMode?'Amazon skincare link recognized. Skin Care category assigned automatically. ':'Amazon link recognized. ')+'ASIN '+j.asin+' detected. '+(captured.length?'Automatically captured: '+captured.join(' · ')+'. ':'')+'Review available details and save as a draft.';
     }
   }catch(e){
     status.textContent='Could not prepare this Amazon link.';
@@ -1004,9 +1007,10 @@ function parseProductVariations(raw){
 }
 async function saveProductDraft(){
   const name=document.getElementById('pfName').value.trim(); if(!name){setAdminStatus('Product title is required.','error');return;}
+  const skinCategory=window.skinCareImportMode?await ensureSkinCategory(false):null;
   const images=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   const product={
-    name,kind:document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
+    name,kind:window.skinCareImportMode?'shop':document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
     description:document.getElementById('pfDescription').value.trim()||null,features:document.getElementById('pfFeatures').value.trim()||null,ingredients:document.getElementById('pfIngredients').value.trim()||null,usage_instructions:document.getElementById('pfUsage').value.trim()||null,product_warnings:document.getElementById('pfWarnings').value.trim()||null,product_size:document.getElementById('pfProductSize').value.trim()||null,
     image_url:images[0]||null,image_urls:images,display_price:document.getElementById('pfPrice').value===''?null:Number(document.getElementById('pfPrice').value),
     amazon_list_price:document.getElementById('pfListPrice').value===''?null:Number(document.getElementById('pfListPrice').value),
@@ -1015,7 +1019,7 @@ async function saveProductDraft(){
     amazon_review_count:document.getElementById('pfReviews').value===''?null:Number(document.getElementById('pfReviews').value),amazon_bought_past_month:document.getElementById('pfBought').value.trim()||null,
     amazon_shipping_text:document.getElementById('pfShipping').value.trim()||null,amazon_tax_text:document.getElementById('pfTax').value.trim()||null,amazon_variations:parseProductVariations(document.getElementById('pfVariations').value),
     currency:document.getElementById('pfCurrency').value.trim()||'NGN',destination_url:document.getElementById('pfDestination').value.trim()||null,
-    retailer:document.getElementById('pfRetailer').value.trim()||null,category_id:document.getElementById('pfCategory').value.trim()||null,
+    retailer:document.getElementById('pfRetailer').value.trim()||null,category_id:skinCategory?String(skinCategory.id):(document.getElementById('pfCategory').value.trim()||null),
     collection_id:document.getElementById('pfCollection').value.trim()||null,amazon_asin:document.getElementById('pfAsin').value.trim()||null,
     amazon_source_url:document.getElementById('pfSource').value==='amazon'?document.getElementById('amazonUrlInput').value.trim()||document.getElementById('pfDestination').value.trim()||null:null,
     source_type:document.getElementById('pfSource').value,
@@ -1039,7 +1043,7 @@ async function saveProductDraft(){
     }else{
       await api('/api/admin/products',{method:'POST',body:{...product,slug}});
     }
-    const wasEditing=!!window.editingProductId; closeProductModal(); await liveAdminProducts(); setAdminStatus(wasEditing?'Product updated.':'Product saved as a draft.');
+    const wasEditing=!!window.editingProductId; closeProductModal(); window.skinCareImportMode=false; await liveAdminProducts(); setAdminStatus(wasEditing?'Product updated.':(skinCategory?'Skincare product saved as a draft in Skin Care.':'Product saved as a draft.'));
   }catch(e){setAdminStatus(e.message)}
 }
 async function editProduct(id){
