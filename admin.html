@@ -724,6 +724,37 @@ function setProductForm(p){
   document.getElementById('pfImages').value=imgs.filter(Boolean).join('\\n');
   renderProductImages();
 }
+async function uploadProductImages(){
+  const input=document.getElementById('pfUpload');
+  const status=document.getElementById('uploadStatus');
+  const button=document.querySelector('button[onclick="uploadProductImages()"]');
+  const files=Array.from(input?.files||[]);
+  if(!files.length){if(status)status.textContent='Choose one or more images first.';return;}
+  if(!adminSB){if(status)status.textContent='Image storage is not connected. Sign in again and retry.';return;}
+  const allowed=new Set(['image/jpeg','image/png','image/webp','image/gif']);
+  const invalid=files.find(f=>!allowed.has(f.type)||f.size>6*1024*1024);
+  if(invalid){if(status)status.textContent=invalid.size>6*1024*1024?invalid.name+' exceeds the 6 MB limit.':' '+invalid.name+' is not a supported image type (JPG, PNG, WEBP or GIF).';return;}
+  if(button){button.disabled=true;button.textContent='Uploading…';}
+  if(status)status.textContent='Uploading '+files.length+' image'+(files.length===1?'':'s')+'…';
+  try{
+    const uploaded=[];
+    for(const file of files){
+      const ext=({ 'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'})[file.type];
+      const path='products/manual-'+crypto.randomUUID()+'.'+ext;
+      const {error}=await adminSB.storage.from('product-images').upload(path,file,{cacheControl:'31536000',contentType:file.type,upsert:false});
+      if(error)throw error;
+      const {data}=adminSB.storage.from('product-images').getPublicUrl(path);
+      if(!data?.publicUrl)throw new Error('Could not create a public image URL.');
+      uploaded.push(data.publicUrl);
+    }
+    const current=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+    document.getElementById('pfImages').value=[...current,...uploaded].filter((x,i,a)=>a.indexOf(x)===i).join('\n');
+    renderProductImages();
+    if(status)status.textContent=uploaded.length+' image'+(uploaded.length===1?'s':'')+' uploaded and added to the product. Save the draft to keep them.';
+    input.value='';
+  }catch(e){if(status)status.textContent='Upload failed: '+(e.message||'Unknown storage error. Check the product-images bucket permissions.');}
+  finally{if(button){button.disabled=false;button.textContent='Upload selected images';}}
+}
 function renderProductImages(){
   const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   document.getElementById('pfImageStrip').innerHTML=urls.map((u,i)=>`<div class="image-item"><img src="${esc(u)}" onerror="this.style.opacity='.25'"><button type="button" onclick="removeProductImage(${i})">×</button></div>`).join('');
