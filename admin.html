@@ -192,11 +192,21 @@ body.admin-workspace-open .modal-backdrop .modal{width:100%!important;max-width:
 body.admin-workspace-open .modal-backdrop .modal-head{position:sticky!important;top:0!important;background:rgba(245,246,243,.96)!important;border-bottom:1px solid var(--line)!important;padding:22px max(22px,calc((100vw - 1180px)/2))!important}
 body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important;margin:0 auto!important;padding:28px 22px 70px!important;background:var(--bg)!important}
 .workspace-back{margin-right:8px}
+</style><style id="nuvora-skin-studio">
+.skin-studio{max-width:1440px;margin:0 auto}
+.skin-studio-hero{display:flex;align-items:center;justify-content:space-between;gap:28px;padding:26px 28px;margin-bottom:16px;border:1px solid #e1e8df;border-radius:22px;background:linear-gradient(115deg,#f0f6ef 0%,#fff 58%,#f7f4e9 100%);box-shadow:var(--shadow)}
+.skin-studio-hero-copy{max-width:790px}.skin-studio-hero h2{font-size:clamp(30px,4vw,46px);line-height:1.02;letter-spacing:-1.8px;margin:10px 0;color:#1b2c20}.skin-studio-hero h2 span{color:#568260}.skin-studio-hero p{max-width:680px;color:#69766b;font-size:13px;line-height:1.7;margin:0}.skin-studio-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+.skin-studio-mark{flex:0 0 190px;min-height:170px;display:flex;flex-direction:column;justify-content:center;align-items:center;border:1px solid #dbe6d8;border-radius:18px;background:rgba(255,255,255,.72);color:#738b75}.skin-studio-mark span{font-size:9px;letter-spacing:.24em;font-weight:850}.skin-studio-mark b{font-size:42px;letter-spacing:-2px;line-height:1.1;color:#285a3b}.skin-studio-mark i{font-size:10px;font-style:normal;letter-spacing:.08em;margin-top:8px}
+.skin-studio-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 30px}.skin-studio-stat{padding:18px;border:1px solid #e3e8e1;border-radius:16px;background:#fff;box-shadow:var(--shadow)}.skin-studio-stat span{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.09em;font-weight:800;color:#7d897e}.skin-studio-stat b{display:block;font-size:32px;letter-spacing:-1.2px;color:#203b29;margin:10px 0 4px}.skin-studio-stat small{font-size:10px;color:#939d94}
+.skin-studio-section-head{display:flex;align-items:end;justify-content:space-between;gap:15px;margin:8px 2px 14px}.skin-studio-section-head h3{font-size:22px;letter-spacing:-.7px;margin:6px 0}.skin-studio-section-head p{font-size:12px;color:#7b857d;margin:0;line-height:1.5}
+.skin-studio-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:22px}.skin-tool-card{position:relative;min-height:220px;padding:18px;border:1px solid #e3e8e1;border-radius:17px;background:#fff;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:flex-start}.skin-tool-icon{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:#edf5ed;color:#316342;font-size:10px;font-weight:850;margin-bottom:14px}.skin-tool-state{display:inline-flex;padding:5px 8px;border-radius:99px;font-size:9px;font-weight:800;margin-bottom:9px}.skin-tool-state.is-current{background:#edf6ee;color:#2f7144}.skin-tool-state.is-planned{background:#f5f1e7;color:#8a6b2f}.skin-tool-card h4{font-size:15px;letter-spacing:-.3px;margin:0 0 7px;color:#25372a}.skin-tool-card p{font-size:11px;line-height:1.65;color:#737e75;margin:0 0 12px}.skin-tool-card>small{font-size:10px;line-height:1.5;color:#9a8b6b;margin-top:auto}.skin-tool-link{border:0;padding:0;background:none;color:#2f7144;font:inherit;font-size:11px;font-weight:800;cursor:pointer;margin-top:auto}.skin-tool-link:hover{text-decoration:underline}.skin-tool-links{display:flex;gap:14px;margin-top:auto}.skin-studio-catalog{scroll-margin-top:90px}.skin-studio-catalog .catalog-panel-head{align-items:center}.skin-studio-catalog .catalog-panel-head h2{margin-bottom:4px!important}
+@media(max-width:1050px){.skin-studio-tools{grid-template-columns:repeat(2,minmax(0,1fr))}.skin-studio-mark{flex-basis:150px}}
+@media(max-width:700px){.skin-studio-hero{align-items:flex-start;padding:20px;}.skin-studio-mark{display:none}.skin-studio-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.skin-studio-stat{padding:14px}.skin-studio-stat b{font-size:27px}.skin-studio-tools{grid-template-columns:1fr}.skin-tool-card{min-height:0}.skin-studio-section-head{align-items:flex-start}.skin-studio-actions .btn{flex:1 1 100%}}
 </style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
 <button data-icon="↥" onclick="show('import',this)">Import</button>
 <button data-icon="▣" onclick="show('products',this)">Products</button>
-<button data-icon="✿" onclick="show('skin-care',this)">Skin Care</button>
+<button data-icon="✿" onclick="show('skin-care',this)">Skin Care Studio</button>
 <button data-icon="☷" onclick="show('categories',this)">Categories</button>
 <button data-icon="◫" onclick="show('collections',this)">Collections</button>
 <button data-icon="□" onclick="show('orders',this)">Orders</button>
@@ -380,13 +390,66 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
   </div>
   <div class="notice" style="margin-top:14px"><b>Full importer pipeline:</b> source URL → product extraction → title cleanup → description cleanup → image normalization → price/list-price/discount → rating/reviews → availability/shipping → variants → brand/category → duplicate detection → draft → edit → publish.</div>
 </section>
-<section id="skin-care" class="view">
-  <div class="catalog-head">
-    <div><span class="eyebrow">Dedicated storefront</span><h2>Nuvora Skin</h2><p>Manage skincare and beauty affiliate products separately from the main Nuvora catalog. Products in the <b>Skin Care</b> category appear on the dedicated skincare storefront.</p></div>
-    <div class="catalog-actions"><button class="btn" onclick="ensureSkinCategory(true)">Set up Skin Care category</button><button class="btn primary" onclick="openSkinProduct()">+ Add skincare product</button><button class="btn" onclick="window.open('/beauty','_blank')">View Nuvora Skin ↗</button></div>
+<section id="skin-care" class="view skin-studio">
+  <div class="skin-studio-hero">
+    <div class="skin-studio-hero-copy">
+      <span class="eyebrow">Nuvora Admin / Dedicated workspace</span>
+      <h2>Nuvora Skin <span>Studio</span></h2>
+      <p>A dedicated control center for the skincare storefront. Manage skincare products here without turning them into ordinary Nuvora listings.</p>
+      <div class="skin-studio-actions">
+        <button class="btn primary" onclick="openSkinProduct()">+ Add skincare product</button>
+        <button class="btn" onclick="ensureSkinCategory(true)">Set up Skin Care category</button>
+        <button class="btn" onclick="window.open('/beauty','_blank')">Preview storefront ↗</button>
+      </div>
+    </div>
+    <div class="skin-studio-mark" aria-hidden="true"><span>NUVORA</span><b>SKIN</b><i>Care, considered.</i></div>
   </div>
-  <div class="panel catalog-panel">
-    <div class="catalog-panel-head"><div><span class="section-kicker">Separate catalog view</span><h2>Skin Care products</h2></div><span id="skinProductCount" class="library-note">0 products</span></div>
+
+  <div class="skin-studio-stats">
+    <article class="skin-studio-stat"><span>All skincare products</span><b id="skinTotal">0</b><small>Dedicated catalog</small></article>
+    <article class="skin-studio-stat"><span>Published</span><b id="skinPublished">0</b><small>Visible in the storefront</small></article>
+    <article class="skin-studio-stat"><span>Drafts</span><b id="skinDrafts">0</b><small>Still being reviewed</small></article>
+    <article class="skin-studio-stat"><span>With images</span><b id="skinImages">0</b><small>Product imagery added</small></article>
+  </div>
+
+  <div class="skin-studio-section-head">
+    <div><span class="section-kicker">Workspace</span><h3>Skincare admin tools</h3><p>One Skin Care workspace under Nuvora Admin, with its own focused tools and future builder controls.</p></div>
+  </div>
+  <div class="skin-studio-tools">
+    <article class="skin-tool-card">
+      <div class="skin-tool-icon">01</div><span class="skin-tool-state is-current">Available now</span>
+      <h4>Product library</h4><p>Review skincare listings, open retailer links, edit product records, publish, unpublish, or remove products.</p>
+      <button class="skin-tool-link" onclick="document.getElementById('skinProductRows').scrollIntoView({behavior:'smooth',block:'start'})">Open product library ↘</button>
+    </article>
+    <article class="skin-tool-card">
+      <div class="skin-tool-icon">02</div><span class="skin-tool-state is-current">Existing Nuvora controls</span>
+      <h4>Categories & collections</h4><p>Organize products into the Skin Care category and use Nuvora’s existing collection controls.</p>
+      <div class="skin-tool-links"><button class="skin-tool-link" onclick="show('categories',document.querySelector('.nav button[onclick*=\'categories\']'))">Categories ↗</button><button class="skin-tool-link" onclick="show('collections',document.querySelector('.nav button[onclick*=\'collections\']'))">Collections ↗</button></div>
+    </article>
+    <article class="skin-tool-card">
+      <div class="skin-tool-icon">03</div><span class="skin-tool-state is-planned">Planned workspace feature</span>
+      <h4>Skincare product guides</h4><p>Dedicated fields for benefits, skin types, skin concerns, ingredients, how to use, cautions, and clear product-specific guidance.</p>
+      <small>Part of the Skin Care admin plan; not all fields are implemented yet.</small>
+    </article>
+    <article class="skin-tool-card">
+      <div class="skin-tool-icon">04</div><span class="skin-tool-state is-planned">Planned workspace feature</span>
+      <h4>Visual storefront builder</h4><p>Arrange homepage sections, product placements, reusable templates, page content, and product-page layouts in a drag-and-drop editor.</p>
+      <small>Planned for this dedicated workspace; not represented as live functionality yet.</small>
+    </article>
+    <article class="skin-tool-card">
+      <div class="skin-tool-icon">05</div><span class="skin-tool-state is-planned">Planned workspace feature</span>
+      <h4>Product imagery & placement</h4><p>Upload your own product images, control image arrangement, feature products, and choose where products and sections appear.</p>
+      <small>Image uploads and flexible placement need dedicated Skin Care controls.</small>
+    </article>
+    <article class="skin-tool-card">
+      <div class="skin-tool-icon">06</div><span class="skin-tool-state is-planned">Planned workspace feature</span>
+      <h4>Complementary recommendations</h4><p>Recommend compatible skincare products with reasons, while flagging combinations that may irritate or conflict.</p>
+      <small>Recommendations must distinguish product facts from general skincare guidance.</small>
+    </article>
+  </div>
+
+  <div class="panel catalog-panel skin-studio-catalog">
+    <div class="catalog-panel-head"><div><span class="section-kicker">Dedicated catalog</span><h2>Skin Care products</h2><p class="muted">Skincare products stay grouped separately from the main Nuvora catalog.</p></div><span id="skinProductCount" class="library-note">0 products</span></div>
     <div id="skinCategoryNotice" class="notice">Products are routed to Nuvora Skin by assigning them to the Skin Care category.</div>
     <div id="skinProductRows" class="product-library"></div>
   </div>
@@ -565,6 +628,8 @@ function renderSkinProducts(){
   const el=document.getElementById('skinProductRows');if(!el)return;
   const rows=adminProducts.filter(isSkinProduct);
   const count=document.getElementById('skinProductCount');if(count)count.textContent=rows.length+' product'+(rows.length===1?'':'s');
+  const put=(id,value)=>{const node=document.getElementById(id);if(node)node.textContent=String(value);};
+  put('skinTotal',rows.length);put('skinPublished',rows.filter(p=>p.published).length);put('skinDrafts',rows.filter(p=>!p.published).length);put('skinImages',rows.filter(p=>Boolean(p.image_url||p.image||p.imageUrl||(Array.isArray(p.images)&&p.images.some(Boolean)))).length);
   const notice=document.getElementById('skinCategoryNotice');
   const cat=categories.find(x=>/^(skin-care|skincare|beauty)$/i.test(String(x.slug||''))||/skin care|skincare/i.test(String(x.name||'')));
   if(notice)notice.textContent=cat?'Using category “'+cat.name+'”. Products assigned to this category are routed to Nuvora Skin.':'Create the Skin Care category first; the setup button will create it without changing existing products.';
