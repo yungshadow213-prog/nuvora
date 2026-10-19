@@ -31,6 +31,24 @@ You only need to enter the Supabase service-role/secret key once on this Windows
 - SEO metadata and dynamic product title/description updates
 - Existing Admin settings, social drafts, categories, collections, publish/unpublish, and sign-out
 
+## Nuvora Skin Studio
+
+The **Skin Care Studio** lives inside the main Nuvora Admin. It has a dedicated product editor that assigns skincare products to the Skin Care category automatically, hides standard price controls, and uses the **Check price on Amazon** retailer handoff.
+
+Its product guides support source-backed benefits, suitable skin types, skin concerns, ingredients, directions, warnings / avoid-if cautions, uploaded product images, manually curated companion products, and an editorial rationale. Do not invent ingredients or manufacturer claims; verify the current retailer listing and product packaging.
+
+The Skin storefront builder controls the page template, accent color, announcement bar, hero and editorial copy, hero image, affiliate disclosure, and page sections. Sections can be reordered, hidden, duplicated, removed, and added; product sections support filters, columns, and explicit product placement. Customers can open a product guide before following the retailer link. The public product card does not display an internal price.
+
+### Skin Studio database migration
+
+`backend/NUVORA-SKIN-STUDIO-MIGRATION.sql` is an additive migration that creates the dedicated guide fields and a JSONB site configuration on existing product/settings records. It uses `ADD COLUMN IF NOT EXISTS` and does not remove customer or catalog data. It has been applied to the Supabase project configured for the current Nuvora deployment.
+
+The public `GET /api/skin-settings` endpoint returns only the Skin storefront configuration. Layout updates require an authenticated Nuvora admin through the existing `/api/admin/settings` route. Worker-side and local API validation limit configuration size and validate section types, template, product IDs, and URLs.
+
+### Deployment verification
+
+A successful CI or Wrangler dry run is **not** the same as a live deployment. Confirm the main-branch deploy workflow and its live health/smoke checks before treating a release as live.
+
 ## Amazon is optional
 
 Nuvora does not bypass Amazon Associates/Creators API requirements. If Amazon credentials are not configured, use manual entry, custom uploads, CSV import, or another authorized retailer integration. The Amazon importer becomes available after legitimate API access is configured.
