@@ -2144,7 +2144,8 @@ function validateSkinSiteConfig(value){
   if(encoded.length>100000)return 'Skin site configuration is too large (maximum 100 KB).';
   if(!['soft-editorial','clean-minimal','sage-botanical'].includes(String(value.template||'soft-editorial')))return 'Unknown Skin Studio template.';
   if(value.accentColor!==undefined&&!/^#[0-9a-f]{6}$/i.test(String(value.accentColor)))return 'Skin Studio accent color must be a six-digit hex color.';
-  if(value.heroImage){try{if(new URL(value.heroImage).protocol!=='https:')return 'Skin Studio hero image must use HTTPS.';}catch{return 'Skin Studio hero image URL is invalid.';}}\n  if(value.storefrontUrl){try{if(new URL(value.storefrontUrl).protocol!=='https:')return 'Client storefront URL must use HTTPS.';}catch{return 'Client storefront URL is invalid.';}}
+  if(value.heroImage){try{if(new URL(value.heroImage).protocol!=='https:')return 'Skin Studio hero image must use HTTPS.';}catch{return 'Skin Studio hero image URL is invalid.';}}
+  if(value.storefrontUrl){try{if(new URL(value.storefrontUrl).protocol!=='https:')return 'Client storefront URL must use HTTPS.';}catch{return 'Client storefront URL is invalid.';}}
   if(value.productGuideTemplate!==undefined&&!['editorial','compact','minimal'].includes(String(value.productGuideTemplate)))return 'Skin Studio product guide layout is invalid.';
   if(value.productGuideFields!==undefined){
     const keys=['benefits','skinTypes','concerns','ingredients','usage','warnings','recommendations'];
@@ -2164,7 +2165,8 @@ function validateSkinSiteConfig(value){
     if(ids.has(id))return 'Skin Studio section IDs must be unique.';
     ids.add(id);
     if(section.title!==undefined&&String(section.title).length>180)return 'Skin Studio section titles are limited to 180 characters.';
-    if(section.text!==undefined&&String(section.text).length>3000)return 'Skin Studio section text is too long.';\n    if(section.image_url){try{if(new URL(section.image_url).protocol!=='https:')return 'Section images must use HTTPS.';}catch{return 'A section image URL is invalid.';}}\n    if(section.image_alt!==undefined&&String(section.image_alt).length>240)return 'Section image alt text is too long.';\n    if(section.button_label!==undefined&&String(section.button_label).length>80)return 'Section button labels are limited to 80 characters.';\n    if(section.button_href!==undefined&&String(section.button_href).length>600)return 'Section button destinations are limited to 600 characters.';\n    if(section.max_items!==undefined&&(!Number.isInteger(Number(section.max_items))||Number(section.max_items)<1||Number(section.max_items)>24))return 'Section item counts must be between 1 and 24.';
+    if(section.text!==undefined&&String(section.text).length>3000)return 'Skin Studio section text is too long.';
+    if(section.image_url){try{if(new URL(section.image_url).protocol!=='https:')return 'Section images must use HTTPS.';}catch{return 'A section image URL is invalid.';}}\n    if(section.image_alt!==undefined&&String(section.image_alt).length>240)return 'Section image alt text is too long.';\n    if(section.button_label!==undefined&&String(section.button_label).length>80)return 'Section button labels are limited to 80 characters.';\n    if(section.button_href!==undefined&&String(section.button_href).length>600)return 'Section button destinations are limited to 600 characters.';\n    if(section.max_items!==undefined&&(!Number.isInteger(Number(section.max_items))||Number(section.max_items)<1||Number(section.max_items)>24))return 'Section item counts must be between 1 and 24.';
     if(section.eyebrow!==undefined&&String(section.eyebrow).length>100)return 'Skin Studio section eyebrows are limited to 100 characters.';
     if(section.product_ids!==undefined){
       if(!Array.isArray(section.product_ids)||section.product_ids.length>60)return 'A Skin Studio section can place up to 60 products.';
