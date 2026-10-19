@@ -78,7 +78,13 @@ function validateSkinSiteConfig(value){
   if(encoded.length>100000)return 'Skin site configuration is too large (maximum 100 KB).';
   if(!['soft-editorial','clean-minimal','sage-botanical'].includes(String(value.template||'soft-editorial')))return 'Unknown Skin Studio template.';
   if(value.accentColor!==undefined&&!/^#[0-9a-f]{6}$/i.test(String(value.accentColor)))return 'Skin Studio accent color must be a six-digit hex color.';
-  if(value.heroImage&&!validUrl(value.heroImage))return 'Skin Studio hero image must be an http(s) URL.';
+  if(value.heroImage){try{if(new URL(value.heroImage).protocol!=='https:')return 'Skin Studio hero image must use HTTPS.';}catch{return 'Skin Studio hero image URL is invalid.';}}
+  if(value.productGuideTemplate!==undefined&&!['editorial','compact','minimal'].includes(String(value.productGuideTemplate)))return 'Skin Studio product guide layout is invalid.';
+  if(value.productGuideFields!==undefined){
+    const keys=['benefits','skinTypes','concerns','ingredients','usage','warnings','recommendations'];
+    if(!value.productGuideFields||typeof value.productGuideFields!=='object'||Array.isArray(value.productGuideFields))return 'Skin Studio product guide visibility settings must be an object.';
+    if(keys.some(key=>value.productGuideFields[key]!==undefined&&typeof value.productGuideFields[key]!=='boolean'))return 'Skin Studio product guide visibility values must be true or false.';
+  }
   if(value.sections!==undefined&&!Array.isArray(value.sections))return 'Skin Studio sections must be an array.';
   const sections=Array.isArray(value.sections)?value.sections:[];
   if(sections.length>40)return 'Skin Studio supports up to 40 sections.';
