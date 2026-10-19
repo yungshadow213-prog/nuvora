@@ -208,6 +208,9 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
 .skin-builder-layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(370px,.95fr);gap:14px;align-items:start}.skin-builder-controls{display:grid;gap:12px}.skin-builder-group{border:1px solid #e3e8e1;border-radius:15px;background:#fff;padding:17px}.skin-builder-group-heading{display:flex;align-items:flex-start;gap:11px;margin-bottom:14px}.skin-builder-group-heading>span{display:grid;place-items:center;flex:0 0 30px;height:30px;border-radius:9px;background:#edf5ed;color:#316342;font-size:10px;font-weight:900}.skin-builder-group-heading h3{font-size:14px;letter-spacing:-.2px;margin:1px 0 4px;color:#25372a}.skin-builder-group-heading p{font-size:10px;line-height:1.5;color:#88938a;margin:0}.skin-builder-fields{display:grid;grid-template-columns:1fr 1fr;gap:11px}.skin-builder-fields .field.full{grid-column:1/-1}.skin-builder-fields .field label,.skin-builder-add>label{font-size:10px;color:#647267;font-weight:800}.skin-builder-fields input,.skin-builder-fields textarea,.skin-builder-fields select,.skin-section-card-fields input,.skin-section-card-fields textarea,.skin-section-card-fields select,.skin-builder-add select{background:#fbfcfa!important;border:1px solid #dfe6dd!important;color:#25372a!important;border-radius:10px!important;font-size:11px!important;padding:10px!important}.skin-builder-fields textarea{min-height:78px}.skin-builder-sections{border:1px solid #e3e8e1;border-radius:15px;background:#f8faf7;padding:16px;position:sticky;top:106px;max-height:calc(100vh - 125px);overflow:auto}.skin-builder-section-list{display:grid;gap:10px}.skin-builder-section-card{background:#fff;border:1px solid #e1e8df;border-radius:13px;padding:11px}.skin-builder-section-card[draggable=true]{cursor:default}.skin-section-card-head{display:flex;align-items:center;gap:8px;margin-bottom:11px}.skin-drag-handle{cursor:grab;color:#829083;font-size:20px;touch-action:none}.skin-section-card-head>div{display:grid;gap:2px;min-width:0}.skin-section-card-head b{font-size:11px;color:#25372a}.skin-section-card-head small{font-size:9px;color:#93a097}.skin-visible-toggle{display:flex;align-items:center;gap:5px;margin-left:auto;font-size:9px;color:#627365;white-space:nowrap}.skin-visible-toggle input{width:auto;accent-color:#2f7144}.skin-section-card-fields{display:grid;gap:9px}.skin-section-card-fields>label{display:grid;gap:5px;font-size:10px;font-weight:750;color:#5e6d61}.skin-section-card-fields textarea{min-height:55px;resize:vertical}.skin-section-card-fields select[multiple]{min-height:100px!important}.skin-section-card-fields small{font-size:9px;color:#929b93;line-height:1.45;font-weight:400}.skin-section-card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.skin-section-card-actions button{border:1px solid #e0e7de;background:#f8faf7;color:#506452;border-radius:8px;padding:7px;font-size:9px;font-weight:800;cursor:pointer}.skin-section-card-actions button:disabled{opacity:.35;cursor:not-allowed}.skin-section-card-actions button.is-danger{color:#a44848;border-color:#f0d9d9;background:#fffafa}.skin-builder-add{border-top:1px solid #e1e8df;padding-top:14px;margin-top:14px;display:grid;gap:8px}.skin-builder-add>div{display:flex;gap:7px}.skin-builder-add select{flex:1;min-width:0}.skin-builder-add button{white-space:nowrap}.skin-builder-info{margin-top:14px;background:#edf5ed;border-radius:12px;padding:12px}.skin-builder-info b{font-size:10px;color:#2f7144}.skin-builder-info p{margin:5px 0 0;color:#627365;font-size:10px;line-height:1.55}
 @media(max-width:1100px){.skin-builder-layout{grid-template-columns:1fr}.skin-builder-sections{position:static;max-height:none}.skin-builder-head{flex-direction:column}.skin-builder-actions{width:100%}.skin-builder-actions .btn{flex:1}}
 @media(max-width:600px){.skin-builder-fields{grid-template-columns:1fr}.skin-builder-fields .field.full{grid-column:auto}.skin-builder-actions .btn{flex:1 1 100%}.skin-builder-add>div{flex-direction:column}.skin-builder-add button{width:100%}.skin-flag-row{display:grid}.skin-flag-row label{width:100%}}
+</style><style id="nuvora-guide-layout-settings">
+.skin-guide-vis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:6px}.skin-guide-vis label{display:flex;align-items:center;gap:7px;border:1px solid #e0e7de;background:#fbfcfa;border-radius:9px;padding:9px;font-size:10px!important;color:#4d5f51!important}.skin-guide-vis input{width:auto;accent-color:#316342}
+@media(max-width:600px){.skin-guide-vis{grid-template-columns:1fr}}
 </style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
 <button data-icon="↥" onclick="show('import',this)">Import</button>
@@ -488,6 +491,23 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
             <div class="field full"><label for="skinCfgApproachTitle">Headline</label><input id="skinCfgApproachTitle" maxlength="180"></div>
             <div class="field full"><label for="skinCfgApproachBody">Editorial copy</label><textarea id="skinCfgApproachBody" maxlength="3000"></textarea></div>
             <div class="field full"><label for="skinCfgFooterNote">Affiliate disclosure / footer note</label><textarea id="skinCfgFooterNote" maxlength="1800"></textarea></div>
+          </div>
+        </section>
+        <section class="skin-builder-group">
+          <div class="skin-builder-group-heading"><span>04</span><div><h3>Product guide pages</h3><p>Control the product-detail presentation and which guide sections shoppers see.</p></div></div>
+          <div class="skin-builder-fields">
+            <div class="field full"><label for="skinCfgGuideTemplate">Product guide layout</label><select id="skinCfgGuideTemplate"><option value="editorial">Editorial — large image and full guide</option><option value="compact">Compact — balanced image and details</option><option value="minimal">Minimal — concise product facts</option></select></div>
+            <div class="field full"><label>Customer-facing guide sections</label>
+              <div class="skin-guide-vis">
+                <label><input type="checkbox" id="skinShowBenefits"> Benefits</label>
+                <label><input type="checkbox" id="skinShowSkinTypes"> Suitable skin types</label>
+                <label><input type="checkbox" id="skinShowConcerns"> Skin concerns / intended use</label>
+                <label><input type="checkbox" id="skinShowIngredients"> Ingredients</label>
+                <label><input type="checkbox" id="skinShowUsage"> How to use</label>
+                <label><input type="checkbox" id="skinShowWarnings"> Warnings / avoid-if notes</label>
+                <label><input type="checkbox" id="skinShowRecommendations"> Complementary products</label>
+              </div>
+            </div>
           </div>
         </section>
       </div>
@@ -1495,6 +1515,8 @@ const defaultSkinSiteConfig=()=>({
   approachTitle:'Good finds. Clear choices.',
   approachBody:'Nuvora Skin is a focused corner of Nuvora for skincare and beauty discoveries. We aim to make browsing simpler with clear product details and direct links to the retailer. Always check the retailer’s ingredient list, product directions, and suitability for your own skin before buying.',
   footerNote:'Affiliate disclosure: Some links may be affiliate links. If you buy through them, Nuvora may earn a commission at no extra cost to you. Retailer prices, availability, ingredients, and product claims can change; confirm details on the retailer’s site.',
+  productGuideTemplate:'editorial',
+  productGuideFields:{benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true},
   sections:[
     {id:'hero',type:'hero',visible:true,title:'Care that feels like you.'},
     {id:'edit',type:'product-grid',visible:true,title:'What’s in the edit',eyebrow:'Curated, not crowded',text:'Product picks are added by the Nuvora team. Explore skincare finds and helpful guides.',filter:'all',columns:4,product_ids:[]},
@@ -1506,18 +1528,27 @@ function mergeSkinSiteConfig(raw){
  cfg.sections=Array.isArray(src.sections)&&src.sections.length?src.sections.map((x,i)=>({id:String(x.id||('section-'+(i+1))).slice(0,80),type:['hero','product-grid','editorial','featured-products','category-grid'].includes(x.type)?x.type:'product-grid',visible:x.visible!==false,title:String(x.title||'New section').slice(0,180),eyebrow:String(x.eyebrow||'').slice(0,100),text:String(x.text||'').slice(0,3000),filter:['all','featured','top_pick','trending'].includes(x.filter)?x.filter:'all',columns:[2,3,4].includes(Number(x.columns))?Number(x.columns):4,product_ids:Array.isArray(x.product_ids)?x.product_ids.map(String).slice(0,60):[],category_id:String(x.category_id||'').slice(0,80)})):base.sections;
  cfg.template=['soft-editorial','clean-minimal','sage-botanical'].includes(cfg.template)?cfg.template:'soft-editorial';
  cfg.accentColor=/^#[0-9a-f]{6}$/i.test(String(cfg.accentColor||''))?cfg.accentColor:'#66745f';
+ cfg.productGuideTemplate=['editorial','compact','minimal'].includes(cfg.productGuideTemplate)?cfg.productGuideTemplate:'editorial';
+ const guideDefaults={benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true};
+ cfg.productGuideFields={...guideDefaults,...(src.productGuideFields&&typeof src.productGuideFields==='object'?src.productGuideFields:{})};
+ Object.keys(guideDefaults).forEach(key=>cfg.productGuideFields[key]=cfg.productGuideFields[key]!==false);
  return cfg;
 }
 function skinBuilderMessage(message,type='info'){const el=document.getElementById('skinBuilderStatus');if(el){el.textContent=message;el.dataset.status=type;}}
 function fillSkinConfigFields(){
  const c=skinBuilderConfig;if(!c)return;
- const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote'};
- Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=c[key]||'';});renderSkinBuilderSections();
+ const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgGuideTemplate:'productGuideTemplate'};
+ Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=c[key]||'';});
+ const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations'};
+ Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=c.productGuideFields[key]!==false;});renderSkinBuilderSections();
 }
 function collectSkinConfigFields(){
  if(!skinBuilderConfig)return;
- const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote'};
+ const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgGuideTemplate:'productGuideTemplate'};
  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)c[key]=el.value.trim();});
+ const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations'};
+ c.productGuideFields=c.productGuideFields||{};
+ Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)c.productGuideFields[key]=!!el.checked;});
  const hero=c.sections.find(x=>x.type==='hero');if(hero){hero.title=c.heroTitle;hero.eyebrow=c.heroEyebrow;hero.text=c.heroDescription;}
  const editorial=c.sections.find(x=>x.type==='editorial');if(editorial){editorial.title=c.approachTitle;editorial.eyebrow=c.approachEyebrow;editorial.text=c.approachBody;}
 }
