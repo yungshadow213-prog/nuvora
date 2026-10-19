@@ -28,7 +28,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-16-publish-schema-fallback-r8',
+          release:'nuvora-2026-10-19-skin-studio-r1',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -178,7 +178,7 @@ async function inspectProductSchema(env){
     'source_url','resolved_url','store_description','temu_source_url','temu_product_id',
     'temu_deal_text','temu_list_price','temu_discount_percent','temu_rating','temu_review_count',
     'deal_text','list_price','discount_percent','rating','review_count',
-    'ingredients','usage_instructions','product_warnings','product_size'
+    'ingredients','usage_instructions','product_warnings','product_size','benefits','skin_types','skin_concerns','recommended_product_ids','recommendation_reason'
   ];
   const query=fields=>'?select='+fields.map(encodeURIComponent).join(',')+'&limit=1';
   const coreRes=await supabaseRest(env,'GET','products',undefined,query(core));
@@ -1690,13 +1690,26 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         return json({counts,total:Array.isArray(rows)?rows.length:0});
       }
 
+      if(url.pathname==='/api/skin-settings'&&request.method==='GET'){
+        // Only expose the explicit Skin storefront configuration; never return the whole admin settings row.
+        const r=await supabaseRest(env,'GET','store_settings',undefined,'?select=skin_site_config&id=eq.true&limit=1');
+        if(!r.ok)return json({error:'Skin storefront settings could not be loaded.'},502);
+        const row=(await r.json())?.[0]||{};
+        return json(row.skin_site_config&&typeof row.skin_site_config==='object'?row.skin_site_config:{});
+      }
+
       if(url.pathname==='/api/admin/settings'&&(request.method==='GET'||request.method==='PATCH')){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         if(request.method==='GET'){
           const r=await supabaseRest(env,'GET','store_settings',undefined,'?id=eq.true&select=*'); if(!r.ok)return json({error:await r.text()},500);
           return json((await r.json())[0]||{});
         }
-        const patch=await body(request); delete patch.id; patch.updated_at=new Date().toISOString();
+        const patch=await body(request); delete patch.id;
+        if(Object.prototype.hasOwnProperty.call(patch,'skin_site_config')){
+          const configError=validateSkinSiteConfig(patch.skin_site_config);
+          if(configError)return json({error:configError},400);
+        }
+        patch.updated_at=new Date().toISOString();
         const r=await supabaseRest(env,'PATCH','store_settings',patch,'?id=eq.true'); if(!r.ok)return json({error:await r.text()},400);
         return json((await r.json())[0]||null);
       }
@@ -1786,6 +1799,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             id:source.id,name:normalized.name,slug:source.slug,kind:source.kind,brand:normalized.brand,
             description:normalized.description,store_description:source.store_description||null,features:normalized.features,
             ingredients:source.ingredients||null,usage_instructions:source.usage_instructions||null,product_warnings:source.product_warnings||null,product_size:source.product_size||null,
+            benefits:source.benefits||source.why_we_picked_it||null,skin_types:source.skin_types||source.best_for||null,skin_concerns:source.skin_concerns||source.skip_if||null,
+            recommended_product_ids:Array.isArray(source.recommended_product_ids)?source.recommended_product_ids:[],recommendation_reason:source.recommendation_reason||null,
             image_url:normalized.image_url,image_urls:normalized.image_urls,display_price:normalized.display_price,currency:normalized.currency,
             destination_url:(isAmazonSource?(source.amazon_source_url||source.destination_url):(source.destination_url||source.source_url))||null,
             retailer:source.retailer||null,provider:source.provider||null,source_type:source.source_type||null,region:source.region||null,
@@ -1822,7 +1837,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           'source_related_products','source_image_urls','source_url','resolved_url','store_description',
           'temu_source_url','temu_product_id','temu_deal_text','temu_list_price','temu_discount_percent',
           'temu_rating','temu_review_count','deal_text','list_price','discount_percent','rating','review_count',
-          'ingredients','usage_instructions','product_warnings','product_size'
+          'ingredients','usage_instructions','product_warnings','product_size','benefits','skin_types','skin_concerns','recommended_product_ids','recommendation_reason'
         ]);
         for(let attempt=0;attempt<40;attempt++){
           const response=await supabaseRest(env,method,'products',payload,query);
@@ -2121,6 +2136,45 @@ function cleanMultilineText(value,max=12000){
 function makeProductSlug(value){
   const base=cleanText(value,180).toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-+/g,'-').slice(0,140);
   return (base||'product')+'-'+Math.random().toString(36).slice(2,8);
+}
+
+function validateSkinSiteConfig(value){
+  if(!value||typeof value!=='object'||Array.isArray(value))return 'Skin site configuration must be an object.';
+  let encoded;try{encoded=JSON.stringify(value);}catch{return 'Skin site configuration is not valid JSON.';}
+  if(encoded.length>100000)return 'Skin site configuration is too large (maximum 100 KB).';
+  if(!['soft-editorial','clean-minimal','sage-botanical'].includes(String(value.template||'soft-editorial')))return 'Unknown Skin Studio template.';
+  if(value.accentColor!==undefined&&!/^#[0-9a-f]{6}$/i.test(String(value.accentColor)))return 'Skin Studio accent color must be a six-digit hex color.';
+  if(value.heroImage){try{if(new URL(value.heroImage).protocol!=='https:')return 'Skin Studio hero image must use HTTPS.';}catch{return 'Skin Studio hero image URL is invalid.';}}
+  if(value.productGuideTemplate!==undefined&&!['editorial','compact','minimal'].includes(String(value.productGuideTemplate)))return 'Skin Studio product guide layout is invalid.';
+  if(value.productGuideFields!==undefined){
+    const keys=['benefits','skinTypes','concerns','ingredients','usage','warnings','recommendations'];
+    if(!value.productGuideFields||typeof value.productGuideFields!=='object'||Array.isArray(value.productGuideFields))return 'Skin Studio product guide visibility settings must be an object.';
+    if(keys.some(key=>value.productGuideFields[key]!==undefined&&typeof value.productGuideFields[key]!=='boolean'))return 'Skin Studio product guide visibility values must be true or false.';
+  }
+  if(value.sections!==undefined&&!Array.isArray(value.sections))return 'Skin Studio sections must be an array.';
+  const sections=Array.isArray(value.sections)?value.sections:[];
+  if(sections.length>40)return 'Skin Studio supports up to 40 sections.';
+  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid']);
+  const ids=new Set();
+  for(const section of sections){
+    if(!section||typeof section!=='object'||Array.isArray(section))return 'Every Skin Studio section must be an object.';
+    if(!allowedTypes.has(String(section.type||'')))return 'A Skin Studio section has an unsupported type.';
+    const id=String(section.id||'');
+    if(!id||id.length>80)return 'Every Skin Studio section needs a short ID.';
+    if(ids.has(id))return 'Skin Studio section IDs must be unique.';
+    ids.add(id);
+    if(section.title!==undefined&&String(section.title).length>180)return 'Skin Studio section titles are limited to 180 characters.';
+    if(section.text!==undefined&&String(section.text).length>3000)return 'Skin Studio section text is too long.';
+    if(section.eyebrow!==undefined&&String(section.eyebrow).length>100)return 'Skin Studio section eyebrows are limited to 100 characters.';
+    if(section.product_ids!==undefined){
+      if(!Array.isArray(section.product_ids)||section.product_ids.length>60)return 'A Skin Studio section can place up to 60 products.';
+      if(section.product_ids.some(id=>!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id))))return 'A placed product has an invalid product ID.';
+    }
+    if(section.columns!==undefined&&!([2,3,4].includes(Number(section.columns))))return 'Skin Studio grid columns must be 2, 3, or 4.';
+    if(section.filter!==undefined&&!['all','featured','top_pick','trending'].includes(String(section.filter)))return 'A Skin Studio product filter is invalid.';
+  }
+  if(!sections.some(section=>section.visible!==false&&(section.type==='product-grid'||section.type==='featured-products')))return 'Skin Studio needs at least one visible product grid.';
+  return null;
 }
 function validateProduct(product){
   if(!product||typeof product!=='object')return 'Product data is required.';

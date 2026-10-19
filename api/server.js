@@ -71,6 +71,43 @@ async function shopifyGraphql(query,variables={},admin=false){
 }
 
 function validUrl(v){if(!v)return true;try{const u=new URL(v);return ['http:','https:'].includes(u.protocol)}catch{return false}}
+
+function validateSkinSiteConfig(value){
+  if(!value||typeof value!=='object'||Array.isArray(value))return 'Skin site configuration must be an object.';
+  let encoded;try{encoded=JSON.stringify(value);}catch{return 'Skin site configuration is not valid JSON.';}
+  if(encoded.length>100000)return 'Skin site configuration is too large (maximum 100 KB).';
+  if(!['soft-editorial','clean-minimal','sage-botanical'].includes(String(value.template||'soft-editorial')))return 'Unknown Skin Studio template.';
+  if(value.accentColor!==undefined&&!/^#[0-9a-f]{6}$/i.test(String(value.accentColor)))return 'Skin Studio accent color must be a six-digit hex color.';
+  if(value.heroImage){try{if(new URL(value.heroImage).protocol!=='https:')return 'Skin Studio hero image must use HTTPS.';}catch{return 'Skin Studio hero image URL is invalid.';}}
+  if(value.productGuideTemplate!==undefined&&!['editorial','compact','minimal'].includes(String(value.productGuideTemplate)))return 'Skin Studio product guide layout is invalid.';
+  if(value.productGuideFields!==undefined){
+    const keys=['benefits','skinTypes','concerns','ingredients','usage','warnings','recommendations'];
+    if(!value.productGuideFields||typeof value.productGuideFields!=='object'||Array.isArray(value.productGuideFields))return 'Skin Studio product guide visibility settings must be an object.';
+    if(keys.some(key=>value.productGuideFields[key]!==undefined&&typeof value.productGuideFields[key]!=='boolean'))return 'Skin Studio product guide visibility values must be true or false.';
+  }
+  if(value.sections!==undefined&&!Array.isArray(value.sections))return 'Skin Studio sections must be an array.';
+  const sections=Array.isArray(value.sections)?value.sections:[];
+  if(sections.length>40)return 'Skin Studio supports up to 40 sections.';
+  const types=new Set(['hero','product-grid','editorial','featured-products','category-grid']),ids=new Set();
+  for(const section of sections){
+    if(!section||typeof section!=='object'||Array.isArray(section))return 'Every Skin Studio section must be an object.';
+    if(!types.has(String(section.type||'')))return 'A Skin Studio section has an unsupported type.';
+    const id=String(section.id||'');if(!id||id.length>80)return 'Every Skin Studio section needs a short ID.';
+    if(ids.has(id))return 'Skin Studio section IDs must be unique.';ids.add(id);
+    if(section.title!==undefined&&String(section.title).length>180)return 'Skin Studio section titles are limited to 180 characters.';
+    if(section.text!==undefined&&String(section.text).length>3000)return 'Skin Studio section text is too long.';
+    if(section.eyebrow!==undefined&&String(section.eyebrow).length>100)return 'Skin Studio section eyebrows are limited to 100 characters.';
+    if(section.product_ids!==undefined){
+      if(!Array.isArray(section.product_ids)||section.product_ids.length>60)return 'A Skin Studio section can place up to 60 products.';
+      if(section.product_ids.some(id=>!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id))))return 'A placed product has an invalid product ID.';
+    }
+    if(section.columns!==undefined&&!([2,3,4].includes(Number(section.columns))))return 'Skin Studio grid columns must be 2, 3, or 4.';
+    if(section.filter!==undefined&&!['all','featured','top_pick','trending'].includes(String(section.filter)))return 'A Skin Studio product filter is invalid.';
+  }
+  if(!sections.some(section=>section.visible!==false&&(section.type==='product-grid'||section.type==='featured-products')))return 'Skin Studio needs at least one visible product grid.';
+  return null;
+}
+
 function cleanText(v,max=5000){return v==null?null:String(v).trim().slice(0,max)||null}
 function validateProduct(product){
   if(!product||!cleanText(product.name,180))return 'Product name is required.';
@@ -90,6 +127,13 @@ const server=http.createServer(async(req,res)=>{
     if(u.pathname==='/admin'||u.pathname==='/admin/') u.pathname='/admin.html';
     if(u.pathname==='/api/health')return json(res,200,{ok:true,configured:configured()});
     if(u.pathname==='/api/config')return json(res,200,{supabaseUrl:env('SUPABASE_URL'),supabaseAnonKey:env('SUPABASE_ANON_KEY')});
+    if(u.pathname==='/api/skin-settings'&&req.method==='GET'){
+      const settings=await supabaseRest('GET','store_settings',undefined,'?select=skin_site_config&id=eq.true&limit=1');
+      if(!settings.ok)return json(res,502,{error:'Skin storefront settings could not be loaded.'});
+      const row=(await settings.json())?.[0]||{};
+      return json(res,200,row.skin_site_config&&typeof row.skin_site_config==='object'?row.skin_site_config:{});
+    }
+
     if(u.pathname==='/api/products'&&req.method==='GET'){
       // Public catalog endpoint: keep the production Node/Railway path identical
       // to the Cloudflare Worker path so the storefront never depends on which
@@ -105,8 +149,19 @@ const server=http.createServer(async(req,res)=>{
       const collections=collectionsRes.ok?await collectionsRes.json():[];
       const categoryMap=new Map(categories.map(x=>[String(x.id),x]));
       const collectionMap=new Map(collections.map(x=>[String(x.id),x]));
-      return json(res,200,products.map(p=>({
+      const storefront=String(u.searchParams.get('storefront')||'').toLowerCase();
+      const storefrontProducts=storefront==='beauty'?products.filter(p=>{
+        const category=categoryMap.get(String(p.category_id||'')),label=String(category?.name||'');
+        const productText=[p.name,p.brand,p.description,p.features,p.store_description].filter(Boolean).join(' ');
+        return /skin\\s*care|skincare|beauty|cosmetic/i.test(label)||/skin\\s*care|skincare|beauty|cosmetic|cleanser|cleansing|face wash|moisturi|serum|sunscreen|sunblock|spf|face cream|toner|retinol|exfoliat|lip balm|facial oil|eye cream|face mask/i.test(productText);
+      }):products;
+      return json(res,200,storefrontProducts.map(p=>({
         ...p,
+        benefits:p.benefits||p.why_we_picked_it||null,
+        skin_types:p.skin_types||p.best_for||null,
+        skin_concerns:p.skin_concerns||null,
+        recommended_product_ids:Array.isArray(p.recommended_product_ids)?p.recommended_product_ids:[],
+        recommendation_reason:p.recommendation_reason||null,
         category:p.category_id?categoryMap.get(String(p.category_id))||null:null,
         collection:p.collection_id?collectionMap.get(String(p.collection_id))||null:null
       })));
@@ -186,7 +241,12 @@ const server=http.createServer(async(req,res)=>{
         if(!r.ok)return json(res,500,{error:await r.text()});
         return json(res,200,(await r.json())[0]||{});
       }
-      const patch=await body(req); delete patch.id; patch.updated_at=new Date().toISOString();
+      const patch=await body(req); delete patch.id;
+      if(Object.prototype.hasOwnProperty.call(patch,'skin_site_config')){
+        const configError=validateSkinSiteConfig(patch.skin_site_config);
+        if(configError)return json(res,400,{error:configError});
+      }
+      patch.updated_at=new Date().toISOString();
       const r=await supabaseRest('PATCH','store_settings',patch,'?id=eq.true');
       if(!r.ok)return json(res,400,{error:await r.text()});
       return json(res,200,(await r.json())[0]||null);
