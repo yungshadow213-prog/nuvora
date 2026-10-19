@@ -1802,7 +1802,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             benefits:source.benefits||source.why_we_picked_it||null,skin_types:source.skin_types||source.best_for||null,skin_concerns:source.skin_concerns||source.skip_if||null,
             recommended_product_ids:Array.isArray(source.recommended_product_ids)?source.recommended_product_ids:[],recommendation_reason:source.recommendation_reason||null,
             image_url:normalized.image_url,image_urls:normalized.image_urls,display_price:normalized.display_price,currency:normalized.currency,
-            destination_url:(isAmazonSource?(source.amazon_source_url||source.destination_url):(source.destination_url||source.source_url))||null,
+            destination_url:(isAmazonSource?(source.destination_url||source.amazon_source_url):(source.destination_url||source.source_url))||null,
             retailer:source.retailer||null,provider:source.provider||null,source_type:source.source_type||null,region:source.region||null,
             category_id:source.category_id||null,collection_id:source.collection_id||null,category:source.category_id?categoryMap.get(String(source.category_id))||null:null,
             collection:source.collection_id?collectionMap.get(String(source.collection_id))||null:null,availability:source.availability||null,
