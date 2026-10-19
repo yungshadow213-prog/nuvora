@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-19-skin-studio-fullpage-r3',
+          release:'nuvora-2026-10-19-client-skin-studio-r4',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -1698,7 +1698,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const r=await supabaseRest(env,'GET','store_settings',undefined,'?select=skin_site_config&id=eq.true&limit=1');
         if(!r.ok)return json({error:'Skin storefront settings could not be loaded.'},502);
         const row=(await r.json())?.[0]||{};
-        return json(row.skin_site_config&&typeof row.skin_site_config==='object'?row.skin_site_config:{});
+        return json(row.skin_site_config&&typeof row.skin_site_config==='object'?row.skin_site_config:{},200,{'access-control-allow-origin':'https://client-store-platform.rayyung713.workers.dev','vary':'Origin'});
       }
 
       if(url.pathname==='/api/admin/settings'&&(request.method==='GET'||request.method==='PATCH')){
@@ -1822,7 +1822,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             shopify_variants:Array.isArray(source.shopify_variants)?source.shopify_variants:[],
           };
           return publicProduct;
-        }));
+        }),200,storefront==='beauty'?{'access-control-allow-origin':'https://client-store-platform.rayyung713.workers.dev','vary':'Origin'}:{});
       }
       async function supabaseProductWrite(env,method,product,query=''){
         const payload={...product};
@@ -2068,7 +2068,7 @@ function securityResponse(response){
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
     "connect-src 'self' https://*.supabase.co https://*.supabase.in https://*.supabase.com",
-    "frame-src 'self' https://accounts.google.com",
+    "frame-src 'self' https://accounts.google.com https://client-store-platform.rayyung713.workers.dev",
     "form-action 'self'",
     "base-uri 'self'",
     "object-src 'none'",
@@ -2157,7 +2157,7 @@ function validateSkinSiteConfig(value){
   if(value.sections!==undefined&&!Array.isArray(value.sections))return 'Skin Studio sections must be an array.';
   const sections=Array.isArray(value.sections)?value.sections:[];
   if(sections.length>40)return 'Skin Studio supports up to 40 sections.';
-  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid']);
+  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid','journal-grid']);
   const ids=new Set();
   for(const section of sections){
     if(!section||typeof section!=='object'||Array.isArray(section))return 'Every Skin Studio section must be an object.';
