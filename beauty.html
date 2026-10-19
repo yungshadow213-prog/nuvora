@@ -10,8 +10,24 @@
 :root{--cream:#f7f4ee;--paper:#fffdf9;--ink:#342f2b;--muted:#77756c;--line:#e4dfd5;--sage:#e6eadf;--sage-deep:#66745f;--clay:#c77d5b;--brown:#3a332d;--max:1240px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--cream);color:var(--ink);font:15px/1.65 "DM Sans",Arial,sans-serif}a{color:inherit;text-decoration:none}button,input{font:inherit}button,a{ -webkit-tap-highlight-color:transparent}button{cursor:pointer}img{display:block;width:100%;height:100%;object-fit:cover}.announce{padding:9px 16px;background:var(--brown);color:#f8f0e5;text-align:center;font-size:11px;letter-spacing:.08em}.header{position:sticky;top:0;z-index:5;background:#f7f4eef0;backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}.nav{max-width:var(--max);margin:auto;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:20px}.brand{font:600 27px Georgia,serif;letter-spacing:-.06em}.brand span{color:var(--sage-deep)}.navlinks{display:flex;gap:24px;align-items:center;font-size:13px}.pill{border:1px solid var(--ink);border-radius:99px;padding:10px 17px;background:transparent}.hero{max-width:var(--max);margin:24px auto 58px;padding:0 24px}.hero-inner{min-height:420px;border-radius:5px;background:linear-gradient(100deg,#e5e8db 0%,#e5e8dbed 45%,#e5e8db00 75%),url('https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1800&q=85') center/cover;display:flex;align-items:center;padding:clamp(28px,7vw,88px)}.hero-copy{max-width:520px}.eyebrow{text-transform:uppercase;letter-spacing:.16em;font-size:10px;font-weight:700;color:var(--sage-deep)}h1,h2{font-family:Georgia,"Times New Roman",serif;font-weight:500;letter-spacing:-.045em;line-height:1.06}h1{font-size:clamp(42px,6vw,76px);margin:15px 0 18px}h2{font-size:clamp(30px,4vw,46px);margin:0 0 12px}.hero p{max-width:420px;color:#5e6156}.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}.btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--brown);background:var(--brown);color:white;border-radius:99px;padding:12px 20px;font-size:12px}.btn.secondary{background:transparent;color:var(--brown)}.section{max-width:var(--max);margin:0 auto 76px;padding:0 24px}.section-head{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:24px}.section-head p{max-width:430px;color:var(--muted);margin:0}.search{width:min(100%,280px);border:1px solid var(--line);background:var(--paper);padding:12px 15px;border-radius:99px;outline-color:var(--sage-deep)}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}.card{min-width:0}.photo{height:300px;position:relative;background:var(--sage);overflow:hidden}.photo img{transition:transform .5s}.card:hover .photo img{transform:scale(1.035)}.badge{position:absolute;left:12px;top:12px;background:#fffdf9e8;padding:5px 9px;text-transform:uppercase;font-size:9px;letter-spacing:.1em}.pin{position:absolute;right:12px;top:12px;border:0;border-radius:50%;width:37px;height:37px;background:var(--paper);font-weight:700}.card-copy{padding:14px 2px}.brandline{font-size:10px;letter-spacing:.13em;color:var(--muted);text-transform:uppercase}.product-name{display:block;font:19px/1.3 Georgia,serif;margin:6px 0}.desc{font-size:12px;color:var(--muted);min-height:40px;margin:7px 0 12px}.card-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px}.price{font-size:13px;font-weight:700}.buy{border:1px solid var(--line);background:var(--paper);border-radius:99px;padding:9px 13px;font-size:11px}.empty,.loading,.error{grid-column:1/-1;padding:30px;border:1px dashed var(--line);text-align:center;color:var(--muted)}.note{background:var(--sage);padding:40px;display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center}.note p{color:#606458}.footer{border-top:1px solid var(--line);padding:30px 24px;color:var(--muted);font-size:11px}.footer-inner{max-width:var(--max);margin:auto;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}.footer a{text-decoration:underline}.disclosure{max-width:var(--max);margin:-45px auto 35px;padding:0 24px;color:var(--muted);font-size:11px}
 @media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.photo{height:clamp(220px,45vw,340px)}.hero-inner{min-height:380px}.navlinks{gap:12px}}@media(max-width:560px){.nav{padding:14px 16px}.navlinks a:not(.pill){display:none}.hero{padding:0 14px;margin-top:14px}.hero-inner{min-height:450px;padding:25px;background:linear-gradient(90deg,#e5e8dff5,#e5e8dfe0 70%,#e5e8d950),url('https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1000&q=80') center/cover}.section{padding:0 14px;margin-bottom:55px}.section-head{align-items:start;flex-direction:column}.search{width:100%}.grid{gap:18px 12px}.photo{height:220px}.card-copy{padding-top:10px}.product-name{font-size:17px}.desc{font-size:11px}.buy{padding:8px 10px}.note{padding:26px;grid-template-columns:1fr}.disclosure{padding:0 14px;margin-top:-25px}}
-</style>
-</head>
+
+<style id="nuvora-skin-product-guide-options">
+.detail-gallery{position:sticky;top:72px;align-self:start;min-width:0}
+.detail-gallery .detail-image{position:static;aspect-ratio:4/5;max-height:560px}
+.detail-thumbnails{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.detail-thumbnail{width:64px;height:64px;padding:0;border:1px solid var(--line);background:var(--paper);opacity:.72;overflow:hidden}
+.detail-thumbnail.active{border:2px solid var(--skin-accent);opacity:1}
+.detail-thumbnail img{width:100%;height:100%;object-fit:cover}
+body.guide-compact .detail-content{grid-template-columns:minmax(0,.72fr) minmax(0,1.28fr);gap:22px;padding:22px}
+body.guide-compact .detail-gallery .detail-image{aspect-ratio:1;max-height:390px}
+body.guide-compact .detail-copy h2{font-size:clamp(26px,3vw,36px)}
+body.guide-compact .detail-block{padding:11px 0}
+body.guide-minimal .detail-content{grid-template-columns:minmax(0,.55fr) minmax(0,1.45fr);gap:20px;padding:20px}
+body.guide-minimal .detail-gallery .detail-image{aspect-ratio:1;max-height:300px}
+body.guide-minimal .detail-copy h2{font-size:clamp(25px,3vw,34px)}
+body.guide-minimal .detail-block{padding:9px 0}
+@media(max-width:800px){.detail-gallery{position:static}.detail-gallery .detail-image{aspect-ratio:1;max-height:360px}body.guide-compact .detail-content,body.guide-minimal .detail-content{grid-template-columns:1fr;gap:16px;padding:18px}}
+</style></head>
 
 <style id="nuvora-skin-builder-styles">
 :root{--skin-accent:#66745f}
@@ -205,20 +221,35 @@ function detailBlock(title,body,isList=false,empty='Not provided in the product 
  const items=isList?textLines(body):[];
  return '<section class="detail-block"><h3>'+esc(title)+'</h3>'+(isList?'<ul>'+items.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'<p>'+esc(body)+'</p>')+'</section>';
 }
+function selectProductImage(src,button){
+ const image=$('productDetailHeroImage'),safe=safeUrl(src,true);if(!image||!safe)return;
+ image.src=safe;
+ document.querySelectorAll('.detail-thumbnail').forEach(el=>el.classList.remove('active'));
+ button?.classList.add('active');
+}
 function openProductDetails(id){
  const p=products.find(x=>String(x.id)===String(id));if(!p)return;
  lastFocusedElement=document.activeElement;
- const image=productImage(p),dest=safeUrl(p.destination_url),benefits=p.benefits||p.why_we_picked_it||p.features||'';
- const skinTypes=p.skin_types||p.best_for||'',concerns=p.skin_concerns||'';
+ const dest=safeUrl(p.destination_url);
+ const imageUrls=[...new Set([p.image_url,...(Array.isArray(p.image_urls)?p.image_urls:[])].map(src=>safeUrl(src,true)).filter(Boolean))].slice(0,20);
+ const image=imageUrls[0]||'';
+ const guide=siteConfig.productGuideFields||{benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true};
+ const benefits=p.benefits||p.why_we_picked_it||p.features||'';
+ const skinTypes=p.skin_types||p.best_for||'';
+ const concerns=p.skin_concerns||'';
  const selectedIds=Array.isArray(p.recommended_product_ids)?p.recommended_product_ids.map(String):[];
  const recommendations=selectedIds.map(rid=>products.find(x=>String(x.id)===rid)).filter(x=>x&&String(x.id)!==String(p.id)).slice(0,6);
- const recHtml=recommendations.length?'<section class="detail-block"><h3>Consider alongside</h3>'+(p.recommendation_reason?'<p>'+esc(p.recommendation_reason)+'</p>':'')+'<div class="detail-recommendations">'+recommendations.map(r=>'<article class="recommendation-card">'+(productImage(r)?'<img src="'+esc(productImage(r))+'" alt="'+esc(r.name)+'" loading="lazy">':'')+'<b>'+esc(r.name)+'</b><button onclick="openProductDetails('+JSON.stringify(String(r.id))+')">View guide →</button></article>').join('')+'</div></section>':'';
+ const gallery=imageUrls.length>1?'<div class="detail-thumbnails" aria-label="Product images">'+imageUrls.map((src,index)=>'<button type="button" class="detail-thumbnail '+(index===0?'active':'')+'" aria-label="Show product image '+(index+1)+'" onclick="selectProductImage('+JSON.stringify(src)+',this)"><img src="'+esc(src)+'" alt="" loading="lazy"></button>').join('')+'</div>':'';
+ const recHtml=guide.recommendations&&recommendations.length?'<section class="detail-block"><h3>Consider alongside</h3>'+(p.recommendation_reason?'<p>'+esc(p.recommendation_reason)+'</p>':'')+'<div class="detail-recommendations">'+recommendations.map(r=>'<article class="recommendation-card">'+(productImage(r)?'<img src="'+esc(productImage(r))+'" alt="'+esc(r.name)+'" loading="lazy">':'')+'<b>'+esc(r.name)+'</b><button onclick="openProductDetails('+JSON.stringify(String(r.id))+')">View guide →</button></article>').join('')+'</div></section>':'';
  const priceButton=dest?'<a class="btn" href="'+esc(dest)+'" target="_blank" rel="sponsored noopener noreferrer" onclick="trackClick('+JSON.stringify(String(p.id))+')">'+productButtonLabel(p)+' ↗</a>':'<span class="muted">Retailer link has not been added yet.</span>';
- $('productDetailContent').innerHTML='<div class="detail-image">'+(image?'<img src="'+esc(image)+'" alt="'+esc(p.name)+'">':'')+'</div><div class="detail-copy"><div class="detail-brand">'+esc(p.brand||'Nuvora Skin selection')+'</div><h2 id="detailTitle">'+esc(p.name)+'</h2><p class="detail-description">'+esc(p.store_description||p.description||'A considered find for everyday skincare routines.')+'</p><div class="detail-meta">'+(p.product_size?'<span>'+esc(p.product_size)+'</span>':'')+(p.category?.name?'<span>'+esc(p.category.name)+'</span>':'')+'</div>'+
- detailBlock('Benefits & what it is for',benefits,true)+detailBlock('Skin types',skinTypes,false,'Skin-type suitability has not been supplied. Check the manufacturer’s guidance and patch-test cautiously.')+
- detailBlock('Skin concerns / intended use',concerns,false)+detailBlock('When to avoid / compatibility cautions',p.skip_if,false)+detailBlock('Ingredients',p.ingredients,false,'The full ingredient list is not available in this guide. Review the current INCI list on Amazon before buying.')+detailBlock('Ingredients',p.ingredients,false,'The full ingredient list is not available in this guide. Review the current INCI list on Amazon before buying.')+
- detailBlock('How to use',p.usage_instructions,false,'Directions are not included in this guide. Follow the manufacturer’s current instructions.')+
- detailBlock('Warnings & cautions',p.product_warnings,false,'No specific cautions have been added to this guide. Review the packaging and retailer information, and stop use if irritation occurs.')+
+ $('productDetailContent').innerHTML='<div class="detail-gallery"><div class="detail-image">'+(image?'<img id="productDetailHeroImage" src="'+esc(image)+'" alt="'+esc(p.name)+'">':'<div class="empty">Product image not added</div>')+'</div>'+gallery+'</div><div class="detail-copy"><div class="detail-brand">'+esc(p.brand||'Nuvora Skin selection')+'</div><h2 id="detailTitle">'+esc(p.name)+'</h2><p class="detail-description">'+esc(p.store_description||p.description||'A considered find for everyday skincare routines.')+'</p><div class="detail-meta">'+(p.product_size?'<span>'+esc(p.product_size)+'</span>':'')+(p.category?.name?'<span>'+esc(p.category.name)+'</span>':'')+'</div>'+
+ (guide.benefits?detailBlock('Benefits & what it is for',benefits,true,'Benefits have not been added to this guide. Check the current product listing.').replace('Benefits have not been added to this guide. Check the current product listing.',''):'')+
+ (guide.skinTypes?detailBlock('Skin types',skinTypes,false,'Skin-type suitability has not been confirmed in this guide. Check the manufacturer’s directions and product packaging.'):'')+
+ (guide.concerns?detailBlock('Skin concerns / intended use',concerns,false):'')+
+ (guide.warnings?detailBlock('When to avoid / compatibility cautions',p.skip_if,false):'')+
+ (guide.ingredients?detailBlock('Ingredients',p.ingredients,false,'The full ingredient list is not available in this guide. Review the current ingredient list on Amazon before buying.'):'')+
+ (guide.usage?detailBlock('How to use',p.usage_instructions,false,'Directions are not included in this guide. Follow the manufacturer’s current instructions.'):'')+
+ (guide.warnings?detailBlock('Warnings & cautions',p.product_warnings,false,'No specific product cautions have been added to this guide. Review the current packaging and retailer information.'):'')+
  recHtml+'<div class="actions">'+priceButton+'</div><div class="detail-note">Product details may change and are not medical advice. Confirm ingredients, directions, and cautions against the current product packaging and retailer listing. Introduce active ingredients carefully and seek qualified advice for persistent or severe skin concerns.</div></div>';
  $('productDetailBackdrop').classList.add('open');document.body.style.overflow='hidden';$('productDetailBackdrop').querySelector('.detail-close').focus();
  if(location.hash!=='#product-'+encodeURIComponent(id))history.replaceState(null,'','#product-'+encodeURIComponent(id));
@@ -238,6 +269,10 @@ async function load(){
   if(!r.ok)throw new Error('Could not load products ('+r.status+').');
   const data=await r.json();products=Array.isArray(data)?data:[];
   renderPage();
+  if(location.hash.startsWith('#product-')){
+   let target='';try{target=decodeURIComponent(location.hash.slice('#product-'.length));}catch(e){}
+   if(target)openProductDetails(target);
+  }
  }catch(e){
   siteConfig=mergeConfig(defaultConfig);products=[];
   renderPage();
