@@ -434,6 +434,7 @@ body.skin-studio-fullpage .skin-main-admin-link{white-space:nowrap;text-decorati
         <button class="btn primary" onclick="openSkinProduct()">+ Add skincare product</button>
         <button class="btn" onclick="ensureSkinCategory(true)">Set up Skin Care category</button>
         <button class="btn" onclick="window.open('/beauty','_blank')">Preview storefront ↗</button>
+        <button class="btn" onclick="window.location.href='/admin/skin-studio'">Open full-page drag builder ↗</button>
       </div>
     </div>
     <div class="skin-studio-mark" aria-hidden="true"><span>NUVORA</span><b>SKIN</b><i>Care, considered.</i></div>
@@ -710,7 +711,7 @@ function retailerDestination(p){
   const amazon=rawRetailer.includes('amazon')||!!p?.amazon_asin||!!p?.amazon_source_url||/azon/i.test(rawRetailer);
   const temu=rawRetailer.includes('temu')||!!p?.temu_source_url;
   const candidates=amazon
-    ? [p?.amazon_source_url,p?.destination_url,p?.source_url,p?.resolved_url,p?.asin&&'https://www.amazon.com/dp/'+p.asin,p?.amazon_asin&&'https://www.amazon.com/dp/'+p.amazon_asin]
+    ? [p?.destination_url,p?.amazon_source_url,p?.source_url,p?.resolved_url,p?.asin&&'https://www.amazon.com/dp/'+p.asin,p?.amazon_asin&&'https://www.amazon.com/dp/'+p.asin]
     : temu
       ? [p?.destination_url,p?.temu_source_url,p?.source_url,p?.resolved_url]
       : [p?.destination_url,p?.source_url,p?.resolved_url];
