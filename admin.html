@@ -1560,7 +1560,7 @@ function previewSkinSite(){collectSkinConfigFields();try{localStorage.setItem('n
 async function saveSkinSiteConfig(){
  if(!skinBuilderConfig)return skinBuilderMessage('The saved configuration has not loaded yet. Reload and retry.','error');
  collectSkinConfigFields();
- if(!skinBuilderConfig.sections.some(s=>s.type==='product-grid'||s.type==='featured-products'))return skinBuilderMessage('Keep at least one product-grid section so shoppers can browse the catalog.','error');
+ if(!skinBuilderConfig.sections.some(s=>s.visible!==false&&(s.type==='product-grid'||s.type==='featured-products')))return skinBuilderMessage('Keep at least one visible product-grid section so shoppers can browse the catalog.','error');
  if(!/^#[0-9a-f]{6}$/i.test(String(skinBuilderConfig.accentColor||'')))return skinBuilderMessage('Choose a valid accent color.','error');
  if(skinBuilderConfig.heroImage&&!/^https:\/\//i.test(skinBuilderConfig.heroImage))return skinBuilderMessage('Hero image must use HTTPS.','error');
  const btn=document.querySelector('button[onclick="saveSkinSiteConfig()"]');if(btn){btn.disabled=true;btn.textContent='Saving…';}
