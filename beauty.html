@@ -145,6 +145,19 @@ function pinUrl(p){
  return 'https://www.pinterest.com/pin/create/button/?url='+encodeURIComponent(page)+(image?'&media='+encodeURIComponent(image):'')+'&description='+encodeURIComponent((p.name||'Skincare find')+' · Nuvora Skin');
 }
 function productImage(p){return safeUrl(p.image_url||(Array.isArray(p.image_urls)?p.image_urls[0]:''),true);}
+function productGalleryImages(p){
+ const raw=[p.image_url,...(Array.isArray(p.image_urls)?p.image_urls:[])],groups=new Map();
+ for(const value of raw){
+  const url=safeUrl(value,true);if(!url)continue;
+  let key=url,quality=0;
+  try{
+   const parsed=new URL(url),m=parsed.pathname.match(/\\/images\\/I\\/([^/]+)$/i);
+   if(m){const filename=m[1];key='amazon-image:'+filename.split('._')[0];quality=(filename.includes('_AC_SL')?10000:0)+Number((filename.match(/_AC_S[XL](\\d+)/i)||[])[1]||0);}
+  }catch(e){}
+  const old=groups.get(key);if(!old||quality>old.quality)groups.set(key,{url,quality});
+ }
+ return [...groups.values()].map(x=>x.url).slice(0,8);
+}
 function textLines(value){return String(value||'').split(/\r?\n|\s*;\s*/).map(x=>x.trim()).filter(Boolean);}
 function isAmazonProduct(p){return /amazon/i.test(String(p.retailer||p.source_type||''))||!!p.amazon_asin||/amazon/i.test(String(p.destination_url||''));}
 function productButtonLabel(p){return isAmazonProduct(p)?'Check price on Amazon':'Check retailer';}
@@ -236,7 +249,7 @@ function openProductDetails(id){
  const p=products.find(x=>String(x.id)===String(id));if(!p)return;
  lastFocusedElement=document.activeElement;
  const dest=safeUrl(p.destination_url);
- const imageUrls=[...new Set([p.image_url,...(Array.isArray(p.image_urls)?p.image_urls:[])].map(src=>safeUrl(src,true)).filter(Boolean))].slice(0,20);
+ const imageUrls=productGalleryImages(p);
  const image=imageUrls[0]||'';
  const guide=siteConfig.productGuideFields||{benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true};
  const benefits=p.benefits||p.why_we_picked_it||p.features||'';
