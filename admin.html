@@ -708,7 +708,7 @@ function renderSkinProducts(){
   const rows=adminProducts.filter(isSkinProduct);
   const count=document.getElementById('skinProductCount');if(count)count.textContent=rows.length+' product'+(rows.length===1?'':'s');
   const put=(id,value)=>{const node=document.getElementById(id);if(node)node.textContent=String(value);};
-  put('skinTotal',rows.length);put('skinPublished',rows.filter(p=>p.published).length);put('skinDrafts',rows.filter(p=>!p.published).length);put('skinImages',rows.filter(p=>Boolean(p.image_url||p.image||p.imageUrl||(Array.isArray(p.images)&&p.images.some(Boolean)))).length);
+  put('skinTotal',rows.length);put('skinPublished',rows.filter(p=>p.published).length);put('skinDrafts',rows.filter(p=>!p.published).length);put('skinImages',rows.filter(p=>Boolean(p.image_url||p.image||p.imageUrl||(Array.isArray(p.image_urls)&&p.image_urls.some(Boolean))||(Array.isArray(p.images)&&p.images.some(Boolean)))).length);
   const notice=document.getElementById('skinCategoryNotice');
   const cat=categories.find(x=>/^(skin-care|skincare|beauty)$/i.test(String(x.slug||''))||/skin care|skincare/i.test(String(x.name||'')));
   if(notice)notice.textContent=cat?'Using category “'+cat.name+'”. Products assigned to this category are routed to Nuvora Skin.':'Create the Skin Care category first; the setup button will create it without changing existing products.';
