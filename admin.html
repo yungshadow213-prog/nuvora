@@ -692,6 +692,7 @@ function renderSkinProducts(){
   const notice=document.getElementById('skinCategoryNotice');
   const cat=categories.find(x=>/^(skin-care|skincare|beauty)$/i.test(String(x.slug||''))||/skin care|skincare/i.test(String(x.name||'')));
   if(notice)notice.textContent=cat?'Using category “'+cat.name+'”. Products assigned to this category are routed to Nuvora Skin.':'Create the Skin Care category first; the setup button will create it without changing existing products.';
+  renderSkinBuilderSections();
   if(!rows.length){el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No skincare products yet. Use “Add skincare product” to import an Amazon listing; Nuvora assigns the Skin Care category automatically.</div>';return;}
   el.innerHTML=rows.map(p=>{const dest=retailerDestination(p),label=retailerLabel(p);return '<div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+'</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+JSON.stringify(dest)+')">Open '+esc(label)+'</button>':'')+'<button class="btn" onclick="editSkinProduct(\''+p.id+'\')">Edit</button><button class="btn" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';}).join('');
 }
@@ -1168,7 +1169,9 @@ function parseProductVariations(raw){
 }
 async function saveProductDraft(){
   const name=document.getElementById('pfName').value.trim(); if(!name){setAdminStatus('Product title is required.','error');return;}
-  const skinCategory=window.skinCareImportMode?await ensureSkinCategory(false):null;
+  let skinCategory=null;
+  try{if(window.skinCareImportMode)skinCategory=await ensureSkinCategory(false);}
+  catch(e){setAdminStatus('Could not verify the Skin Care category. The product was not saved: '+(e.message||e),'error');return;}
   const images=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   const product={
     name,kind:window.skinCareImportMode?'shop':document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
@@ -1481,7 +1484,7 @@ async function adminBoot(){
   }
 }
 
-let skinBuilderConfig=null,skinDragSectionIndex=null;
+let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false;
 const defaultSkinSiteConfig=()=>({
   version:1,template:'soft-editorial',accentColor:'#66745f',
   announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
@@ -1519,9 +1522,11 @@ function collectSkinConfigFields(){
  const editorial=c.sections.find(x=>x.type==='editorial');if(editorial){editorial.title=c.approachTitle;editorial.eyebrow=c.approachEyebrow;editorial.text=c.approachBody;}
 }
 async function loadSkinSiteConfig(){
- try{const settings=await api('/api/admin/settings');skinBuilderConfig=mergeSkinSiteConfig(settings?.skin_site_config);fillSkinConfigFields();skinBuilderMessage('Saved storefront settings loaded. Changes affect the public Nuvora Skin page after you save.','success');}
- catch(e){skinBuilderConfig=mergeSkinSiteConfig(null);fillSkinConfigFields();skinBuilderMessage('Could not load saved settings: '+(e.message||'unknown error')+'. Save must succeed before changes go live.','warning');}
+ skinSiteConfigLoaded=false;
+ try{const settings=await api('/api/admin/settings');if(!settings||typeof settings!=='object')throw new Error('The settings endpoint returned an invalid response.');skinBuilderConfig=mergeSkinSiteConfig(settings.skin_site_config);fillSkinConfigFields();skinSiteConfigLoaded=true;skinBuilderMessage('Saved storefront settings loaded. Changes affect the public Nuvora Skin page after you save.','success');}
+ catch(e){skinBuilderConfig=mergeSkinConfigForRecovery();fillSkinConfigFields();skinBuilderMessage('Could not load saved settings: '+(e.message||'unknown error')+'. Saving is disabled until the existing settings load successfully, to protect your live configuration.','warning');}
 }
+function mergeSkinConfigForRecovery(){return mergeSkinSiteConfig(null);}
 function skinProductOptions(){return adminProducts.filter(isSkinProduct).map(p=>({id:String(p.id),name:String(p.name||'Untitled product')}));}
 function renderSkinBuilderSections(){
  const root=document.getElementById('skinBuilderSections');if(!root||!skinBuilderConfig)return;
@@ -1541,6 +1546,7 @@ function renderSkinBuilderSections(){
 }
 function updateSkinSection(index,key,value){
  const sec=skinBuilderConfig?.sections?.[index];if(!sec)return;sec[key]=value;
+ if(key==='type'){sec.product_ids=[];sec.category_id='';sec.filter=value==='featured-products'?'featured':'all';renderSkinBuilderSections();return;}
  const sync=(cfgKey,fieldId)=>{skinBuilderConfig[cfgKey]=String(value??'');const el=document.getElementById(fieldId);if(el)el.value=String(value??'');};
  if(sec.type==='hero'){if(key==='title')sync('heroTitle','skinCfgHeroTitle');if(key==='eyebrow')sync('heroEyebrow','skinCfgHeroEyebrow');if(key==='text')sync('heroDescription','skinCfgHeroDescription');}
  if(sec.type==='editorial'){if(key==='title')sync('approachTitle','skinCfgApproachTitle');if(key==='eyebrow')sync('approachEyebrow','skinCfgApproachEyebrow');if(key==='text')sync('approachBody','skinCfgApproachBody');}
@@ -1558,6 +1564,7 @@ function duplicateSkinSection(index){const original=skinBuilderConfig?.sections?
 function removeSkinSection(index){const section=skinBuilderConfig?.sections?.[index];if(!section)return;if(!confirm('Remove the "'+(section.title||'section')+'" section from the storefront draft?'))return;skinBuilderConfig.sections.splice(index,1);renderSkinBuilderSections();}
 function previewSkinSite(){collectSkinConfigFields();try{localStorage.setItem('nuvora-skin-preview-config',JSON.stringify(skinBuilderConfig));window.open('/beauty?preview=admin','_blank','noopener');}catch(e){skinBuilderMessage('Preview could not be opened: '+(e.message||'browser storage unavailable'),'warning');}}
 async function saveSkinSiteConfig(){
+ if(!skinSiteConfigLoaded)return skinBuilderMessage('Existing saved settings were not loaded successfully. Reload the Skin Care workspace before saving, so a default draft cannot overwrite the live configuration.','error');
  if(!skinBuilderConfig)return skinBuilderMessage('The saved configuration has not loaded yet. Reload and retry.','error');
  collectSkinConfigFields();
  if(!skinBuilderConfig.sections.some(s=>s.visible!==false&&(s.type==='product-grid'||s.type==='featured-products')))return skinBuilderMessage('Keep at least one visible product-grid section so shoppers can browse the catalog.','error');
