@@ -81,7 +81,7 @@ body.template-sage-botanical{--cream:#eef1e7;--paper:#fbfcf7;--ink:#2b382a;--mut
 
 <script>
 const $=id=>document.getElementById(id);
-let products=[],siteConfig=null,activeCategory='',lastFocusedElement=null;
+let products=[],siteConfig=null,activeCategory='',searchQuery='',lastFocusedElement=null;
 const defaultConfig={
  version:1,template:'soft-editorial',accentColor:'#66745f',
  announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
@@ -129,18 +129,20 @@ function renderProductCard(p){
 }
 function filteredProducts(section){
  let list=[...products];
- if(section.type==='featured-products'&&section.filter==='all')section={...section,filter:'featured'};
- if(section.filter==='featured')list=list.filter(p=>p.featured);
- else if(section.filter==='top_pick')list=list.filter(p=>p.top_pick);
- else if(section.filter==='trending')list=list.filter(p=>p.trending);
- if(section.type==='category-grid'&&section.category_id)list=list.filter(p=>String(p.category_id||'')===String(section.category_id));
- if(Array.isArray(section.product_ids)&&section.product_ids.length){
-  const byId=new Map(list.map(p=>[String(p.id),p]));
+ const explicit=Array.isArray(section.product_ids)&&section.product_ids.length;
+ if(explicit){
+  const byId=new Map(products.map(p=>[String(p.id),p]));
   list=section.product_ids.map(id=>byId.get(String(id))).filter(Boolean);
+ }else{
+  if(section.type==='featured-products'&&section.filter==='all')section={...section,filter:'featured'};
+  if(section.filter==='featured')list=list.filter(p=>p.featured);
+  else if(section.filter==='top_pick')list=list.filter(p=>p.top_pick);
+  else if(section.filter==='trending')list=list.filter(p=>p.trending);
  }
+ if(section.type==='category-grid'&&section.category_id)list=list.filter(p=>String(p.category_id||'')===String(section.category_id));
  if(activeCategory)list=list.filter(p=>String(p.category_id||'')===String(activeCategory));
- const search=$('search');
- if(search){const q=search.value.trim().toLowerCase();if(q)list=list.filter(p=>[p.name,p.brand,p.description,p.store_description,p.category?.name,p.skin_concerns,p.skin_types].filter(Boolean).join(' ').toLowerCase().includes(q));}
+ const q=searchQuery.trim().toLowerCase();
+ if(q)list=list.filter(p=>[p.name,p.brand,p.description,p.store_description,p.category?.name,p.skin_concerns,p.skin_types].filter(Boolean).join(' ').toLowerCase().includes(q));
  return list;
 }
 function renderCategoryBrowse(section){
@@ -149,7 +151,7 @@ function renderCategoryBrowse(section){
  let rows=[...categoryProducts.values()];if(section.category_id)rows=rows.filter(x=>x.id===String(section.category_id));
  return '<section class="section category-section" id="'+esc(section.id)+'"><div class="section-head"><div><div class="eyebrow">'+esc(section.eyebrow||'Explore the edit')+'</div><h2>'+esc(section.title||'Browse by category')+'</h2><p>'+esc(section.text||'Choose a focus to narrow the skincare edit.')+'</p></div></div><div class="category-links">'+rows.map(c=>'<button class="category-link" onclick="selectCategory('+JSON.stringify(c.id)+')">'+esc(c.name)+' <span>('+c.count+')</span></button>').join('')+(activeCategory?'<button class="category-link" onclick="selectCategory(\'\')">Clear category ×</button>':'')+'</div></section>';
 }
-function renderSection(section){
+function renderSection(section,showSearch=false){
  if(section.type==='hero'){
   return '<section class="hero" id="'+esc(section.id)+'"><div class="hero-inner" data-hero-image><div class="hero-copy"><div class="eyebrow">'+esc(siteConfig.heroEyebrow||section.eyebrow||'The everyday skin edit')+'</div><h1>'+esc(siteConfig.heroTitle||section.title||'Care that feels like you.')+'</h1><p>'+esc(siteConfig.heroDescription||section.text||'Thoughtful skincare finds, curated for real routines.')+'</p><div class="actions"><a class="btn" href="#edit">'+esc(siteConfig.heroButtonLabel||'Explore the edit')+' ↓</a><a class="btn secondary" href="https://www.pinterest.com/" target="_blank" rel="noopener noreferrer">Find us on Pinterest ↗</a></div></div></div></section>';
  }
@@ -160,7 +162,8 @@ function renderSection(section){
  if(section.type==='category-grid')return renderCategoryBrowse(section);
  const list=filteredProducts(section);
  const anchor=section.type==='featured-products'?'featured-edit':'edit';
- return '<section class="section product-grid-section" id="'+esc(section.id||anchor)+'"><div class="section-head"><div><div class="eyebrow">'+esc(section.eyebrow||(section.type==='featured-products'?'Thoughtfully chosen':'Curated, not crowded'))+'</div><h2>'+esc(section.title||'What’s in the edit')+'</h2><p class="section-description">'+esc(section.text||'Explore skincare finds and useful routine essentials.')+'</p>'+(activeCategory?'<button class="category-link" onclick="selectCategory(\'\')">Clear active category ×</button>':'')+'</div><input class="search" id="search" type="search" placeholder="Search skincare and beauty…" aria-label="Search skincare products" value="'+esc($('search')?.value||'')+'"></div><div class="grid" data-columns="'+Number(section.columns||4)+'">'+(list.length?list.map(renderProductCard).join(''):'<div class="empty">No skincare picks match this section yet. Check the product placement and publication settings in Nuvora Admin.</div>')+'</div></section>';
+ const searchMarkup=showSearch?'<input class="search skin-search-input" id="skinSearch" type="search" placeholder="Search skincare and beauty…" aria-label="Search skincare products" value="'+esc(searchQuery)+'">':'';
+ return '<section class="section product-grid-section" id="'+esc(section.id||anchor)+'"><div class="section-head"><div><div class="eyebrow">'+esc(section.eyebrow||(section.type==='featured-products'?'Thoughtfully chosen':'Curated, not crowded'))+'</div><h2>'+esc(section.title||'What’s in the edit')+'</h2><p class="section-description">'+esc(section.text||'Explore skincare finds and useful routine essentials.')+'</p>'+(activeCategory?'<button class="category-link" onclick="selectCategory(\'\')">Clear active category ×</button>':'')+'</div>'+searchMarkup+'</div><div class="grid" data-columns="'+Number(section.columns||4)+'">'+(list.length?list.map(renderProductCard).join(''):'<div class="empty">No skincare picks match this section yet. Check the product placement and publication settings in Nuvora Admin.</div>')+'</div></section>';
 }
 function applyTemplate(){
  document.body.classList.remove('template-clean-minimal','template-sage-botanical');
@@ -168,15 +171,25 @@ function applyTemplate(){
  document.documentElement.style.setProperty('--skin-accent',siteConfig.accentColor||'#66745f');
 }
 function renderPage(){
+ const active=document.activeElement;
+ const wasSearching=!!active?.classList?.contains('skin-search-input');
+ let caret=null;if(wasSearching){searchQuery=active.value;caret=active.selectionStart;}
  applyTemplate();
  $('announcementBar').textContent=siteConfig.announcement||'';
  const visible=siteConfig.sections.filter(s=>s.visible!==false);
- $('beautyMain').innerHTML='<div class="site-sections">'+visible.map(renderSection).join('')+'</div>';
+ let searchPlaced=false;
+ $('beautyMain').innerHTML='<div class="site-sections">'+visible.map(sec=>{
+  const showSearch=!searchPlaced&&['product-grid','featured-products'].includes(sec.type);
+  if(showSearch)searchPlaced=true;
+  return renderSection(sec,showSearch);
+ }).join('')+'</div>';
  const hero=$('beautyMain').querySelector('[data-hero-image]');
  if(hero){const img=safeUrl(siteConfig.heroImage,true);hero.style.backgroundImage='linear-gradient(100deg,#e5e8db 0%,#e5e8dbed 45%,#e5e8db00 75%)'+(img?',url("'+img+'")':'');}
  $('affiliateDisclosure').textContent=siteConfig.footerNote||defaultConfig.footerNote;
  $('year').textContent=new Date().getFullYear();
- const searches=Array.from(document.querySelectorAll('#search'));searches.forEach(el=>el.addEventListener('input',()=>renderPage()));
+ const search=$('skinSearch');
+ if(search)search.addEventListener('input',()=>{searchQuery=search.value;renderPage();});
+ if(wasSearching&&search){search.focus();try{search.setSelectionRange(caret??search.value.length,caret??search.value.length);}catch(e){}}
 }
 function selectCategory(id){activeCategory=String(id||'');renderPage();const grid=document.querySelector('.product-grid-section');grid?.scrollIntoView({behavior:'smooth',block:'start'});}
 function trackClick(id){try{fetch('/api/analytics/events',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({event_name:'affiliate_outbound_click',product_id:id,metadata:{source:'nuvora-skin'}})}).catch(()=>{});}catch{}}
@@ -196,7 +209,7 @@ function openProductDetails(id){
  const priceButton=dest?'<a class="btn" href="'+esc(dest)+'" target="_blank" rel="sponsored noopener noreferrer" onclick="trackClick('+JSON.stringify(String(p.id))+')">'+productButtonLabel(p)+' ↗</a>':'<span class="muted">Retailer link has not been added yet.</span>';
  $('productDetailContent').innerHTML='<div class="detail-image">'+(image?'<img src="'+esc(image)+'" alt="'+esc(p.name)+'">':'')+'</div><div class="detail-copy"><div class="detail-brand">'+esc(p.brand||'Nuvora Skin selection')+'</div><h2 id="detailTitle">'+esc(p.name)+'</h2><p class="detail-description">'+esc(p.store_description||p.description||'A considered find for everyday skincare routines.')+'</p><div class="detail-meta">'+(p.product_size?'<span>'+esc(p.product_size)+'</span>':'')+(p.category?.name?'<span>'+esc(p.category.name)+'</span>':'')+'</div>'+
  detailBlock('Benefits & what it is for',benefits,true)+detailBlock('Skin types',skinTypes,false,'Skin-type suitability has not been supplied. Check the manufacturer’s guidance and patch-test cautiously.')+
- detailBlock('Skin concerns / intended use',concerns,false)+detailBlock('Ingredients',p.ingredients,false,'The full ingredient list is not available in this guide. Review the current INCI list on Amazon before buying.')+
+ detailBlock('Skin concerns / intended use',concerns,false)+detailBlock('When to avoid / compatibility cautions',p.skip_if,false)+detailBlock('Ingredients',p.ingredients,false,'The full ingredient list is not available in this guide. Review the current INCI list on Amazon before buying.')+detailBlock('Ingredients',p.ingredients,false,'The full ingredient list is not available in this guide. Review the current INCI list on Amazon before buying.')+
  detailBlock('How to use',p.usage_instructions,false,'Directions are not included in this guide. Follow the manufacturer’s current instructions.')+
  detailBlock('Warnings & cautions',p.product_warnings,false,'No specific cautions have been added to this guide. Review the packaging and retailer information, and stop use if irritation occurs.')+
  recHtml+'<div class="actions">'+priceButton+'</div><div class="detail-note">Product details may change and are not medical advice. Confirm ingredients, directions, and cautions against the current product packaging and retailer listing. Introduce active ingredients carefully and seek qualified advice for persistent or severe skin concerns.</div></div>';
