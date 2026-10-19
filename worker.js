@@ -1704,7 +1704,12 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const r=await supabaseRest(env,'GET','store_settings',undefined,'?id=eq.true&select=*'); if(!r.ok)return json({error:await r.text()},500);
           return json((await r.json())[0]||{});
         }
-        const patch=await body(request); delete patch.id; patch.updated_at=new Date().toISOString();
+        const patch=await body(request); delete patch.id;
+        if(Object.prototype.hasOwnProperty.call(patch,'skin_site_config')){
+          const configError=validateSkinSiteConfig(patch.skin_site_config);
+          if(configError)return json({error:configError},400);
+        }
+        patch.updated_at=new Date().toISOString();
         const r=await supabaseRest(env,'PATCH','store_settings',patch,'?id=eq.true'); if(!r.ok)return json({error:await r.text()},400);
         return json((await r.json())[0]||null);
       }
@@ -2131,6 +2136,38 @@ function cleanMultilineText(value,max=12000){
 function makeProductSlug(value){
   const base=cleanText(value,180).toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-+/g,'-').slice(0,140);
   return (base||'product')+'-'+Math.random().toString(36).slice(2,8);
+}
+
+function validateSkinSiteConfig(value){
+  if(!value||typeof value!=='object'||Array.isArray(value))return 'Skin site configuration must be an object.';
+  let encoded;try{encoded=JSON.stringify(value);}catch{return 'Skin site configuration is not valid JSON.';}
+  if(encoded.length>100000)return 'Skin site configuration is too large (maximum 100 KB).';
+  if(!['soft-editorial','clean-minimal','sage-botanical'].includes(String(value.template||'soft-editorial')))return 'Unknown Skin Studio template.';
+  if(value.accentColor!==undefined&&!/^#[0-9a-f]{6}$/i.test(String(value.accentColor)))return 'Skin Studio accent color must be a six-digit hex color.';
+  if(value.heroImage&&!isValidHttpUrl(value.heroImage))return 'Skin Studio hero image must be an http(s) URL.';
+  if(value.sections!==undefined&&!Array.isArray(value.sections))return 'Skin Studio sections must be an array.';
+  const sections=Array.isArray(value.sections)?value.sections:[];
+  if(sections.length>40)return 'Skin Studio supports up to 40 sections.';
+  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid']);
+  const ids=new Set();
+  for(const section of sections){
+    if(!section||typeof section!=='object'||Array.isArray(section))return 'Every Skin Studio section must be an object.';
+    if(!allowedTypes.has(String(section.type||'')))return 'A Skin Studio section has an unsupported type.';
+    const id=String(section.id||'');
+    if(!id||id.length>80)return 'Every Skin Studio section needs a short ID.';
+    if(ids.has(id))return 'Skin Studio section IDs must be unique.';
+    ids.add(id);
+    if(section.title!==undefined&&String(section.title).length>180)return 'Skin Studio section titles are limited to 180 characters.';
+    if(section.text!==undefined&&String(section.text).length>3000)return 'Skin Studio section text is too long.';
+    if(section.eyebrow!==undefined&&String(section.eyebrow).length>100)return 'Skin Studio section eyebrows are limited to 100 characters.';
+    if(section.product_ids!==undefined){
+      if(!Array.isArray(section.product_ids)||section.product_ids.length>60)return 'A Skin Studio section can place up to 60 products.';
+      if(section.product_ids.some(id=>!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id))))return 'A placed product has an invalid product ID.';
+    }
+    if(section.columns!==undefined&&!([2,3,4].includes(Number(section.columns))))return 'Skin Studio grid columns must be 2, 3, or 4.';
+    if(section.filter!==undefined&&!['all','featured','top_pick','trending'].includes(String(section.filter)))return 'A Skin Studio product filter is invalid.';
+  }
+  return null;
 }
 function validateProduct(product){
   if(!product||typeof product!=='object')return 'Product data is required.';
