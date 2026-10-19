@@ -538,7 +538,7 @@ body.skin-studio-fullpage .skin-main-admin-link{white-space:nowrap;text-decorati
         </section>
       </div>
       <section class="skin-builder-preview-panel" aria-label="Live storefront canvas">
-        <div class="skin-preview-head"><div><b>Live page canvas</b><small>Drag a section by its handle to change the order. Changes here update the section list.</small></div><button class="btn" type="button" onclick="refreshSkinStudioPreview()">Refresh canvas ↻</button></div>
+        <div class="skin-preview-head"><div><b>Live page canvas</b><small>Drag section handles to reorder page blocks, or drag product handles to arrange items inside a product grid. Changes stay in your draft until you save and publish.</small></div><button class="btn" type="button" onclick="refreshSkinStudioPreview()">Refresh canvas ↻</button></div>
         <div class="skin-preview-frame-wrap"><iframe id="skinStudioPreview" title="Live Nuvora Skin storefront preview" src="https://client-store-platform.rayyung713.workers.dev/?preview=admin&studioPreview=initial"></iframe></div>
       </section>
       <aside class="skin-builder-sections">
@@ -1661,6 +1661,18 @@ function wireSkinStudioCanvas(){
   window.addEventListener('message',event=>{
    if(event.origin!==SKIN_CLIENT_ORIGIN||event.source!==document.getElementById('skinStudioPreview')?.contentWindow||!event.data)return;
    if(event.data.type==='nuvora-skin-studio-ready'){sendSkinStudioPreview();return;}
+   if(event.data.type==='nuvora-skin-studio-product-reorder'){
+    if(!skinBuilderConfig||!Array.isArray(event.data.productIds))return;
+    const section=skinBuilderConfig.sections.find(item=>String(item.id)===String(event.data.sectionId));
+    if(!section||!['product-grid','featured-products'].includes(section.type))return;
+    const allowed=new Set(skinProductOptions().map(item=>String(item.id)));
+    const ordered=event.data.productIds.map(String);
+    if(ordered.length<2||ordered.length>60||new Set(ordered).size!==ordered.length||ordered.some(id=>!allowed.has(id)))return;
+    section.product_ids=ordered;
+    renderSkinBuilderSections();
+    skinBuilderMessage('Product order updated in the canvas draft. Save & publish site changes to apply it.','info');
+    return;
+   }
    if(event.data.type!=='nuvora-skin-studio-reorder'||!skinBuilderConfig)return;
    const from=skinBuilderConfig.sections.findIndex(section=>String(section.id)===String(event.data.sourceId));
    const to=skinBuilderConfig.sections.findIndex(section=>String(section.id)===String(event.data.targetId));
