@@ -2166,7 +2166,11 @@ function validateSkinSiteConfig(value){
     ids.add(id);
     if(section.title!==undefined&&String(section.title).length>180)return 'Skin Studio section titles are limited to 180 characters.';
     if(section.text!==undefined&&String(section.text).length>3000)return 'Skin Studio section text is too long.';
-    if(section.image_url){try{if(new URL(section.image_url).protocol!=='https:')return 'Section images must use HTTPS.';}catch{return 'A section image URL is invalid.';}}\n    if(section.image_alt!==undefined&&String(section.image_alt).length>240)return 'Section image alt text is too long.';\n    if(section.button_label!==undefined&&String(section.button_label).length>80)return 'Section button labels are limited to 80 characters.';\n    if(section.button_href!==undefined&&String(section.button_href).length>600)return 'Section button destinations are limited to 600 characters.';\n    if(section.max_items!==undefined&&(!Number.isInteger(Number(section.max_items))||Number(section.max_items)<1||Number(section.max_items)>24))return 'Section item counts must be between 1 and 24.';
+    if(section.image_url){try{if(new URL(section.image_url).protocol!=='https:')return 'Section images must use HTTPS.';}catch{return 'A section image URL is invalid.';}}
+    if(section.image_alt!==undefined&&String(section.image_alt).length>240)return 'Section image alt text is too long.';
+    if(section.button_label!==undefined&&String(section.button_label).length>80)return 'Section button labels are limited to 80 characters.';
+    if(section.button_href!==undefined&&String(section.button_href).length>600)return 'Section button destinations are limited to 600 characters.';
+    if(section.max_items!==undefined&&(!Number.isInteger(Number(section.max_items))||Number(section.max_items)<1||Number(section.max_items)>24))return 'Section item counts must be between 1 and 24.';
     if(section.eyebrow!==undefined&&String(section.eyebrow).length>100)return 'Skin Studio section eyebrows are limited to 100 characters.';
     if(section.product_ids!==undefined){
       if(!Array.isArray(section.product_ids)||section.product_ids.length>60)return 'A Skin Studio section can place up to 60 products.';
