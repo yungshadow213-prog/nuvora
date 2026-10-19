@@ -28,7 +28,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-16-publish-schema-fallback-r8',
+          release:'nuvora-2026-10-19-skin-studio-r1',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -178,7 +178,7 @@ async function inspectProductSchema(env){
     'source_url','resolved_url','store_description','temu_source_url','temu_product_id',
     'temu_deal_text','temu_list_price','temu_discount_percent','temu_rating','temu_review_count',
     'deal_text','list_price','discount_percent','rating','review_count',
-    'ingredients','usage_instructions','product_warnings','product_size'
+    'ingredients','usage_instructions','product_warnings','product_size','benefits','skin_types','skin_concerns','recommended_product_ids','recommendation_reason'
   ];
   const query=fields=>'?select='+fields.map(encodeURIComponent).join(',')+'&limit=1';
   const coreRes=await supabaseRest(env,'GET','products',undefined,query(core));
@@ -1690,6 +1690,14 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         return json({counts,total:Array.isArray(rows)?rows.length:0});
       }
 
+      if(url.pathname==='/api/skin-settings'&&request.method==='GET'){
+        // Only expose the explicit Skin storefront configuration; never return the whole admin settings row.
+        const r=await supabaseRest(env,'GET','store_settings',undefined,'?select=skin_site_config&id=eq.true&limit=1');
+        if(!r.ok)return json({error:'Skin storefront settings could not be loaded.'},502);
+        const row=(await r.json())?.[0]||{};
+        return json(row.skin_site_config&&typeof row.skin_site_config==='object'?row.skin_site_config:{});
+      }
+
       if(url.pathname==='/api/admin/settings'&&(request.method==='GET'||request.method==='PATCH')){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         if(request.method==='GET'){
@@ -1786,6 +1794,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             id:source.id,name:normalized.name,slug:source.slug,kind:source.kind,brand:normalized.brand,
             description:normalized.description,store_description:source.store_description||null,features:normalized.features,
             ingredients:source.ingredients||null,usage_instructions:source.usage_instructions||null,product_warnings:source.product_warnings||null,product_size:source.product_size||null,
+            benefits:source.benefits||source.why_we_picked_it||null,skin_types:source.skin_types||source.best_for||null,skin_concerns:source.skin_concerns||source.skip_if||null,
+            recommended_product_ids:Array.isArray(source.recommended_product_ids)?source.recommended_product_ids:[],recommendation_reason:source.recommendation_reason||null,
             image_url:normalized.image_url,image_urls:normalized.image_urls,display_price:normalized.display_price,currency:normalized.currency,
             destination_url:(isAmazonSource?(source.amazon_source_url||source.destination_url):(source.destination_url||source.source_url))||null,
             retailer:source.retailer||null,provider:source.provider||null,source_type:source.source_type||null,region:source.region||null,
@@ -1822,7 +1832,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           'source_related_products','source_image_urls','source_url','resolved_url','store_description',
           'temu_source_url','temu_product_id','temu_deal_text','temu_list_price','temu_discount_percent',
           'temu_rating','temu_review_count','deal_text','list_price','discount_percent','rating','review_count',
-          'ingredients','usage_instructions','product_warnings','product_size'
+          'ingredients','usage_instructions','product_warnings','product_size','benefits','skin_types','skin_concerns','recommended_product_ids','recommendation_reason'
         ]);
         for(let attempt=0;attempt<40;attempt++){
           const response=await supabaseRest(env,method,'products',payload,query);
