@@ -153,7 +153,7 @@ const server=http.createServer(async(req,res)=>{
       const storefrontProducts=storefront==='beauty'?products.filter(p=>{
         const category=categoryMap.get(String(p.category_id||'')),label=String(category?.name||'');
         const productText=[p.name,p.brand,p.description,p.features,p.store_description].filter(Boolean).join(' ');
-        return /skin\\s*care|skincare|beauty|cosmetic/i.test(label)||/skin\\s*care|skincare|beauty|cosmetic|cleanser|cleansing|face wash|moisturi|serum|sunscreen|sunblock|spf|face cream|toner|retinol|exfoliat|lip balm|facial oil|eye cream|face mask/i.test(productText);
+        return /skin[ -]*care|skincare|beauty|cosmetic/i.test(label)||/skin[ -]*care|skincare|beauty|cosmetic|cleanser|cleansing|face wash|moisturi|serum|sunscreen|sunblock|spf|face cream|toner|retinol|exfoliat|lip balm|facial oil|eye cream|face mask/i.test(productText);
       }):products;
       return json(res,200,storefrontProducts.map(p=>({
         ...p,
