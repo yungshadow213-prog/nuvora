@@ -90,6 +90,13 @@ const server=http.createServer(async(req,res)=>{
     if(u.pathname==='/admin'||u.pathname==='/admin/') u.pathname='/admin.html';
     if(u.pathname==='/api/health')return json(res,200,{ok:true,configured:configured()});
     if(u.pathname==='/api/config')return json(res,200,{supabaseUrl:env('SUPABASE_URL'),supabaseAnonKey:env('SUPABASE_ANON_KEY')});
+    if(u.pathname==='/api/skin-settings'&&req.method==='GET'){
+      const settings=await supabaseRest('GET','store_settings',undefined,'?select=skin_site_config&id=eq.true&limit=1');
+      if(!settings.ok)return json(res,502,{error:'Skin storefront settings could not be loaded.'});
+      const row=(await settings.json())?.[0]||{};
+      return json(res,200,row.skin_site_config&&typeof row.skin_site_config==='object'?row.skin_site_config:{});
+    }
+
     if(u.pathname==='/api/products'&&req.method==='GET'){
       // Public catalog endpoint: keep the production Node/Railway path identical
       // to the Cloudflare Worker path so the storefront never depends on which
@@ -105,8 +112,19 @@ const server=http.createServer(async(req,res)=>{
       const collections=collectionsRes.ok?await collectionsRes.json():[];
       const categoryMap=new Map(categories.map(x=>[String(x.id),x]));
       const collectionMap=new Map(collections.map(x=>[String(x.id),x]));
-      return json(res,200,products.map(p=>({
+      const storefront=String(u.searchParams.get('storefront')||'').toLowerCase();
+      const storefrontProducts=storefront==='beauty'?products.filter(p=>{
+        const category=categoryMap.get(String(p.category_id||'')),label=String(category?.name||'');
+        const productText=[p.name,p.brand,p.description,p.features,p.store_description].filter(Boolean).join(' ');
+        return /skin\\s*care|skincare|beauty|cosmetic/i.test(label)||/skin\\s*care|skincare|beauty|cosmetic|cleanser|cleansing|face wash|moisturi|serum|sunscreen|sunblock|spf|face cream|toner|retinol|exfoliat|lip balm|facial oil|eye cream|face mask/i.test(productText);
+      }):products;
+      return json(res,200,storefrontProducts.map(p=>({
         ...p,
+        benefits:p.benefits||p.why_we_picked_it||null,
+        skin_types:p.skin_types||p.best_for||null,
+        skin_concerns:p.skin_concerns||null,
+        recommended_product_ids:Array.isArray(p.recommended_product_ids)?p.recommended_product_ids:[],
+        recommendation_reason:p.recommendation_reason||null,
         category:p.category_id?categoryMap.get(String(p.category_id))||null:null,
         collection:p.collection_id?collectionMap.get(String(p.collection_id))||null:null
       })));
