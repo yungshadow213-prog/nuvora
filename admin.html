@@ -471,7 +471,7 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
           <div class="skin-builder-fields">
             <div class="field"><label for="skinCfgTemplate">Template</label><select id="skinCfgTemplate"><option value="soft-editorial">Soft editorial</option><option value="clean-minimal">Clean minimal</option><option value="sage-botanical">Sage botanical</option></select></div>
             <div class="field"><label for="skinCfgAccent">Accent color</label><input id="skinCfgAccent" type="color" value="#66745f"></div>
-            <div class="field full"><label for="skinCfgAnnouncement">Announcement bar</label><input id="skinCfgAnnouncement" maxlength="180" placeholder="Announcement text"></div>
+            <div class="field full"><label for="skinCfgAnnouncement">Announcement bar</label><input id="skinCfgAnnouncement" maxlength="180" placeholder="Announcement text"></div><div class="field full"><label for="skinCfgStorefrontUrl">Client storefront URL</label><input id="skinCfgStorefrontUrl" type="url" placeholder="https://your-live-nuvora-skin-site.example"><div class="muted">Set the deployed client-store-platform URL so Preview opens the actual Nuvora Skin storefront.</div></div>
           </div>
         </section>
         <section class="skin-builder-group">
@@ -1506,7 +1506,7 @@ async function adminBoot(){
 
 let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false;
 const defaultSkinSiteConfig=()=>({
-  version:2,template:'soft-editorial',accentColor:'#66745f',
+  version:2,template:'soft-editorial',accentColor:'#66745f',storefrontUrl:'',
   announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
   heroEyebrow:'The everyday skin edit',heroTitle:'Care that feels like you.',
   heroDescription:'Skincare and beauty finds, thoughtfully collected for real routines. Explore useful essentials without the overwhelm.',
@@ -1551,7 +1551,7 @@ function mergeSkinSiteConfig(raw){
 function skinBuilderMessage(message,type='info'){const el=document.getElementById('skinBuilderStatus');if(el){el.textContent=message;el.dataset.status=type;}}
 function fillSkinConfigFields(){
  const c=skinBuilderConfig;if(!c)return;
- const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgGuideTemplate:'productGuideTemplate'};
+ const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgStorefrontUrl:'storefrontUrl',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgGuideTemplate:'productGuideTemplate'};
  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=c[key]||'';});
  const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations'};
  Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=c.productGuideFields[key]!==false;});renderSkinBuilderSections();
@@ -1610,7 +1610,7 @@ function addSkinBuilderSection(){
 }
 function duplicateSkinSection(index){const original=skinBuilderConfig?.sections?.[index];if(!original)return;const clone=JSON.parse(JSON.stringify(original));clone.id='skin-section-'+Date.now().toString(36);clone.title=(clone.title||'Section')+' copy';skinBuilderConfig.sections.splice(index+1,0,clone);renderSkinBuilderSections();}
 function removeSkinSection(index){const section=skinBuilderConfig?.sections?.[index];if(!section)return;if(!confirm('Remove the "'+(section.title||'section')+'" section from the storefront draft?'))return;skinBuilderConfig.sections.splice(index,1);renderSkinBuilderSections();}
-function previewSkinSite(){collectSkinConfigFields();try{localStorage.setItem('nuvora-skin-preview-config',JSON.stringify(skinBuilderConfig));window.open('/beauty?preview=admin','_blank','noopener');}catch(e){skinBuilderMessage('Preview could not be opened: '+(e.message||'browser storage unavailable'),'warning');}}
+function previewSkinSite(){collectSkinConfigFields();const target=String(skinBuilderConfig?.storefrontUrl||'').trim();if(!target)return skinBuilderMessage('Add the deployed client storefront URL in Brand & template first. The old /beauty preview is a different storefront and is intentionally not used here.','warning');try{const url=new URL(target);if(url.protocol!=='https:')throw new Error('Use the HTTPS URL of the deployed client storefront.');url.searchParams.set('skinPreview',JSON.stringify(skinBuilderConfig));window.open(url.toString(),'_blank','noopener,noreferrer');}catch(e){skinBuilderMessage('Preview could not be opened: '+(e.message||'invalid storefront URL'),'warning');}}
 async function saveSkinSiteConfig(){
  if(!skinSiteConfigLoaded)return skinBuilderMessage('Existing saved settings were not loaded successfully. Reload the Skin Care workspace before saving, so a default draft cannot overwrite the live configuration.','error');
  if(!skinBuilderConfig)return skinBuilderMessage('The saved configuration has not loaded yet. Reload and retry.','error');
