@@ -104,6 +104,7 @@ function validateSkinSiteConfig(value){
     if(section.columns!==undefined&&!([2,3,4].includes(Number(section.columns))))return 'Skin Studio grid columns must be 2, 3, or 4.';
     if(section.filter!==undefined&&!['all','featured','top_pick','trending'].includes(String(section.filter)))return 'A Skin Studio product filter is invalid.';
   }
+  if(!sections.some(section=>section.visible!==false&&(section.type==='product-grid'||section.type==='featured-products')))return 'Skin Studio needs at least one visible product grid.';
   return null;
 }
 
