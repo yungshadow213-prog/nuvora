@@ -602,6 +602,7 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
         <div class="field full skin-only-field"><label>Product benefits <span class="muted">(source-backed)</span></label><textarea id="pfBenefits" placeholder="What the product is intended to do, based on product information"></textarea></div>
         <div class="field full skin-only-field"><label>Suitable skin types</label><textarea id="pfSkinTypes" placeholder="Oily, dry, combination, normal, sensitive — include only supported suitability information"></textarea></div>
         <div class="field full skin-only-field"><label>Skin concerns / intended use</label><textarea id="pfSkinConcerns" placeholder="e.g. dryness, uneven texture, oiliness — avoid medical promises"></textarea></div>
+        <div class="field full skin-only-field"><label>When to avoid / compatibility cautions</label><textarea id="pfSkinAvoid" placeholder="Source-backed warnings, contraindications, or known incompatibilities"></textarea></div>
         <div class="field full skin-only-field"><label>Complementary products</label><select id="pfRecommendedProducts" multiple size="5" aria-label="Select complementary skincare products" style="min-height:115px"></select><div class="muted">Choose products you have reviewed as reasonable companions. This does not replace professional advice or ingredient compatibility checks.</div></div>
         <div class="field full skin-only-field"><label>Why these products work together</label><textarea id="pfRecommendationReason" placeholder="Explain the intended routine role, sequencing, and any limitations. Keep product facts separate from general guidance."></textarea></div>
         <div class="field full skin-only-field"><label>Storefront placement</label><div class="skin-flag-row"><label><input id="pfSkinFeatured" type="checkbox"> Feature on Skin homepage</label><label><input id="pfSkinTopPick" type="checkbox"> Mark as a top pick</label><label><input id="pfSkinTrending" type="checkbox"> Mark as trending</label></div></div><div class="field full"><label>Ingredients (source-verified)</label><textarea id="pfIngredients" placeholder="Only use ingredients confirmed by the source listing"></textarea></div><div class="field full"><label>Directions / how to use (source-verified)</label><textarea id="pfUsage" placeholder="Directions copied or summarized from the product source"></textarea></div><div class="field full"><label>Warnings / cautions (source-verified)</label><textarea id="pfWarnings" placeholder="Warnings stated by the manufacturer or source"></textarea></div><div class="field"><label>Product size / format</label><input id="pfProductSize" placeholder="e.g. 50 ml / 1.7 fl oz"></div><div class="field full"><label>Product options</label><textarea id="pfVariations" placeholder="Size: X-Small, Small, Medium, Large&#10;Color: Black, Grey, White"></textarea><div class="muted">Nuvora shows these as product options when the retailer provides them.</div></div>
@@ -627,7 +628,7 @@ let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[]
 window.__nuvoraSchemaState=window.__nuvoraSchemaState||{missingProductColumns:[],productSchemaError:''};
 function validURL(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
 
-function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=meta[id][0];document.getElementById('sub').textContent=meta[id][1];if(id==='settings')loadSettings();if(id==='skin-care'){loadCategories().then(renderSkinProducts);renderSkinProducts();loadSkinSiteConfig();}if(id==='categories')loadCategories();if(id==='collections')loadCollections();if(id==='social')loadSocial();if(id==='analytics')loadAnalytics();}
+function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=meta[id][0];document.getElementById('sub').textContent=meta[id][1];if(id==='settings')loadSettings();if(id==='skin-care'){loadCategories().then(()=>{renderSkinProducts();renderSkinBuilderSections();});renderSkinProducts();loadSkinSiteConfig();}if(id==='categories')loadCategories();if(id==='collections')loadCollections();if(id==='social')loadSocial();if(id==='analytics')loadAnalytics();}
 function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function setAdminStatus(message,type='info'){const ids=['globalAdminStatus','importStatus','shopifyImportStatus','aiImageStatus','aiCopyStatus','uploadStatus'];for(const id of ids){const el=document.getElementById(id);if(el&&message){el.textContent=String(message);el.dataset.status=type;}}} 
 async function api(path,options={},retry=true){
@@ -797,7 +798,7 @@ function renderProductTaxonomy(){
 }
 function resetProductForm(){
   window.temuImportMode=false;window.skinCareImportMode=false;setSkinAdminFormMode(false);
-  ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfFeatures','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost','pfBenefits','pfSkinTypes','pfSkinConcerns','pfRecommendationReason'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfFeatures','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost','pfBenefits','pfSkinTypes','pfSkinConcerns','pfSkinAvoid','pfRecommendationReason'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   ['pfSkinFeatured','pfSkinTopPick','pfSkinTrending'].forEach(id=>{const e=document.getElementById(id);if(e)e.checked=false;});
   document.getElementById('pfKind').value='shop'; document.getElementById('pfSource').value='manual'; document.getElementById('pfCurrency').value='NGN'; document.getElementById('pfRetailer').value='Amazon';
   document.getElementById('pfImageStrip').innerHTML='';const rec=document.getElementById('pfRecommendedProducts');if(rec)rec.innerHTML='';
@@ -846,7 +847,8 @@ function setProductForm(p){
   document.getElementById('pfSupplierCost').value=p.supplier_cost??'';
   const benefits=document.getElementById('pfBenefits');if(benefits)benefits.value=p.benefits||p.why_we_picked_it||'';
   const skinTypes=document.getElementById('pfSkinTypes');if(skinTypes)skinTypes.value=p.skin_types||p.best_for||'';
-  const skinConcerns=document.getElementById('pfSkinConcerns');if(skinConcerns)skinConcerns.value=p.skin_concerns||p.skip_if||'';
+  const skinConcerns=document.getElementById('pfSkinConcerns');if(skinConcerns)skinConcerns.value=p.skin_concerns||'';
+  const skinAvoid=document.getElementById('pfSkinAvoid');if(skinAvoid)skinAvoid.value=p.skip_if||'';
   const recommendationReason=document.getElementById('pfRecommendationReason');if(recommendationReason)recommendationReason.value=p.recommendation_reason||'';
   const imgs=p.image_urls||((p.image_url)?[p.image_url]:[]);
   document.getElementById('pfImages').value=imgs.filter(Boolean).join('\\n');
@@ -1174,6 +1176,7 @@ async function saveProductDraft(){
     benefits:window.skinCareImportMode?(document.getElementById('pfBenefits').value.trim()||null):null,
     skin_types:window.skinCareImportMode?(document.getElementById('pfSkinTypes').value.trim()||null):null,
     skin_concerns:window.skinCareImportMode?(document.getElementById('pfSkinConcerns').value.trim()||null):null,
+    skip_if:window.skinCareImportMode?(document.getElementById('pfSkinAvoid').value.trim()||null):null,
     recommended_product_ids:window.skinCareImportMode?Array.from(document.getElementById('pfRecommendedProducts').selectedOptions).map(o=>o.value):[],
     recommendation_reason:window.skinCareImportMode?(document.getElementById('pfRecommendationReason').value.trim()||null):null,
     featured:window.skinCareImportMode?document.getElementById('pfSkinFeatured').checked:!!adminProducts.find(x=>x.id===window.editingProductId)?.featured,
@@ -1196,7 +1199,7 @@ async function saveProductDraft(){
     supplier_cost:document.getElementById('pfSupplierCost').value===''?null:Number(document.getElementById('pfSupplierCost').value),
     published:window.editingProductId?!!adminProducts.find(x=>x.id===window.editingProductId)?.published:false
   };
-  if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.skip_if=product.skin_concerns;product.retailer='Amazon';}
+  if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer='Amazon';}
   try{
     const existingId=window.editingProductId||null;
     const existing=existingId?adminProducts.find(x=>String(x.id)===String(existingId)):null;
@@ -1512,6 +1515,8 @@ function collectSkinConfigFields(){
  if(!skinBuilderConfig)return;
  const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote'};
  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)c[key]=el.value.trim();});
+ const hero=c.sections.find(x=>x.type==='hero');if(hero){hero.title=c.heroTitle;hero.eyebrow=c.heroEyebrow;hero.text=c.heroDescription;}
+ const editorial=c.sections.find(x=>x.type==='editorial');if(editorial){editorial.title=c.approachTitle;editorial.eyebrow=c.approachEyebrow;editorial.text=c.approachBody;}
 }
 async function loadSkinSiteConfig(){
  try{const settings=await api('/api/admin/settings');skinBuilderConfig=mergeSkinSiteConfig(settings?.skin_site_config);fillSkinConfigFields();skinBuilderMessage('Saved storefront settings loaded. Changes affect the public Nuvora Skin page after you save.','success');}
@@ -1534,7 +1539,12 @@ function renderSkinBuilderSections(){
    '<div class="skin-section-card-actions"><button type="button" onclick="moveSkinSection('+index+',-1)" '+(index===0?'disabled':'')+'>↑ Move up</button><button type="button" onclick="moveSkinSection('+index+',1)" '+(index===skinBuilderConfig.sections.length-1?'disabled':'')+'>↓ Move down</button><button type="button" onclick="duplicateSkinSection('+index+')">Duplicate</button><button type="button" class="is-danger" onclick="removeSkinSection('+index+')">Remove</button></div></div></article>';
  }).join('')||'<div class="muted">No sections yet. Add one below.</div>';
 }
-function updateSkinSection(index,key,value){const sec=skinBuilderConfig?.sections?.[index];if(!sec)return;sec[key]=value;}
+function updateSkinSection(index,key,value){
+ const sec=skinBuilderConfig?.sections?.[index];if(!sec)return;sec[key]=value;
+ const sync=(cfgKey,fieldId)=>{skinBuilderConfig[cfgKey]=String(value??'');const el=document.getElementById(fieldId);if(el)el.value=String(value??'');};
+ if(sec.type==='hero'){if(key==='title')sync('heroTitle','skinCfgHeroTitle');if(key==='eyebrow')sync('heroEyebrow','skinCfgHeroEyebrow');if(key==='text')sync('heroDescription','skinCfgHeroDescription');}
+ if(sec.type==='editorial'){if(key==='title')sync('approachTitle','skinCfgApproachTitle');if(key==='eyebrow')sync('approachEyebrow','skinCfgApproachEyebrow');if(key==='text')sync('approachBody','skinCfgApproachBody');}
+}
 function skinBuilderDragStart(event,index){skinDragSectionIndex=index;event.dataTransfer?.setData('text/plain',String(index));if(event.dataTransfer)event.dataTransfer.effectAllowed='move';}
 function skinBuilderDrop(event,target){event.preventDefault();const source=skinDragSectionIndex??Number(event.dataTransfer?.getData('text/plain'));skinDragSectionIndex=null;if(!Number.isInteger(source)||source<0||source>=skinBuilderConfig.sections.length||source===target)return;const [item]=skinBuilderConfig.sections.splice(source,1);skinBuilderConfig.sections.splice(target,0,item);renderSkinBuilderSections();}
 function moveSkinSection(index,delta){const target=index+delta;if(!skinBuilderConfig||target<0||target>=skinBuilderConfig.sections.length)return;const [item]=skinBuilderConfig.sections.splice(index,1);skinBuilderConfig.sections.splice(target,0,item);renderSkinBuilderSections();}
