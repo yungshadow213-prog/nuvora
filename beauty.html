@@ -92,6 +92,8 @@ const defaultConfig={
  approachTitle:'Good finds. Clear choices.',
  approachBody:'Nuvora Skin is a focused corner of Nuvora for skincare and beauty discoveries. We aim to make browsing simpler with clear product details and direct links to the retailer. Always check the retailer’s ingredient list, product directions, and suitability for your own skin before buying.',
  footerNote:'Affiliate disclosure: Some links may be affiliate links. If you buy through them, Nuvora may earn a commission at no extra cost to you. Retailer prices, availability, ingredients, and product claims can change; confirm details on the retailer’s site.',
+ productGuideTemplate:'editorial',
+ productGuideFields:{benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true},
  sections:[
   {id:'hero',type:'hero',visible:true,title:'Care that feels like you.'},
   {id:'edit',type:'product-grid',visible:true,title:'What’s in the edit',eyebrow:'Curated, not crowded',text:'Product picks are added by the Nuvora team. Explore skincare finds and helpful guides.',filter:'all',columns:4,product_ids:[]},
@@ -111,6 +113,10 @@ function mergeConfig(raw){
   product_ids:Array.isArray(x.product_ids)?x.product_ids.map(String).slice(0,60):[],category_id:String(x.category_id||'')
  })):defaultConfig.sections;
  cfg.template=['soft-editorial','clean-minimal','sage-botanical'].includes(cfg.template)?cfg.template:'soft-editorial';
+ cfg.productGuideTemplate=['editorial','compact','minimal'].includes(cfg.productGuideTemplate)?cfg.productGuideTemplate:'editorial';
+ const guideDefaults={benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true};
+ cfg.productGuideFields={...guideDefaults,...(src.productGuideFields&&typeof src.productGuideFields==='object'?src.productGuideFields:{})};
+ Object.keys(guideDefaults).forEach(key=>cfg.productGuideFields[key]=cfg.productGuideFields[key]!==false);
  cfg.accentColor=/^#[0-9a-f]{6}$/i.test(String(cfg.accentColor||''))?cfg.accentColor:'#66745f';
  cfg.heroImage=safeUrl(cfg.heroImage,true)||defaultConfig.heroImage;
  return cfg;
@@ -166,8 +172,9 @@ function renderSection(section,showSearch=false){
  return '<section class="section product-grid-section" id="'+esc(section.id||anchor)+'"><div class="section-head"><div><div class="eyebrow">'+esc(section.eyebrow||(section.type==='featured-products'?'Thoughtfully chosen':'Curated, not crowded'))+'</div><h2>'+esc(section.title||'What’s in the edit')+'</h2><p class="section-description">'+esc(section.text||'Explore skincare finds and useful routine essentials.')+'</p>'+(activeCategory?'<button class="category-link" onclick="selectCategory(\'\')">Clear active category ×</button>':'')+'</div>'+searchMarkup+'</div><div class="grid" data-columns="'+Number(section.columns||4)+'">'+(list.length?list.map(renderProductCard).join(''):'<div class="empty">No skincare picks match this section yet. Check the product placement and publication settings in Nuvora Admin.</div>')+'</div></section>';
 }
 function applyTemplate(){
- document.body.classList.remove('template-clean-minimal','template-sage-botanical');
+ document.body.classList.remove('template-clean-minimal','template-sage-botanical','guide-compact','guide-minimal');
  document.body.classList.add('template-'+siteConfig.template);
+ document.body.classList.add('guide-'+siteConfig.productGuideTemplate);
  document.documentElement.style.setProperty('--skin-accent',siteConfig.accentColor||'#66745f');
 }
 function renderPage(){
