@@ -1969,7 +1969,6 @@ function renderSkinSelectedInspector(){
   if(sec.type==='category-grid'){
    html+='<label class="studio-inspector-field"><span>Show category</span><select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+skinStoreCategoryOptions().map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
   }
-  }
   html+='<div class="studio-inspector-actions"><button class="btn" type="button" onclick="duplicateSkinSection('+index+')">Duplicate</button><button class="btn danger" type="button" onclick="removeSkinSection('+index+')">Delete section</button></div>';
   setHead(types[sec.type]||'Section settings',skinPageLabel()+' · Section '+(index+1));
   root.innerHTML=html;return;
