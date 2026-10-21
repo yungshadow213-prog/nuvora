@@ -1848,7 +1848,7 @@ function mergeSkinSiteConfig(raw){
  cfg.headerCtaLabel=String(src.headerCtaLabel??base.headerCtaLabel).slice(0,80);
  ['showSearch','showSaved','showHeaderCta'].forEach(key=>cfg[key]=src[key]!==false);
  cfg.navigationItems=cleanLinks(src.navigationItems,base.navigationItems,20);
- if(!Array.isArray(src.navigationItems))cfg.pages.filter(page=>page.visible!==false).forEach(page=>{if(!cfg.navigationItems.some(link=>link.url==='/pages/'+page.slug))cfg.navigationItems.push({id:'page-'+page.slug,label:page.title,url:'/pages/'+page.slug,visible:true});});
+
  cfg.footerIntro=String(src.footerIntro??base.footerIntro).slice(0,1200);
  cfg.footerStamp=String(src.footerStamp??base.footerStamp).slice(0,120);
  cfg.footerExploreHeading=String(src.footerExploreHeading??base.footerExploreHeading).slice(0,80);
@@ -1869,6 +1869,7 @@ function mergeSkinSiteConfig(raw){
   visible:p.visible!==false,
   sections:cleanSections(p.sections,[])
  })):Array.isArray(base.pages)?base.pages:[];
+ if(!Array.isArray(src.navigationItems))cfg.pages.filter(page=>page.visible!==false).forEach(page=>{if(!cfg.navigationItems.some(link=>link.url==='/pages/'+page.slug))cfg.navigationItems.push({id:'page-'+page.slug,label:page.title,url:'/pages/'+page.slug,visible:true});});
  cfg.customCategories=Array.isArray(src.customCategories)?src.customCategories.slice(0,60).map((x,i)=>({
   id:String(x.id||x.slug||('category-'+(i+1))).slice(0,100),
   slug:String(x.slug||x.id||('category-'+(i+1))).toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80),
