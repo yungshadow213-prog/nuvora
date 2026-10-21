@@ -2227,6 +2227,13 @@ function wireSkinStudioCanvas(){
    const data=event.data;
    if(data.type==='nuvora-skin-studio-ready'){sendSkinStudioPreview();return;}
    if(!skinBuilderConfig)return;
+   if(data.type==='nuvora-skin-studio-select-section'){
+    skinStudioPageId=data.pageId||'home';
+    skinStudioSelection={type:'section',id:String(data.sectionId||'')};
+    switchSkinStudioTab('outline');renderSkinStudioAll();
+    skinBuilderMessage('Selected '+(skinSectionsFor().find(x=>String(x.id)===String(data.sectionId))?.title||'section')+'. Edit its settings in the right panel.','info');
+    return;
+   }
    if(data.type==='nuvora-skin-studio-reorder'){
     const sections=skinSectionsFor(data.pageId||'home');
     const from=sections.findIndex(section=>String(section.id)===String(data.sourceId));
