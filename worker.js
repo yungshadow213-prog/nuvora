@@ -2150,33 +2150,73 @@ function validateSkinSiteConfig(value){
   if(value.heroImage){try{if(new URL(value.heroImage).protocol!=='https:')return 'Skin Studio hero image must use HTTPS.';}catch{return 'Skin Studio hero image URL is invalid.';}}
   if(value.productGuideTemplate!==undefined&&!['editorial','compact','minimal'].includes(String(value.productGuideTemplate)))return 'Skin Studio product guide layout is invalid.';
   if(value.productGuideFields!==undefined){
-    const keys=['benefits','skinTypes','concerns','ingredients','usage','warnings','recommendations'];
+    const keys=['benefits','skinTypes','concerns','ingredients','usage','warnings','recommendations','size'];
     if(!value.productGuideFields||typeof value.productGuideFields!=='object'||Array.isArray(value.productGuideFields))return 'Skin Studio product guide visibility settings must be an object.';
     if(keys.some(key=>value.productGuideFields[key]!==undefined&&typeof value.productGuideFields[key]!=='boolean'))return 'Skin Studio product guide visibility values must be true or false.';
   }
+  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid','journal-grid']);
+  const checkSections=(sections,label)=>{
+    if(!Array.isArray(sections))return label+' sections must be an array.';
+    if(sections.length>40)return label+' supports up to 40 sections.';
+    const ids=new Set();
+    for(const section of sections){
+      if(!section||typeof section!=='object'||Array.isArray(section))return 'Every '+label.toLowerCase()+' section must be an object.';
+      if(!allowedTypes.has(String(section.type||'')))return 'A '+label.toLowerCase()+' section has an unsupported type.';
+      const id=String(section.id||'');
+      if(!id||id.length>80)return 'Every '+label.toLowerCase()+' section needs a short ID.';
+      if(ids.has(id))return label+' section IDs must be unique.';
+      ids.add(id);
+      if(section.title!==undefined&&String(section.title).length>180)return label+' section titles are limited to 180 characters.';
+      if(section.text!==undefined&&String(section.text).length>3000)return label+' section text is too long.';
+      if(section.eyebrow!==undefined&&String(section.eyebrow).length>100)return label+' section eyebrows are limited to 100 characters.';
+      if(section.image){try{if(new URL(section.image).protocol!=='https:')return label+' section image must use HTTPS.';}catch{return label+' section image URL is invalid.';}}
+      if(section.backgroundColor!==undefined&&section.backgroundColor!==''&&!/^#[0-9a-f]{6}$/i.test(String(section.backgroundColor)))return label+' section background color is invalid.';
+      if(section.product_ids!==undefined){
+        if(!Array.isArray(section.product_ids)||section.product_ids.length>60)return 'A '+label.toLowerCase()+' section can place up to 60 products.';
+        if(section.product_ids.some(id=>!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id))))return 'A placed product has an invalid product ID.';
+      }
+      if(section.columns!==undefined&&!([2,3,4].includes(Number(section.columns))))return label+' grid columns must be 2, 3, or 4.';
+      if(section.filter!==undefined&&!['all','featured','top_pick','trending'].includes(String(section.filter)))return 'A '+label.toLowerCase()+' product filter is invalid.';
+    }
+    return null;
+  };
   if(value.sections!==undefined&&!Array.isArray(value.sections))return 'Skin Studio sections must be an array.';
   const sections=Array.isArray(value.sections)?value.sections:[];
-  if(sections.length>40)return 'Skin Studio supports up to 40 sections.';
-  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid','journal-grid']);
-  const ids=new Set();
-  for(const section of sections){
-    if(!section||typeof section!=='object'||Array.isArray(section))return 'Every Skin Studio section must be an object.';
-    if(!allowedTypes.has(String(section.type||'')))return 'A Skin Studio section has an unsupported type.';
-    const id=String(section.id||'');
-    if(!id||id.length>80)return 'Every Skin Studio section needs a short ID.';
-    if(ids.has(id))return 'Skin Studio section IDs must be unique.';
-    ids.add(id);
-    if(section.title!==undefined&&String(section.title).length>180)return 'Skin Studio section titles are limited to 180 characters.';
-    if(section.text!==undefined&&String(section.text).length>3000)return 'Skin Studio section text is too long.';
-    if(section.eyebrow!==undefined&&String(section.eyebrow).length>100)return 'Skin Studio section eyebrows are limited to 100 characters.';
-    if(section.product_ids!==undefined){
-      if(!Array.isArray(section.product_ids)||section.product_ids.length>60)return 'A Skin Studio section can place up to 60 products.';
-      if(section.product_ids.some(id=>!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id))))return 'A placed product has an invalid product ID.';
-    }
-    if(section.columns!==undefined&&!([2,3,4].includes(Number(section.columns))))return 'Skin Studio grid columns must be 2, 3, or 4.';
-    if(section.filter!==undefined&&!['all','featured','top_pick','trending'].includes(String(section.filter)))return 'A Skin Studio product filter is invalid.';
-  }
+  const homeError=checkSections(sections,'Skin Studio');
+  if(homeError)return homeError;
   if(!sections.some(section=>section.visible!==false&&(section.type==='product-grid'||section.type==='featured-products')))return 'Skin Studio needs at least one visible product grid.';
+  if(value.pages!==undefined&&!Array.isArray(value.pages))return 'Skin Studio pages must be an array.';
+  const pages=Array.isArray(value.pages)?value.pages:[];
+  if(pages.length>30)return 'Skin Studio supports up to 30 custom pages.';
+  const slugs=new Set(['home','shop','saved','journal']);
+  for(const page of pages){
+    if(!page||typeof page!=='object'||Array.isArray(page))return 'Every custom page must be an object.';
+    const slug=String(page.slug||'');
+    if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)||slug.length>80)return 'Every custom page needs a valid URL slug.';
+    if(slugs.has(slug))return 'A custom page uses a reserved or duplicate URL slug.';
+    slugs.add(slug);
+    if(String(page.title||'').length>120)return 'Custom page titles are limited to 120 characters.';
+    if(String(page.description||'').length>1200)return 'Custom page descriptions are limited to 1200 characters.';
+    const pageError=checkSections(page.sections||[],'Custom page');
+    if(pageError)return pageError;
+  }
+  if(value.customCategories!==undefined&&!Array.isArray(value.customCategories))return 'Skin Studio categories must be an array.';
+  const cats=Array.isArray(value.customCategories)?value.customCategories:[];
+  if(cats.length>60)return 'Skin Studio supports up to 60 custom categories.';
+  const categorySlugs=new Set();
+  for(const category of cats){
+    if(!category||typeof category!=='object'||Array.isArray(category))return 'Every custom category must be an object.';
+    const slug=String(category.slug||'');
+    if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)||slug.length>80)return 'Every custom category needs a valid slug.';
+    if(categorySlugs.has(slug))return 'Custom category slugs must be unique.';
+    categorySlugs.add(slug);
+    if(String(category.name||'').length>100)return 'Custom category names are limited to 100 characters.';
+    if(String(category.description||'').length>1000)return 'Custom category descriptions are limited to 1000 characters.';
+    if(category.image){try{if(new URL(category.image).protocol!=='https:')return 'Custom category images must use HTTPS.';}catch{return 'Custom category image URL is invalid.';}}
+  }
+  if(value.productCategoryMap!==undefined&&(!value.productCategoryMap||typeof value.productCategoryMap!=='object'||Array.isArray(value.productCategoryMap)))return 'Product category mapping must be an object.';
+  if(value.productCategoryMap&&Object.keys(value.productCategoryMap).length>500)return 'Skin Studio can map up to 500 products to custom categories.';
+  if(value.productCategoryMap&&Object.entries(value.productCategoryMap).some(([id,slug])=>String(id).length>100||String(slug).length>100))return 'A product category mapping is too long.';
   return null;
 }
 function validateProduct(product){
