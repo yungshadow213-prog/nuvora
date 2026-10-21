@@ -1923,10 +1923,10 @@ function renderSkinLibrary(){
  }
  if(skinStudioTab==='categories'){
   const defaults=skinDefaultCategories(),custom=skinBuilderConfig.customCategories||[];
-  root.innerHTML='<button type="button" class="studio-outline-add" onclick="openSkinAdd(\\'category\\')">＋ Add a category</button><p class="studio-inline-help">Existing storefront categories keep their established card style. Create custom categories and assign products in the inspector.</p>'+
-   '<div class="studio-divider-label">Existing storefront categories</div>'+defaults.map(cat=>'<div class="studio-category-row"><div><b>'+esc(cat.name)+'</b><small>/shop?category='+esc(cat.name)+'</small></div><button type="button" class="btn" onclick="selectSkinItem(\\'default-category\\','+JSON.stringify(String(cat.slug))+')">View</button></div>').join('')+
+  root.innerHTML='<button type="button" class="studio-outline-add" onclick="openSkinAdd(\'category\')">＋ Add a category</button><p class="studio-inline-help">Existing storefront categories keep their established card style. Create custom categories and assign products in the inspector.</p>'+
+   '<div class="studio-divider-label">Existing storefront categories</div>'+defaults.map(cat=>'<div class="studio-category-row"><div><b>'+esc(cat.name)+'</b><small>/shop?category='+esc(cat.name)+'</small></div><button type="button" class="btn" onclick="selectSkinItem(\'default-category\','+JSON.stringify(String(cat.slug))+')">View</button></div>').join('')+
    '<div class="studio-divider-label">Custom categories</div>'+
-   (custom.length?custom.map(cat=>'<div class="studio-category-row"><div><b>'+esc(cat.name)+'</b><small>/shop?category='+esc(cat.name)+' · '+esc(cat.slug)+'</small></div><button type="button" class="btn" onclick="selectSkinItem(\\'category\\','+JSON.stringify(String(cat.slug))+')">Edit</button></div>').join(''):'<div class="studio-library-empty">No custom categories yet.</div>');
+   (custom.length?custom.map(cat=>'<div class="studio-category-row"><div><b>'+esc(cat.name)+'</b><small>/shop?category='+esc(cat.name)+' · '+esc(cat.slug)+'</small></div><button type="button" class="btn" onclick="selectSkinItem(\'category\','+JSON.stringify(String(cat.slug))+')">Edit</button></div>').join(''):'<div class="studio-library-empty">No custom categories yet.</div>');
  }
  }
 }
@@ -1962,12 +1962,12 @@ function renderSkinSelectedInspector(){
   if(sec.type==='product-grid'||sec.type==='featured-products'){
    const activeIds=new Set((sec.product_ids||[]).map(String));
    html+='<label class="studio-inspector-field"><span>Product filter</span><select onchange="updateSkinSection('+index+',\'filter\',this.value)">'+[['all','All eligible skincare products'],['featured','Featured picks'],['top_pick','Top picks'],['trending','Trending picks']].map(([v,l])=>'<option value="'+v+'" '+(sec.filter===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
-   html+='<label class="studio-inspector-field"><span>Category filter</span><select onchange="updateSkinSection('+index+',\\'category_id\\',this.value)"><option value="">All categories</option>'+skinStoreCategoryOptions().map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
+   html+='<label class="studio-inspector-field"><span>Category filter</span><select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+skinStoreCategoryOptions().map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
    html+='<label class="studio-inspector-field"><span>Columns</span><select onchange="updateSkinSection('+index+',\'columns\',Number(this.value))">'+[2,3,4].map(n=>'<option value="'+n+'" '+(Number(sec.columns||4)===n?'selected':'')+'>'+n+' columns</option>').join('')+'</select></label>';
    html+='<label class="studio-inspector-field"><span>Exact products in this section</span><select multiple size="7" onchange="updateSkinSection('+index+',\'product_ids\',Array.from(this.selectedOptions).map(o=>o.value))">'+skinProductOptions().map(p=>'<option value="'+esc(p.id)+'" '+(activeIds.has(String(p.id))?'selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select></label><p class="studio-inline-help">The order here is the display order. You can also drag cards directly in the canvas or drag a product from the left library into this grid.</p>';
   }
   if(sec.type==='category-grid'){
-   html+='<label class="studio-inspector-field"><span>Show category</span><select onchange="updateSkinSection('+index+',\\'category_id\\',this.value)"><option value="">All categories</option>'+skinStoreCategoryOptions().map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
+   html+='<label class="studio-inspector-field"><span>Show category</span><select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+skinStoreCategoryOptions().map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
   }
   }
   html+='<div class="studio-inspector-actions"><button class="btn" type="button" onclick="duplicateSkinSection('+index+')">Duplicate</button><button class="btn danger" type="button" onclick="removeSkinSection('+index+')">Delete section</button></div>';
@@ -2004,7 +2004,7 @@ function renderSkinSelectedInspector(){
   const cat=skinDefaultCategories().find(x=>String(x.slug)===String(selection.id));
   if(!cat){setHead('Storefront category','Choose a category from the left panel.');root.innerHTML='<div class="studio-library-empty">Select an existing category.</div>';return;}
   setHead('Storefront category',String(cat.name));
-  root.innerHTML='<p class="studio-inline-help">This existing Nuvora Skin category keeps the established storefront card style. Select a product in the Products tab to assign it here, or filter a product section by this category.</p><div class="studio-inspector-actions"><button class="btn" type="button" onclick="switchSkinStudioTab(\\'products\\')">Open product library</button><button class="btn" type="button" onclick="openSkinAdd(\\'category\\')">Add a custom category</button></div>';
+  root.innerHTML='<p class="studio-inline-help">This existing Nuvora Skin category keeps the established storefront card style. Select a product in the Products tab to assign it here, or filter a product section by this category.</p><div class="studio-inspector-actions"><button class="btn" type="button" onclick="switchSkinStudioTab(\'products\')">Open product library</button><button class="btn" type="button" onclick="openSkinAdd(\'category\')">Add a custom category</button></div>';
   return;
  }
  if(selection.type==='category'){
