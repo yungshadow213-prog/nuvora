@@ -1929,7 +1929,6 @@ function renderSkinLibrary(){
    '<div class="studio-divider-label">Custom categories</div>'+
    (custom.length?custom.map(cat=>'<div class="studio-category-row"><div><b>'+esc(cat.name)+'</b><small>/shop?category='+esc(cat.name)+' · '+esc(cat.slug)+'</small></div><button type="button" class="btn" onclick="selectSkinItem(\'category\','+JSON.stringify(String(cat.slug))+')">Edit</button></div>').join(''):'<div class="studio-library-empty">No custom categories yet.</div>');
  }
- }
 }
 function renderSkinBuilderSections(){
  const root=document.getElementById('skinBuilderSections');if(!root||!skinBuilderConfig)return;
