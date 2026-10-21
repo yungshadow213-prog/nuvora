@@ -212,29 +212,156 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
 .skin-guide-vis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:6px}.skin-guide-vis label{display:flex;align-items:center;gap:7px;border:1px solid #e0e7de;background:#fbfcfa;border-radius:9px;padding:9px;font-size:10px!important;color:#4d5f51!important}.skin-guide-vis input{width:auto;accent-color:#316342}
 @media(max-width:600px){.skin-guide-vis{grid-template-columns:1fr}}
 </style><style id="nuvora-skin-studio-fullpage-css">
-body.skin-studio-fullpage{background:#f5f7f2;color:#233328;overflow-x:hidden}
-body.skin-studio-fullpage .app{display:block;min-height:100vh}
+body.skin-studio-fullpage{background:#f2f4f0!important;color:#1d2b21!important;overflow:hidden!important}
+body.skin-studio-fullpage .app{display:block!important;height:100vh;min-height:0}
 body.skin-studio-fullpage .side,body.skin-studio-fullpage .top{display:none!important}
-body.skin-studio-fullpage .main{width:100%;max-width:none;padding:16px 20px 40px}
-body.skin-studio-fullpage #skin-care.view{display:block!important}
-body.skin-studio-fullpage #skin-care .skin-studio-hero,body.skin-studio-fullpage #skin-care .skin-studio-stats,body.skin-studio-fullpage #skin-care .skin-studio-section-head,body.skin-studio-fullpage #skin-care .skin-studio-tools{display:none!important}
-body.skin-studio-fullpage .skin-site-builder{margin:0 0 24px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
-body.skin-studio-fullpage .skin-builder-head{position:sticky;top:0;z-index:100;background:#f5f7f2;padding:10px 0 13px;margin-bottom:12px;border-bottom:1px solid #dfe6db;align-items:center}
-body.skin-studio-fullpage .skin-builder-head h2{font-size:25px!important;color:#213628}
-body.skin-studio-fullpage .skin-builder-head p{max-width:520px}
-body.skin-studio-fullpage .skin-builder-layout{grid-template-columns:minmax(245px,.82fr) minmax(330px,1.1fr) minmax(275px,.88fr);gap:12px;align-items:start}
-body.skin-studio-fullpage .skin-builder-controls{max-height:calc(100vh - 155px);overflow:auto;padding:0 3px 12px 0;scrollbar-width:thin}
-body.skin-studio-fullpage .skin-builder-preview-panel{position:sticky;top:112px;min-width:0;border:1px solid #dce4d8;border-radius:15px;background:#fff;overflow:hidden;box-shadow:0 8px 28px #2333280a}
-body.skin-studio-fullpage .skin-preview-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border-bottom:1px solid #e8ede5}
-body.skin-studio-fullpage .skin-preview-head b{display:block;font-size:12px;color:#2b4030}
-body.skin-studio-fullpage .skin-preview-head small{display:block;margin-top:4px;max-width:270px;font-size:10px;line-height:1.4;color:#778477}
-body.skin-studio-fullpage .skin-preview-frame-wrap{height:calc(100vh - 205px);min-height:540px;background:#f7f7f3}
-body.skin-studio-fullpage #skinStudioPreview{display:block;width:100%;height:100%;border:0;background:white}
-body.skin-studio-fullpage .skin-builder-sections{position:sticky;top:112px;max-height:calc(100vh - 155px);overflow:auto;padding:12px;scrollbar-width:thin}
-body.skin-studio-fullpage .skin-studio-catalog{margin-top:26px}
-body.skin-studio-fullpage .skin-main-admin-link{white-space:nowrap;text-decoration:none}
-@media(max-width:1180px){body.skin-studio-fullpage .skin-builder-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}body.skin-studio-fullpage .skin-builder-preview-panel{grid-column:1/-1;grid-row:1;position:relative;top:auto}body.skin-studio-fullpage .skin-preview-frame-wrap{height:620px}body.skin-studio-fullpage .skin-builder-controls,body.skin-studio-fullpage .skin-builder-sections{position:relative;top:auto;max-height:none}}
-@media(max-width:720px){body.skin-studio-fullpage .main{padding:10px 10px 28px}body.skin-studio-fullpage .skin-builder-head{position:relative;align-items:flex-start;flex-direction:column}body.skin-studio-fullpage .skin-builder-actions{width:100%}body.skin-studio-fullpage .skin-builder-actions>*{flex:1 1 auto}body.skin-studio-fullpage .skin-builder-layout{grid-template-columns:minmax(0,1fr)}body.skin-studio-fullpage .skin-builder-preview-panel{grid-column:auto;grid-row:auto}body.skin-studio-fullpage .skin-preview-frame-wrap{height:540px;min-height:0}body.skin-studio-fullpage .skin-builder-sections{position:relative;max-height:none}body.skin-studio-fullpage .skin-builder-fields{grid-template-columns:minmax(0,1fr)}body.skin-studio-fullpage .skin-builder-fields .field.full{grid-column:auto}}
+body.skin-studio-fullpage .main{width:100%;max-width:none;height:100vh;min-height:0;overflow:hidden;padding:0!important;background:#f2f4f0!important}
+body.skin-studio-fullpage #skin-care.view{display:flex!important;flex-direction:column;width:100%;height:100vh;min-height:0;padding:0!important;overflow:hidden}
+body.skin-studio-fullpage #skin-care .skin-studio-hero,body.skin-studio-fullpage #skin-care .skin-studio-stats,body.skin-studio-fullpage #skin-care .skin-studio-section-head,body.skin-studio-fullpage #skin-care .skin-studio-tools,body.skin-studio-fullpage #skin-care .skin-studio-catalog{display:none!important}
+body.skin-studio-fullpage .skin-site-builder{display:flex!important;flex-direction:column;flex:1;min-height:0;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:#f3f5f1!important;box-shadow:none!important}
+body.skin-studio-fullpage .studio-toolbar{position:relative;z-index:110;display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:76px;padding:12px 22px;border-bottom:1px solid #dfe5dc;background:#fff}
+body.skin-studio-fullpage .studio-brandline{display:flex;align-items:center;gap:13px;min-width:0}
+body.skin-studio-fullpage .studio-back{display:grid;place-items:center;width:38px;height:38px;border:1px solid #e1e7df;border-radius:12px;background:#fafbf9;color:#314333;text-decoration:none;font-size:20px}
+body.skin-studio-fullpage .studio-overline{color:#8d9a8e;font-size:9px;font-weight:850;letter-spacing:.15em}
+body.skin-studio-fullpage .studio-page-line{margin-top:5px;font-size:17px;font-weight:750;letter-spacing:-.035em;color:#213528}
+body.skin-studio-fullpage .studio-page-line span{padding:0 5px;color:#a9b2a8}
+body.skin-studio-fullpage .studio-page-line strong{color:#68806a;font-weight:650}
+body.skin-studio-fullpage .studio-toolbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-shrink:0}
+body.skin-studio-fullpage .studio-toolbar-actions .btn{min-height:38px;padding:9px 13px!important;font-size:11px!important}
+body.skin-studio-fullpage .studio-save-state{display:flex;align-items:center;gap:7px;margin-right:4px;color:#68766a;font-size:10px;font-weight:700;white-space:nowrap}
+body.skin-studio-fullpage .studio-save-dot{width:7px;height:7px;border-radius:50%;background:#9aaa94;box-shadow:0 0 0 3px #eef3eb}
+body.skin-studio-fullpage .studio-save-state[data-status="dirty"] .studio-save-dot{background:#c77d5b;box-shadow:0 0 0 3px #fbefe9}
+body.skin-studio-fullpage .studio-status{flex-shrink:0;margin:8px 12px 0!important;padding:7px 10px!important;min-height:30px;border-radius:10px!important;font-size:10px!important}
+body.skin-studio-fullpage .studio-status[data-status="error"]{background:#fff0ef;border-color:#f4cbc6;color:#a33d31}
+body.skin-studio-fullpage .studio-status[data-status="success"]{background:#edf6ed;border-color:#d8e9d6;color:#366641}
+body.skin-studio-fullpage .studio-layout{display:grid!important;grid-template-columns:258px minmax(360px,1fr) 318px;gap:0!important;align-items:stretch!important;flex:1;min-height:0;overflow:hidden;padding-top:9px}
+body.skin-studio-fullpage .studio-left-panel{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;border-right:1px solid #dde4db;background:#fff}
+body.skin-studio-fullpage .studio-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:15px 13px 12px}
+body.skin-studio-fullpage .studio-panel-head h3,body.skin-studio-fullpage .studio-inspector-heading h3{margin:5px 0 0;font-size:16px;letter-spacing:-.04em;color:#26392a}
+body.skin-studio-fullpage .studio-add-button{padding:8px 10px!important;font-size:11px!important}
+body.skin-studio-fullpage .studio-add-menu{position:relative;z-index:20;display:grid;gap:4px;margin:0 10px 10px;padding:6px;border:1px solid #dfe7dc;border-radius:14px;background:#fbfcfa;box-shadow:0 8px 22px #253c2b0d}
+body.skin-studio-fullpage .studio-add-menu[hidden],body.skin-studio-fullpage .studio-quick-add[hidden],body.skin-studio-fullpage .studio-library-items[hidden],body.skin-studio-fullpage .studio-outline-list[hidden]{display:none!important}
+body.skin-studio-fullpage .studio-add-menu button{display:flex;align-items:center;gap:10px;width:100%;padding:9px;border:0;border-radius:9px;background:transparent;color:#314435;text-align:left;cursor:pointer}
+body.skin-studio-fullpage .studio-add-menu button:hover{background:#edf4eb}
+body.skin-studio-fullpage .studio-add-menu button>span:first-child{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#edf3ea;color:#527052;font-size:16px}
+body.skin-studio-fullpage .studio-add-menu b,body.skin-studio-fullpage .studio-add-menu small{display:block}
+body.skin-studio-fullpage .studio-add-menu b{font-size:11px}
+body.skin-studio-fullpage .studio-add-menu small{margin-top:2px;color:#859184;font-size:9px;line-height:1.35}
+body.skin-studio-fullpage .studio-library-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;padding:0 9px 10px;border-bottom:1px solid #eef1ec}
+body.skin-studio-fullpage .studio-library-tabs button{padding:8px 2px;border:0;border-radius:8px;background:transparent;color:#859084;font-size:10px;font-weight:700;cursor:pointer}
+body.skin-studio-fullpage .studio-library-tabs button.active{background:#edf4eb;color:#315739}
+body.skin-studio-fullpage .studio-quick-add{padding:11px;border-bottom:1px solid #e9eee6;background:#f8faf6}
+body.skin-studio-fullpage .studio-quick-add h4{margin:0 0 8px;font-size:12px;color:#2d4131}
+body.skin-studio-fullpage .studio-quick-add p{margin:0 0 9px;font-size:10px;color:#7f8b80;line-height:1.45}
+body.skin-studio-fullpage .studio-quick-add label{display:grid;gap:4px;margin-top:8px;color:#718073;font-size:10px;font-weight:700}
+body.skin-studio-fullpage .studio-quick-add input,body.skin-studio-fullpage .studio-quick-add textarea,body.skin-studio-fullpage .studio-quick-add select{width:100%;min-width:0;border:1px solid #dbe4d7;border-radius:8px;background:#fff;color:#243628;padding:8px 9px;font-size:11px}
+body.skin-studio-fullpage .studio-quick-actions{display:flex;gap:6px;margin-top:10px}
+body.skin-studio-fullpage .studio-quick-actions .btn{flex:1;padding:8px!important;font-size:10px!important}
+body.skin-studio-fullpage .studio-library-items,body.skin-studio-fullpage .studio-outline-list{flex:1;min-height:0;overflow:auto;padding:9px;scrollbar-width:thin}
+body.skin-studio-fullpage .studio-left-foot{display:grid;gap:3px;padding:10px 12px;border-top:1px solid #edf0eb;color:#929d91;font-size:9px;line-height:1.35}
+body.skin-studio-fullpage .studio-left-foot span:first-child{color:#617662;font-weight:650}
+body.skin-studio-fullpage .skin-builder-preview-panel{display:flex;flex-direction:column;position:relative;top:auto;min-width:0;min-height:0;overflow:hidden;border:0!important;border-right:1px solid #dfe5dc;border-radius:0!important;background:#eff2ed!important;box-shadow:none!important}
+body.skin-studio-fullpage .studio-canvas-head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:57px;padding:9px 13px;border-bottom:1px solid #dfe5dc;background:#fff}
+body.skin-studio-fullpage .studio-canvas-head b{display:block;font-size:11px;color:#344737}
+body.skin-studio-fullpage .studio-canvas-head small{display:block;max-width:560px;margin-top:3px;color:#8a9689;font-size:9px;line-height:1.35}
+body.skin-studio-fullpage .studio-device-controls{display:flex;align-items:center;gap:3px;padding:3px;border:1px solid #e2e7df;border-radius:9px;background:#f8faf7;flex-shrink:0}
+body.skin-studio-fullpage .studio-device-controls button{padding:6px 8px;border:0;border-radius:6px;background:transparent;color:#7b887b;font-size:9px;font-weight:750;cursor:pointer}
+body.skin-studio-fullpage .studio-device-controls button.active{background:#e7efe5;color:#315c39}
+body.skin-studio-fullpage .studio-device-controls .studio-refresh-button{font-size:14px;padding:4px 7px}
+body.skin-studio-fullpage .studio-canvas-viewport{display:flex;justify-content:center;align-items:stretch;flex:1;min-height:0;overflow:auto;padding:10px;background:#edf0eb}
+body.skin-studio-fullpage .studio-canvas-inner{width:100%;min-width:0;height:100%;min-height:0;overflow:hidden;border:1px solid #dbe2d8;border-radius:12px;background:#fff;box-shadow:0 5px 22px #263c2a0b;transition:width .18s ease}
+body.skin-studio-fullpage .studio-canvas-viewport[data-device="tablet"] .studio-canvas-inner{width:768px;max-width:100%;flex:0 0 768px}
+body.skin-studio-fullpage .studio-canvas-viewport[data-device="mobile"] .studio-canvas-inner{width:390px;max-width:100%;flex:0 0 390px}
+body.skin-studio-fullpage #skinStudioPreview{display:block;width:100%;height:100%;min-height:0;border:0;background:#fff}
+body.skin-studio-fullpage .studio-right-panel{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:auto;background:#fff;scrollbar-width:thin}
+body.skin-studio-fullpage .studio-inspector-heading{padding:17px 14px 12px;border-bottom:1px solid #edf0eb}
+body.skin-studio-fullpage .studio-inspector-heading p{margin:5px 0 0;color:#8a968a;font-size:10px;line-height:1.4}
+body.skin-studio-fullpage .studio-selected-inspector{padding:12px;overflow:visible}
+body.skin-studio-fullpage .studio-empty-inspector{display:grid;justify-items:start;padding:12px 4px;color:#7d8d7d}
+body.skin-studio-fullpage .studio-empty-inspector>span{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:#eef4eb;color:#517251;font-size:20px}
+body.skin-studio-fullpage .studio-empty-inspector b{margin-top:13px;color:#405443;font-size:12px}
+body.skin-studio-fullpage .studio-empty-inspector p{margin:6px 0;font-size:10px;line-height:1.5;color:#8a978a}
+body.skin-studio-fullpage .studio-inspector-field{display:grid;gap:5px;margin-bottom:12px}
+body.skin-studio-fullpage .studio-inspector-field>span,body.skin-studio-fullpage .studio-inspector-field>label{color:#7a887a;font-size:10px;font-weight:750}
+body.skin-studio-fullpage .studio-inspector-field input,body.skin-studio-fullpage .studio-inspector-field textarea,body.skin-studio-fullpage .studio-inspector-field select{width:100%;min-width:0;border:1px solid #dfe6dc;border-radius:9px;background:#fff;color:#243328;padding:9px 10px;font-size:11px}
+body.skin-studio-fullpage .studio-inspector-field textarea{min-height:76px;resize:vertical}
+body.skin-studio-fullpage .studio-inspector-check{display:flex;align-items:center;gap:8px;margin:10px 0;color:#536755;font-size:11px}
+body.skin-studio-fullpage .studio-inspector-check input{width:auto}
+body.skin-studio-fullpage .studio-inspector-actions{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+body.skin-studio-fullpage .studio-inspector-actions .btn{padding:8px 10px!important;font-size:10px!important}
+body.skin-studio-fullpage .studio-site-settings{margin:0 10px 14px;border:1px solid #e2e8df;border-radius:12px;background:#fafbf9}
+body.skin-studio-fullpage .studio-site-settings summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;cursor:pointer;list-style:none}
+body.skin-studio-fullpage .studio-site-settings summary::-webkit-details-marker{display:none}
+body.skin-studio-fullpage .studio-site-settings summary b,body.skin-studio-fullpage .studio-site-settings summary small{display:block}
+body.skin-studio-fullpage .studio-site-settings summary b{font-size:11px;color:#384a3a}
+body.skin-studio-fullpage .studio-site-settings summary small{margin-top:3px;font-size:9px;color:#8a9788}
+body.skin-studio-fullpage .studio-chevron{color:#7e8b7d}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-controls{display:grid;gap:10px;padding:0 9px 10px;max-height:none;overflow:visible}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-group{border:1px solid #e4eae1;border-radius:10px;background:#fff;padding:10px}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-group-heading{gap:8px;margin-bottom:9px}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-group-heading>span{width:22px;height:22px;font-size:9px}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-group-heading h3{font-size:11px;margin:0}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-group-heading p{font-size:9px;margin:3px 0 0}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-fields{grid-template-columns:minmax(0,1fr);gap:9px}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-fields .field.full{grid-column:auto}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-fields .field{gap:4px}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-fields .field label{font-size:10px}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-fields input,body.skin-studio-fullpage .studio-site-settings .skin-builder-fields select,body.skin-studio-fullpage .studio-site-settings .skin-builder-fields textarea{min-width:0;padding:8px 9px;border-radius:8px;font-size:10px}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-fields textarea{min-height:65px}
+body.skin-studio-fullpage .studio-site-settings .skin-guide-vis{display:grid;grid-template-columns:1fr;gap:7px}
+body.skin-studio-fullpage .studio-site-settings .skin-guide-vis label{font-size:10px}
+body.skin-studio-fullpage .studio-status[hidden]{display:none!important}
+body.skin-studio-fullpage .studio-library-item{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid #e3e9e1;border-radius:10px;background:#fff;margin-bottom:7px;cursor:pointer}
+body.skin-studio-fullpage .studio-library-item.is-selected{border-color:#9ab69a;background:#f4f8f2;box-shadow:0 0 0 2px #eaf2e8}
+body.skin-studio-fullpage .studio-library-item img{width:42px;height:47px;flex:0 0 42px;object-fit:cover;border-radius:7px;background:#edf0ea}
+body.skin-studio-fullpage .studio-library-item-copy{min-width:0;flex:1}
+body.skin-studio-fullpage .studio-library-item-copy b{display:block;font-size:10px;line-height:1.35;color:#364739;overflow-wrap:anywhere}
+body.skin-studio-fullpage .studio-library-item-copy small{display:block;margin-top:3px;color:#909b90;font-size:9px;line-height:1.35}
+body.skin-studio-fullpage .studio-library-item-actions{display:flex;gap:3px;flex-shrink:0}
+body.skin-studio-fullpage .studio-library-item-actions button{border:1px solid #e1e7df;border-radius:7px;background:#fff;color:#738172;padding:5px;font-size:9px;cursor:pointer}
+body.skin-studio-fullpage .studio-library-item-actions button:hover{background:#eff5ec;color:#35553a}
+body.skin-studio-fullpage .studio-section-outline{display:flex;align-items:flex-start;gap:8px;padding:10px 8px;margin-bottom:5px;border:1px solid transparent;border-radius:10px;background:transparent;cursor:pointer}
+body.skin-studio-fullpage .studio-section-outline.is-selected{border-color:#dce8d9;background:#edf4eb}
+body.skin-studio-fullpage .studio-section-outline[draggable="true"]{cursor:grab}
+body.skin-studio-fullpage .studio-outline-grip{color:#8e9b8d;font-size:14px;line-height:1.2}
+body.skin-studio-fullpage .studio-section-outline-copy{flex:1;min-width:0}
+body.skin-studio-fullpage .studio-section-outline-copy b{display:block;font-size:10px;color:#394c3a;overflow-wrap:anywhere}
+body.skin-studio-fullpage .studio-section-outline-copy small{display:block;margin-top:4px;color:#8a9688;font-size:9px}
+body.skin-studio-fullpage .studio-section-outline-actions{display:flex;gap:3px}
+body.skin-studio-fullpage .studio-section-outline-actions button{border:0;background:transparent;color:#738570;padding:2px 4px;font-size:11px;cursor:pointer}
+body.skin-studio-fullpage .studio-section-outline-actions button:disabled{opacity:.3;cursor:default}
+body.skin-studio-fullpage .studio-category-row{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center;padding:9px;margin-bottom:7px;border:1px solid #e4e9e2;border-radius:10px;background:#fff}
+body.skin-studio-fullpage .studio-category-row b{font-size:10px;color:#3c4d3c}
+body.skin-studio-fullpage .studio-category-row small{display:block;margin-top:3px;color:#919b8e;font-size:9px}
+body.skin-studio-fullpage .studio-page-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px;margin-bottom:7px;border:1px solid #e2e8df;border-radius:10px;background:#fff}
+body.skin-studio-fullpage .studio-page-row.active{background:#edf4eb;border-color:#d1e3cc}
+body.skin-studio-fullpage .studio-page-row button{border:0;background:transparent;color:#3d5a40;text-align:left;cursor:pointer}
+body.skin-studio-fullpage .studio-page-row b{display:block;font-size:10px}
+body.skin-studio-fullpage .studio-page-row small{display:block;margin-top:3px;color:#8b988b;font-size:9px}
+body.skin-studio-fullpage .studio-divider-label{margin:13px 0 6px;padding-top:12px;border-top:1px solid #edf0eb;color:#8a9789;font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:800}
+body.skin-studio-fullpage .studio-inline-help{font-size:9px;line-height:1.45;color:#8a9689;margin:7px 0}
+body.skin-studio-fullpage .studio-library-empty{padding:19px 10px;text-align:center;color:#8b978a;font-size:10px;line-height:1.5;border:1px dashed #dfe6dc;border-radius:10px;background:#fbfcfa}
+body.skin-studio-fullpage .studio-outline-add{width:100%;margin-top:5px;padding:9px;border:1px dashed #cbdac8;border-radius:9px;background:#fafcf9;color:#577258;font-size:10px;font-weight:750;cursor:pointer}
+body.skin-studio-fullpage .skin-section-card-actions .is-danger{color:#ac4b42}
+body.skin-studio-fullpage .studio-add-menu[hidden]{display:none!important}
+@media(max-width:1180px){
+ body.skin-studio-fullpage .studio-layout{grid-template-columns:235px minmax(310px,1fr)}
+ body.skin-studio-fullpage .studio-right-panel{grid-column:1/-1;max-height:420px;border-top:1px solid #dfe5dc}
+ body.skin-studio-fullpage .studio-canvas-panel{grid-column:2;grid-row:1/3}
+}
+@media(max-width:760px){
+ body.skin-studio-fullpage .app,body.skin-studio-fullpage .main,body.skin-studio-fullpage #skin-care.view{height:auto;min-height:100vh;overflow:visible}
+ body.skin-studio-fullpage .main{padding:0!important}
+ body.skin-studio-fullpage .studio-toolbar{align-items:flex-start;flex-direction:column;padding:12px;gap:10px}
+ body.skin-studio-fullpage .studio-toolbar-actions{width:100%;justify-content:space-between;flex-wrap:wrap}
+ body.skin-studio-fullpage .studio-save-state{flex:1 1 100%;margin-bottom:2px}
+ body.skin-studio-fullpage .studio-layout{grid-template-columns:minmax(0,1fr);overflow:visible}
+ body.skin-studio-fullpage .studio-left-panel{min-height:480px;max-height:620px;border-right:0;border-bottom:1px solid #dce4db}
+ body.skin-studio-fullpage .studio-canvas-panel{grid-column:auto;grid-row:auto;min-height:650px;border-right:0;border-bottom:1px solid #dce4db}
+ body.skin-studio-fullpage .studio-canvas-viewport{min-height:580px}
+ body.skin-studio-fullpage .studio-right-panel{grid-column:auto;max-height:none;border-top:0}
+ body.skin-studio-fullpage .studio-device-controls button{font-size:8px;padding:6px}
+}
 </style>
 </head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
@@ -484,13 +611,58 @@ body.skin-studio-fullpage .skin-main-admin-link{white-space:nowrap;text-decorati
   </div>
 
 
-  <div class="panel skin-site-builder" id="skinSiteBuilder">
-    <div class="skin-builder-head">
-      <div><span class="section-kicker">Live storefront controls</span><h2>Visual site builder</h2><p class="muted">Edit the public Nuvora Skin page. Changes save to the database and are read by the storefront.</p></div>
-      <div class="skin-builder-actions"><a class="btn skin-main-admin-link" href="/admin">← Main admin</a><button class="btn" type="button" onclick="previewSkinSite()">Open preview ↗</button><button class="btn primary" type="button" onclick="saveSkinSiteConfig()">Save & publish site changes</button></div>
+  <div class="skin-site-builder studio-shell" id="skinSiteBuilder">
+  <header class="studio-toolbar">
+    <div class="studio-brandline">
+      <a class="studio-back" href="/admin" aria-label="Back to Nuvora admin">←</a>
+      <div><span class="studio-overline">NUVORA ADMIN / WEBSITE BUILDER</span><div class="studio-page-line">Nuvora Skin <span>/</span> <strong id="skinStudioPageTitle">Home page</strong></div></div>
     </div>
-    <div id="skinBuilderStatus" class="notice" role="status" aria-live="polite">Loading the saved storefront configuration…</div>
-    <div class="skin-builder-layout">
+    <div class="studio-toolbar-actions">
+      <div class="studio-save-state"><span class="studio-save-dot"></span><span id="skinStudioSaveLabel">Saved version loaded</span></div>
+      <button class="btn" type="button" onclick="previewSkinSite()">View live ↗</button>
+      <button class="btn primary studio-publish-button" type="button" onclick="saveSkinSiteConfig()">Publish changes</button>
+    </div>
+  </header>
+  <div id="skinBuilderStatus" class="studio-status notice" role="status" aria-live="polite">Loading your saved Skin Care site…</div>
+  <div class="skin-builder-layout studio-layout">
+    <aside class="studio-left-panel">
+      <div class="studio-panel-head"><div><span class="section-kicker">Workspace</span><h3>Content library</h3></div><button class="btn primary studio-add-button" type="button" onclick="toggleSkinAddMenu()">+ Add</button></div>
+      <div id="skinStudioAddMenu" class="studio-add-menu" hidden>
+        <button type="button" onclick="openSkinAdd('product')"><span>＋</span><span><b>Product</b><small>Import an Amazon link or add a product</small></span></button>
+        <button type="button" onclick="openSkinAdd('page')"><span>▤</span><span><b>Page</b><small>Create a new storefront page</small></span></button>
+        <button type="button" onclick="openSkinAdd('category')"><span>◫</span><span><b>Category</b><small>Group and organize skincare picks</small></span></button>
+        <button type="button" onclick="openSkinAdd('section')"><span>▦</span><span><b>Section</b><small>Add a block to the current page</small></span></button>
+      </div>
+      <div class="studio-library-tabs" role="tablist" aria-label="Skin Studio content">
+        <button id="skinTabOutline" class="active" type="button" onclick="switchSkinStudioTab('outline')">Outline</button>
+        <button id="skinTabProducts" type="button" onclick="switchSkinStudioTab('products')">Products</button>
+        <button id="skinTabPages" type="button" onclick="switchSkinStudioTab('pages')">Pages</button>
+        <button id="skinTabCategories" type="button" onclick="switchSkinStudioTab('categories')">Categories</button>
+      </div>
+      <div id="skinQuickAddPanel" class="studio-quick-add" hidden></div>
+      <div id="skinLibraryItems" class="studio-library-items" hidden></div>
+      <div id="skinBuilderSections" class="skin-builder-sections studio-outline-list" aria-label="Page section outline"></div>
+      <div class="studio-left-foot"><span>Drag products onto a product section.</span><span>Changes stay in draft until published.</span></div>
+    </aside>
+    <section class="skin-builder-preview-panel studio-canvas-panel" aria-label="Live storefront canvas">
+      <div class="skin-preview-head studio-canvas-head">
+        <div><b>Storefront canvas</b><small>Drag sections to reorder them. Drag products into a product grid or onto another product to rearrange.</small></div>
+        <div class="studio-device-controls" aria-label="Preview size">
+          <button type="button" class="active" onclick="setSkinPreviewDevice('desktop',this)">Desktop</button>
+          <button type="button" onclick="setSkinPreviewDevice('tablet',this)">Tablet</button>
+          <button type="button" onclick="setSkinPreviewDevice('mobile',this)">Mobile</button>
+          <button type="button" class="studio-refresh-button" onclick="refreshSkinStudioPreview()" title="Refresh draft preview">↻</button>
+        </div>
+      </div>
+      <div id="skinPreviewFrameOuter" class="studio-canvas-viewport" data-device="desktop">
+        <div class="studio-canvas-inner"><iframe id="skinStudioPreview" title="Nuvora Skin storefront — editable preview" src="https://client-store-platform.rayyung713.workers.dev/?preview=admin&studioPreview=initial"></iframe></div>
+      </div>
+    </section>
+    <aside class="studio-right-panel">
+      <div class="studio-inspector-heading"><div><span class="section-kicker">Inspector</span><h3 id="skinInspectorTitle">Select an item</h3><p id="skinInspectorSubtitle">Select a section, product, page or category to edit its details.</p></div></div>
+      <div id="skinSelectedInspector" class="studio-selected-inspector"><div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b><p>Select an item in the left panel or click a section in the storefront preview.</p></div></div>
+      <details class="studio-site-settings">
+        <summary><span><b>Site-wide settings</b><small>Brand, template and product page settings</small></span><span class="studio-chevron">⌄</span></summary>
       <div class="skin-builder-controls">
         <section class="skin-builder-group">
           <div class="skin-builder-group-heading"><span>01</span><div><h3>Brand & template</h3><p>Choose a visual direction and set the primary accent.</p></div></div>
@@ -537,19 +709,11 @@ body.skin-studio-fullpage .skin-main-admin-link{white-space:nowrap;text-decorati
           </div>
         </section>
       </div>
-      <section class="skin-builder-preview-panel" aria-label="Live storefront canvas">
-        <div class="skin-preview-head"><div><b>Live page canvas</b><small>Drag a section by its handle to change the order. Changes here update the section list.</small></div><button class="btn" type="button" onclick="refreshSkinStudioPreview()">Refresh canvas ↻</button></div>
-        <div class="skin-preview-frame-wrap"><iframe id="skinStudioPreview" title="Live Nuvora Skin storefront preview" src="https://client-store-platform.rayyung713.workers.dev/?preview=admin&studioPreview=initial"></iframe></div>
-      </section>
-      <aside class="skin-builder-sections">
-        <div class="skin-builder-group-heading"><span>04</span><div><h3>Page sections</h3><p>Drag to reorder. Add, hide, duplicate, or remove sections.</p></div></div>
-        <div id="skinBuilderSections" class="skin-builder-section-list"></div>
-        <div class="skin-builder-add"><label for="skinNewSectionType">Add a section</label><div><select id="skinNewSectionType"><option value="product-grid">Product grid</option><option value="editorial">Editorial / text</option><option value="featured-products">Featured products</option><option value="category-grid">Category browse</option><option value="journal-grid">Journal / guide cards</option></select><button class="btn" type="button" onclick="addSkinBuilderSection()">Add section</button></div></div>
-        <div class="skin-builder-info"><b>Product placement</b><p>Choose exact products per section or leave the list empty to use the section filter. Customer product cards point to the retailer and show no internal price.</p></div>
-      </aside>
-    </div>
+      </details>
+    </aside>
   </div>
-  <div class="panel catalog-panel skin-studio-catalog">
+</div>
+<div class="panel catalog-panel skin-studio-catalog">
     <div class="catalog-panel-head"><div><span class="section-kicker">Dedicated catalog</span><h2>Skin Care products</h2><p class="muted">Skincare products stay grouped separately from the main Nuvora catalog.</p></div><span id="skinProductCount" class="library-note">0 products</span></div>
     <div id="skinCategoryNotice" class="notice">Products are routed to Nuvora Skin by assigning them to the Skin Care category.</div>
     <div id="skinProductRows" class="product-library"></div>
