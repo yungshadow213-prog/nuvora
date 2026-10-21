@@ -212,35 +212,169 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
 .skin-guide-vis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:6px}.skin-guide-vis label{display:flex;align-items:center;gap:7px;border:1px solid #e0e7de;background:#fbfcfa;border-radius:9px;padding:9px;font-size:10px!important;color:#4d5f51!important}.skin-guide-vis input{width:auto;accent-color:#316342}
 @media(max-width:600px){.skin-guide-vis{grid-template-columns:1fr}}
 </style><style id="nuvora-skin-studio-fullpage-css">
-body.skin-studio-fullpage{background:#f5f7f2;color:#233328;overflow-x:hidden}
-body.skin-studio-fullpage .app{display:block;min-height:100vh}
+body.skin-studio-fullpage{background:#f2f4f0!important;color:#1d2b21!important;overflow:hidden!important}
+body.skin-studio-fullpage .app{display:block!important;height:100vh;min-height:0}
 body.skin-studio-fullpage .side,body.skin-studio-fullpage .top{display:none!important}
-body.skin-studio-fullpage .main{width:100%;max-width:none;padding:16px 20px 40px}
-body.skin-studio-fullpage #skin-care.view{display:block!important}
-body.skin-studio-fullpage #skin-care .skin-studio-hero,body.skin-studio-fullpage #skin-care .skin-studio-stats,body.skin-studio-fullpage #skin-care .skin-studio-section-head,body.skin-studio-fullpage #skin-care .skin-studio-tools{display:none!important}
-body.skin-studio-fullpage .skin-site-builder{margin:0 0 24px!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
-body.skin-studio-fullpage .skin-builder-head{position:sticky;top:0;z-index:100;background:#f5f7f2;padding:10px 0 13px;margin-bottom:12px;border-bottom:1px solid #dfe6db;align-items:center}
-body.skin-studio-fullpage .skin-builder-head h2{font-size:25px!important;color:#213628}
-body.skin-studio-fullpage .skin-builder-head p{max-width:520px}
-body.skin-studio-fullpage .skin-builder-layout{grid-template-columns:minmax(245px,.82fr) minmax(330px,1.1fr) minmax(275px,.88fr);gap:12px;align-items:start}
-body.skin-studio-fullpage .skin-builder-controls{max-height:calc(100vh - 155px);overflow:auto;padding:0 3px 12px 0;scrollbar-width:thin}
-body.skin-studio-fullpage .skin-builder-preview-panel{position:sticky;top:112px;min-width:0;border:1px solid #dce4d8;border-radius:15px;background:#fff;overflow:hidden;box-shadow:0 8px 28px #2333280a}
-body.skin-studio-fullpage .skin-preview-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;border-bottom:1px solid #e8ede5}
-body.skin-studio-fullpage .skin-preview-head b{display:block;font-size:12px;color:#2b4030}
-body.skin-studio-fullpage .skin-preview-head small{display:block;margin-top:4px;max-width:270px;font-size:10px;line-height:1.4;color:#778477}
-body.skin-studio-fullpage .skin-preview-frame-wrap{height:calc(100vh - 205px);min-height:540px;background:#f7f7f3}
-body.skin-studio-fullpage #skinStudioPreview{display:block;width:100%;height:100%;border:0;background:white}
-body.skin-studio-fullpage .skin-builder-sections{position:sticky;top:112px;max-height:calc(100vh - 155px);overflow:auto;padding:12px;scrollbar-width:thin}
-body.skin-studio-fullpage .skin-studio-catalog{margin-top:26px}
-body.skin-studio-fullpage .skin-main-admin-link{white-space:nowrap;text-decoration:none}
-@media(max-width:1180px){body.skin-studio-fullpage .skin-builder-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}body.skin-studio-fullpage .skin-builder-preview-panel{grid-column:1/-1;grid-row:1;position:relative;top:auto}body.skin-studio-fullpage .skin-preview-frame-wrap{height:620px}body.skin-studio-fullpage .skin-builder-controls,body.skin-studio-fullpage .skin-builder-sections{position:relative;top:auto;max-height:none}}
-@media(max-width:720px){body.skin-studio-fullpage .main{padding:10px 10px 28px}body.skin-studio-fullpage .skin-builder-head{position:relative;align-items:flex-start;flex-direction:column}body.skin-studio-fullpage .skin-builder-actions{width:100%}body.skin-studio-fullpage .skin-builder-actions>*{flex:1 1 auto}body.skin-studio-fullpage .skin-builder-layout{grid-template-columns:minmax(0,1fr)}body.skin-studio-fullpage .skin-builder-preview-panel{grid-column:auto;grid-row:auto}body.skin-studio-fullpage .skin-preview-frame-wrap{height:540px;min-height:0}body.skin-studio-fullpage .skin-builder-sections{position:relative;max-height:none}body.skin-studio-fullpage .skin-builder-fields{grid-template-columns:minmax(0,1fr)}body.skin-studio-fullpage .skin-builder-fields .field.full{grid-column:auto}}
+body.skin-studio-fullpage .main{width:100%;max-width:none;height:100vh;min-height:0;overflow:hidden;padding:0!important;background:#f2f4f0!important}
+body.skin-studio-fullpage #skin-care.view{display:flex!important;flex-direction:column;width:100%;height:100vh;min-height:0;padding:0!important;overflow:hidden}
+body.skin-studio-fullpage #skin-care .skin-studio-hero,body.skin-studio-fullpage #skin-care .skin-studio-stats,body.skin-studio-fullpage #skin-care .skin-studio-section-head,body.skin-studio-fullpage #skin-care .skin-studio-tools,body.skin-studio-fullpage #skin-care .skin-studio-catalog{display:none!important}
+body.skin-studio-fullpage .skin-site-builder{display:flex!important;flex-direction:column;flex:1;min-height:0;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:#f3f5f1!important;box-shadow:none!important}
+body.skin-studio-fullpage .studio-toolbar{position:relative;z-index:110;display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:76px;padding:12px 22px;border-bottom:1px solid #dfe5dc;background:#fff}
+body.skin-studio-fullpage .studio-brandline{display:flex;align-items:center;gap:13px;min-width:0}
+body.skin-studio-fullpage .studio-back{display:grid;place-items:center;width:38px;height:38px;border:1px solid #e1e7df;border-radius:12px;background:#fafbf9;color:#314333;text-decoration:none;font-size:20px}
+body.skin-studio-fullpage .studio-overline{color:#8d9a8e;font-size:9px;font-weight:850;letter-spacing:.15em}
+body.skin-studio-fullpage .studio-page-line{margin-top:5px;font-size:17px;font-weight:750;letter-spacing:-.035em;color:#213528}
+body.skin-studio-fullpage .studio-page-line span{padding:0 5px;color:#a9b2a8}
+body.skin-studio-fullpage .studio-page-line strong{color:#68806a;font-weight:650}
+body.skin-studio-fullpage .studio-toolbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-shrink:0}
+body.skin-studio-fullpage .studio-toolbar-actions .btn{min-height:38px;padding:9px 13px!important;font-size:11px!important}
+body.skin-studio-fullpage .studio-save-state{display:flex;align-items:center;gap:7px;margin-right:4px;color:#68766a;font-size:10px;font-weight:700;white-space:nowrap}
+body.skin-studio-fullpage .studio-save-dot{width:7px;height:7px;border-radius:50%;background:#9aaa94;box-shadow:0 0 0 3px #eef3eb}
+body.skin-studio-fullpage .studio-save-state[data-status="dirty"] .studio-save-dot{background:#c77d5b;box-shadow:0 0 0 3px #fbefe9}
+body.skin-studio-fullpage .studio-status{flex-shrink:0;margin:8px 12px 0!important;padding:7px 10px!important;min-height:30px;border-radius:10px!important;font-size:10px!important}
+body.skin-studio-fullpage .studio-status[data-status="error"]{background:#fff0ef;border-color:#f4cbc6;color:#a33d31}
+body.skin-studio-fullpage .studio-status[data-status="success"]{background:#edf6ed;border-color:#d8e9d6;color:#366641}
+body.skin-studio-fullpage .studio-layout{display:grid!important;grid-template-columns:258px minmax(360px,1fr) 318px;gap:0!important;align-items:stretch!important;flex:1;min-height:0;overflow:hidden;padding-top:9px}
+body.skin-studio-fullpage .studio-left-panel{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;border-right:1px solid #dde4db;background:#fff}
+body.skin-studio-fullpage .studio-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:15px 13px 12px}
+body.skin-studio-fullpage .studio-panel-head h3,body.skin-studio-fullpage .studio-inspector-heading h3{margin:5px 0 0;font-size:16px;letter-spacing:-.04em;color:#26392a}
+body.skin-studio-fullpage .studio-add-button{padding:8px 10px!important;font-size:11px!important}
+body.skin-studio-fullpage .studio-add-menu{position:relative;z-index:20;display:grid;gap:4px;margin:0 10px 10px;padding:6px;border:1px solid #dfe7dc;border-radius:14px;background:#fbfcfa;box-shadow:0 8px 22px #253c2b0d}
+body.skin-studio-fullpage .studio-add-menu[hidden],body.skin-studio-fullpage .studio-quick-add[hidden],body.skin-studio-fullpage .studio-library-items[hidden],body.skin-studio-fullpage .studio-outline-list[hidden]{display:none!important}
+body.skin-studio-fullpage .studio-add-menu button{display:flex;align-items:center;gap:10px;width:100%;padding:9px;border:0;border-radius:9px;background:transparent;color:#314435;text-align:left;cursor:pointer}
+body.skin-studio-fullpage .studio-add-menu button:hover{background:#edf4eb}
+body.skin-studio-fullpage .studio-add-menu button>span:first-child{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#edf3ea;color:#527052;font-size:16px}
+body.skin-studio-fullpage .studio-add-menu b,body.skin-studio-fullpage .studio-add-menu small{display:block}
+body.skin-studio-fullpage .studio-add-menu b{font-size:11px}
+body.skin-studio-fullpage .studio-add-menu small{margin-top:2px;color:#859184;font-size:9px;line-height:1.35}
+body.skin-studio-fullpage .studio-library-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;padding:0 9px 10px;border-bottom:1px solid #eef1ec}
+body.skin-studio-fullpage .studio-library-tabs button{padding:8px 2px;border:0;border-radius:8px;background:transparent;color:#859084;font-size:10px;font-weight:700;cursor:pointer}
+body.skin-studio-fullpage .studio-library-tabs button.active{background:#edf4eb;color:#315739}
+body.skin-studio-fullpage .studio-quick-add{padding:11px;border-bottom:1px solid #e9eee6;background:#f8faf6}
+body.skin-studio-fullpage .studio-quick-add h4{margin:0 0 8px;font-size:12px;color:#2d4131}
+body.skin-studio-fullpage .studio-quick-add p{margin:0 0 9px;font-size:10px;color:#7f8b80;line-height:1.45}
+body.skin-studio-fullpage .studio-quick-add label{display:grid;gap:4px;margin-top:8px;color:#718073;font-size:10px;font-weight:700}
+body.skin-studio-fullpage .studio-quick-add input,body.skin-studio-fullpage .studio-quick-add textarea,body.skin-studio-fullpage .studio-quick-add select{width:100%;min-width:0;border:1px solid #dbe4d7;border-radius:8px;background:#fff;color:#243628;padding:8px 9px;font-size:11px}
+body.skin-studio-fullpage .studio-quick-actions{display:flex;gap:6px;margin-top:10px}
+body.skin-studio-fullpage .studio-quick-actions .btn{flex:1;padding:8px!important;font-size:10px!important}
+body.skin-studio-fullpage .studio-library-items,body.skin-studio-fullpage .studio-outline-list{flex:1;min-height:0;overflow:auto;padding:9px;scrollbar-width:thin}
+body.skin-studio-fullpage .studio-left-foot{display:grid;gap:3px;padding:10px 12px;border-top:1px solid #edf0eb;color:#929d91;font-size:9px;line-height:1.35}
+body.skin-studio-fullpage .studio-left-foot span:first-child{color:#617662;font-weight:650}
+body.skin-studio-fullpage .skin-builder-preview-panel{display:flex;flex-direction:column;position:relative;top:auto;min-width:0;min-height:0;overflow:hidden;border:0!important;border-right:1px solid #dfe5dc;border-radius:0!important;background:#eff2ed!important;box-shadow:none!important}
+body.skin-studio-fullpage .studio-canvas-head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:57px;padding:9px 13px;border-bottom:1px solid #dfe5dc;background:#fff}
+body.skin-studio-fullpage .studio-canvas-head b{display:block;font-size:11px;color:#344737}
+body.skin-studio-fullpage .studio-canvas-head small{display:block;max-width:560px;margin-top:3px;color:#8a9689;font-size:9px;line-height:1.35}
+body.skin-studio-fullpage .studio-device-controls{display:flex;align-items:center;gap:3px;padding:3px;border:1px solid #e2e7df;border-radius:9px;background:#f8faf7;flex-shrink:0}
+body.skin-studio-fullpage .studio-device-controls button{padding:6px 8px;border:0;border-radius:6px;background:transparent;color:#7b887b;font-size:9px;font-weight:750;cursor:pointer}
+body.skin-studio-fullpage .studio-device-controls button.active{background:#e7efe5;color:#315c39}
+body.skin-studio-fullpage .studio-device-controls .studio-refresh-button{font-size:14px;padding:4px 7px}
+body.skin-studio-fullpage .studio-canvas-viewport{display:flex;justify-content:center;align-items:stretch;flex:1;min-height:0;overflow:auto;padding:10px;background:#edf0eb}
+body.skin-studio-fullpage .studio-canvas-inner{width:100%;min-width:0;height:100%;min-height:0;overflow:hidden;border:1px solid #dbe2d8;border-radius:12px;background:#fff;box-shadow:0 5px 22px #263c2a0b;transition:width .18s ease}
+body.skin-studio-fullpage .studio-canvas-viewport[data-device="tablet"] .studio-canvas-inner{width:768px;max-width:100%;flex:0 0 768px}
+body.skin-studio-fullpage .studio-canvas-viewport[data-device="mobile"] .studio-canvas-inner{width:390px;max-width:100%;flex:0 0 390px}
+body.skin-studio-fullpage #skinStudioPreview{display:block;width:100%;height:100%;min-height:0;border:0;background:#fff}
+body.skin-studio-fullpage .studio-right-panel{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:auto;background:#fff;scrollbar-width:thin}
+body.skin-studio-fullpage .studio-inspector-heading{padding:17px 14px 12px;border-bottom:1px solid #edf0eb}
+body.skin-studio-fullpage .studio-inspector-heading p{margin:5px 0 0;color:#8a968a;font-size:10px;line-height:1.4}
+body.skin-studio-fullpage .studio-selected-inspector{padding:12px;overflow:visible}
+body.skin-studio-fullpage .studio-empty-inspector{display:grid;justify-items:start;padding:12px 4px;color:#7d8d7d}
+body.skin-studio-fullpage .studio-empty-inspector>span{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:#eef4eb;color:#517251;font-size:20px}
+body.skin-studio-fullpage .studio-empty-inspector b{margin-top:13px;color:#405443;font-size:12px}
+body.skin-studio-fullpage .studio-empty-inspector p{margin:6px 0;font-size:10px;line-height:1.5;color:#8a978a}
+body.skin-studio-fullpage .studio-inspector-field{display:grid;gap:5px;margin-bottom:12px}
+body.skin-studio-fullpage .studio-inspector-field>span,body.skin-studio-fullpage .studio-inspector-field>label{color:#7a887a;font-size:10px;font-weight:750}
+body.skin-studio-fullpage .studio-inspector-field input,body.skin-studio-fullpage .studio-inspector-field textarea,body.skin-studio-fullpage .studio-inspector-field select{width:100%;min-width:0;border:1px solid #dfe6dc;border-radius:9px;background:#fff;color:#243328;padding:9px 10px;font-size:11px}
+body.skin-studio-fullpage .studio-inspector-field textarea{min-height:76px;resize:vertical}
+body.skin-studio-fullpage .studio-inspector-check{display:flex;align-items:center;gap:8px;margin:10px 0;color:#536755;font-size:11px}
+body.skin-studio-fullpage .studio-inspector-check input{width:auto}
+body.skin-studio-fullpage .studio-inspector-actions{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+body.skin-studio-fullpage .studio-inspector-actions .btn{padding:8px 10px!important;font-size:10px!important}
+body.skin-studio-fullpage .studio-site-settings{margin:0 10px 14px;border:1px solid #e2e8df;border-radius:12px;background:#fafbf9}
+body.skin-studio-fullpage .studio-site-settings summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px;cursor:pointer;list-style:none}
+body.skin-studio-fullpage .studio-site-settings summary::-webkit-details-marker{display:none}
+body.skin-studio-fullpage .studio-site-settings summary b,body.skin-studio-fullpage .studio-site-settings summary small{display:block}
+body.skin-studio-fullpage .studio-site-settings summary b{font-size:11px;color:#384a3a}
+body.skin-studio-fullpage .studio-site-settings summary small{margin-top:3px;font-size:9px;color:#8a9788}
+body.skin-studio-fullpage .studio-chevron{color:#7e8b7d}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-controls{display:grid;gap:10px;padding:0 9px 10px;max-height:none;overflow:visible}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-group{border:1px solid #e4eae1;border-radius:10px;background:#fff;padding:10px}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-group-heading{gap:8px;margin-bottom:9px}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-group-heading>span{width:22px;height:22px;font-size:9px}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-group-heading h3{font-size:11px;margin:0}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-group-heading p{font-size:9px;margin:3px 0 0}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-fields{grid-template-columns:minmax(0,1fr);gap:9px}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-fields .field.full{grid-column:auto}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-fields .field{gap:4px}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-fields .field label{font-size:10px}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-fields input,body.skin-studio-fullpage .studio-site-settings .skin-builder-fields select,body.skin-studio-fullpage .studio-site-settings .skin-builder-fields textarea{min-width:0;padding:8px 9px;border-radius:8px;font-size:10px}
+body.skin-studio-fullpage .studio-site-settings .skin-builder-fields textarea{min-height:65px}
+body.skin-studio-fullpage .studio-site-settings .skin-guide-vis{display:grid;grid-template-columns:1fr;gap:7px}
+body.skin-studio-fullpage .studio-site-settings .skin-guide-vis label{font-size:10px}
+body.skin-studio-fullpage .studio-status[hidden]{display:none!important}
+body.skin-studio-fullpage .studio-library-item{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid #e3e9e1;border-radius:10px;background:#fff;margin-bottom:7px;cursor:pointer}
+body.skin-studio-fullpage .studio-library-item.is-selected{border-color:#9ab69a;background:#f4f8f2;box-shadow:0 0 0 2px #eaf2e8}
+body.skin-studio-fullpage .studio-library-item img{width:42px;height:47px;flex:0 0 42px;object-fit:cover;border-radius:7px;background:#edf0ea}
+body.skin-studio-fullpage .studio-library-item-copy{min-width:0;flex:1}
+body.skin-studio-fullpage .studio-library-item-copy b{display:block;font-size:10px;line-height:1.35;color:#364739;overflow-wrap:anywhere}
+body.skin-studio-fullpage .studio-library-item-copy small{display:block;margin-top:3px;color:#909b90;font-size:9px;line-height:1.35}
+body.skin-studio-fullpage .studio-library-item-actions{display:flex;gap:3px;flex-shrink:0}
+body.skin-studio-fullpage .studio-library-item-actions button{border:1px solid #e1e7df;border-radius:7px;background:#fff;color:#738172;padding:5px;font-size:9px;cursor:pointer}
+body.skin-studio-fullpage .studio-library-item-actions button:hover{background:#eff5ec;color:#35553a}
+body.skin-studio-fullpage .studio-section-outline{display:flex;align-items:flex-start;gap:8px;padding:10px 8px;margin-bottom:5px;border:1px solid transparent;border-radius:10px;background:transparent;cursor:pointer}
+body.skin-studio-fullpage .studio-section-outline.is-selected{border-color:#dce8d9;background:#edf4eb}
+body.skin-studio-fullpage .studio-section-outline[draggable="true"]{cursor:grab}
+body.skin-studio-fullpage .studio-outline-grip{color:#8e9b8d;font-size:14px;line-height:1.2}
+body.skin-studio-fullpage .studio-section-outline-copy{flex:1;min-width:0}
+body.skin-studio-fullpage .studio-section-outline-copy b{display:block;font-size:10px;color:#394c3a;overflow-wrap:anywhere}
+body.skin-studio-fullpage .studio-section-outline-copy small{display:block;margin-top:4px;color:#8a9688;font-size:9px}
+body.skin-studio-fullpage .studio-section-outline-actions{display:flex;gap:3px}
+body.skin-studio-fullpage .studio-section-outline-actions button{border:0;background:transparent;color:#738570;padding:2px 4px;font-size:11px;cursor:pointer}
+body.skin-studio-fullpage .studio-section-outline-actions button:disabled{opacity:.3;cursor:default}
+body.skin-studio-fullpage .studio-category-row{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center;padding:9px;margin-bottom:7px;border:1px solid #e4e9e2;border-radius:10px;background:#fff}
+body.skin-studio-fullpage .studio-category-row b{font-size:10px;color:#3c4d3c}
+body.skin-studio-fullpage .studio-category-row small{display:block;margin-top:3px;color:#919b8e;font-size:9px}
+body.skin-studio-fullpage .studio-page-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px;margin-bottom:7px;border:1px solid #e2e8df;border-radius:10px;background:#fff}
+body.skin-studio-fullpage .studio-page-row.active{background:#edf4eb;border-color:#d1e3cc}
+body.skin-studio-fullpage .studio-page-row button{border:0;background:transparent;color:#3d5a40;text-align:left;cursor:pointer}
+body.skin-studio-fullpage .studio-page-row b{display:block;font-size:10px}
+body.skin-studio-fullpage .studio-page-row small{display:block;margin-top:3px;color:#8b988b;font-size:9px}
+body.skin-studio-fullpage .studio-divider-label{margin:13px 0 6px;padding-top:12px;border-top:1px solid #edf0eb;color:#8a9789;font-size:9px;text-transform:uppercase;letter-spacing:.12em;font-weight:800}
+body.skin-studio-fullpage .studio-inline-help{font-size:9px;line-height:1.45;color:#8a9689;margin:7px 0}
+body.skin-studio-fullpage .studio-library-empty{padding:19px 10px;text-align:center;color:#8b978a;font-size:10px;line-height:1.5;border:1px dashed #dfe6dc;border-radius:10px;background:#fbfcfa}
+body.skin-studio-fullpage .studio-outline-add{width:100%;margin-top:5px;padding:9px;border:1px dashed #cbdac8;border-radius:9px;background:#fafcf9;color:#577258;font-size:10px;font-weight:750;cursor:pointer}
+body.skin-studio-fullpage .skin-section-card-actions .is-danger{color:#ac4b42}
+body.skin-studio-fullpage .studio-add-menu[hidden]{display:none!important}
+@media(max-width:1180px){
+ body.skin-studio-fullpage .studio-layout{grid-template-columns:235px minmax(310px,1fr)}
+ body.skin-studio-fullpage .studio-right-panel{grid-column:1/-1;max-height:420px;border-top:1px solid #dfe5dc}
+ body.skin-studio-fullpage .studio-canvas-panel{grid-column:2;grid-row:1/3}
+}
+@media(max-width:760px){
+ body.skin-studio-fullpage .app,body.skin-studio-fullpage .main,body.skin-studio-fullpage #skin-care.view{height:auto;min-height:100vh;overflow:visible}
+ body.skin-studio-fullpage .main{padding:0!important}
+ body.skin-studio-fullpage .studio-toolbar{align-items:flex-start;flex-direction:column;padding:12px;gap:10px}
+ body.skin-studio-fullpage .studio-toolbar-actions{width:100%;justify-content:space-between;flex-wrap:wrap}
+ body.skin-studio-fullpage .studio-save-state{flex:1 1 100%;margin-bottom:2px}
+ body.skin-studio-fullpage .studio-layout{grid-template-columns:minmax(0,1fr);overflow:visible}
+ body.skin-studio-fullpage .studio-left-panel{min-height:480px;max-height:620px;border-right:0;border-bottom:1px solid #dce4db}
+ body.skin-studio-fullpage .studio-canvas-panel{grid-column:auto;grid-row:auto;min-height:650px;border-right:0;border-bottom:1px solid #dce4db}
+ body.skin-studio-fullpage .studio-canvas-viewport{min-height:580px}
+ body.skin-studio-fullpage .studio-right-panel{grid-column:auto;max-height:none;border-top:0}
+ body.skin-studio-fullpage .studio-device-controls button{font-size:8px;padding:6px}
+}
+
+body.skin-studio-fullpage .studio-product-add-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+body.skin-studio-fullpage .studio-product-add-actions .studio-outline-add{margin:0;padding:9px 5px;font-size:9px;line-height:1.3}
+body.skin-studio-fullpage .studio-product-placeholder{display:grid;place-items:center;width:42px;height:47px;flex:0 0 42px;border-radius:7px;background:#edf1e9;color:#819580;font-size:22px}
+body.skin-studio-fullpage .studio-library-item[draggable="false"]{cursor:pointer}
+body.skin-studio-fullpage .studio-library-item[draggable="true"]{cursor:grab}
+body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:grabbing}
 </style>
 </head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
 <button data-icon="↥" onclick="show('import',this)">Import</button>
 <button data-icon="▣" onclick="show('products',this)">Products</button>
-<button data-icon="✿" onclick="show('skin-care',this)">Skin Care Studio</button>
+<button data-icon="✿" onclick="window.location.href='/admin/skin-studio'">Skin Care Studio</button>
 <button data-icon="☷" onclick="show('categories',this)">Categories</button>
 <button data-icon="◫" onclick="show('collections',this)">Collections</button>
 <button data-icon="□" onclick="show('orders',this)">Orders</button>
@@ -484,13 +618,58 @@ body.skin-studio-fullpage .skin-main-admin-link{white-space:nowrap;text-decorati
   </div>
 
 
-  <div class="panel skin-site-builder" id="skinSiteBuilder">
-    <div class="skin-builder-head">
-      <div><span class="section-kicker">Live storefront controls</span><h2>Visual site builder</h2><p class="muted">Edit the public Nuvora Skin page. Changes save to the database and are read by the storefront.</p></div>
-      <div class="skin-builder-actions"><a class="btn skin-main-admin-link" href="/admin">← Main admin</a><button class="btn" type="button" onclick="previewSkinSite()">Open preview ↗</button><button class="btn primary" type="button" onclick="saveSkinSiteConfig()">Save & publish site changes</button></div>
+  <div class="skin-site-builder studio-shell" id="skinSiteBuilder">
+  <header class="studio-toolbar">
+    <div class="studio-brandline">
+      <a class="studio-back" href="/admin" aria-label="Back to Nuvora admin">←</a>
+      <div><span class="studio-overline">NUVORA ADMIN / WEBSITE BUILDER</span><div class="studio-page-line">Nuvora Skin <span>/</span> <strong id="skinStudioPageTitle">Home page</strong></div></div>
     </div>
-    <div id="skinBuilderStatus" class="notice" role="status" aria-live="polite">Loading the saved storefront configuration…</div>
-    <div class="skin-builder-layout">
+    <div class="studio-toolbar-actions">
+      <div class="studio-save-state"><span class="studio-save-dot"></span><span id="skinStudioSaveLabel">Saved version loaded</span></div>
+      <button class="btn" type="button" onclick="previewSkinSite()">View live ↗</button>
+      <button class="btn primary studio-publish-button" type="button" onclick="saveSkinSiteConfig()">Publish changes</button>
+    </div>
+  </header>
+  <div id="skinBuilderStatus" class="studio-status notice" role="status" aria-live="polite">Loading your saved Skin Care site…</div>
+  <div class="skin-builder-layout studio-layout">
+    <aside class="studio-left-panel">
+      <div class="studio-panel-head"><div><span class="section-kicker">Workspace</span><h3>Content library</h3></div><button class="btn primary studio-add-button" type="button" onclick="toggleSkinAddMenu()">+ Add</button></div>
+      <div id="skinStudioAddMenu" class="studio-add-menu" hidden>
+        <button type="button" onclick="openSkinAdd('product')"><span>＋</span><span><b>Product</b><small>Import an Amazon link or add a product</small></span></button>
+        <button type="button" onclick="openSkinAdd('page')"><span>▤</span><span><b>Page</b><small>Create a new storefront page</small></span></button>
+        <button type="button" onclick="openSkinAdd('category')"><span>◫</span><span><b>Category</b><small>Group and organize skincare picks</small></span></button>
+        <button type="button" onclick="openSkinAdd('section')"><span>▦</span><span><b>Section</b><small>Add a block to the current page</small></span></button>
+      </div>
+      <div class="studio-library-tabs" role="tablist" aria-label="Skin Studio content">
+        <button id="skinTabOutline" class="active" type="button" onclick="switchSkinStudioTab('outline')">Outline</button>
+        <button id="skinTabProducts" type="button" onclick="switchSkinStudioTab('products')">Products</button>
+        <button id="skinTabPages" type="button" onclick="switchSkinStudioTab('pages')">Pages</button>
+        <button id="skinTabCategories" type="button" onclick="switchSkinStudioTab('categories')">Categories</button>
+      </div>
+      <div id="skinQuickAddPanel" class="studio-quick-add" hidden></div>
+      <div id="skinLibraryItems" class="studio-library-items" hidden></div>
+      <div id="skinBuilderSections" class="skin-builder-sections studio-outline-list" aria-label="Page section outline"></div>
+      <div class="studio-left-foot"><span>Drag products onto a product section.</span><span>Changes stay in draft until published.</span></div>
+    </aside>
+    <section class="skin-builder-preview-panel studio-canvas-panel" aria-label="Live storefront canvas">
+      <div class="skin-preview-head studio-canvas-head">
+        <div><b>Storefront canvas</b><small>Drag sections to reorder them. Drag products into a product grid or onto another product to rearrange.</small></div>
+        <div class="studio-device-controls" aria-label="Preview size">
+          <button type="button" class="active" onclick="setSkinPreviewDevice('desktop',this)">Desktop</button>
+          <button type="button" onclick="setSkinPreviewDevice('tablet',this)">Tablet</button>
+          <button type="button" onclick="setSkinPreviewDevice('mobile',this)">Mobile</button>
+          <button type="button" class="studio-refresh-button" onclick="refreshSkinStudioPreview()" title="Refresh draft preview">↻</button>
+        </div>
+      </div>
+      <div id="skinPreviewFrameOuter" class="studio-canvas-viewport" data-device="desktop">
+        <div class="studio-canvas-inner"><iframe id="skinStudioPreview" title="Nuvora Skin storefront — editable preview" src="https://client-store-platform.rayyung713.workers.dev/?preview=admin&studioPreview=initial"></iframe></div>
+      </div>
+    </section>
+    <aside class="studio-right-panel">
+      <div class="studio-inspector-heading"><div><span class="section-kicker">Inspector</span><h3 id="skinInspectorTitle">Select an item</h3><p id="skinInspectorSubtitle">Select a section, product, page or category to edit its details.</p></div></div>
+      <div id="skinSelectedInspector" class="studio-selected-inspector"><div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b><p>Select an item in the left panel or click a section in the storefront preview.</p></div></div>
+      <details class="studio-site-settings">
+        <summary><span><b>Site-wide settings</b><small>Brand, template and product page settings</small></span><span class="studio-chevron">⌄</span></summary>
       <div class="skin-builder-controls">
         <section class="skin-builder-group">
           <div class="skin-builder-group-heading"><span>01</span><div><h3>Brand & template</h3><p>Choose a visual direction and set the primary accent.</p></div></div>
@@ -532,24 +711,17 @@ body.skin-studio-fullpage .skin-main-admin-link{white-space:nowrap;text-decorati
                 <label><input type="checkbox" id="skinShowUsage"> How to use</label>
                 <label><input type="checkbox" id="skinShowWarnings"> Warnings / avoid-if notes</label>
                 <label><input type="checkbox" id="skinShowRecommendations"> Complementary products</label>
+                <label><input type="checkbox" id="skinShowSize"> Product size / format</label>
               </div>
             </div>
           </div>
         </section>
       </div>
-      <section class="skin-builder-preview-panel" aria-label="Live storefront canvas">
-        <div class="skin-preview-head"><div><b>Live page canvas</b><small>Drag section handles to reorder page blocks, or drag product handles to arrange items inside a product grid. Changes stay in your draft until you save and publish.</small></div><button class="btn" type="button" onclick="refreshSkinStudioPreview()">Refresh canvas ↻</button></div>
-        <div class="skin-preview-frame-wrap"><iframe id="skinStudioPreview" title="Live Nuvora Skin storefront preview" src="https://client-store-platform.rayyung713.workers.dev/?preview=admin&studioPreview=initial"></iframe></div>
-      </section>
-      <aside class="skin-builder-sections">
-        <div class="skin-builder-group-heading"><span>04</span><div><h3>Page sections</h3><p>Drag to reorder. Add, hide, duplicate, or remove sections.</p></div></div>
-        <div id="skinBuilderSections" class="skin-builder-section-list"></div>
-        <div class="skin-builder-add"><label for="skinNewSectionType">Add a section</label><div><select id="skinNewSectionType"><option value="product-grid">Product grid</option><option value="editorial">Editorial / text</option><option value="featured-products">Featured products</option><option value="category-grid">Category browse</option><option value="journal-grid">Journal / guide cards</option></select><button class="btn" type="button" onclick="addSkinBuilderSection()">Add section</button></div></div>
-        <div class="skin-builder-info"><b>Product placement</b><p>Choose exact products per section or leave the list empty to use the section filter. Customer product cards point to the retailer and show no internal price.</p></div>
-      </aside>
-    </div>
+      </details>
+    </aside>
   </div>
-  <div class="panel catalog-panel skin-studio-catalog">
+</div>
+<div class="panel catalog-panel skin-studio-catalog">
     <div class="catalog-panel-head"><div><span class="section-kicker">Dedicated catalog</span><h2>Skin Care products</h2><p class="muted">Skincare products stay grouped separately from the main Nuvora catalog.</p></div><span id="skinProductCount" class="library-note">0 products</span></div>
     <div id="skinCategoryNotice" class="notice">Products are routed to Nuvora Skin by assigning them to the Skin Care category.</div>
     <div id="skinProductRows" class="product-library"></div>
@@ -1539,7 +1711,8 @@ async function adminBoot(){
   }
 }
 
-let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false;
+const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
+let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='';
 const defaultSkinSiteConfig=()=>({
   version:2,template:'soft-editorial',accentColor:'#66745f',
   announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
@@ -1551,7 +1724,10 @@ const defaultSkinSiteConfig=()=>({
   approachBody:'Nuvora Skin is a focused corner of Nuvora for skincare and beauty discoveries. We aim to make browsing simpler with clear product details and direct links to the retailer. Always check the retailer’s ingredient list, product directions, and suitability for your own skin before buying.',
   footerNote:'Affiliate disclosure: Some links may be affiliate links. If you buy through them, Nuvora may earn a commission at no extra cost to you. Retailer prices, availability, ingredients, and product claims can change; confirm details on the retailer’s site.',
   productGuideTemplate:'editorial',
-  productGuideFields:{benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true},
+  productGuideFields:{benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true,size:true},
+  customCategories:[],
+  productCategoryMap:{},
+  pages:[],
   sections:[
     {id:'hero',type:'hero',visible:true,title:'Care that feels like you.'},
     {id:'edit',type:'product-grid',visible:true,title:'What’s in the edit',eyebrow:'Curated, not crowded',text:'Product picks are added by the Nuvora team. Explore skincare finds and helpful guides.',filter:'all',columns:4,product_ids:[]},
@@ -1561,78 +1737,501 @@ const defaultSkinSiteConfig=()=>({
 });
 function mergeSkinSiteConfig(raw){
  const base=defaultSkinSiteConfig(),src=raw&&typeof raw==='object'?raw:{},cfg={...base,...src};
- cfg.sections=Array.isArray(src.sections)&&src.sections.length?src.sections.map((x,i)=>({id:String(x.id||('section-'+(i+1))).slice(0,80),type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid'].includes(x.type)?x.type:'product-grid',visible:x.visible!==false,title:String(x.title||'New section').slice(0,180),eyebrow:String(x.eyebrow||'').slice(0,100),text:String(x.text||'').slice(0,3000),filter:['all','featured','top_pick','trending'].includes(x.filter)?x.filter:'all',columns:[2,3,4].includes(Number(x.columns))?Number(x.columns):4,product_ids:Array.isArray(x.product_ids)?x.product_ids.map(String).slice(0,60):[],category_id:String(x.category_id||'').slice(0,80)})):base.sections;
+ const cleanSections=(items,fallback=[])=>Array.isArray(items)&&items.length?items.slice(0,40).map((x,i)=>({
+  id:String(x.id||('section-'+(i+1))).slice(0,80),
+  type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid'].includes(x.type)?x.type:'product-grid',
+  visible:x.visible!==false,title:String(x.title||'New section').slice(0,180),
+  eyebrow:String(x.eyebrow||'').slice(0,100),text:String(x.text||'').slice(0,3000),
+  image:String(x.image||'').slice(0,1600),
+  backgroundColor:/^#[0-9a-f]{6}$/i.test(String(x.backgroundColor||''))?String(x.backgroundColor):'',
+  filter:['all','featured','top_pick','trending'].includes(x.filter)?x.filter:'all',
+  columns:[2,3,4].includes(Number(x.columns))?Number(x.columns):4,
+  product_ids:Array.isArray(x.product_ids)?x.product_ids.map(String).slice(0,60):[],
+  category_id:String(x.category_id||'').slice(0,100)
+ })):fallback;
+ cfg.sections=cleanSections(src.sections,base.sections);
  if(Number(src.version||0)<2&&!cfg.sections.some(x=>x.type==='journal-grid'))cfg.sections.push({id:'journal',type:'journal-grid',visible:true,title:'Little notes for everyday skin.',eyebrow:'The journal',text:'Practical notes for building a routine at your own pace.',columns:3,product_ids:[]});
- cfg.version=2;
+ cfg.pages=Array.isArray(src.pages)?src.pages.slice(0,30).map((p,i)=>({
+  id:String(p.id||p.slug||('page-'+(i+1))).slice(0,80),
+  title:String(p.title||'Untitled page').slice(0,120),
+  slug:String(p.slug||'page-'+(i+1)).toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80),
+  description:String(p.description||'').slice(0,1200),
+  visible:p.visible!==false,
+  sections:cleanSections(p.sections,[])
+ })):Array.isArray(base.pages)?base.pages:[];
+ cfg.customCategories=Array.isArray(src.customCategories)?src.customCategories.slice(0,60).map((x,i)=>({
+  id:String(x.id||x.slug||('category-'+(i+1))).slice(0,100),
+  slug:String(x.slug||x.id||('category-'+(i+1))).toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80),
+  name:String(x.name||'New category').slice(0,100),
+  description:String(x.description||'').slice(0,1000),
+  image:String(x.image||'').slice(0,1600)
+ })):Array.isArray(base.customCategories)?base.customCategories:[];
+ const mapping=src.productCategoryMap&&typeof src.productCategoryMap==='object'&&!Array.isArray(src.productCategoryMap)?src.productCategoryMap:{};
+ cfg.productCategoryMap={};
+ Object.entries(mapping).slice(0,500).forEach(([id,category])=>{if(id.length<=100&&String(category||'').length<=100)cfg.productCategoryMap[id]=String(category||'');});
+ cfg.version=3;
  cfg.template=['soft-editorial','clean-minimal','sage-botanical'].includes(cfg.template)?cfg.template:'soft-editorial';
  cfg.accentColor=/^#[0-9a-f]{6}$/i.test(String(cfg.accentColor||''))?cfg.accentColor:'#66745f';
  cfg.productGuideTemplate=['editorial','compact','minimal'].includes(cfg.productGuideTemplate)?cfg.productGuideTemplate:'editorial';
- const guideDefaults={benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true};
+ const guideDefaults={benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true,size:true};
  cfg.productGuideFields={...guideDefaults,...(src.productGuideFields&&typeof src.productGuideFields==='object'?src.productGuideFields:{})};
  Object.keys(guideDefaults).forEach(key=>cfg.productGuideFields[key]=cfg.productGuideFields[key]!==false);
  return cfg;
 }
-function skinBuilderMessage(message,type='info'){const el=document.getElementById('skinBuilderStatus');if(el){el.textContent=message;el.dataset.status=type;}}
+function skinBuilderMessage(message,type='info'){
+ const el=document.getElementById('skinBuilderStatus');
+ if(el){el.textContent=String(message||'');el.dataset.status=type;}
+}
+function skinMarkDirty(message='Draft updated. Publish when you are ready.'){
+ const label=document.getElementById('skinStudioSaveLabel');
+ if(label){label.textContent='Unsaved changes';label.dataset.status='dirty';}
+ skinBuilderMessage(message,'info');
+}
+function skinSetSavedLabel(message='Saved version loaded'){
+ const label=document.getElementById('skinStudioSaveLabel');
+ if(label){label.textContent=message;label.dataset.status='saved';}
+}
+function skinCurrentPage(pageId=skinStudioPageId){
+ if(!skinBuilderConfig||pageId==='home')return null;
+ return (skinBuilderConfig.pages||[]).find(p=>String(p.slug)===String(pageId)||String(p.id)===String(pageId))||null;
+}
+function skinSectionsFor(pageId=skinStudioPageId){
+ if(!skinBuilderConfig)return [];
+ if(pageId==='home')return skinBuilderConfig.sections||[];
+ const page=skinCurrentPage(pageId);
+ return page&&Array.isArray(page.sections)?page.sections:[];
+}
+function skinPageLabel(pageId=skinStudioPageId){
+ const page=skinCurrentPage(pageId);
+ return page?String(page.title||'Untitled page'):'Home page';
+}
 function fillSkinConfigFields(){
  const c=skinBuilderConfig;if(!c)return;
  const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgGuideTemplate:'productGuideTemplate'};
  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=c[key]||'';});
- const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations'};
- Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=c.productGuideFields[key]!==false;});renderSkinBuilderSections();
+ const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations',skinShowSize:'size'};
+ Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=c.productGuideFields[key]!==false;});
+ const pageExists=skinStudioPageId==='home'||!!skinCurrentPage(skinStudioPageId);
+ if(!pageExists)skinStudioPageId='home';
+ const sections=skinSectionsFor();
+ if(!sections.some(x=>String(x.id)===String(skinStudioSelection?.id))||skinStudioSelection?.type!=='section'){
+  skinStudioSelection={type:'section',id:sections[0]?.id||''};
+ }
+ updateSkinStudioPageTitle();
+ renderSkinBuilderSections();
+ renderSkinLibrary();
+ renderSkinSelectedInspector();
 }
 function collectSkinConfigFields(){
  if(!skinBuilderConfig)return;
  const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgGuideTemplate:'productGuideTemplate'};
- Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)c[key]=el.value.trim();});
- const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations'};
- c.productGuideFields=c.productGuideFields||{};
- Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)c.productGuideFields[key]=!!el.checked;});
- const hero=c.sections.find(x=>x.type==='hero');if(hero){hero.title=c.heroTitle;hero.eyebrow=c.heroEyebrow;hero.text=c.heroDescription;}
- const editorial=c.sections.find(x=>x.type==='editorial');if(editorial){editorial.title=c.approachTitle;editorial.eyebrow=c.approachEyebrow;editorial.text=c.approachBody;}
+ Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig[key]=el.value.trim();});
+ const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations',skinShowSize:'size'};
+ skinBuilderConfig.productGuideFields=skinBuilderConfig.productGuideFields||{};
+ Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig.productGuideFields[key]=!!el.checked;});
+ const hero=skinBuilderConfig.sections.find(x=>x.type==='hero');
+ if(hero){hero.title=skinBuilderConfig.heroTitle;hero.eyebrow=skinBuilderConfig.heroEyebrow;hero.text=skinBuilderConfig.heroDescription;if(!hero.image)hero.image=skinBuilderConfig.heroImage;}
+ const editorial=skinBuilderConfig.sections.find(x=>x.type==='editorial');
+ if(editorial){editorial.title=skinBuilderConfig.approachTitle;editorial.eyebrow=skinBuilderConfig.approachEyebrow;editorial.text=skinBuilderConfig.approachBody;}
 }
 async function loadSkinSiteConfig(){
  skinSiteConfigLoaded=false;
- try{const settings=await api('/api/admin/settings');if(!settings||typeof settings!=='object')throw new Error('The settings endpoint returned an invalid response.');skinBuilderConfig=mergeSkinSiteConfig(settings.skin_site_config);fillSkinConfigFields();skinSiteConfigLoaded=true;skinBuilderMessage('Saved storefront settings loaded. Changes affect the public Nuvora Skin page after you save.','success');if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();}
- catch(e){skinBuilderConfig=mergeSkinConfigForRecovery();fillSkinConfigFields();skinBuilderMessage('Could not load saved settings: '+(e.message||'unknown error')+'. Saving is disabled until the existing settings load successfully, to protect your live configuration.','warning');if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();}
+ try{
+  const settings=await api('/api/admin/settings');
+  if(!settings||typeof settings!=='object')throw new Error('The settings endpoint returned an invalid response.');
+  skinBuilderConfig=mergeSkinSiteConfig(settings.skin_site_config);
+  skinStudioPageId='home';
+  skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||'hero'};
+  fillSkinConfigFields();
+  skinSiteConfigLoaded=true;
+  skinSetSavedLabel('Saved version loaded');
+  skinBuilderMessage('Your saved site layout is loaded. Edit the canvas or use the manual controls, then publish your changes.','success');
+  if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
+ }catch(e){
+  skinBuilderConfig=mergeSkinConfigForRecovery();
+  fillSkinConfigFields();
+  skinBuilderMessage('Could not load saved settings: '+(e.message||'unknown error')+'. Publishing is disabled to protect your existing live configuration.','error');
+  skinSetSavedLabel('Unable to load saved version');
+  if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
+ }
 }
 function mergeSkinConfigForRecovery(){return mergeSkinSiteConfig(null);}
 function skinProductOptions(){return adminProducts.filter(isSkinProduct).map(p=>({id:String(p.id),name:String(p.name||'Untitled product')}));}
+function skinImageOf(p){return String(p?.image_url||p?.image||p?.imageUrl||(Array.isArray(p?.image_urls)?p.image_urls[0]:'')||(Array.isArray(p?.images)?p.images[0]:'')||'');}
+function skinCategoryOfProduct(id){return String((skinBuilderConfig?.productCategoryMap||{})[String(id)]||'');}
+function skinDefaultCategories(){
+ return [
+  {id:'cleanse',slug:'cleanse',name:'Cleanse',description:'A fresh start for morning and evening routines.'},
+  {id:'treat',slug:'treat',name:'Treat',description:'Serums and focused additions to explore.'},
+  {id:'hydrate',slug:'hydrate',name:'Hydrate',description:'Moisture-minded everyday essentials.'},
+  {id:'protect',slug:'protect',name:'Protect',description:'Sun protection and daytime essentials.'},
+  {id:'body-lips',slug:'body-lips',name:'Body & lips',description:'Care for lips and body.'}
+ ];
+}
+function skinStoreCategoryOptions(){
+ return [...skinDefaultCategories(),...(skinBuilderConfig?.customCategories||[]).map(x=>({...x,custom:true}))];
+}
+function inferSkinProductCategory(p){
+ const text=[p?.name,p?.brand,p?.description,p?.features,p?.store_description].filter(Boolean).join(' ').toLowerCase();
+ if(/cleanser|cleansing|face wash|micellar/.test(text))return 'cleanse';
+ if(/sunscreen|sun screen|spf|sunblock/.test(text))return 'protect';
+ if(/serum|retinol|toner|exfoliat|treatment|acne/.test(text))return 'treat';
+ if(/lip balm|body lotion|body cream|body wash|hair mask|hair care/.test(text))return 'body-lips';
+ if(/moisturi|hydration|cream|lotion|barrier/.test(text))return 'hydrate';
+ return '';
+}
+function skinActiveSectionIndex(id){
+ return skinSectionsFor().findIndex(s=>String(s.id)===String(id));
+}
+function updateSkinStudioPageTitle(){
+ const el=document.getElementById('skinStudioPageTitle');if(el)el.textContent=skinPageLabel();
+}
+function switchSkinStudioTab(tab){
+ skinStudioTab=['outline','products','pages','categories'].includes(tab)?tab:'outline';
+ ['outline','products','pages','categories'].forEach(key=>{const b=document.getElementById('skinTab'+key.charAt(0).toUpperCase()+key.slice(1));if(b)b.classList.toggle('active',skinStudioTab===key);});
+ const outline=document.getElementById('skinBuilderSections'),library=document.getElementById('skinLibraryItems');
+ if(outline)outline.hidden=skinStudioTab!=='outline';
+ if(library)library.hidden=skinStudioTab==='outline';
+ renderSkinLibrary();
+ if(skinStudioTab==='outline')renderSkinBuilderSections();
+}
+function renderSkinLibrary(){
+ const root=document.getElementById('skinLibraryItems');if(!root)return;
+ const outline=document.getElementById('skinBuilderSections');
+ if(outline)outline.hidden=skinStudioTab!=='outline';
+ root.hidden=skinStudioTab==='outline';
+ if(skinStudioTab==='outline'){root.innerHTML='';return;}
+ if(!skinBuilderConfig){root.innerHTML='<div class="studio-library-empty">Loading your site content…</div>';return;}
+ if(skinStudioTab==='products'){
+  const rows=adminProducts.filter(isSkinProduct).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
+  root.innerHTML='<div class="studio-product-add-actions"><button type="button" class="studio-outline-add" onclick="openSkinManualProduct()">＋ Add manually</button><button type="button" class="studio-outline-add" onclick="openSkinProduct()">↗ Import Amazon link</button></div><p class="studio-inline-help">Drag a published product into a product grid on the canvas. Select a product to assign its category, or use Edit for all product fields.</p>'+
+   (rows.length?rows.map(p=>{
+    const id=String(p.id),image=skinImageOf(p),published=!!p.published;
+    const selection=skinStudioSelection?.type==='product'&&String(skinStudioSelection.id)===id;
+    return '<article class="studio-library-item '+(selection?'is-selected':'')+'" draggable="'+(published?'true':'false')+'" ondragstart="skinProductDragStart(event,'+JSON.stringify(id)+')" onclick="selectSkinItem(\'product\','+JSON.stringify(id)+')">'+
+     (image?'<img src="'+esc(image)+'" alt="" loading="lazy">':'<div class="studio-product-placeholder">◯</div>')+
+     '<div class="studio-library-item-copy"><b>'+esc(p.name||'Untitled product')+'</b><small>'+esc(published?'Published':'Draft — not visible yet')+' · '+esc(retailerLabel(p))+'</small></div>'+
+     '<div class="studio-library-item-actions"><button type="button" onclick="event.stopPropagation();editSkinProduct('+JSON.stringify(id)+')">Edit</button></div></article>';
+   }).join(''):'<div class="studio-library-empty">No skincare products found yet. Add a product by pasting its Amazon link or create one manually.</div>');
+  return;
+ }
+ if(skinStudioTab==='pages'){
+  const pages=skinBuilderConfig.pages||[];
+  root.innerHTML='<button type="button" class="studio-outline-add" onclick="openSkinAdd(\'page\')">＋ Add a page</button><p class="studio-inline-help">Pages use the same section styles as the current Nuvora Skin storefront.</p>'+
+   '<div class="studio-page-row '+(skinStudioPageId==='home'?'active':'')+'"><button type="button" onclick="setSkinStudioPage(\'home\')"><b>Home page</b><small> / · Main storefront</small></button><span>⌂</span></div>'+
+   (pages.length?pages.map(p=>'<div class="studio-page-row '+(String(skinStudioPageId)===String(p.slug)?'active':'')+'"><button type="button" onclick="setSkinStudioPage('+JSON.stringify(String(p.slug))+')"><b>'+esc(p.title)+'</b><small>/pages/'+esc(p.slug)+(p.visible?'':' · Hidden')+'</small></button><button type="button" title="Edit page settings" onclick="selectSkinItem(\'page\','+JSON.stringify(String(p.slug))+')">✎</button></div>').join(''):'<div class="studio-library-empty">No extra pages yet. Use Add → Page to create one.</div>');
+  return;
+ }
+ if(skinStudioTab==='categories'){
+  const defaults=skinDefaultCategories(),custom=skinBuilderConfig.customCategories||[];
+  root.innerHTML='<button type="button" class="studio-outline-add" onclick="openSkinAdd(\'category\')">＋ Add a category</button><p class="studio-inline-help">Existing storefront categories keep their established card style. Create custom categories and assign products in the inspector.</p>'+
+   '<div class="studio-divider-label">Existing storefront categories</div>'+defaults.map(cat=>'<div class="studio-category-row"><div><b>'+esc(cat.name)+'</b><small>/shop?category='+esc(cat.name)+'</small></div><button type="button" class="btn" onclick="selectSkinItem(\'default-category\','+JSON.stringify(String(cat.slug))+')">View</button></div>').join('')+
+   '<div class="studio-divider-label">Custom categories</div>'+
+   (custom.length?custom.map(cat=>'<div class="studio-category-row"><div><b>'+esc(cat.name)+'</b><small>/shop?category='+esc(cat.name)+' · '+esc(cat.slug)+'</small></div><button type="button" class="btn" onclick="selectSkinItem(\'category\','+JSON.stringify(String(cat.slug))+')">Edit</button></div>').join(''):'<div class="studio-library-empty">No custom categories yet.</div>');
+ }
+}
 function renderSkinBuilderSections(){
  const root=document.getElementById('skinBuilderSections');if(!root||!skinBuilderConfig)return;
- const opts=skinProductOptions(),typeLabels={hero:'Hero', 'product-grid':'Product grid',editorial:'Editorial / text','featured-products':'Featured products','category-grid':'Category browse','journal-grid':'Journal / guide cards'};
- root.innerHTML=skinBuilderConfig.sections.map((sec,index)=>{
-  const selected=new Set(sec.product_ids||[]);
-  return '<article class="skin-builder-section-card" draggable="true" data-section-index="'+index+'" ondragstart="skinBuilderDragStart(event,'+index+')" ondragover="event.preventDefault()" ondrop="skinBuilderDrop(event,'+index+')">'+
-   '<div class="skin-section-card-head"><span class="skin-drag-handle" title="Drag to reorder">⠿</span><div><b>'+esc(typeLabels[sec.type]||sec.type)+'</b><small>Section '+(index+1)+'</small></div><label class="skin-visible-toggle"><input type="checkbox" '+(sec.visible?'checked':'')+' onchange="updateSkinSection('+index+',\'visible\',this.checked)"> Visible</label></div>'+
-   '<div class="skin-section-card-fields"><label>Type<select onchange="updateSkinSection('+index+',\'type\',this.value)">'+Object.entries(typeLabels).map(([value,label])=>'<option value="'+value+'" '+(sec.type===value?'selected':'')+'>'+label+'</option>').join('')+'</select></label>'+
-   '<label>Section title<input value="'+esc(sec.title)+'" maxlength="180" oninput="updateSkinSection('+index+',\'title\',this.value)"></label>'+
-   '<label>Eyebrow<input value="'+esc(sec.eyebrow||'')+'" maxlength="100" oninput="updateSkinSection('+index+',\'eyebrow\',this.value)"></label>'+
-   '<label>Supporting text<textarea maxlength="3000" oninput="updateSkinSection('+index+',\'text\',this.value)">'+esc(sec.text||'')+'</textarea></label>'+
-   ((sec.type==='product-grid'||sec.type==='featured-products')?'<label>Product category<select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+categories.map(c=>'<option value="'+esc(c.id)+'" '+(String(sec.category_id)===String(c.id)?'selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></label><label>Product filter<select onchange="updateSkinSection('+index+',\'filter\',this.value)"><option value="all" '+(sec.filter==='all'?'selected':'')+'>All skincare products</option><option value="featured" '+(sec.filter==='featured'?'selected':'')+'>Featured only</option><option value="top_pick" '+(sec.filter==='top_pick'?'selected':'')+'>Top picks only</option><option value="trending" '+(sec.filter==='trending'?'selected':'')+'>Trending only</option></select></label><label>Products to place here<select multiple size="4" onchange="updateSkinSection('+index+',\'product_ids\',Array.from(this.selectedOptions).map(o=>o.value))">'+opts.map(p=>'<option value="'+esc(p.id)+'" '+(selected.has(p.id)?'selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select><small>Choose multiple products; chosen items display in this order.</small></label><label>Columns<select onchange="updateSkinSection('+index+',\'columns\',Number(this.value))"><option value="2" '+(sec.columns===2?'selected':'')+'>2</option><option value="3" '+(sec.columns===3?'selected':'')+'>3</option><option value="4" '+(sec.columns===4?'selected':'')+'>4</option></select></label>':'')+
-   
-   '<div class="skin-section-card-actions"><button type="button" onclick="moveSkinSection('+index+',-1)" '+(index===0?'disabled':'')+'>↑ Move up</button><button type="button" onclick="moveSkinSection('+index+',1)" '+(index===skinBuilderConfig.sections.length-1?'disabled':'')+'>↓ Move down</button><button type="button" onclick="duplicateSkinSection('+index+')">Duplicate</button><button type="button" class="is-danger" onclick="removeSkinSection('+index+')">Remove</button></div></div></article>';
- }).join('')||'<div class="muted">No sections yet. Add one below.</div>';
- if(document.body.classList.contains('skin-studio-fullpage'))queueSkinStudioPreview();
+ const sections=skinSectionsFor();
+ const typeLabels={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Featured products','category-grid':'Category browse','journal-grid':'Journal cards'};
+ root.innerHTML=sections.map((sec,index)=>{
+  const selected=skinStudioSelection?.type==='section'&&String(skinStudioSelection.id)===String(sec.id);
+  const visible=sec.visible!==false;
+  return '<article class="studio-section-outline '+(selected?'is-selected':'')+'" draggable="true" data-section-index="'+index+'" onclick="selectSkinItem(\'section\','+JSON.stringify(String(sec.id))+')" ondragstart="skinBuilderDragStart(event,'+index+')" ondragover="event.preventDefault()" ondrop="skinBuilderDrop(event,'+index+')">'+
+   '<span class="studio-outline-grip" title="Drag to reorder">⠿</span><div class="studio-section-outline-copy"><b>'+esc(sec.title||typeLabels[sec.type]||sec.type||'Section')+'</b><small>'+esc(typeLabels[sec.type]||'Section')+' · '+(visible?'Visible':'Hidden')+'</small></div>'+
+   '<div class="studio-section-outline-actions"><button type="button" title="Move up" '+(index===0?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',-1)">↑</button><button type="button" title="Move down" '+(index===sections.length-1?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',1)">↓</button><button type="button" title="'+(visible?'Hide':'Show')+'" onclick="event.stopPropagation();toggleSkinSectionVisibility('+index+')">'+(visible?'◉':'○')+'</button></div></article>';
+ }).join('')||'<div class="studio-library-empty">This page has no sections yet. Use + Add → Section to start building it.</div>';
+ renderSkinLibrary();
 }
+function renderSkinSelectedInspector(){
+ const root=document.getElementById('skinSelectedInspector');if(!root)return;
+ const title=document.getElementById('skinInspectorTitle'),subtitle=document.getElementById('skinInspectorSubtitle');
+ const setHead=(a,b)=>{if(title)title.textContent=a;if(subtitle)subtitle.textContent=b;};
+ if(!skinBuilderConfig){setHead('Loading','Waiting for the saved site configuration.');root.innerHTML='';return;}
+ const selection=skinStudioSelection||{type:'none'},sections=skinSectionsFor();
+ if(selection.type==='section'){
+  const index=sections.findIndex(s=>String(s.id)===String(selection.id)),sec=sections[index];
+  if(!sec){setHead('Select an item','Choose a section, product, page or category.');root.innerHTML='<div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b><p>Select an item in the left panel.</p></div>';return;}
+  const types={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Featured products','category-grid':'Category browse','journal-grid':'Journal cards'};
+  const field=(label,key,value,kind='text',max='180')=>'<label class="studio-inspector-field"><span>'+label+'</span>'+(kind==='textarea'?'<textarea maxlength="'+max+'" oninput="updateSkinSection('+index+',\''+key+'\',this.value)">'+esc(value||'')+'</textarea>':'<input type="'+kind+'" maxlength="'+(kind==='color'?'7':max)+'" value="'+esc(value||'')+'" oninput="updateSkinSection('+index+',\''+key+'\',this.value)">')+'</label>';
+  let html='<label class="studio-inspector-field"><span>Section type</span><select onchange="updateSkinSection('+index+',\'type\',this.value)">'+Object.entries(types).map(([val,label])=>'<option value="'+val+'" '+(sec.type===val?'selected':'')+'>'+label+'</option>').join('')+'</select></label>';
+  html+=field('Section title','title',sec.title,'text','180')+field('Small heading / eyebrow','eyebrow',sec.eyebrow,'text','100')+field('Supporting text','text',sec.text,'textarea','3000');
+  html+=field('Section background','backgroundColor',sec.backgroundColor||'#ffffff','color','7');
+  if(sec.type==='hero'||sec.type==='editorial')html+=field('Section image URL','image',sec.image||'','url','1600');
+  html+='<label class="studio-inspector-check"><input type="checkbox" '+(sec.visible!==false?'checked':'')+' onchange="updateSkinSection('+index+',\'visible\',this.checked)"> Show this section on the published page</label>';
+  if(sec.type==='product-grid'||sec.type==='featured-products'){
+   const activeIds=new Set((sec.product_ids||[]).map(String));
+   html+='<label class="studio-inspector-field"><span>Product filter</span><select onchange="updateSkinSection('+index+',\'filter\',this.value)">'+[['all','All eligible skincare products'],['featured','Featured picks'],['top_pick','Top picks'],['trending','Trending picks']].map(([v,l])=>'<option value="'+v+'" '+(sec.filter===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
+   html+='<label class="studio-inspector-field"><span>Category filter</span><select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+skinStoreCategoryOptions().map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
+   html+='<label class="studio-inspector-field"><span>Columns</span><select onchange="updateSkinSection('+index+',\'columns\',Number(this.value))">'+[2,3,4].map(n=>'<option value="'+n+'" '+(Number(sec.columns||4)===n?'selected':'')+'>'+n+' columns</option>').join('')+'</select></label>';
+   html+='<label class="studio-inspector-field"><span>Exact products in this section</span><select multiple size="7" onchange="updateSkinSection('+index+',\'product_ids\',Array.from(this.selectedOptions).map(o=>o.value))">'+skinProductOptions().map(p=>'<option value="'+esc(p.id)+'" '+(activeIds.has(String(p.id))?'selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select></label><p class="studio-inline-help">The order here is the display order. You can also drag cards directly in the canvas or drag a product from the left library into this grid.</p>';
+  }
+  if(sec.type==='category-grid'){
+   html+='<label class="studio-inspector-field"><span>Show category</span><select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+skinStoreCategoryOptions().map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
+  }
+  html+='<div class="studio-inspector-actions"><button class="btn" type="button" onclick="duplicateSkinSection('+index+')">Duplicate</button><button class="btn danger" type="button" onclick="removeSkinSection('+index+')">Delete section</button></div>';
+  setHead(types[sec.type]||'Section settings',skinPageLabel()+' · Section '+(index+1));
+  root.innerHTML=html;return;
+ }
+ if(selection.type==='product'){
+  const p=adminProducts.find(x=>String(x.id)===String(selection.id));
+  if(!p){setHead('Product not found','Refresh the product library.');root.innerHTML='<div class="studio-library-empty">This product record is not available.</div>';return;}
+  const id=String(p.id),image=skinImageOf(p),current=skinCategoryOfProduct(id);
+  const dest=retailerDestination(p);
+  const cats=skinStoreCategoryOptions();
+  setHead('Product settings',String(p.name||'Skincare product'));
+  root.innerHTML=(image?'<img src="'+esc(image)+'" alt="" style="display:block;width:100%;max-height:190px;object-fit:cover;border:1px solid #e3e9e1;border-radius:10px;margin-bottom:12px">':'')+
+   '<p class="studio-inline-help">'+esc(p.published?'Published product':'Draft product — publish before placing it in a live grid')+' · '+esc(retailerLabel(p))+'</p>'+
+   '<label class="studio-inspector-field"><span>Storefront category</span><select onchange="assignSkinProductCategory('+JSON.stringify(id)+',this.value)"><option value="">Automatic product type</option>'+cats.map(cat=>'<option value="'+esc(cat.slug)+'" '+(current===String(cat.slug)||current===String(cat.id)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>'+
+   '<p class="studio-inline-help">This category controls where the product appears in Nuvora Skin. It does not change the main Nuvora product taxonomy.</p>'+
+   (dest?'<a class="btn" style="display:inline-flex;margin:0 0 12px" href="'+esc(dest)+'" target="_blank" rel="noopener noreferrer">Check saved retailer link ↗</a>':'<div class="notice" style="font-size:10px">No specific retailer link is saved yet. Add the exact Amazon link in the product editor before publishing.</div>')+
+   '<div class="studio-inspector-actions"><button class="btn primary" type="button" onclick="editSkinProduct('+JSON.stringify(id)+')">Edit product details</button><button class="btn" type="button" onclick="togglePublish('+JSON.stringify(id)+')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" type="button" onclick="removeProduct('+JSON.stringify(id)+');renderSkinLibrary()">Delete</button></div>';
+  return;
+ }
+ if(selection.type==='page'){
+  const page=skinCurrentPage(selection.id);
+  if(!page){setHead('Home page','Choose a section in the outline to edit the homepage.');root.innerHTML='<div class="studio-empty-inspector"><b>Home page</b><p>The homepage sections can be selected from the Outline tab.</p></div>';return;}
+  setHead('Page settings',String(page.title||'Page'));
+  root.innerHTML='<label class="studio-inspector-field"><span>Page title</span><input maxlength="120" value="'+esc(page.title)+'" oninput="updateSkinPage('+JSON.stringify(String(page.slug))+',\'title\',this.value)"></label>'+
+   '<label class="studio-inspector-field"><span>Page address</span><input value="/pages/'+esc(page.slug)+'" readonly></label>'+
+   '<label class="studio-inspector-field"><span>Search description</span><textarea maxlength="1200" oninput="updateSkinPage('+JSON.stringify(String(page.slug))+',\'description\',this.value)">'+esc(page.description||'')+'</textarea></label>'+
+   '<label class="studio-inspector-check"><input type="checkbox" '+(page.visible!==false?'checked':'')+' onchange="updateSkinPage('+JSON.stringify(String(page.slug))+',\'visible\',this.checked)"> Published / visible to shoppers</label>'+
+   '<div class="studio-inspector-actions"><button class="btn primary" type="button" onclick="setSkinStudioPage('+JSON.stringify(String(page.slug))+');switchSkinStudioTab(\'outline\')">Edit page layout</button><button class="btn danger" type="button" onclick="deleteSkinPage('+JSON.stringify(String(page.slug))+')">Delete page</button></div>';
+  return;
+ }
+ if(selection.type==='default-category'){
+  const cat=skinDefaultCategories().find(x=>String(x.slug)===String(selection.id));
+  if(!cat){setHead('Storefront category','Choose a category from the left panel.');root.innerHTML='<div class="studio-library-empty">Select an existing category.</div>';return;}
+  setHead('Storefront category',String(cat.name));
+  root.innerHTML='<p class="studio-inline-help">This existing Nuvora Skin category keeps the established storefront card style. Select a product in the Products tab to assign it here, or filter a product section by this category.</p><div class="studio-inspector-actions"><button class="btn" type="button" onclick="switchSkinStudioTab(\'products\')">Open product library</button><button class="btn" type="button" onclick="openSkinAdd(\'category\')">Add a custom category</button></div>';
+  return;
+ }
+ if(selection.type==='category'){
+  const cat=(skinBuilderConfig.customCategories||[]).find(x=>String(x.slug)===String(selection.id)||String(x.id)===String(selection.id));
+  if(!cat){setHead('Category settings','Choose a category from the left panel.');root.innerHTML='<div class="studio-library-empty">Select a category to edit.</div>';return;}
+  setHead('Category settings',String(cat.name||'Category'));
+  root.innerHTML='<label class="studio-inspector-field"><span>Category name</span><input maxlength="100" value="'+esc(cat.name)+'" oninput="updateSkinCategory('+JSON.stringify(String(cat.slug))+',\'name\',this.value)"></label>'+
+   '<label class="studio-inspector-field"><span>URL slug</span><input value="'+esc(cat.slug)+'" readonly></label>'+
+   '<label class="studio-inspector-field"><span>Category description</span><textarea maxlength="1000" oninput="updateSkinCategory('+JSON.stringify(String(cat.slug))+',\'description\',this.value)">'+esc(cat.description||'')+'</textarea></label>'+
+   '<label class="studio-inspector-field"><span>Category image URL</span><input type="url" maxlength="1600" value="'+esc(cat.image||'')+'" oninput="updateSkinCategory('+JSON.stringify(String(cat.slug))+',\'image\',this.value)"></label>'+
+   (cat.image?'<img src="'+esc(cat.image)+'" alt="" style="width:100%;max-height:140px;object-fit:cover;border-radius:9px;margin-bottom:10px">':'')+
+   '<div class="studio-inspector-actions"><button class="btn danger" type="button" onclick="deleteSkinCategory('+JSON.stringify(String(cat.slug))+')">Delete category</button></div>';
+  return;
+ }
+ setHead('Select an item','Sections, products, pages and categories can all be managed here.');
+ root.innerHTML='<div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b><p>Select an item in the left panel or a page section in Outline.</p></div>';
+}
+function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();updateSkinStudioPageTitle();}
+function selectSkinItem(type,id){
+ if(type==='section'){skinStudioSelection={type:'section',id:String(id)};switchSkinStudioTab('outline');renderSkinBuilderSections();}
+ else if(type==='product'){skinStudioSelection={type:'product',id:String(id)};switchSkinStudioTab('products');renderSkinLibrary();}
+ else if(type==='page'){const page=skinCurrentPage(id);skinStudioSelection={type:'page',id:String(page?.slug||id)};switchSkinStudioTab('pages');renderSkinLibrary();}
+ else if(type==='category'){skinStudioSelection={type:'category',id:String(id)};switchSkinStudioTab('categories');renderSkinLibrary();}
+ else if(type==='default-category'){skinStudioSelection={type:'default-category',id:String(id)};switchSkinStudioTab('categories');renderSkinLibrary();}
+ renderSkinSelectedInspector();
+}
+function setSkinStudioPage(pageId){
+ skinStudioPageId=pageId==='home'?'home':String(pageId);
+ if(skinStudioPageId!=='home'&&!skinCurrentPage(skinStudioPageId)){skinStudioPageId='home';}
+ const sections=skinSectionsFor();
+ skinStudioSelection={type:'section',id:sections[0]?.id||''};
+ updateSkinStudioPageTitle();
+ switchSkinStudioTab('outline');
+ renderSkinStudioAll();
+ const frame=document.getElementById('skinStudioPreview');
+ if(frame){
+  const query='?preview=admin&studioPreview='+Date.now()+(skinStudioPageId!=='home'?'&page='+encodeURIComponent(skinStudioPageId):'');
+  frame.src=SKIN_CLIENT_ORIGIN+'/'+query;
+ }
+ skinBuilderMessage('Editing '+skinPageLabel()+'. Changes remain in your draft until published.','info');
+}
+function skinSlug(value){
+ return String(value||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80)||'skin-page';
+}
+function toggleSkinAddMenu(){
+ const el=document.getElementById('skinStudioAddMenu');if(!el)return;
+ el.hidden=!el.hidden;
+}
+function openSkinAdd(type){
+ const menu=document.getElementById('skinStudioAddMenu');if(menu)menu.hidden=true;
+ if(type==='product'){switchSkinStudioTab('products');const quick=document.getElementById('skinQuickAddPanel');if(quick)quick.hidden=true;renderSkinLibrary();return;}
+ skinQuickAddType=type;
+ const panel=document.getElementById('skinQuickAddPanel');if(!panel)return;
+ panel.hidden=false;
+ if(type==='page'){
+  panel.innerHTML='<h4>Create a page</h4><p>Build a new page using the same storefront sections and visual styles.</p><label>Page title<input id="skinQuickTitle" maxlength="120" placeholder="e.g. About Nuvora Skin"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="about-nuvora-skin"></label><label>Search description<textarea id="skinQuickDescription" maxlength="1200" placeholder="A short description for this page"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create page</button></div>';
+ }else if(type==='category'){
+  panel.innerHTML='<h4>Create a category</h4><p>Categories organize products while keeping the existing storefront card style.</p><label>Category name<input id="skinQuickTitle" maxlength="100" placeholder="e.g. Serums"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="serums"></label><label>Description<textarea id="skinQuickDescription" maxlength="1000" placeholder="What shoppers will find here"></textarea></label><label>Category image URL (optional)<input id="skinQuickImage" type="url" maxlength="1600" placeholder="https://…"></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create category</button></div>';
+ }else{
+  panel.innerHTML='<h4>Add a section</h4><p>Choose a section type. Its design will follow the existing Nuvora Skin storefront style.</p><label>Section type<select id="skinQuickType"><option value="product-grid">Product grid</option><option value="featured-products">Featured products</option><option value="hero">Hero / banner</option><option value="category-grid">Category browse</option><option value="editorial">Image and text</option><option value="journal-grid">Journal cards</option></select></label><label>Section title<input id="skinQuickTitle" maxlength="180" placeholder="Section title"></label><label>Small heading<input id="skinQuickEyebrow" maxlength="100" placeholder="Optional eyebrow"></label><label>Supporting text<textarea id="skinQuickDescription" maxlength="3000" placeholder="Optional supporting text"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Add section</button></div>';
+ }
+}
+function closeSkinQuickAdd(){const panel=document.getElementById('skinQuickAddPanel');if(panel){panel.hidden=true;panel.innerHTML='';}skinQuickAddType='';}
+function createSkinQuickItem(){
+ if(!skinBuilderConfig)return;
+ const title=String(document.getElementById('skinQuickTitle')?.value||'').trim();
+ const rawSlug=String(document.getElementById('skinQuickSlug')?.value||'').trim();
+ if(!title)return skinBuilderMessage('Enter a name before creating this item.','error');
+ collectSkinConfigFields();
+ if(skinQuickAddType==='page'){
+  const slug=skinSlug(rawSlug||title);
+  if(slug==='home'||slug==='shop'||slug==='saved'||slug==='journal'||slug.startsWith('product-')||skinBuilderConfig.pages.some(p=>p.slug===slug))return skinBuilderMessage('That page address is already used or reserved. Choose another slug.','error');
+  const page={id:slug,slug,title,description:String(document.getElementById('skinQuickDescription')?.value||''),visible:true,sections:[
+   {id:slug+'-hero',type:'hero',visible:true,title,eyebrow:'',text:'',image:'',columns:4,product_ids:[]},
+   {id:slug+'-products',type:'product-grid',visible:true,title:'Explore '+title,eyebrow:'The Nuvora Skin edit',text:'Browse the products selected for this page.',filter:'all',columns:3,product_ids:[]}
+  ]};
+  skinBuilderConfig.pages.push(page);skinStudioPageId=slug;skinStudioSelection={type:'section',id:page.sections[0].id};closeSkinQuickAdd();skinMarkDirty('Page created in draft. Add and arrange its content, then publish when it is ready.');setSkinStudioPage(slug);return;
+ }
+ if(skinQuickAddType==='category'){
+  const slug=skinSlug(rawSlug||title);
+  if(skinBuilderConfig.customCategories.some(x=>x.slug===slug)||categories.some(x=>String(x.slug)===slug))return skinBuilderMessage('That category address already exists. Choose another slug.','error');
+  const image=String(document.getElementById('skinQuickImage')?.value||'').trim();
+  if(image&&(!validURL(image)||!/^https:\/\//i.test(image)))return skinBuilderMessage('Category images must use a valid HTTPS URL.','error');
+  skinBuilderConfig.customCategories.push({id:slug,slug,name:title,description:String(document.getElementById('skinQuickDescription')?.value||''),image});
+  skinStudioSelection={type:'category',id:slug};closeSkinQuickAdd();skinMarkDirty('Category created in draft. Assign products to it in the product inspector.');switchSkinStudioTab('categories');renderSkinSelectedInspector();return;
+ }
+ if(skinQuickAddType==='section'){
+  const type=document.getElementById('skinQuickType')?.value||'product-grid';
+  const id='section-'+Date.now().toString(36);
+  const section={id,type,visible:true,title,eyebrow:String(document.getElementById('skinQuickEyebrow')?.value||''),text:String(document.getElementById('skinQuickDescription')?.value||''),image:'',backgroundColor:'',filter:type==='featured-products'?'featured':'all',columns:3,product_ids:[],category_id:''};
+  skinSectionsFor().push(section);skinStudioSelection={type:'section',id};closeSkinQuickAdd();skinMarkDirty('Section added to the current page. Drag it in the outline or canvas to arrange it.');switchSkinStudioTab('outline');renderSkinStudioAll();queueSkinStudioPreview();
+ }
+}
+function addSkinBuilderSection(){openSkinAdd('section');}
+function skinProductDragStart(event,id){
+ if(!event?.dataTransfer)return;
+ event.dataTransfer.setData('text/plain','product:'+String(id));event.dataTransfer.effectAllowed='copy';
+}
+function assignSkinProductCategory(id,slug){
+ skinBuilderConfig.productCategoryMap=skinBuilderConfig.productCategoryMap||{};
+ if(!slug)delete skinBuilderConfig.productCategoryMap[String(id)];
+ else skinBuilderConfig.productCategoryMap[String(id)]=String(slug);
+ skinMarkDirty('Product category updated in the draft. Publish to update storefront browse filters.');
+ renderSkinLibrary();queueSkinStudioPreview();
+}
+function updateSkinCategory(slug,key,value){
+ const cat=(skinBuilderConfig.customCategories||[]).find(x=>String(x.slug)===String(slug));if(!cat)return;
+ cat[key]=String(value??'');
+ if(key==='name'){const label=document.getElementById('skinInspectorTitle');if(label)label.textContent=cat.name;}
+ skinMarkDirty('Category details changed in the draft.');renderSkinLibrary();queueSkinStudioPreview();
+}
+function deleteSkinCategory(slug){
+ const cat=(skinBuilderConfig.customCategories||[]).find(x=>String(x.slug)===String(slug));if(!cat)return;
+ if(!confirm('Delete the category “'+cat.name+'”? Products using it will return to automatic product-type categories.'))return;
+ skinBuilderConfig.customCategories=skinBuilderConfig.customCategories.filter(x=>String(x.slug)!==String(slug));
+ Object.keys(skinBuilderConfig.productCategoryMap||{}).forEach(id=>{if(String(skinBuilderConfig.productCategoryMap[id])===String(slug))delete skinBuilderConfig.productCategoryMap[id];});
+ skinSectionsFor().forEach(s=>{if(String(s.category_id||'')===String(slug))s.category_id='';});
+ skinStudioSelection={type:'none',id:''};skinMarkDirty('Category removed from the draft.');renderSkinStudioAll();queueSkinStudioPreview();
+}
+function updateSkinPage(slug,key,value){
+ const page=(skinBuilderConfig.pages||[]).find(p=>String(p.slug)===String(slug));if(!page)return;
+ page[key]=key==='visible'?!!value:String(value??'');
+ skinMarkDirty('Page settings changed in the draft.');
+ updateSkinStudioPageTitle();renderSkinLibrary();renderSkinSelectedInspector();queueSkinStudioPreview();
+}
+function deleteSkinPage(slug){
+ const page=skinCurrentPage(slug);if(!page)return;
+ if(!confirm('Delete the page “'+page.title+'”? This removes its layout from the draft.'))return;
+ skinBuilderConfig.pages=skinBuilderConfig.pages.filter(p=>String(p.slug)!==String(slug));
+ skinStudioPageId='home';skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||''};skinMarkDirty('Page removed from the draft.');
+ renderSkinStudioAll();setSkinStudioPage('home');
+}
+function skinSelectedCategoryValue(id){
+ return String((skinBuilderConfig.productCategoryMap||{})[String(id)]||'');
+}
+function selectSkinPreviewDevice(device,button){
+ const root=document.getElementById('skinPreviewFrameOuter');if(root)root.dataset.device=device;
+ document.querySelectorAll('.studio-device-controls button').forEach(b=>b.classList.remove('active'));
+ if(button)button.classList.add('active');
+}
+function setSkinPreviewDevice(device,button){selectSkinPreviewDevice(device,button);}
+function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();updateSkinStudioPageTitle();}
 function updateSkinSection(index,key,value){
- const sec=skinBuilderConfig?.sections?.[index];if(!sec)return;sec[key]=value;
- if(key==='type'){sec.product_ids=[];sec.category_id='';sec.filter=value==='featured-products'?'featured':'all';renderSkinBuilderSections();return;}
- const sync=(cfgKey,fieldId)=>{skinBuilderConfig[cfgKey]=String(value??'');const el=document.getElementById(fieldId);if(el)el.value=String(value??'');};
- if(sec.type==='hero'){if(key==='title')sync('heroTitle','skinCfgHeroTitle');if(key==='eyebrow')sync('heroEyebrow','skinCfgHeroEyebrow');if(key==='text')sync('heroDescription','skinCfgHeroDescription');}
- if(sec.type==='editorial'){if(key==='title')sync('approachTitle','skinCfgApproachTitle');if(key==='eyebrow')sync('approachEyebrow','skinCfgApproachEyebrow');if(key==='text')sync('approachBody','skinCfgApproachBody');}
+ const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;
+ sec[key]=value;
+ if(key==='type'){sec.product_ids=[];sec.category_id='';sec.filter=value==='featured-products'?'featured':'all';}
+ if(skinStudioPageId==='home'&&sec.type==='hero'){
+  const map={title:'heroTitle',eyebrow:'heroEyebrow',text:'heroDescription'};
+  if(map[key])skinBuilderConfig[map[key]]=String(value??'');
+  if(key==='image')skinBuilderConfig.heroImage=String(value??'');
+  const elementIds={title:'skinCfgHeroTitle',eyebrow:'skinCfgHeroEyebrow',text:'skinCfgHeroDescription',image:'skinCfgHeroImage'};
+  if(elementIds[key]){const el=document.getElementById(elementIds[key]);if(el)el.value=String(value??'');}
+ }
+ if(skinStudioPageId==='home'&&sec.type==='editorial'){
+  const map={title:'approachTitle',eyebrow:'approachEyebrow',text:'approachBody'};if(map[key])skinBuilderConfig[map[key]]=String(value??'');
+  const elementIds={title:'skinCfgApproachTitle',eyebrow:'skinCfgApproachEyebrow',text:'skinCfgApproachBody'};
+  if(elementIds[key]){const el=document.getElementById(elementIds[key]);if(el)el.value=String(value??'');}
+ }
+ skinMarkDirty('Section changes are in draft. Publish when you are ready.');
+ if(['type','visible','category_id','filter','columns','product_ids','backgroundColor'].includes(key))renderSkinStudioAll();
+ else {renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();}
+ queueSkinStudioPreview();
 }
-function skinBuilderDragStart(event,index){skinDragSectionIndex=index;event.dataTransfer?.setData('text/plain',String(index));if(event.dataTransfer)event.dataTransfer.effectAllowed='move';}
-function skinBuilderDrop(event,target){event.preventDefault();const source=skinDragSectionIndex??Number(event.dataTransfer?.getData('text/plain'));skinDragSectionIndex=null;if(!Number.isInteger(source)||source<0||source>=skinBuilderConfig.sections.length||source===target)return;const [item]=skinBuilderConfig.sections.splice(source,1);skinBuilderConfig.sections.splice(target,0,item);renderSkinBuilderSections();queueSkinStudioPreview();}
-function moveSkinSection(index,delta){const target=index+delta;if(!skinBuilderConfig||target<0||target>=skinBuilderConfig.sections.length)return;const [item]=skinBuilderConfig.sections.splice(index,1);skinBuilderConfig.sections.splice(target,0,item);renderSkinBuilderSections();}
-function addSkinBuilderSection(){
- if(!skinBuilderConfig)skinBuilderConfig=mergeSkinSiteConfig(null);
- const type=document.getElementById('skinNewSectionType').value,labels={hero:'New hero','product-grid':'New skincare collection',editorial:'New editorial section','featured-products':'Featured skincare picks','category-grid':'Browse by category'};
- skinBuilderConfig.sections.push({id:'skin-section-'+Date.now().toString(36),type,visible:true,title:labels[type]||'New section',eyebrow:'',text:'',filter:type==='featured-products'?'featured':'all',columns:4,product_ids:[],category_id:''});
- renderSkinBuilderSections();skinBuilderMessage('Section added to your unsaved draft. Save to publish it.','info');
+function toggleSkinSectionVisibility(index){
+ const sec=skinSectionsFor()[index];if(!sec)return;sec.visible=sec.visible===false;
+ skinMarkDirty('Section visibility changed in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
-function duplicateSkinSection(index){const original=skinBuilderConfig?.sections?.[index];if(!original)return;const clone=JSON.parse(JSON.stringify(original));clone.id='skin-section-'+Date.now().toString(36);clone.title=(clone.title||'Section')+' copy';skinBuilderConfig.sections.splice(index+1,0,clone);renderSkinBuilderSections();}
-function removeSkinSection(index){const section=skinBuilderConfig?.sections?.[index];if(!section)return;if(!confirm('Remove the "'+(section.title||'section')+'" section from the storefront draft?'))return;skinBuilderConfig.sections.splice(index,1);renderSkinBuilderSections();}
-const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
+function skinBuilderDragStart(event,index){
+ const section=skinSectionsFor()[index];if(!section||!event?.dataTransfer)return;
+ skinDragSectionIndex=index;event.dataTransfer.setData('text/plain','section:'+String(section.id));event.dataTransfer.effectAllowed='move';
+}
+function skinBuilderDrop(event,targetIndex){
+ event.preventDefault();const source=event.dataTransfer?.getData('text/plain')||'';
+ if(!source.startsWith('section:'))return;
+ const id=source.slice(8),sections=skinSectionsFor(),from=sections.findIndex(s=>String(s.id)===id);
+ if(from<0||targetIndex<0||from===targetIndex)return;
+ const [section]=sections.splice(from,1);sections.splice(targetIndex,0,section);
+ skinStudioSelection={type:'section',id:String(section.id)};skinMarkDirty('Section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
+}
+function moveSkinSection(index,delta){
+ const sections=skinSectionsFor(),target=index+delta;if(target<0||target>=sections.length)return;
+ const [item]=sections.splice(index,1);sections.splice(target,0,item);
+ skinStudioSelection={type:'section',id:String(item.id)};skinMarkDirty('Section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
+}
+function duplicateSkinSection(index){
+ const sections=skinSectionsFor(),original=sections[index];if(!original)return;
+ const clone=JSON.parse(JSON.stringify(original));clone.id='section-'+Date.now().toString(36);clone.title=(clone.title||'Section')+' copy';sections.splice(index+1,0,clone);
+ skinStudioSelection={type:'section',id:String(clone.id)};skinMarkDirty('Section duplicated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
+}
+function removeSkinSection(index){
+ const sections=skinSectionsFor(),section=sections[index];if(!section)return;
+ if(!confirm('Remove the “'+(section.title||'section')+'” section from this page draft?'))return;
+ sections.splice(index,1);skinStudioSelection={type:'section',id:String(sections[Math.max(0,index-1)]?.id||'')};
+ skinMarkDirty('Section removed from the draft.');renderSkinStudioAll();queueSkinStudioPreview();
+}
+function skinProductsForSection(sec){
+ let list=adminProducts.filter(p=>isSkinProduct(p)&&!!p.published);
+ if(sec.filter==='featured')list=list.filter(p=>!!p.featured);
+ else if(sec.filter==='top_pick')list=list.filter(p=>!!p.top_pick);
+ else if(sec.filter==='trending')list=list.filter(p=>!!p.trending);
+ if(sec.category_id){
+  const custom=String(sec.category_id),builtIn=skinDefaultCategories().some(x=>x.slug===custom);
+  list=list.filter(p=>String(p.category_id||'')===custom||skinSelectedCategoryValue(p.id)===custom||(builtIn&&inferSkinProductCategory(p)===custom));
+ }
+ return list;
+}
+function addSkinProductToSection(productId,targetId,pageId){
+ const product=adminProducts.find(p=>String(p.id)===String(productId));if(!product)return skinBuilderMessage('That product could not be found. Refresh the product library and try again.','error');
+ if(!product.published)return skinBuilderMessage('Publish this product from the manual product editor before placing it into the live page. Draft products are not displayed to shoppers.','warning');
+ let sections=skinSectionsFor(pageId),sec=sections.find(s=>String(s.id)===String(targetId));
+ if(!sec||!['product-grid','featured-products'].includes(sec.type))sec=sections.find(s=>s.visible!==false&&['product-grid','featured-products'].includes(s.type));
+ if(!sec){sec={id:'section-'+Date.now().toString(36),type:'product-grid',visible:true,title:'New skincare picks',eyebrow:'The edit',text:'',filter:'all',columns:3,product_ids:[]};sections.push(sec);}
+ let ids=Array.isArray(sec.product_ids)?sec.product_ids.map(String):[];
+ if(!ids.length)ids=skinProductsForSection(sec).map(p=>String(p.id));
+ if(!ids.includes(String(productId)))ids.push(String(productId));
+ sec.product_ids=ids.slice(0,60);skinStudioPageId=pageId||'home';skinStudioSelection={type:'section',id:String(sec.id)};
+ skinMarkDirty('Product placed in “'+(sec.title||'Product grid')+'”. Publish to make the placement public.');renderSkinStudioAll();queueSkinStudioPreview();
+}
+function moveSkinProductInSection(productId,targetProductId,sectionId,pageId){
+ const sections=skinSectionsFor(pageId),sec=sections.find(s=>String(s.id)===String(sectionId));
+ if(!sec||!['product-grid','featured-products'].includes(sec.type))return;
+ let ids=Array.isArray(sec.product_ids)?sec.product_ids.map(String):[];
+ if(!ids.length)ids=skinProductsForSection(sec).map(p=>String(p.id));
+ const from=ids.indexOf(String(productId)),to=ids.indexOf(String(targetProductId));
+ if(from<0||to<0||from===to)return;
+ const [item]=ids.splice(from,1);ids.splice(ids.indexOf(String(targetProductId)),0,item);sec.product_ids=ids.slice(0,60);
+ skinStudioPageId=pageId||'home';skinStudioSelection={type:'section',id:String(sectionId)};skinMarkDirty('Product order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
+}
 function sendSkinStudioPreview(){
  const frame=document.getElementById('skinStudioPreview');
  if(!frame||!skinBuilderConfig||!frame.contentWindow)return;
@@ -1643,7 +2242,7 @@ function refreshSkinStudioPreview(){
  collectSkinConfigFields();
  const frame=document.getElementById('skinStudioPreview');if(!frame)return;
  if(!String(frame.src||'').startsWith(SKIN_CLIENT_ORIGIN+'/')){
-  frame.src=SKIN_CLIENT_ORIGIN+'/?preview=admin&studioPreview='+Date.now();
+  frame.src=SKIN_CLIENT_ORIGIN+'/?preview=admin&studioPreview='+Date.now()+(skinStudioPageId!=='home'?'&page='+encodeURIComponent(skinStudioPageId):'');
   return;
  }
  sendSkinStudioPreview();
@@ -1652,54 +2251,60 @@ let skinStudioPreviewTimer=null;
 function queueSkinStudioPreview(){if(skinStudioPreviewTimer)clearTimeout(skinStudioPreviewTimer);skinStudioPreviewTimer=setTimeout(refreshSkinStudioPreview,450);}
 function wireSkinStudioCanvas(){
  const frame=document.getElementById('skinStudioPreview');if(!frame)return;
- if(!frame.dataset.canvasWired){
-  frame.dataset.canvasWired='1';
-  frame.addEventListener('load',sendSkinStudioPreview);
- }
+ if(!frame.dataset.canvasWired){frame.dataset.canvasWired='1';frame.addEventListener('load',sendSkinStudioPreview);}
  if(!window.__nuvoraSkinStudioBridgeWired){
   window.__nuvoraSkinStudioBridgeWired=true;
   window.addEventListener('message',event=>{
    if(event.origin!==SKIN_CLIENT_ORIGIN||event.source!==document.getElementById('skinStudioPreview')?.contentWindow||!event.data)return;
-   if(event.data.type==='nuvora-skin-studio-ready'){sendSkinStudioPreview();return;}
-   if(event.data.type==='nuvora-skin-studio-product-reorder'){
-    if(!skinBuilderConfig||!Array.isArray(event.data.productIds))return;
-    const section=skinBuilderConfig.sections.find(item=>String(item.id)===String(event.data.sectionId));
-    if(!section||!['product-grid','featured-products'].includes(section.type))return;
-    const allowed=new Set(skinProductOptions().map(item=>String(item.id)));
-    const ordered=event.data.productIds.map(String);
-    if(ordered.length<2||ordered.length>60||new Set(ordered).size!==ordered.length||ordered.some(id=>!allowed.has(id)))return;
-    section.product_ids=ordered;
-    renderSkinBuilderSections();
-    skinBuilderMessage('Product order updated in the canvas draft. Save & publish site changes to apply it.','info');
+   const data=event.data;
+   if(data.type==='nuvora-skin-studio-ready'){sendSkinStudioPreview();return;}
+   if(!skinBuilderConfig)return;
+   if(data.type==='nuvora-skin-studio-select-section'){
+    skinStudioPageId=data.pageId||'home';
+    skinStudioSelection={type:'section',id:String(data.sectionId||'')};
+    switchSkinStudioTab('outline');renderSkinStudioAll();
+    skinBuilderMessage('Selected '+(skinSectionsFor().find(x=>String(x.id)===String(data.sectionId))?.title||'section')+'. Edit its settings in the right panel.','info');
     return;
    }
-   if(event.data.type!=='nuvora-skin-studio-reorder'||!skinBuilderConfig)return;
-   const from=skinBuilderConfig.sections.findIndex(section=>String(section.id)===String(event.data.sourceId));
-   const to=skinBuilderConfig.sections.findIndex(section=>String(section.id)===String(event.data.targetId));
-   if(from<0||to<0||from===to)return;
-   const [section]=skinBuilderConfig.sections.splice(from,1);
-   skinBuilderConfig.sections.splice(to,0,section);
-   renderSkinBuilderSections();
-   skinBuilderMessage('Page order updated in the draft. Save & publish site changes to apply it.','info');
+   if(data.type==='nuvora-skin-studio-select-product'){
+    selectSkinItem('product',String(data.productId||''));
+    skinBuilderMessage('Selected product. Edit its category here or open the manual product editor for full details.','info');
+    return;
+   }
+   if(data.type==='nuvora-skin-studio-reorder'){
+    const sections=skinSectionsFor(data.pageId||'home');
+    const from=sections.findIndex(section=>String(section.id)===String(data.sourceId));
+    const to=sections.findIndex(section=>String(section.id)===String(data.targetId));
+    if(from<0||to<0||from===to)return;
+    const [section]=sections.splice(from,1);sections.splice(to,0,section);
+    skinStudioPageId=data.pageId||'home';skinStudioSelection={type:'section',id:String(section.id)};
+    skinMarkDirty('Page section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();return;
+   }
+   if(data.type==='nuvora-skin-studio-add-product'){addSkinProductToSection(data.productId,data.targetId,data.pageId||'home');return;}
+   if(data.type==='nuvora-skin-studio-move-product'){moveSkinProductInSection(data.productId,data.targetProductId,data.sectionId,data.pageId||'home');return;}
   });
  }
 }
 function previewSkinSite(){
- const frame=document.getElementById('skinStudioPreview');
- if(frame){window.open(SKIN_CLIENT_ORIGIN+'/', '_blank','noopener');skinBuilderMessage('Opened the published Nuvora Skin storefront. Unsaved edits remain in the canvas until you publish.','info');}
+ window.open(SKIN_CLIENT_ORIGIN+'/', '_blank','noopener');
+ skinBuilderMessage('Opened the live Nuvora Skin storefront. Unsaved changes remain in the builder draft.','info');
 }
 async function saveSkinSiteConfig(){
- if(!skinSiteConfigLoaded)return skinBuilderMessage('Existing saved settings were not loaded successfully. Reload the Skin Care workspace before saving, so a default draft cannot overwrite the live configuration.','error');
+ if(!skinSiteConfigLoaded)return skinBuilderMessage('The existing site settings did not load successfully. Reload the Skin Care workspace before publishing.','error');
  if(!skinBuilderConfig)return skinBuilderMessage('The saved configuration has not loaded yet. Reload and retry.','error');
  collectSkinConfigFields();
- if(!skinBuilderConfig.sections.some(s=>s.visible!==false&&(s.type==='product-grid'||s.type==='featured-products')))return skinBuilderMessage('Keep at least one visible product-grid section so shoppers can browse the catalog.','error');
+ if(!skinBuilderConfig.sections.some(s=>s.visible!==false&&(s.type==='product-grid'||s.type==='featured-products')))return skinBuilderMessage('Keep at least one visible product grid on the homepage so shoppers can browse products.','error');
  if(!/^#[0-9a-f]{6}$/i.test(String(skinBuilderConfig.accentColor||'')))return skinBuilderMessage('Choose a valid accent color.','error');
  if(skinBuilderConfig.heroImage&&!/^https:\/\//i.test(skinBuilderConfig.heroImage))return skinBuilderMessage('Hero image must use HTTPS.','error');
- const btn=document.querySelector('button[onclick="saveSkinSiteConfig()"]');if(btn){btn.disabled=true;btn.textContent='Saving…';}
- skinBuilderMessage('Saving the layout and copy…');
- try{const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_config:skinBuilderConfig}});skinBuilderConfig=mergeSkinSiteConfig(response?.skin_site_config||skinBuilderConfig);fillSkinConfigFields();refreshSkinStudioPreview();skinBuilderMessage('Saved & published. The live Nuvora Skin storefront can now load this layout.','success');}
- catch(e){skinBuilderMessage('Save failed: '+(e.message||'unknown error')+'. No live changes were confirmed.','error');}
- finally{if(btn){btn.disabled=false;btn.textContent='Save & publish site changes';}}
+ const btn=document.querySelector('button[onclick="saveSkinSiteConfig()"]');if(btn){btn.disabled=true;btn.textContent='Publishing…';}
+ skinBuilderMessage('Publishing the current site draft…','info');
+ try{
+  const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_config:skinBuilderConfig}});
+  skinBuilderConfig=mergeSkinSiteConfig(response?.skin_site_config||skinBuilderConfig);
+  fillSkinConfigFields();sendSkinStudioPreview();skinSetSavedLabel('All changes published');
+  skinBuilderMessage('Published. The live Nuvora Skin site now uses this saved configuration.','success');
+ }catch(e){skinBuilderMessage('Publish failed: '+(e.message||'unknown error')+'. No live changes were confirmed.','error');}
+ finally{if(btn){btn.disabled=false;btn.textContent='Publish changes';}}
 }
 function setSkinAdminFormMode(enabled){
  document.body.classList.toggle('skin-admin-mode',!!enabled);
@@ -1714,6 +2319,28 @@ function populateSkinRecommendations(selectedIds=[]){
  const el=document.getElementById('pfRecommendedProducts');if(!el)return;
  const selected=new Set((selectedIds||[]).map(String)),current=String(window.editingProductId||'');
  el.innerHTML=skinProductOptions().filter(p=>p.id!==current).map(p=>'<option value="'+esc(p.id)+'" '+(selected.has(p.id)?'selected':'')+'>'+esc(p.name)+'</option>').join('');
+}
+async function openSkinManualProduct(){
+ try{
+  const cat=await ensureSkinCategory(false);
+  if(!categories.length)await loadCategories();
+  openProductModal(false);
+  window.skinCareImportMode=true;
+  setSkinAdminFormMode(true);
+  document.getElementById('productModalTitle').textContent='Add skincare product manually';
+  document.getElementById('productModalSub').textContent='Enter the real product information and exact Amazon affiliate link. Nothing is published until you choose to publish it.';
+  document.getElementById('pfKind').value='find';
+  document.getElementById('pfSource').value='amazon';
+  document.getElementById('pfCategory').value=cat?.id||'';
+  document.getElementById('pfRetailer').value='Amazon';
+  document.getElementById('pfPrice').value='';
+  document.getElementById('pfListPrice').value='';
+  document.getElementById('pfDiscount').value='';
+  document.getElementById('pfDestination').placeholder='Paste the exact Amazon Associates product URL';
+  document.getElementById('amazonUrlInput').placeholder='Optional: paste an Amazon product link to import details';
+  populateSkinRecommendations();
+  document.getElementById('productModal').classList.add('open');
+ }catch(e){skinBuilderMessage('Could not open manual product editor: '+(e.message||e),'error');}
 }
 async function editSkinProduct(id){
  const p=adminProducts.find(x=>String(x.id)===String(id));if(!p)return setAdminStatus('Product not found in the skincare catalog.','error');
