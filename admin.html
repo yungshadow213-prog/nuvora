@@ -2195,7 +2195,7 @@ function renderSkinSelectedInspector(){
  setHead('Select an item','Sections, products, pages and categories can all be managed here.');
  root.innerHTML='<div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b><p>Select an item in the left panel or a page section in Outline.</p></div>';
 }
-function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();updateSkinStudioPageTitle();}
+function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();}
 function selectSkinItem(type,id){
  if(type==='section'){skinStudioSelection={type:'section',id:String(id)};switchSkinStudioTab('outline');renderSkinBuilderSections();}
  else if(type==='product'){skinStudioSelection={type:'product',id:String(id)};switchSkinStudioTab('products');renderSkinLibrary();}
@@ -2256,6 +2256,7 @@ function createSkinQuickItem(){
   ]};
   skinBuilderConfig.pages.push(page);
   if(Array.isArray(skinBuilderConfig.navigationItems)&&!skinBuilderConfig.navigationItems.some(link=>String(link.url||'')==='/pages/'+slug))skinBuilderConfig.navigationItems.push({id:'page-'+slug,label:title,url:'/pages/'+slug,visible:true});
+  renderSkinSiteLinkEditor('navigationItems');
   skinStudioPageId=slug;skinStudioSelection={type:'section',id:page.sections[0].id};closeSkinQuickAdd();skinMarkDirty('Page created in draft. Add and arrange its content, then publish when it is ready.');setSkinStudioPage(slug);return;
  }
  if(skinQuickAddType==='category'){
@@ -2265,6 +2266,7 @@ function createSkinQuickItem(){
   if(image&&(!validURL(image)||!/^https:\/\//i.test(image)))return skinBuilderMessage('Category images must use a valid HTTPS URL.','error');
   skinBuilderConfig.customCategories.push({id:slug,slug,name:title,description:String(document.getElementById('skinQuickDescription')?.value||''),image});
   if(Array.isArray(skinBuilderConfig.navigationItems)&&!skinBuilderConfig.navigationItems.some(link=>String(link.id||'')==='category-'+slug))skinBuilderConfig.navigationItems.push({id:'category-'+slug,label:title,url:'/shop?category='+encodeURIComponent(title),visible:true});
+  renderSkinSiteLinkEditor('navigationItems');
   skinStudioSelection={type:'category',id:slug};closeSkinQuickAdd();skinMarkDirty('Category created in draft. Assign products to it in the product inspector.');switchSkinStudioTab('categories');renderSkinSelectedInspector();return;
  }
  if(skinQuickAddType==='section'){
@@ -2296,6 +2298,7 @@ function deleteSkinCategory(slug){
  const cat=(skinBuilderConfig.customCategories||[]).find(x=>String(x.slug)===String(slug));if(!cat)return;
  if(!confirm('Delete the category “'+cat.name+'”? Products using it will return to automatic product-type categories.'))return;
  skinBuilderConfig.customCategories=skinBuilderConfig.customCategories.filter(x=>String(x.slug)!==String(slug));
+ skinBuilderConfig.navigationItems=(skinBuilderConfig.navigationItems||[]).filter(link=>String(link.id||'')!=='category-'+String(slug));
  Object.keys(skinBuilderConfig.productCategoryMap||{}).forEach(id=>{if(String(skinBuilderConfig.productCategoryMap[id])===String(slug))delete skinBuilderConfig.productCategoryMap[id];});
  skinSectionsFor().forEach(s=>{if(String(s.category_id||'')===String(slug))s.category_id='';});
  skinStudioSelection={type:'none',id:''};skinMarkDirty('Category removed from the draft.');renderSkinStudioAll();queueSkinStudioPreview();
@@ -2310,6 +2313,7 @@ function deleteSkinPage(slug){
  const page=skinCurrentPage(slug);if(!page)return;
  if(!confirm('Delete the page “'+page.title+'”? This removes its layout from the draft.'))return;
  skinBuilderConfig.pages=skinBuilderConfig.pages.filter(p=>String(p.slug)!==String(slug));
+ skinBuilderConfig.navigationItems=(skinBuilderConfig.navigationItems||[]).filter(link=>String(link.url||'')!=='/pages/'+String(slug));
  skinStudioPageId='home';skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||''};skinMarkDirty('Page removed from the draft.');
  renderSkinStudioAll();setSkinStudioPage('home');
 }
@@ -2322,7 +2326,7 @@ function selectSkinPreviewDevice(device,button){
  if(button)button.classList.add('active');
 }
 function setSkinPreviewDevice(device,button){selectSkinPreviewDevice(device,button);}
-function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();updateSkinStudioPageTitle();}
+function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();}
 function updateSkinSection(index,key,value){
  const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;
  sec[key]=value;
