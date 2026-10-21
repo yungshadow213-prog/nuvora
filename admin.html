@@ -2080,7 +2080,9 @@ function createSkinQuickItem(){
    {id:slug+'-hero',type:'hero',visible:true,title,eyebrow:'',text:'',image:'',columns:4,product_ids:[]},
    {id:slug+'-products',type:'product-grid',visible:true,title:'Explore '+title,eyebrow:'The Nuvora Skin edit',text:'Browse the products selected for this page.',filter:'all',columns:3,product_ids:[]}
   ]};
-  skinBuilderConfig.pages.push(page);skinStudioPageId=slug;skinStudioSelection={type:'section',id:page.sections[0].id};closeSkinQuickAdd();skinMarkDirty('Page created in draft. Add and arrange its content, then publish when it is ready.');setSkinStudioPage(slug);return;
+  skinBuilderConfig.pages.push(page);
+  if(Array.isArray(skinBuilderConfig.navigationItems)&&!skinBuilderConfig.navigationItems.some(link=>String(link.url||'')==='/pages/'+slug))skinBuilderConfig.navigationItems.push({id:'page-'+slug,label:title,url:'/pages/'+slug,visible:true});
+  skinStudioPageId=slug;skinStudioSelection={type:'section',id:page.sections[0].id};closeSkinQuickAdd();skinMarkDirty('Page created in draft. Add and arrange its content, then publish when it is ready.');setSkinStudioPage(slug);return;
  }
  if(skinQuickAddType==='category'){
   const slug=skinSlug(rawSlug||title);
@@ -2088,6 +2090,7 @@ function createSkinQuickItem(){
   const image=String(document.getElementById('skinQuickImage')?.value||'').trim();
   if(image&&(!validURL(image)||!/^https:\/\//i.test(image)))return skinBuilderMessage('Category images must use a valid HTTPS URL.','error');
   skinBuilderConfig.customCategories.push({id:slug,slug,name:title,description:String(document.getElementById('skinQuickDescription')?.value||''),image});
+  if(Array.isArray(skinBuilderConfig.navigationItems)&&!skinBuilderConfig.navigationItems.some(link=>String(link.id||'')==='category-'+slug))skinBuilderConfig.navigationItems.push({id:'category-'+slug,label:title,url:'/shop?category='+encodeURIComponent(title),visible:true});
   skinStudioSelection={type:'category',id:slug};closeSkinQuickAdd();skinMarkDirty('Category created in draft. Assign products to it in the product inspector.');switchSkinStudioTab('categories');renderSkinSelectedInspector();return;
  }
  if(skinQuickAddType==='section'){
