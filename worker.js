@@ -2149,6 +2149,28 @@ function validateSkinSiteConfig(value){
   if(value.accentColor!==undefined&&!/^#[0-9a-f]{6}$/i.test(String(value.accentColor)))return 'Skin Studio accent color must be a six-digit hex color.';
   if(value.heroImage){try{if(new URL(value.heroImage).protocol!=='https:')return 'Skin Studio hero image must use HTTPS.';}catch{return 'Skin Studio hero image URL is invalid.';}}
   if(value.productGuideTemplate!==undefined&&!['editorial','compact','minimal'].includes(String(value.productGuideTemplate)))return 'Skin Studio product guide layout is invalid.';
+  const siteTextLimits={brandName:60,brandSuffix:60,headerTagline:120,announcementAside:120,headerCtaLabel:80,footerIntro:1200,footerStamp:120,footerExploreHeading:80,footerReadHeading:80,footerNoteHeading:100,footerNoteBody:1800,footerBottomTagline:180,footerCopyright:80,announcement:180,footerNote:1800,shopEyebrow:120,shopHeadline:180,shopHeadlineEmphasis:180,shopDescription:1200,journalEyebrow:120,journalHeadline:180,journalHeadlineEmphasis:180,journalDescription:1200,savedEyebrow:120,savedHeadline:180,savedHeadlineEmphasis:180,savedDescription:1200};
+  for(const [key,max] of Object.entries(siteTextLimits)){if(value[key]!==undefined&&(typeof value[key]!=='string'||value[key].length>max))return 'Skin Studio '+key+' must be text no longer than '+max+' characters.';}
+  for(const key of ['showSearch','showSaved','showHeaderCta'])if(value[key]!==undefined&&typeof value[key]!=='boolean')return 'Skin Studio '+key+' must be true or false.';
+  const validateSiteLinks=(items,label,max)=>{
+    if(items===undefined)return null;
+    if(!Array.isArray(items))return label+' must be a list.';
+    if(items.length>max)return label+' supports up to '+max+' links.';
+    const ids=new Set();
+    for(const item of items){
+      if(!item||typeof item!=='object'||Array.isArray(item))return label+' contains an invalid link.';
+      const id=String(item.id||''),text=String(item.label||''),path=String(item.url||'');
+      if(!id||id.length>80||ids.has(id))return label+' link IDs must be unique and under 80 characters.';
+      ids.add(id);
+      if(!text.trim()||text.length>80)return label+' link labels must be 1–80 characters.';
+      if(path.length>240||!path.startsWith('/')||path.startsWith('//')||path.includes(String.fromCharCode(10))||path.includes(String.fromCharCode(13)))return label+' destinations must be safe internal paths such as /shop or /journal.';
+      if(item.visible!==undefined&&typeof item.visible!=='boolean')return label+' visibility must be true or false.';
+    }
+    return null;
+  };
+  for(const [key,label,max] of [['navigationItems','Navigation',20],['footerExploreLinks','Footer Explore links',12],['footerReadLinks','Footer Read links',12]]){
+    const linkError=validateSiteLinks(value[key],label,max);if(linkError)return linkError;
+  }
   if(value.productGuideFields!==undefined){
     const keys=['benefits','skinTypes','concerns','ingredients','usage','warnings','recommendations','size'];
     if(!value.productGuideFields||typeof value.productGuideFields!=='object'||Array.isArray(value.productGuideFields))return 'Skin Studio product guide visibility settings must be an object.';

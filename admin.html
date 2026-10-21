@@ -369,6 +369,22 @@ body.skin-studio-fullpage .studio-product-placeholder{display:grid;place-items:c
 body.skin-studio-fullpage .studio-library-item[draggable="false"]{cursor:pointer}
 body.skin-studio-fullpage .studio-library-item[draggable="true"]{cursor:grab}
 body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:grabbing}
+
+.studio-site-links-editor{margin-top:14px;padding-top:13px;border-top:1px solid #e8ede6}
+.studio-site-links-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}
+.studio-site-links-head>b{font-size:11px;color:#354b39}
+.studio-site-link-row{padding:10px;margin:8px 0;border:1px solid #e2e8df;border-radius:10px;background:#fbfcfa}
+.studio-site-link-fields{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:8px}
+.studio-site-link-fields label{display:grid;gap:4px;font-size:9px;font-weight:750;color:#7b897b}
+.studio-site-link-fields input{width:100%;min-width:0;border:1px solid #dfe6dc;border-radius:7px;background:#fff;color:#243328;padding:7px 8px;font-size:10px}
+.studio-site-link-actions{display:flex;align-items:center;gap:5px;margin-top:7px}
+.studio-site-link-visible{display:flex;align-items:center;gap:5px;margin-right:auto;color:#6c7c6c;font-size:9px}
+.studio-site-link-visible input{margin:0}
+.studio-site-link-actions button{border:1px solid #dfe6dc;border-radius:6px;background:#fff;color:#516552;padding:4px 7px;font-size:10px;cursor:pointer}
+.studio-site-link-actions button:disabled{opacity:.35;cursor:default}
+.studio-site-settings[open] summary{border-bottom:1px solid #e4eae1}
+.studio-site-settings[open] .skin-builder-controls{padding:0 10px 10px}
+@media(max-width:700px){.studio-site-link-fields{grid-template-columns:1fr}.studio-site-link-row{padding:8px}}
 </style>
 </head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
@@ -626,6 +642,7 @@ body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:g
     </div>
     <div class="studio-toolbar-actions">
       <div class="studio-save-state"><span class="studio-save-dot"></span><span id="skinStudioSaveLabel">Saved version loaded</span></div>
+      <button class="btn" type="button" onclick="openSkinSiteSettings()">Edit whole site</button>
       <button class="btn" type="button" onclick="previewSkinSite()">View live ↗</button>
       <button class="btn primary studio-publish-button" type="button" onclick="saveSkinSiteConfig()">Publish changes</button>
     </div>
@@ -669,7 +686,7 @@ body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:g
       <div class="studio-inspector-heading"><div><span class="section-kicker">Inspector</span><h3 id="skinInspectorTitle">Select an item</h3><p id="skinInspectorSubtitle">Select a section, product, page or category to edit its details.</p></div></div>
       <div id="skinSelectedInspector" class="studio-selected-inspector"><div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b><p>Select an item in the left panel or click a section in the storefront preview.</p></div></div>
       <details class="studio-site-settings">
-        <summary><span><b>Site-wide settings</b><small>Brand, template and product page settings</small></span><span class="studio-chevron">⌄</span></summary>
+        <summary><span><b>Whole-site settings</b><small>Header, navigation, footer, brand and product pages</small></span><span class="studio-chevron">⌄</span></summary>
       <div class="skin-builder-controls">
         <section class="skin-builder-group">
           <div class="skin-builder-group-heading"><span>01</span><div><h3>Brand & template</h3><p>Choose a visual direction and set the primary accent.</p></div></div>
@@ -677,6 +694,26 @@ body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:g
             <div class="field"><label for="skinCfgTemplate">Template</label><select id="skinCfgTemplate"><option value="soft-editorial">Soft editorial</option><option value="clean-minimal">Clean minimal</option><option value="sage-botanical">Sage botanical</option></select></div>
             <div class="field"><label for="skinCfgAccent">Accent color</label><input id="skinCfgAccent" type="color" value="#66745f"></div>
             <div class="field full"><label for="skinCfgAnnouncement">Announcement bar</label><input id="skinCfgAnnouncement" maxlength="180" placeholder="Announcement text"></div>
+          </div>
+        </section>
+        <section class="skin-builder-group">
+          <div class="skin-builder-group-heading"><span>01B</span><div><h3>Header & navigation</h3><p>Edit the announcement, brand label, navigation links and header actions. The established visual styling remains unchanged.</p></div></div>
+          <div class="skin-builder-fields">
+            <div class="field"><label for="skinCfgBrandName">Brand name</label><input id="skinCfgBrandName" maxlength="60"></div>
+            <div class="field"><label for="skinCfgBrandSuffix">Brand suffix</label><input id="skinCfgBrandSuffix" maxlength="60"></div>
+            <div class="field full"><label for="skinCfgHeaderTagline">Brand tagline</label><input id="skinCfgHeaderTagline" maxlength="120"></div>
+            <div class="field full"><label for="skinCfgAnnouncementAside">Announcement side label</label><input id="skinCfgAnnouncementAside" maxlength="120"></div>
+            <div class="field full"><label for="skinCfgHeaderCtaLabel">Header button label</label><input id="skinCfgHeaderCtaLabel" maxlength="80"></div>
+            <div class="field full skin-flag-row">
+              <label><input type="checkbox" id="skinCfgShowSearch"> Show search</label>
+              <label><input type="checkbox" id="skinCfgShowSaved"> Show saved picks</label>
+              <label><input type="checkbox" id="skinCfgShowHeaderCta"> Show header button</label>
+            </div>
+          </div>
+          <div class="studio-site-links-editor">
+            <div class="studio-site-links-head"><b>Navigation links</b><button type="button" class="btn" onclick="addSkinSiteLink('navigationItems')">＋ Add link</button></div>
+            <p class="studio-inline-help">Edit labels, destinations, visibility and order in the storefront navigation.</p>
+            <div id="skinNavLinksEditor"></div>
           </div>
         </section>
         <section class="skin-builder-group">
@@ -696,6 +733,44 @@ body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:g
             <div class="field full"><label for="skinCfgApproachTitle">Headline</label><input id="skinCfgApproachTitle" maxlength="180"></div>
             <div class="field full"><label for="skinCfgApproachBody">Editorial copy</label><textarea id="skinCfgApproachBody" maxlength="3000"></textarea></div>
             <div class="field full"><label for="skinCfgFooterNote">Affiliate disclosure / footer note</label><textarea id="skinCfgFooterNote" maxlength="1800"></textarea></div>
+          </div>
+        </section>
+        <section class="skin-builder-group">
+          <div class="skin-builder-group-heading"><span>03B</span><div><h3>Footer & site information</h3><p>Edit the footer copy and link groups without changing the existing footer layout.</p></div></div>
+          <div class="skin-builder-fields">
+            <div class="field full"><label for="skinCfgFooterIntro">Footer introduction</label><textarea id="skinCfgFooterIntro" maxlength="1200"></textarea></div>
+            <div class="field"><label for="skinCfgFooterStamp">Footer signature</label><input id="skinCfgFooterStamp" maxlength="120"></div>
+            <div class="field"><label for="skinCfgFooterBottomTagline">Bottom tagline</label><input id="skinCfgFooterBottomTagline" maxlength="180"></div>
+            <div class="field"><label for="skinCfgFooterExploreHeading">Explore column heading</label><input id="skinCfgFooterExploreHeading" maxlength="80"></div>
+            <div class="field"><label for="skinCfgFooterReadHeading">Read column heading</label><input id="skinCfgFooterReadHeading" maxlength="80"></div>
+            <div class="field"><label for="skinCfgFooterNoteHeading">Disclosure column heading</label><input id="skinCfgFooterNoteHeading" maxlength="100"></div>
+            <div class="field full"><label for="skinCfgFooterNoteBody">Retailer / buying note</label><textarea id="skinCfgFooterNoteBody" maxlength="1800"></textarea></div>
+            <div class="field"><label for="skinCfgFooterCopyright">Copyright label</label><input id="skinCfgFooterCopyright" maxlength="80"></div>
+          </div>
+          <div class="studio-site-links-editor">
+            <div class="studio-site-links-head"><b>Footer · Explore links</b><button type="button" class="btn" onclick="addSkinSiteLink('footerExploreLinks')">＋ Add link</button></div>
+            <div id="skinFooterExploreLinksEditor"></div>
+          </div>
+          <div class="studio-site-links-editor">
+            <div class="studio-site-links-head"><b>Footer · Read links</b><button type="button" class="btn" onclick="addSkinSiteLink('footerReadLinks')">＋ Add link</button></div>
+            <div id="skinFooterReadLinksEditor"></div>
+          </div>
+        </section>
+        <section class="skin-builder-group">
+          <div class="skin-builder-group-heading"><span>03C</span><div><h3>Shop, journal & saved pages</h3><p>Edit the introductions on the built-in pages. Their existing layouts and product-card design stay the same.</p></div></div>
+          <div class="skin-builder-fields">
+            <div class="field"><label for="skinCfgShopEyebrow">Shop eyebrow</label><input id="skinCfgShopEyebrow" maxlength="120"></div>
+            <div class="field"><label for="skinCfgShopHeadline">Shop headline line 1</label><input id="skinCfgShopHeadline" maxlength="180"></div>
+            <div class="field"><label for="skinCfgShopHeadlineEmphasis">Shop headline line 2</label><input id="skinCfgShopHeadlineEmphasis" maxlength="180"></div>
+            <div class="field full"><label for="skinCfgShopDescription">Shop introduction</label><textarea id="skinCfgShopDescription" maxlength="1200"></textarea></div>
+            <div class="field"><label for="skinCfgJournalEyebrow">Journal eyebrow</label><input id="skinCfgJournalEyebrow" maxlength="120"></div>
+            <div class="field"><label for="skinCfgJournalHeadline">Journal headline line 1</label><input id="skinCfgJournalHeadline" maxlength="180"></div>
+            <div class="field"><label for="skinCfgJournalHeadlineEmphasis">Journal headline line 2</label><input id="skinCfgJournalHeadlineEmphasis" maxlength="180"></div>
+            <div class="field full"><label for="skinCfgJournalDescription">Journal introduction</label><textarea id="skinCfgJournalDescription" maxlength="1200"></textarea></div>
+            <div class="field"><label for="skinCfgSavedEyebrow">Saved page eyebrow</label><input id="skinCfgSavedEyebrow" maxlength="120"></div>
+            <div class="field"><label for="skinCfgSavedHeadline">Saved headline line 1</label><input id="skinCfgSavedHeadline" maxlength="180"></div>
+            <div class="field"><label for="skinCfgSavedHeadlineEmphasis">Saved headline line 2</label><input id="skinCfgSavedHeadlineEmphasis" maxlength="180"></div>
+            <div class="field full"><label for="skinCfgSavedDescription">Saved page introduction</label><textarea id="skinCfgSavedDescription" maxlength="1200"></textarea></div>
           </div>
         </section>
         <section class="skin-builder-group">
@@ -1714,8 +1789,42 @@ async function adminBoot(){
 const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
 let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='';
 const defaultSkinSiteConfig=()=>({
-  version:2,template:'soft-editorial',accentColor:'#66745f',
+  version:3,template:'soft-editorial',accentColor:'#66745f',
   announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
+  brandName:'nuvora',brandSuffix:'skin',headerTagline:'YOUR EVERYDAY SKIN EDIT',
+  announcementAside:'A LITTLE MORE CONSIDERED',headerCtaLabel:'Explore the edit',
+  showSearch:true,showSaved:true,showHeaderCta:true,
+  navigationItems:[
+   {id:'shop-all',label:'Shop all',url:'/shop',visible:true},
+   {id:'cleanse',label:'Cleanse',url:'/shop?category=Cleanse',visible:true},
+   {id:'treat',label:'Treat',url:'/shop?category=Treat',visible:true},
+   {id:'hydrate',label:'Hydrate',url:'/shop?category=Hydrate',visible:true},
+   {id:'protect',label:'Protect',url:'/shop?category=Protect',visible:true},
+   {id:'journal',label:'Journal',url:'/journal',visible:true}
+  ],
+  footerIntro:'Skincare feels less complicated when you know what to look for. We collect approachable finds and thoughtful notes to help you browse with more intention.',
+  footerStamp:'A little care, every day.',footerExploreHeading:'Explore',footerReadHeading:'Read',
+  footerExploreLinks:[
+   {id:'shop-skincare',label:'Shop skincare',url:'/shop',visible:true},
+   {id:'sun-care',label:'Sun care',url:'/shop?category=Protect',visible:true},
+   {id:'saved-picks',label:'Saved picks',url:'/saved',visible:true}
+  ],
+  footerReadLinks:[
+   {id:'morning-routine',label:'A simple morning skincare routine',url:'/journal/simple-morning-routine',visible:true},
+   {id:'layering',label:'How to layer skincare without overcomplicating it',url:'/journal/how-to-layer-skincare',visible:true},
+   {id:'moisturizer',label:'Choosing a moisturizer for your routine',url:'/journal/choosing-a-moisturizer',visible:true},
+   {id:'all-notes',label:'All journal notes',url:'/journal',visible:true}
+  ],
+  footerNoteHeading:'Our note to you',
+  footerNoteBody:'Product information and prices can change. Always check the retailer’s current listing, ingredients, directions, seller and availability before purchasing.',
+  footerBottomTagline:'Thoughtful finds, no perfect-routine pressure.',
+  footerCopyright:'Nuvora Skin',
+  shopEyebrow:'THE NUVORA EDIT',shopHeadline:'Find your next',shopHeadlineEmphasis:'everyday essential.',
+  shopDescription:'A considered starting point for comparing cleansers, serums, moisturizers, SPF and little extras. Product details can change, so always check the live retailer page.',
+  journalEyebrow:'THE NUVORA SKIN JOURNAL',journalHeadline:'Small notes for',journalHeadlineEmphasis:'everyday care.',
+  journalDescription:'Approachable guides to product labels, routine steps, and the details worth checking before you buy.',
+  savedEyebrow:'YOUR PERSONAL SHORTLIST',savedHeadline:'Good finds,',savedHeadlineEmphasis:'kept close.',
+  savedDescription:'Save a few ideas while you compare. Your shortlist stays in this browser.',
   heroEyebrow:'The everyday skin edit',heroTitle:'Care that feels like you.',
   heroDescription:'Skincare and beauty finds, thoughtfully collected for real routines. Explore useful essentials without the overwhelm.',
   heroImage:'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1800&q=85',
@@ -1749,6 +1858,32 @@ function mergeSkinSiteConfig(raw){
   product_ids:Array.isArray(x.product_ids)?x.product_ids.map(String).slice(0,60):[],
   category_id:String(x.category_id||'').slice(0,100)
  })):fallback;
+ const cleanLinks=(items,fallback,max=20)=>Array.isArray(items)?items.slice(0,max).map((item,i)=>({
+  id:String(item.id||('site-link-'+(i+1))).slice(0,80),
+  label:String(item.label||'Link').trim().slice(0,80),
+  url:String(item.url||'/shop').trim().slice(0,240),
+  visible:item.visible!==false
+ })).filter(item=>item.label&&item.url):fallback.map(item=>({...item}));
+ cfg.brandName=String(src.brandName??base.brandName).slice(0,60);
+ cfg.brandSuffix=String(src.brandSuffix??base.brandSuffix).slice(0,60);
+ cfg.headerTagline=String(src.headerTagline??base.headerTagline).slice(0,120);
+ cfg.announcementAside=String(src.announcementAside??base.announcementAside).slice(0,120);
+ cfg.headerCtaLabel=String(src.headerCtaLabel??base.headerCtaLabel).slice(0,80);
+ ['showSearch','showSaved','showHeaderCta'].forEach(key=>cfg[key]=src[key]!==false);
+ cfg.navigationItems=cleanLinks(src.navigationItems,base.navigationItems,20);
+
+ cfg.footerIntro=String(src.footerIntro??base.footerIntro).slice(0,1200);
+ cfg.footerStamp=String(src.footerStamp??base.footerStamp).slice(0,120);
+ cfg.footerExploreHeading=String(src.footerExploreHeading??base.footerExploreHeading).slice(0,80);
+ cfg.footerReadHeading=String(src.footerReadHeading??base.footerReadHeading).slice(0,80);
+ cfg.footerExploreLinks=cleanLinks(src.footerExploreLinks,base.footerExploreLinks,12);
+ cfg.footerReadLinks=cleanLinks(src.footerReadLinks,base.footerReadLinks,12);
+ cfg.footerNoteHeading=String(src.footerNoteHeading??base.footerNoteHeading).slice(0,100);
+ cfg.footerNoteBody=String(src.footerNoteBody??base.footerNoteBody).slice(0,1800);
+ cfg.footerBottomTagline=String(src.footerBottomTagline??base.footerBottomTagline).slice(0,180);
+ cfg.footerCopyright=String(src.footerCopyright??base.footerCopyright).slice(0,80);
+ const builtInPageText={shopEyebrow:120,shopHeadline:180,shopHeadlineEmphasis:180,shopDescription:1200,journalEyebrow:120,journalHeadline:180,journalHeadlineEmphasis:180,journalDescription:1200,savedEyebrow:120,savedHeadline:180,savedHeadlineEmphasis:180,savedDescription:1200};
+ for(const [key,max] of Object.entries(builtInPageText))cfg[key]=String(src[key]??base[key]).slice(0,max);
  cfg.sections=cleanSections(src.sections,base.sections);
  if(Number(src.version||0)<2&&!cfg.sections.some(x=>x.type==='journal-grid'))cfg.sections.push({id:'journal',type:'journal-grid',visible:true,title:'Little notes for everyday skin.',eyebrow:'The journal',text:'Practical notes for building a routine at your own pace.',columns:3,product_ids:[]});
  cfg.pages=Array.isArray(src.pages)?src.pages.slice(0,30).map((p,i)=>({
@@ -1759,6 +1894,7 @@ function mergeSkinSiteConfig(raw){
   visible:p.visible!==false,
   sections:cleanSections(p.sections,[])
  })):Array.isArray(base.pages)?base.pages:[];
+ if(!Array.isArray(src.navigationItems))cfg.pages.filter(page=>page.visible!==false).forEach(page=>{if(!cfg.navigationItems.some(link=>link.url==='/pages/'+page.slug))cfg.navigationItems.push({id:'page-'+page.slug,label:page.title,url:'/pages/'+page.slug,visible:true});});
  cfg.customCategories=Array.isArray(src.customCategories)?src.customCategories.slice(0,60).map((x,i)=>({
   id:String(x.id||x.slug||('category-'+(i+1))).slice(0,100),
   slug:String(x.slug||x.id||('category-'+(i+1))).toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80),
@@ -1781,6 +1917,39 @@ function mergeSkinSiteConfig(raw){
 function skinBuilderMessage(message,type='info'){
  const el=document.getElementById('skinBuilderStatus');
  if(el){el.textContent=String(message||'');el.dataset.status=type;}
+}
+function openSkinSiteSettings(){
+ const details=document.querySelector('.studio-site-settings');
+ if(details)details.open=true;
+ const panel=document.querySelector('.studio-right-panel');
+ if(panel&&details)panel.scrollTo({top:Math.max(0,details.offsetTop-panel.offsetTop),behavior:'smooth'});
+ skinBuilderMessage('Whole-site settings are open. Changes remain in draft until published.','info');
+}
+function renderSkinSiteLinkEditor(key){
+ const ids={navigationItems:'skinNavLinksEditor',footerExploreLinks:'skinFooterExploreLinksEditor',footerReadLinks:'skinFooterReadLinksEditor'};
+ const root=document.getElementById(ids[key]);if(!root||!skinBuilderConfig)return;
+ const items=Array.isArray(skinBuilderConfig[key])?skinBuilderConfig[key]:[];
+ root.innerHTML=items.map((item,index)=>'<div class="studio-site-link-row"><div class="studio-site-link-fields"><label>Label<input maxlength="80" value="'+esc(item.label||'')+'" oninput="updateSkinSiteLink('+JSON.stringify(key)+','+index+',\'label\',this.value)"></label><label>Destination<input maxlength="240" value="'+esc(item.url||'')+'" oninput="updateSkinSiteLink('+JSON.stringify(key)+','+index+',\'url\',this.value)" placeholder="/shop or /journal"></label></div><div class="studio-site-link-actions"><label class="studio-site-link-visible"><input type="checkbox" '+(item.visible!==false?'checked':'')+' onchange="updateSkinSiteLink('+JSON.stringify(key)+','+index+',\'visible\',this.checked)"> Visible</label><button type="button" title="Move up" '+(index===0?'disabled':'')+' onclick="moveSkinSiteLink('+JSON.stringify(key)+','+index+',-1)">↑</button><button type="button" title="Move down" '+(index===items.length-1?'disabled':'')+' onclick="moveSkinSiteLink('+JSON.stringify(key)+','+index+',1)">↓</button><button type="button" title="Remove link" onclick="removeSkinSiteLink('+JSON.stringify(key)+','+index+')">×</button></div></div>').join('')||'<p class="studio-inline-help">No links yet. Use Add link to create one.</p>';
+}
+function updateSkinSiteLink(key,index,field,value){
+ const list=skinBuilderConfig?.[key];if(!Array.isArray(list)||!list[index])return;
+ list[index][field]=field==='visible'?!!value:String(value??'');
+ skinMarkDirty('Site navigation and footer links changed in the draft.');queueSkinStudioPreview();
+}
+function addSkinSiteLink(key){
+ if(!skinBuilderConfig||!['navigationItems','footerExploreLinks','footerReadLinks'].includes(key))return;
+ const list=skinBuilderConfig[key]||(skinBuilderConfig[key]=[]);
+ if(list.length>=(key==='navigationItems'?20:12))return skinBuilderMessage('This link list has reached its limit.','error');
+ list.push({id:'site-link-'+Date.now().toString(36),label:'New link',url:'/shop',visible:true});
+ renderSkinSiteLinkEditor(key);skinMarkDirty('Link added to the draft.');queueSkinStudioPreview();
+}
+function removeSkinSiteLink(key,index){
+ const list=skinBuilderConfig?.[key];if(!Array.isArray(list)||!list[index])return;
+ list.splice(index,1);renderSkinSiteLinkEditor(key);skinMarkDirty('Link removed from the draft.');queueSkinStudioPreview();
+}
+function moveSkinSiteLink(key,index,delta){
+ const list=skinBuilderConfig?.[key],target=index+delta;if(!Array.isArray(list)||target<0||target>=list.length)return;
+ const [item]=list.splice(index,1);list.splice(target,0,item);renderSkinSiteLinkEditor(key);skinMarkDirty('Link order updated in the draft.');queueSkinStudioPreview();
 }
 function skinMarkDirty(message='Draft updated. Publish when you are ready.'){
  const label=document.getElementById('skinStudioSaveLabel');
@@ -1807,8 +1976,11 @@ function skinPageLabel(pageId=skinStudioPageId){
 }
 function fillSkinConfigFields(){
  const c=skinBuilderConfig;if(!c)return;
- const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgGuideTemplate:'productGuideTemplate'};
- Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=c[key]||'';});
+ const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgBrandName:'brandName',skinCfgBrandSuffix:'brandSuffix',skinCfgHeaderTagline:'headerTagline',skinCfgAnnouncementAside:'announcementAside',skinCfgHeaderCtaLabel:'headerCtaLabel',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgFooterIntro:'footerIntro',skinCfgFooterStamp:'footerStamp',skinCfgFooterExploreHeading:'footerExploreHeading',skinCfgFooterReadHeading:'footerReadHeading',skinCfgFooterNoteHeading:'footerNoteHeading',skinCfgFooterNoteBody:'footerNoteBody',skinCfgFooterBottomTagline:'footerBottomTagline',skinCfgFooterCopyright:'footerCopyright',skinCfgShopEyebrow:'shopEyebrow',skinCfgShopHeadline:'shopHeadline',skinCfgShopHeadlineEmphasis:'shopHeadlineEmphasis',skinCfgShopDescription:'shopDescription',skinCfgJournalEyebrow:'journalEyebrow',skinCfgJournalHeadline:'journalHeadline',skinCfgJournalHeadlineEmphasis:'journalHeadlineEmphasis',skinCfgJournalDescription:'journalDescription',skinCfgSavedEyebrow:'savedEyebrow',skinCfgSavedHeadline:'savedHeadline',skinCfgSavedHeadlineEmphasis:'savedHeadlineEmphasis',skinCfgSavedDescription:'savedDescription',skinCfgGuideTemplate:'productGuideTemplate'};
+ Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=c[key]??'';});
+ const toggles={skinCfgShowSearch:'showSearch',skinCfgShowSaved:'showSaved',skinCfgShowHeaderCta:'showHeaderCta'};
+ Object.entries(toggles).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=c[key]!==false;});
+ renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');
  const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations',skinShowSize:'size'};
  Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=c.productGuideFields[key]!==false;});
  const pageExists=skinStudioPageId==='home'||!!skinCurrentPage(skinStudioPageId);
@@ -1824,8 +1996,10 @@ function fillSkinConfigFields(){
 }
 function collectSkinConfigFields(){
  if(!skinBuilderConfig)return;
- const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgGuideTemplate:'productGuideTemplate'};
+ const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgBrandName:'brandName',skinCfgBrandSuffix:'brandSuffix',skinCfgHeaderTagline:'headerTagline',skinCfgAnnouncementAside:'announcementAside',skinCfgHeaderCtaLabel:'headerCtaLabel',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgFooterIntro:'footerIntro',skinCfgFooterStamp:'footerStamp',skinCfgFooterExploreHeading:'footerExploreHeading',skinCfgFooterReadHeading:'footerReadHeading',skinCfgFooterNoteHeading:'footerNoteHeading',skinCfgFooterNoteBody:'footerNoteBody',skinCfgFooterBottomTagline:'footerBottomTagline',skinCfgFooterCopyright:'footerCopyright',skinCfgShopEyebrow:'shopEyebrow',skinCfgShopHeadline:'shopHeadline',skinCfgShopHeadlineEmphasis:'shopHeadlineEmphasis',skinCfgShopDescription:'shopDescription',skinCfgJournalEyebrow:'journalEyebrow',skinCfgJournalHeadline:'journalHeadline',skinCfgJournalHeadlineEmphasis:'journalHeadlineEmphasis',skinCfgJournalDescription:'journalDescription',skinCfgSavedEyebrow:'savedEyebrow',skinCfgSavedHeadline:'savedHeadline',skinCfgSavedHeadlineEmphasis:'savedHeadlineEmphasis',skinCfgSavedDescription:'savedDescription',skinCfgGuideTemplate:'productGuideTemplate'};
  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig[key]=el.value.trim();});
+ const toggles={skinCfgShowSearch:'showSearch',skinCfgShowSaved:'showSaved',skinCfgShowHeaderCta:'showHeaderCta'};
+ Object.entries(toggles).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig[key]=!!el.checked;});
  const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations',skinShowSize:'size'};
  skinBuilderConfig.productGuideFields=skinBuilderConfig.productGuideFields||{};
  Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig.productGuideFields[key]=!!el.checked;});
@@ -2021,7 +2195,7 @@ function renderSkinSelectedInspector(){
  setHead('Select an item','Sections, products, pages and categories can all be managed here.');
  root.innerHTML='<div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b><p>Select an item in the left panel or a page section in Outline.</p></div>';
 }
-function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();updateSkinStudioPageTitle();}
+function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();}
 function selectSkinItem(type,id){
  if(type==='section'){skinStudioSelection={type:'section',id:String(id)};switchSkinStudioTab('outline');renderSkinBuilderSections();}
  else if(type==='product'){skinStudioSelection={type:'product',id:String(id)};switchSkinStudioTab('products');renderSkinLibrary();}
@@ -2080,7 +2254,10 @@ function createSkinQuickItem(){
    {id:slug+'-hero',type:'hero',visible:true,title,eyebrow:'',text:'',image:'',columns:4,product_ids:[]},
    {id:slug+'-products',type:'product-grid',visible:true,title:'Explore '+title,eyebrow:'The Nuvora Skin edit',text:'Browse the products selected for this page.',filter:'all',columns:3,product_ids:[]}
   ]};
-  skinBuilderConfig.pages.push(page);skinStudioPageId=slug;skinStudioSelection={type:'section',id:page.sections[0].id};closeSkinQuickAdd();skinMarkDirty('Page created in draft. Add and arrange its content, then publish when it is ready.');setSkinStudioPage(slug);return;
+  skinBuilderConfig.pages.push(page);
+  if(Array.isArray(skinBuilderConfig.navigationItems)&&!skinBuilderConfig.navigationItems.some(link=>String(link.url||'')==='/pages/'+slug))skinBuilderConfig.navigationItems.push({id:'page-'+slug,label:title,url:'/pages/'+slug,visible:true});
+  renderSkinSiteLinkEditor('navigationItems');
+  skinStudioPageId=slug;skinStudioSelection={type:'section',id:page.sections[0].id};closeSkinQuickAdd();skinMarkDirty('Page created in draft. Add and arrange its content, then publish when it is ready.');setSkinStudioPage(slug);return;
  }
  if(skinQuickAddType==='category'){
   const slug=skinSlug(rawSlug||title);
@@ -2088,6 +2265,8 @@ function createSkinQuickItem(){
   const image=String(document.getElementById('skinQuickImage')?.value||'').trim();
   if(image&&(!validURL(image)||!/^https:\/\//i.test(image)))return skinBuilderMessage('Category images must use a valid HTTPS URL.','error');
   skinBuilderConfig.customCategories.push({id:slug,slug,name:title,description:String(document.getElementById('skinQuickDescription')?.value||''),image});
+  if(Array.isArray(skinBuilderConfig.navigationItems)&&!skinBuilderConfig.navigationItems.some(link=>String(link.id||'')==='category-'+slug))skinBuilderConfig.navigationItems.push({id:'category-'+slug,label:title,url:'/shop?category='+encodeURIComponent(title),visible:true});
+  renderSkinSiteLinkEditor('navigationItems');
   skinStudioSelection={type:'category',id:slug};closeSkinQuickAdd();skinMarkDirty('Category created in draft. Assign products to it in the product inspector.');switchSkinStudioTab('categories');renderSkinSelectedInspector();return;
  }
  if(skinQuickAddType==='section'){
@@ -2119,6 +2298,7 @@ function deleteSkinCategory(slug){
  const cat=(skinBuilderConfig.customCategories||[]).find(x=>String(x.slug)===String(slug));if(!cat)return;
  if(!confirm('Delete the category “'+cat.name+'”? Products using it will return to automatic product-type categories.'))return;
  skinBuilderConfig.customCategories=skinBuilderConfig.customCategories.filter(x=>String(x.slug)!==String(slug));
+ skinBuilderConfig.navigationItems=(skinBuilderConfig.navigationItems||[]).filter(link=>String(link.id||'')!=='category-'+String(slug));
  Object.keys(skinBuilderConfig.productCategoryMap||{}).forEach(id=>{if(String(skinBuilderConfig.productCategoryMap[id])===String(slug))delete skinBuilderConfig.productCategoryMap[id];});
  skinSectionsFor().forEach(s=>{if(String(s.category_id||'')===String(slug))s.category_id='';});
  skinStudioSelection={type:'none',id:''};skinMarkDirty('Category removed from the draft.');renderSkinStudioAll();queueSkinStudioPreview();
@@ -2133,6 +2313,7 @@ function deleteSkinPage(slug){
  const page=skinCurrentPage(slug);if(!page)return;
  if(!confirm('Delete the page “'+page.title+'”? This removes its layout from the draft.'))return;
  skinBuilderConfig.pages=skinBuilderConfig.pages.filter(p=>String(p.slug)!==String(slug));
+ skinBuilderConfig.navigationItems=(skinBuilderConfig.navigationItems||[]).filter(link=>String(link.url||'')!=='/pages/'+String(slug));
  skinStudioPageId='home';skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||''};skinMarkDirty('Page removed from the draft.');
  renderSkinStudioAll();setSkinStudioPage('home');
 }
@@ -2145,7 +2326,7 @@ function selectSkinPreviewDevice(device,button){
  if(button)button.classList.add('active');
 }
 function setSkinPreviewDevice(device,button){selectSkinPreviewDevice(device,button);}
-function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();updateSkinStudioPageTitle();}
+function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();}
 function updateSkinSection(index,key,value){
  const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;
  sec[key]=value;
@@ -2363,7 +2544,7 @@ adminBoot();
 document.addEventListener('DOMContentLoaded',()=>{
   wireSkinStudioCanvas();
   const builder=document.querySelector('.skin-builder-controls');
-  if(builder){builder.addEventListener('input',()=>{if(document.body.classList.contains('skin-studio-fullpage'))queueSkinStudioPreview();});builder.addEventListener('change',()=>{if(document.body.classList.contains('skin-studio-fullpage'))queueSkinStudioPreview();});}
+  if(builder){builder.addEventListener('input',event=>{if(!document.body.classList.contains('skin-studio-fullpage'))return;if(event.target?.id?.startsWith('skinCfg')||event.target?.id?.startsWith('skinShow')){collectSkinConfigFields();skinMarkDirty('Whole-site settings changed in the draft.');}queueSkinStudioPreview();});builder.addEventListener('change',event=>{if(!document.body.classList.contains('skin-studio-fullpage'))return;if(event.target?.id?.startsWith('skinCfg')||event.target?.id?.startsWith('skinShow')){collectSkinConfigFields();skinMarkDirty('Whole-site settings changed in the draft.');}queueSkinStudioPreview();});}
   ['productModal','aiStudioModal','shopifyModal','sourcinBoxModal'].forEach(id=>{
     const root=document.getElementById(id); if(!root)return;
     const head=root.querySelector('.modal-head');
