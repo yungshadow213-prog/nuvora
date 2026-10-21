@@ -757,6 +757,23 @@ body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:g
           </div>
         </section>
         <section class="skin-builder-group">
+          <div class="skin-builder-group-heading"><span>03C</span><div><h3>Shop, journal & saved pages</h3><p>Edit the introductions on the built-in pages. Their existing layouts and product-card design stay the same.</p></div></div>
+          <div class="skin-builder-fields">
+            <div class="field"><label for="skinCfgShopEyebrow">Shop eyebrow</label><input id="skinCfgShopEyebrow" maxlength="120"></div>
+            <div class="field"><label for="skinCfgShopHeadline">Shop headline line 1</label><input id="skinCfgShopHeadline" maxlength="180"></div>
+            <div class="field"><label for="skinCfgShopHeadlineEmphasis">Shop headline line 2</label><input id="skinCfgShopHeadlineEmphasis" maxlength="180"></div>
+            <div class="field full"><label for="skinCfgShopDescription">Shop introduction</label><textarea id="skinCfgShopDescription" maxlength="1200"></textarea></div>
+            <div class="field"><label for="skinCfgJournalEyebrow">Journal eyebrow</label><input id="skinCfgJournalEyebrow" maxlength="120"></div>
+            <div class="field"><label for="skinCfgJournalHeadline">Journal headline line 1</label><input id="skinCfgJournalHeadline" maxlength="180"></div>
+            <div class="field"><label for="skinCfgJournalHeadlineEmphasis">Journal headline line 2</label><input id="skinCfgJournalHeadlineEmphasis" maxlength="180"></div>
+            <div class="field full"><label for="skinCfgJournalDescription">Journal introduction</label><textarea id="skinCfgJournalDescription" maxlength="1200"></textarea></div>
+            <div class="field"><label for="skinCfgSavedEyebrow">Saved page eyebrow</label><input id="skinCfgSavedEyebrow" maxlength="120"></div>
+            <div class="field"><label for="skinCfgSavedHeadline">Saved headline line 1</label><input id="skinCfgSavedHeadline" maxlength="180"></div>
+            <div class="field"><label for="skinCfgSavedHeadlineEmphasis">Saved headline line 2</label><input id="skinCfgSavedHeadlineEmphasis" maxlength="180"></div>
+            <div class="field full"><label for="skinCfgSavedDescription">Saved page introduction</label><textarea id="skinCfgSavedDescription" maxlength="1200"></textarea></div>
+          </div>
+        </section>
+        <section class="skin-builder-group">
           <div class="skin-builder-group-heading"><span>04</span><div><h3>Product guide pages</h3><p>Control the product-detail presentation and which guide sections shoppers see.</p></div></div>
           <div class="skin-builder-fields">
             <div class="field full"><label for="skinCfgGuideTemplate">Product guide layout</label><select id="skinCfgGuideTemplate"><option value="editorial">Editorial — large image and full guide</option><option value="compact">Compact — balanced image and details</option><option value="minimal">Minimal — concise product facts</option></select></div>
@@ -1802,6 +1819,12 @@ const defaultSkinSiteConfig=()=>({
   footerNoteBody:'Product information and prices can change. Always check the retailer’s current listing, ingredients, directions, seller and availability before purchasing.',
   footerBottomTagline:'Thoughtful finds, no perfect-routine pressure.',
   footerCopyright:'Nuvora Skin',
+  shopEyebrow:'THE NUVORA EDIT',shopHeadline:'Find your next',shopHeadlineEmphasis:'everyday essential.',
+  shopDescription:'A considered starting point for comparing cleansers, serums, moisturizers, SPF and little extras. Product details can change, so always check the live retailer page.',
+  journalEyebrow:'THE NUVORA SKIN JOURNAL',journalHeadline:'Small notes for',journalHeadlineEmphasis:'everyday care.',
+  journalDescription:'Approachable guides to product labels, routine steps, and the details worth checking before you buy.',
+  savedEyebrow:'YOUR PERSONAL SHORTLIST',savedHeadline:'Good finds,',savedHeadlineEmphasis:'kept close.',
+  savedDescription:'Save a few ideas while you compare. Your shortlist stays in this browser.',
   heroEyebrow:'The everyday skin edit',heroTitle:'Care that feels like you.',
   heroDescription:'Skincare and beauty finds, thoughtfully collected for real routines. Explore useful essentials without the overwhelm.',
   heroImage:'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1800&q=85',
@@ -1859,6 +1882,8 @@ function mergeSkinSiteConfig(raw){
  cfg.footerNoteBody=String(src.footerNoteBody??base.footerNoteBody).slice(0,1800);
  cfg.footerBottomTagline=String(src.footerBottomTagline??base.footerBottomTagline).slice(0,180);
  cfg.footerCopyright=String(src.footerCopyright??base.footerCopyright).slice(0,80);
+ const builtInPageText={shopEyebrow:120,shopHeadline:180,shopHeadlineEmphasis:180,shopDescription:1200,journalEyebrow:120,journalHeadline:180,journalHeadlineEmphasis:180,journalDescription:1200,savedEyebrow:120,savedHeadline:180,savedHeadlineEmphasis:180,savedDescription:1200};
+ for(const [key,max] of Object.entries(builtInPageText))cfg[key]=String(src[key]??base[key]).slice(0,max);
  cfg.sections=cleanSections(src.sections,base.sections);
  if(Number(src.version||0)<2&&!cfg.sections.some(x=>x.type==='journal-grid'))cfg.sections.push({id:'journal',type:'journal-grid',visible:true,title:'Little notes for everyday skin.',eyebrow:'The journal',text:'Practical notes for building a routine at your own pace.',columns:3,product_ids:[]});
  cfg.pages=Array.isArray(src.pages)?src.pages.slice(0,30).map((p,i)=>({
@@ -1951,7 +1976,7 @@ function skinPageLabel(pageId=skinStudioPageId){
 }
 function fillSkinConfigFields(){
  const c=skinBuilderConfig;if(!c)return;
- const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgBrandName:'brandName',skinCfgBrandSuffix:'brandSuffix',skinCfgHeaderTagline:'headerTagline',skinCfgAnnouncementAside:'announcementAside',skinCfgHeaderCtaLabel:'headerCtaLabel',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgFooterIntro:'footerIntro',skinCfgFooterStamp:'footerStamp',skinCfgFooterExploreHeading:'footerExploreHeading',skinCfgFooterReadHeading:'footerReadHeading',skinCfgFooterNoteHeading:'footerNoteHeading',skinCfgFooterNoteBody:'footerNoteBody',skinCfgFooterBottomTagline:'footerBottomTagline',skinCfgFooterCopyright:'footerCopyright',skinCfgGuideTemplate:'productGuideTemplate'};
+ const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgBrandName:'brandName',skinCfgBrandSuffix:'brandSuffix',skinCfgHeaderTagline:'headerTagline',skinCfgAnnouncementAside:'announcementAside',skinCfgHeaderCtaLabel:'headerCtaLabel',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgFooterIntro:'footerIntro',skinCfgFooterStamp:'footerStamp',skinCfgFooterExploreHeading:'footerExploreHeading',skinCfgFooterReadHeading:'footerReadHeading',skinCfgFooterNoteHeading:'footerNoteHeading',skinCfgFooterNoteBody:'footerNoteBody',skinCfgFooterBottomTagline:'footerBottomTagline',skinCfgFooterCopyright:'footerCopyright',skinCfgShopEyebrow:'shopEyebrow',skinCfgShopHeadline:'shopHeadline',skinCfgShopHeadlineEmphasis:'shopHeadlineEmphasis',skinCfgShopDescription:'shopDescription',skinCfgJournalEyebrow:'journalEyebrow',skinCfgJournalHeadline:'journalHeadline',skinCfgJournalHeadlineEmphasis:'journalHeadlineEmphasis',skinCfgJournalDescription:'journalDescription',skinCfgSavedEyebrow:'savedEyebrow',skinCfgSavedHeadline:'savedHeadline',skinCfgSavedHeadlineEmphasis:'savedHeadlineEmphasis',skinCfgSavedDescription:'savedDescription',skinCfgGuideTemplate:'productGuideTemplate'};
  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=c[key]??'';});
  const toggles={skinCfgShowSearch:'showSearch',skinCfgShowSaved:'showSaved',skinCfgShowHeaderCta:'showHeaderCta'};
  Object.entries(toggles).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=c[key]!==false;});
@@ -1971,7 +1996,7 @@ function fillSkinConfigFields(){
 }
 function collectSkinConfigFields(){
  if(!skinBuilderConfig)return;
- const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgBrandName:'brandName',skinCfgBrandSuffix:'brandSuffix',skinCfgHeaderTagline:'headerTagline',skinCfgAnnouncementAside:'announcementAside',skinCfgHeaderCtaLabel:'headerCtaLabel',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgFooterIntro:'footerIntro',skinCfgFooterStamp:'footerStamp',skinCfgFooterExploreHeading:'footerExploreHeading',skinCfgFooterReadHeading:'footerReadHeading',skinCfgFooterNoteHeading:'footerNoteHeading',skinCfgFooterNoteBody:'footerNoteBody',skinCfgFooterBottomTagline:'footerBottomTagline',skinCfgFooterCopyright:'footerCopyright',skinCfgGuideTemplate:'productGuideTemplate'};
+ const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgBrandName:'brandName',skinCfgBrandSuffix:'brandSuffix',skinCfgHeaderTagline:'headerTagline',skinCfgAnnouncementAside:'announcementAside',skinCfgHeaderCtaLabel:'headerCtaLabel',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgFooterIntro:'footerIntro',skinCfgFooterStamp:'footerStamp',skinCfgFooterExploreHeading:'footerExploreHeading',skinCfgFooterReadHeading:'footerReadHeading',skinCfgFooterNoteHeading:'footerNoteHeading',skinCfgFooterNoteBody:'footerNoteBody',skinCfgFooterBottomTagline:'footerBottomTagline',skinCfgFooterCopyright:'footerCopyright',skinCfgShopEyebrow:'shopEyebrow',skinCfgShopHeadline:'shopHeadline',skinCfgShopHeadlineEmphasis:'shopHeadlineEmphasis',skinCfgShopDescription:'shopDescription',skinCfgJournalEyebrow:'journalEyebrow',skinCfgJournalHeadline:'journalHeadline',skinCfgJournalHeadlineEmphasis:'journalHeadlineEmphasis',skinCfgJournalDescription:'journalDescription',skinCfgSavedEyebrow:'savedEyebrow',skinCfgSavedHeadline:'savedHeadline',skinCfgSavedHeadlineEmphasis:'savedHeadlineEmphasis',skinCfgSavedDescription:'savedDescription',skinCfgGuideTemplate:'productGuideTemplate'};
  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig[key]=el.value.trim();});
  const toggles={skinCfgShowSearch:'showSearch',skinCfgShowSaved:'showSaved',skinCfgShowHeaderCta:'showHeaderCta'};
  Object.entries(toggles).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig[key]=!!el.checked;});
