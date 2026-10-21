@@ -362,12 +362,19 @@ body.skin-studio-fullpage .studio-add-menu[hidden]{display:none!important}
  body.skin-studio-fullpage .studio-right-panel{grid-column:auto;max-height:none;border-top:0}
  body.skin-studio-fullpage .studio-device-controls button{font-size:8px;padding:6px}
 }
+
+body.skin-studio-fullpage .studio-product-add-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+body.skin-studio-fullpage .studio-product-add-actions .studio-outline-add{margin:0;padding:9px 5px;font-size:9px;line-height:1.3}
+body.skin-studio-fullpage .studio-product-placeholder{display:grid;place-items:center;width:42px;height:47px;flex:0 0 42px;border-radius:7px;background:#edf1e9;color:#819580;font-size:22px}
+body.skin-studio-fullpage .studio-library-item[draggable="false"]{cursor:pointer}
+body.skin-studio-fullpage .studio-library-item[draggable="true"]{cursor:grab}
+body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:grabbing}
 </style>
 </head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
 <button data-icon="↥" onclick="show('import',this)">Import</button>
 <button data-icon="▣" onclick="show('products',this)">Products</button>
-<button data-icon="✿" onclick="show('skin-care',this)">Skin Care Studio</button>
+<button data-icon="✿" onclick="window.location.href='/admin/skin-studio'">Skin Care Studio</button>
 <button data-icon="☷" onclick="show('categories',this)">Categories</button>
 <button data-icon="◫" onclick="show('collections',this)">Collections</button>
 <button data-icon="□" onclick="show('orders',this)">Orders</button>
