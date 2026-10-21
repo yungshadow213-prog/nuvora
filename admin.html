@@ -704,6 +704,7 @@ body.skin-studio-fullpage .studio-add-menu[hidden]{display:none!important}
                 <label><input type="checkbox" id="skinShowUsage"> How to use</label>
                 <label><input type="checkbox" id="skinShowWarnings"> Warnings / avoid-if notes</label>
                 <label><input type="checkbox" id="skinShowRecommendations"> Complementary products</label>
+                <label><input type="checkbox" id="skinShowSize"> Product size / format</label>
               </div>
             </div>
           </div>
@@ -1800,7 +1801,7 @@ function fillSkinConfigFields(){
  const c=skinBuilderConfig;if(!c)return;
  const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgGuideTemplate:'productGuideTemplate'};
  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.value=c[key]||'';});
- const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations'};
+ const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations',skinShowSize:'size'};
  Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=c.productGuideFields[key]!==false;});
  const pageExists=skinStudioPageId==='home'||!!skinCurrentPage(skinStudioPageId);
  if(!pageExists)skinStudioPageId='home';
@@ -1817,7 +1818,7 @@ function collectSkinConfigFields(){
  if(!skinBuilderConfig)return;
  const map={skinCfgTemplate:'template',skinCfgAccent:'accentColor',skinCfgAnnouncement:'announcement',skinCfgHeroEyebrow:'heroEyebrow',skinCfgHeroTitle:'heroTitle',skinCfgHeroDescription:'heroDescription',skinCfgHeroImage:'heroImage',skinCfgHeroButton:'heroButtonLabel',skinCfgApproachEyebrow:'approachEyebrow',skinCfgApproachTitle:'approachTitle',skinCfgApproachBody:'approachBody',skinCfgFooterNote:'footerNote',skinCfgGuideTemplate:'productGuideTemplate'};
  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig[key]=el.value.trim();});
- const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations'};
+ const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations',skinShowSize:'size'};
  skinBuilderConfig.productGuideFields=skinBuilderConfig.productGuideFields||{};
  Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig.productGuideFields[key]=!!el.checked;});
  const hero=skinBuilderConfig.sections.find(x=>x.type==='hero');
@@ -1874,7 +1875,7 @@ function renderSkinLibrary(){
  if(!skinBuilderConfig){root.innerHTML='<div class="studio-library-empty">Loading your site content…</div>';return;}
  if(skinStudioTab==='products'){
   const rows=adminProducts.filter(isSkinProduct).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
-  root.innerHTML='<button type="button" class="studio-outline-add" onclick="openSkinAdd(\'product\')">＋ Add a product</button><p class="studio-inline-help">Drag a published product into a product grid on the canvas. Select a product to assign its category, or use Edit for all product fields.</p>'+
+  root.innerHTML='<div class="studio-product-add-actions"><button type="button" class="studio-outline-add" onclick="openSkinManualProduct()">＋ Add manually</button><button type="button" class="studio-outline-add" onclick="openSkinProduct()">↗ Import Amazon link</button></div><p class="studio-inline-help">Drag a published product into a product grid on the canvas. Select a product to assign its category, or use Edit for all product fields.</p>'+
    (rows.length?rows.map(p=>{
     const id=String(p.id),image=skinImageOf(p),published=!!p.published;
     const selection=skinStudioSelection?.type==='product'&&String(skinStudioSelection.id)===id;
@@ -1930,7 +1931,7 @@ function renderSkinSelectedInspector(){
   if(sec.type==='product-grid'||sec.type==='featured-products'){
    const activeIds=new Set((sec.product_ids||[]).map(String));
    html+='<label class="studio-inspector-field"><span>Product filter</span><select onchange="updateSkinSection('+index+',\'filter\',this.value)">'+[['all','All eligible skincare products'],['featured','Featured picks'],['top_pick','Top picks'],['trending','Trending picks']].map(([v,l])=>'<option value="'+v+'" '+(sec.filter===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
-   html+='<label class="studio-inspector-field"><span>Category filter</span><select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+categories.map(cat=>'<option value="'+esc(cat.id)+'" '+(String(sec.category_id||'')===String(cat.id)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
+   html+='<label class="studio-inspector-field"><span>Category filter</span><select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+categories.map(cat=>'<option value="'+esc(cat.id)+'" '+(String(sec.category_id||'')===String(cat.id)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+(skinBuilderConfig.customCategories||[]).map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+' (Skin Studio)</option>').join('')+'</select></label>';
    html+='<label class="studio-inspector-field"><span>Columns</span><select onchange="updateSkinSection('+index+',\'columns\',Number(this.value))">'+[2,3,4].map(n=>'<option value="'+n+'" '+(Number(sec.columns||4)===n?'selected':'')+'>'+n+' columns</option>').join('')+'</select></label>';
    html+='<label class="studio-inspector-field"><span>Exact products in this section</span><select multiple size="7" onchange="updateSkinSection('+index+',\'product_ids\',Array.from(this.selectedOptions).map(o=>o.value))">'+skinProductOptions().map(p=>'<option value="'+esc(p.id)+'" '+(activeIds.has(String(p.id))?'selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select></label><p class="studio-inline-help">The order here is the display order. You can also drag cards directly in the canvas or drag a product from the left library into this grid.</p>';
   }
@@ -2267,6 +2268,28 @@ function populateSkinRecommendations(selectedIds=[]){
  const el=document.getElementById('pfRecommendedProducts');if(!el)return;
  const selected=new Set((selectedIds||[]).map(String)),current=String(window.editingProductId||'');
  el.innerHTML=skinProductOptions().filter(p=>p.id!==current).map(p=>'<option value="'+esc(p.id)+'" '+(selected.has(p.id)?'selected':'')+'>'+esc(p.name)+'</option>').join('');
+}
+async function openSkinManualProduct(){
+ try{
+  const cat=await ensureSkinCategory(false);
+  if(!categories.length)await loadCategories();
+  openProductModal(false);
+  window.skinCareImportMode=true;
+  setSkinAdminFormMode(true);
+  document.getElementById('productModalTitle').textContent='Add skincare product manually';
+  document.getElementById('productModalSub').textContent='Enter the real product information and exact Amazon affiliate link. Nothing is published until you choose to publish it.';
+  document.getElementById('pfKind').value='find';
+  document.getElementById('pfSource').value='amazon';
+  document.getElementById('pfCategory').value=cat?.id||'';
+  document.getElementById('pfRetailer').value='Amazon';
+  document.getElementById('pfPrice').value='';
+  document.getElementById('pfListPrice').value='';
+  document.getElementById('pfDiscount').value='';
+  document.getElementById('pfDestination').placeholder='Paste the exact Amazon Associates product URL';
+  document.getElementById('amazonUrlInput').placeholder='Optional: paste an Amazon product link to import details';
+  populateSkinRecommendations();
+  document.getElementById('productModal').classList.add('open');
+ }catch(e){skinBuilderMessage('Could not open manual product editor: '+(e.message||e),'error');}
 }
 async function editSkinProduct(id){
  const p=adminProducts.find(x=>String(x.id)===String(id));if(!p)return setAdminStatus('Product not found in the skincare catalog.','error');
