@@ -1703,7 +1703,7 @@ async function adminBoot(){
   }
 }
 
-let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false;
+let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='';
 const defaultSkinSiteConfig=()=>({
   version:2,template:'soft-editorial',accentColor:'#66745f',
   announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
@@ -1715,7 +1715,10 @@ const defaultSkinSiteConfig=()=>({
   approachBody:'Nuvora Skin is a focused corner of Nuvora for skincare and beauty discoveries. We aim to make browsing simpler with clear product details and direct links to the retailer. Always check the retailer’s ingredient list, product directions, and suitability for your own skin before buying.',
   footerNote:'Affiliate disclosure: Some links may be affiliate links. If you buy through them, Nuvora may earn a commission at no extra cost to you. Retailer prices, availability, ingredients, and product claims can change; confirm details on the retailer’s site.',
   productGuideTemplate:'editorial',
-  productGuideFields:{benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true},
+  productGuideFields:{benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true,size:true},
+  customCategories:[],
+  productCategoryMap:{},
+  pages:[],
   sections:[
     {id:'hero',type:'hero',visible:true,title:'Care that feels like you.'},
     {id:'edit',type:'product-grid',visible:true,title:'What’s in the edit',eyebrow:'Curated, not crowded',text:'Product picks are added by the Nuvora team. Explore skincare finds and helpful guides.',filter:'all',columns:4,product_ids:[]},
@@ -1725,13 +1728,43 @@ const defaultSkinSiteConfig=()=>({
 });
 function mergeSkinSiteConfig(raw){
  const base=defaultSkinSiteConfig(),src=raw&&typeof raw==='object'?raw:{},cfg={...base,...src};
- cfg.sections=Array.isArray(src.sections)&&src.sections.length?src.sections.map((x,i)=>({id:String(x.id||('section-'+(i+1))).slice(0,80),type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid'].includes(x.type)?x.type:'product-grid',visible:x.visible!==false,title:String(x.title||'New section').slice(0,180),eyebrow:String(x.eyebrow||'').slice(0,100),text:String(x.text||'').slice(0,3000),filter:['all','featured','top_pick','trending'].includes(x.filter)?x.filter:'all',columns:[2,3,4].includes(Number(x.columns))?Number(x.columns):4,product_ids:Array.isArray(x.product_ids)?x.product_ids.map(String).slice(0,60):[],category_id:String(x.category_id||'').slice(0,80)})):base.sections;
+ const cleanSections=(items,fallback=[])=>Array.isArray(items)&&items.length?items.slice(0,40).map((x,i)=>({
+  id:String(x.id||('section-'+(i+1))).slice(0,80),
+  type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid'].includes(x.type)?x.type:'product-grid',
+  visible:x.visible!==false,title:String(x.title||'New section').slice(0,180),
+  eyebrow:String(x.eyebrow||'').slice(0,100),text:String(x.text||'').slice(0,3000),
+  image:String(x.image||'').slice(0,1600),
+  backgroundColor:/^#[0-9a-f]{6}$/i.test(String(x.backgroundColor||''))?String(x.backgroundColor):'',
+  filter:['all','featured','top_pick','trending'].includes(x.filter)?x.filter:'all',
+  columns:[2,3,4].includes(Number(x.columns))?Number(x.columns):4,
+  product_ids:Array.isArray(x.product_ids)?x.product_ids.map(String).slice(0,60):[],
+  category_id:String(x.category_id||'').slice(0,100)
+ })):fallback;
+ cfg.sections=cleanSections(src.sections,base.sections);
  if(Number(src.version||0)<2&&!cfg.sections.some(x=>x.type==='journal-grid'))cfg.sections.push({id:'journal',type:'journal-grid',visible:true,title:'Little notes for everyday skin.',eyebrow:'The journal',text:'Practical notes for building a routine at your own pace.',columns:3,product_ids:[]});
- cfg.version=2;
+ cfg.pages=Array.isArray(src.pages)?src.pages.slice(0,30).map((p,i)=>({
+  id:String(p.id||p.slug||('page-'+(i+1))).slice(0,80),
+  title:String(p.title||'Untitled page').slice(0,120),
+  slug:String(p.slug||'page-'+(i+1)).toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80),
+  description:String(p.description||'').slice(0,1200),
+  visible:p.visible!==false,
+  sections:cleanSections(p.sections,[])
+ })):Array.isArray(base.pages)?base.pages:[];
+ cfg.customCategories=Array.isArray(src.customCategories)?src.customCategories.slice(0,60).map((x,i)=>({
+  id:String(x.id||x.slug||('category-'+(i+1))).slice(0,100),
+  slug:String(x.slug||x.id||('category-'+(i+1))).toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80),
+  name:String(x.name||'New category').slice(0,100),
+  description:String(x.description||'').slice(0,1000),
+  image:String(x.image||'').slice(0,1600)
+ })):Array.isArray(base.customCategories)?base.customCategories:[];
+ const mapping=src.productCategoryMap&&typeof src.productCategoryMap==='object'&&!Array.isArray(src.productCategoryMap)?src.productCategoryMap:{};
+ cfg.productCategoryMap={};
+ Object.entries(mapping).slice(0,500).forEach(([id,category])=>{if(id.length<=100&&String(category||'').length<=100)cfg.productCategoryMap[id]=String(category||'');});
+ cfg.version=3;
  cfg.template=['soft-editorial','clean-minimal','sage-botanical'].includes(cfg.template)?cfg.template:'soft-editorial';
  cfg.accentColor=/^#[0-9a-f]{6}$/i.test(String(cfg.accentColor||''))?cfg.accentColor:'#66745f';
  cfg.productGuideTemplate=['editorial','compact','minimal'].includes(cfg.productGuideTemplate)?cfg.productGuideTemplate:'editorial';
- const guideDefaults={benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true};
+ const guideDefaults={benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true,size:true};
  cfg.productGuideFields={...guideDefaults,...(src.productGuideFields&&typeof src.productGuideFields==='object'?src.productGuideFields:{})};
  Object.keys(guideDefaults).forEach(key=>cfg.productGuideFields[key]=cfg.productGuideFields[key]!==false);
  return cfg;
