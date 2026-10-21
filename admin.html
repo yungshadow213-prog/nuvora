@@ -2234,6 +2234,11 @@ function wireSkinStudioCanvas(){
     skinBuilderMessage('Selected '+(skinSectionsFor().find(x=>String(x.id)===String(data.sectionId))?.title||'section')+'. Edit its settings in the right panel.','info');
     return;
    }
+   if(data.type==='nuvora-skin-studio-select-product'){
+    selectSkinItem('product',String(data.productId||''));
+    skinBuilderMessage('Selected product. Edit its category here or open the manual product editor for full details.','info');
+    return;
+   }
    if(data.type==='nuvora-skin-studio-reorder'){
     const sections=skinSectionsFor(data.pageId||'home');
     const from=sections.findIndex(section=>String(section.id)===String(data.sourceId));
