@@ -2163,7 +2163,7 @@ function validateSkinSiteConfig(value){
       if(!id||id.length>80||ids.has(id))return label+' link IDs must be unique and under 80 characters.';
       ids.add(id);
       if(!text.trim()||text.length>80)return label+' link labels must be 1–80 characters.';
-      if(path.length>240||!path.startsWith('/')||path.startsWith('//')||/[\\r\\n]/.test(path))return label+' destinations must be safe internal paths such as /shop or /journal.';
+      if(path.length>240||!path.startsWith('/')||path.startsWith('//')||path.includes(String.fromCharCode(10))||path.includes(String.fromCharCode(13)))return label+' destinations must be safe internal paths such as /shop or /journal.';
       if(item.visible!==undefined&&typeof item.visible!=='boolean')return label+' visibility must be true or false.';
     }
     return null;
