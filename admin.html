@@ -1126,6 +1126,12 @@ function productReviewFlags(p){
  const isolated=words.filter(w=>/^[A-Za-z]$/.test(w)).length;
  const brokenName=!name||/^(?:amazon(?:\.com)?|temu)(?:\s+product)?$/i.test(name)||/^(?:azon\.|mazon\.com\b|isit the\b)/i.test(name)||(words.length>=6&&isolated>=2)||(/\b(?:ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries)\b/i.test(name)&&/\b(?:isit|azon|rand|omedics|ahome|ndstone)\b/i.test(name));
  if(brokenName)flags.push('Title needs review');
+ const source=String(p?.source_type||p?.retailer||'').toLowerCase();
+ const sourceUrl=String(p?.amazon_source_url||p?.source_url||p?.resolved_url||p?.destination_url||'');
+ const sourceAsin=sourceUrl.match(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|[?&]asin=)([A-Z0-9]{10})/i)?.[1]?.toUpperCase()||'';
+ const storedAsin=String(p?.amazon_asin||'').trim().toUpperCase();
+ if(source.includes('amazon')&&storedAsin&&sourceAsin&&storedAsin!==sourceAsin)flags.push('ASIN mismatch');
+ if(source.includes('amazon')&&storedAsin&&adminProducts.some(other=>String(other?.id)!==String(p?.id)&&String(other?.source_type||other?.retailer||'').toLowerCase().includes('amazon')&&String(other?.amazon_asin||'').trim().toUpperCase()===storedAsin))flags.push('Possible duplicate');
  const brand=String(p?.brand||'').trim();
  if(brand&&/\b(?:mazon\.com|azon\.com|isit\s+the|tore\s+sit|ack\s+cented|ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries|rand\s+ahome|ndstone\s+elief|ometric\s+riptych|omedics\s+tore)\b/i.test(brand))flags.push('Brand needs review');
  const image=String(p?.image_url||p?.image_urls?.[0]||'');
@@ -1163,7 +1169,7 @@ async function refreshAmazonDraft(id){
   const title=String(listing.title||'').trim();
   const titleFlags=productReviewFlags({...p,name:title});
   if(!title||titleFlags.includes('Title needs review'))throw new Error('Amazon did not return a reliable product title. Your existing draft was left unchanged.');
-  const patch={name:title,published:false,last_checked_at:new Date().toISOString(),amazon_last_synced:new Date().toISOString()};
+  const patch={name:title,published:false,amazon_asin:prepared.asin||p.amazon_asin||null,last_checked_at:new Date().toISOString(),amazon_last_synced:new Date().toISOString()};
   if(listing.brand&&String(listing.brand).trim())patch.brand=String(listing.brand).trim().slice(0,180);
   const description=String(listing.description||'').trim();
   const descriptionWords=description.split(/\s+/).filter(Boolean);
