@@ -1802,14 +1802,26 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const source=p;
           const normalized=normalizeAmazonProduct(source);
           const safeText=v=>cleanMultilineText(v,12000)||null;
+          const storedName=cleanText(source.name,180)||normalized.name;
+          const storedDescription=safeText(source.description);
+          const curatedDescription=safeText(source.store_description);
+          // Imported text is normalized before storage. Do not run a second
+          // title rewrite on every public read: repeated cleanup can damage
+          // perfectly good titles/descriptions. If a legacy description is
+          // visibly fragmented, prefer the clean editorial description.
+          const publicDescription=storedDescription&&!looksFragmentedText(storedDescription)
+            ?storedDescription
+            :(curatedDescription&&!looksFragmentedText(curatedDescription)?curatedDescription:storedDescription||normalized.description);
+          const storedFeatures=safeText(source.features);
+          const publicFeatures=storedFeatures&&!looksFragmentedText(storedFeatures)?storedFeatures:null;
           const isAmazonSource=/amazon/i.test(String(source.retailer||source.source_type||''))||!!source.amazon_asin||!!source.amazon_source_url;
           const publicProduct={
-            id:source.id,name:normalized.name,slug:source.slug,kind:source.kind,brand:normalized.brand,
-            description:normalized.description,store_description:source.store_description||null,features:normalized.features,
+            id:source.id,name:storedName,slug:source.slug,kind:source.kind,brand:cleanText(source.brand,180)||normalized.brand,
+            description:publicDescription,store_description:source.store_description||null,features:publicFeatures,
             ingredients:source.ingredients||null,usage_instructions:source.usage_instructions||null,product_warnings:source.product_warnings||null,product_size:source.product_size||null,
             benefits:source.benefits||source.why_we_picked_it||null,skin_types:source.skin_types||source.best_for||null,skin_concerns:source.skin_concerns||source.skip_if||null,
             recommended_product_ids:Array.isArray(source.recommended_product_ids)?source.recommended_product_ids:[],recommendation_reason:source.recommendation_reason||null,
-            image_url:normalized.image_url,image_urls:normalized.image_urls,display_price:normalized.display_price,currency:normalized.currency,
+            image_url:normalized.image_url,image_urls:normalized.image_urls,display_price:source.display_price??normalized.display_price,currency:source.currency||normalized.currency,
             destination_url:(isAmazonSource?(source.destination_url||source.amazon_source_url):(source.destination_url||source.source_url))||null,
             retailer:source.retailer||null,provider:source.provider||null,source_type:source.source_type||null,region:source.region||null,
             category_id:source.category_id||null,collection_id:source.collection_id||null,category:source.category_id?categoryMap.get(String(source.category_id))||null:null,
