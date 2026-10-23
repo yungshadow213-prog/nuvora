@@ -673,7 +673,7 @@ body.skin-studio-fullpage .studio-product-check span{overflow-wrap:anywhere}
     </div>
   </header>
   <div id="skinBuilderStatus" class="studio-status notice" role="status" aria-live="polite">Loading your saved Skin Care site…</div>
-  <section class="studio-simple-guide" aria-label="How to use Skin Studio">
+  <section class="studio-simple-guide" aria-label="How to use Skin Studio" hidden>
     <div class="studio-simple-guide-intro"><span class="studio-simple-guide-number">START HERE</span><b>Build your page in 3 simple steps</b><small>No dragging needed — just click and edit.</small></div>
     <button type="button" class="studio-guide-step" onclick="switchSkinStudioTab('outline');selectFirstSkinSection()"><span>1</span><span><b>Choose a section</b><small>Pick a block on the left</small></span></button>
     <button type="button" class="studio-guide-step" onclick="focusSkinInspector()"><span>2</span><span><b>Edit its content</b><small>Change text, image or products</small></span></button>
@@ -951,6 +951,24 @@ body.skin-studio-fullpage .studio-product-check span{overflow-wrap:anywhere}
     </div>
   </div>
 </div>
+<style id="skin-studio-ux-fixes">
+body.skin-studio-fullpage{min-height:100vh;height:auto;overflow:auto!important;background:#f4f6f1}
+body.skin-studio-fullpage .app{min-height:100vh;height:auto;overflow:visible}
+body.skin-studio-fullpage .main,body.skin-studio-fullpage .view.active{height:auto!important;min-height:100vh;overflow:visible!important}
+body.skin-studio-fullpage #skinSiteBuilder{overflow:visible!important;min-height:calc(100vh - 28px);height:auto!important}
+body.skin-studio-fullpage .studio-simple-guide[hidden]{display:none!important}
+body.skin-studio-fullpage .studio-layout{grid-template-columns:238px minmax(520px,1fr) 286px!important;min-height:760px;height:auto!important;overflow:visible!important}
+body.skin-studio-fullpage .studio-center-panel{min-width:0;min-height:760px;overflow:visible}
+body.skin-studio-fullpage .studio-canvas-viewport{min-height:700px;overflow:auto}
+body.skin-studio-fullpage .studio-canvas-inner{min-height:680px;height:100%;width:100%;max-width:none;flex:1 0 auto}
+body.skin-studio-fullpage #skinStudioPreview{height:100%;min-height:680px}
+body.skin-studio-fullpage .studio-left-panel,body.skin-studio-fullpage .studio-right-panel{overflow:visible;min-height:760px}
+body.skin-studio-fullpage .studio-toolbar{position:sticky;top:0;z-index:30}
+body.skin-studio-fullpage .studio-toolbar-actions{flex-wrap:wrap}
+body.skin-studio-fullpage .studio-toolbar-actions .btn{white-space:nowrap}
+@media(max-width:1100px){body.skin-studio-fullpage .studio-layout{grid-template-columns:220px minmax(420px,1fr)!important}body.skin-studio-fullpage .studio-right-panel{grid-column:1/-1;min-height:0;border-top:1px solid #dde4db}}
+@media(max-width:760px){body.skin-studio-fullpage .studio-layout{display:flex!important;flex-direction:column;min-height:0}body.skin-studio-fullpage .studio-left-panel,body.skin-studio-fullpage .studio-right-panel{min-height:0}body.skin-studio-fullpage .studio-canvas-viewport{min-height:620px}}
+</style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],bulkReview:['Import Review','Review, edit and publish the products from your latest bulk discovery.'],products:['Products','Manage Shop, Finds, and Learn listings.'],'skin-care':['Skin Care','Manage the dedicated Nuvora Skin skincare and beauty storefront.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['Settings','Connections and store configuration.']};
 let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[],collections=[],socialPosts=[];
@@ -2151,7 +2169,7 @@ function renderSkinLibrary(){
     return '<article class="studio-library-item '+(selection?'is-selected':'')+'" onclick="selectSkinItem(\'product\','+JSON.stringify(id)+')">'+
      (image?'<img src="'+esc(image)+'" alt="" loading="lazy">':'<div class="studio-product-placeholder">◯</div>')+
      '<div class="studio-library-item-copy"><b>'+esc(p.name||'Untitled product')+'</b><small>'+esc(published?'Published':'Draft — not visible yet')+' · '+esc(retailerLabel(p))+'</small></div>'+
-     '<div class="studio-library-item-actions"><button type="button" onclick="event.stopPropagation();editSkinProduct('+JSON.stringify(id)+')">Edit</button></div></article>';
+     '<div class="studio-library-item-actions"><button type="button" onclick="event.stopPropagation();editSkinProduct('+JSON.stringify(id)+')">Edit details</button><button type="button" onclick="event.stopPropagation();addSkinProductToSection('+JSON.stringify(id)+',skinStudioSelection?.type===\'section\'?skinStudioSelection.id:null,skinStudioPageId)">＋ Place on page</button></div></article>';
    }).join(''):'<div class="studio-library-empty">No skincare products found yet. Add a product by pasting its Amazon link or create one manually.</div>');
   return;
  }
@@ -2254,6 +2272,7 @@ function renderSkinSelectedInspector(){
    '<label class="studio-inspector-field"><span>URL slug</span><input value="'+esc(cat.slug)+'" readonly></label>'+
    '<label class="studio-inspector-field"><span>Category description</span><textarea maxlength="1000" oninput="updateSkinCategory('+JSON.stringify(String(cat.slug))+',\'description\',this.value)">'+esc(cat.description||'')+'</textarea></label>'+
    '<label class="studio-inspector-field"><span>Category image URL</span><input type="url" maxlength="1600" value="'+esc(cat.image||'')+'" oninput="updateSkinCategory('+JSON.stringify(String(cat.slug))+',\'image\',this.value)"></label>'+
+   '<label class="studio-inspector-field"><span>Upload category image</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'category\','+JSON.stringify(String(cat.slug))+')"><small class="studio-inline-help">Choose an image from your device · up to 6 MB.</small></label>'+
    (cat.image?'<img src="'+esc(cat.image)+'" alt="" style="width:100%;max-height:140px;object-fit:cover;border-radius:9px;margin-bottom:10px">':'')+
    '<div class="studio-inspector-actions"><button class="btn danger" type="button" onclick="deleteSkinCategory('+JSON.stringify(String(cat.slug))+')">Delete category</button></div>';
   return;
@@ -2482,6 +2501,14 @@ function moveSkinProductInSection(productId,targetProductId,sectionId,pageId){
  const [item]=ids.splice(from,1);ids.splice(ids.indexOf(String(targetProductId)),0,item);sec.product_ids=ids.slice(0,60);
  skinStudioPageId=pageId||'home';skinStudioSelection={type:'section',id:String(sectionId)};skinMarkDirty('Product order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
+function requestSkinSectionImageUpload(sectionId,pageId='home'){
+ skinStudioPageId=pageId||'home';
+ const sections=skinSectionsFor(skinStudioPageId),index=sections.findIndex(section=>String(section.id)===String(sectionId));
+ if(index<0)return skinBuilderMessage('Select a page section before changing its image.','error');
+ const input=document.createElement('input');input.type='file';input.accept='image/jpeg,image/png,image/webp,image/gif';input.style.display='none';
+ input.addEventListener('change',()=>{if(input.files?.length)uploadSkinStudioImage(input,'section',index);input.remove();},{once:true});
+ document.body.appendChild(input);input.click();
+}
 function sendSkinStudioPreview(){
  const frame=document.getElementById('skinStudioPreview');
  if(!frame||!skinBuilderConfig||!frame.contentWindow)return;
@@ -2509,6 +2536,17 @@ function wireSkinStudioCanvas(){
    const data=event.data;
    if(data.type==='nuvora-skin-studio-ready'){sendSkinStudioPreview();return;}
    if(!skinBuilderConfig)return;
+   if(data.type==='nuvora-skin-studio-request-add-product'){
+    skinStudioPageId=data.pageId||'home';skinStudioSelection={type:'section',id:String(data.sectionId||'')};
+    switchSkinStudioTab('products');renderSkinLibrary();
+    skinBuilderMessage('Choose “＋ Place on page” beside a product, or use the Add product button to create/import one.','info');return;
+   }
+   if(data.type==='nuvora-skin-studio-request-image-upload'){requestSkinSectionImageUpload(data.sectionId,data.pageId||'home');return;}
+   if(data.type==='nuvora-skin-studio-update-section-field'){
+    const sections=skinSectionsFor(data.pageId||'home'),index=sections.findIndex(section=>String(section.id)===String(data.sectionId));
+    if(index<0||!['title','eyebrow','text'].includes(data.key))return;
+    skinStudioPageId=data.pageId||'home';updateSkinSection(index,data.key,String(data.value??''));return;
+   }
    if(data.type==='nuvora-skin-studio-select-section'){
     skinStudioPageId=data.pageId||'home';
     skinStudioSelection={type:'section',id:String(data.sectionId||'')};
@@ -2547,6 +2585,29 @@ function skinConfigValidationMessage(requireProductGrid=true){
  if(!/^#[0-9a-f]{6}$/i.test(String(skinBuilderConfig.accentColor||'')))return 'Choose a valid accent color.';
  if(skinBuilderConfig.heroImage&&!/^https:\/\//i.test(skinBuilderConfig.heroImage))return 'Hero image must use HTTPS.';
  return '';
+}
+async function uploadSkinStudioImage(input,type,id){
+ const file=input?.files?.[0];if(!file)return;
+ const allowed=new Set(['image/jpeg','image/png','image/webp','image/gif']);
+ if(!allowed.has(file.type)||file.size>6*1024*1024){skinBuilderMessage(file.size>6*1024*1024?'Image must be 6 MB or smaller.':'Choose a JPG, PNG, WEBP or GIF image.','error');input.value='';return;}
+ if(!adminSB){skinBuilderMessage('Image storage is not connected. Sign in again and retry.','error');return;}
+ const label=input.closest('label')?.querySelector('span');const original=label?.textContent;if(label)label.textContent='Uploading image…';
+ try{
+  const ext=({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'})[file.type];
+  const path='skin-site/'+String(type)+'-'+crypto.randomUUID()+'.'+ext;
+  const {error}=await adminSB.storage.from('product-images').upload(path,file,{cacheControl:'31536000',contentType:file.type,upsert:false});
+  if(error)throw error;
+  const {data}=adminSB.storage.from('product-images').getPublicUrl(path);
+  if(!data?.publicUrl)throw new Error('Could not create a public image URL.');
+  if(type==='section'){
+   const sections=skinSectionsFor(),section=sections[Number(id)];if(!section)throw new Error('The selected section is no longer available.');
+   updateSkinSection(Number(id),'image',data.publicUrl);
+  }else if(type==='category'){
+   updateSkinCategory(String(id),'image',data.publicUrl);
+  }
+  skinBuilderMessage('Image uploaded and added to this draft. Save draft to keep it; publish when ready.','success');
+ }catch(e){skinBuilderMessage('Image upload failed: '+(e.message||e),'error');}
+ finally{if(label&&original)label.textContent=original;input.value='';}
 }
 async function saveSkinSiteDraft(){
  const validation=skinConfigValidationMessage(false);if(validation)return skinBuilderMessage(validation,'error');
@@ -2611,20 +2672,23 @@ async function openSkinManualProduct(){
  }catch(e){skinBuilderMessage('Could not open manual product editor: '+(e.message||e),'error');}
 }
 async function editSkinProduct(id){
- const p=adminProducts.find(x=>String(x.id)===String(id));if(!p)return setAdminStatus('Product not found in the skincare catalog.','error');
- if(!categories.length)await loadCategories();
- openProductModal(false);window.skinCareImportMode=true;setSkinAdminFormMode(true);window.editingProductId=id;
- document.getElementById('productModalTitle').textContent='Edit skincare product';
- document.getElementById('productModalSub').textContent='Edit the skincare guide and Amazon link. Nuvora Skin does not manage product prices.';
- setProductForm(p);
- document.getElementById('pfBenefits').value=p.benefits||p.why_we_picked_it||'';
- document.getElementById('pfSkinTypes').value=p.skin_types||p.best_for||'';
- document.getElementById('pfSkinConcerns').value=p.skin_concerns||p.skip_if||'';
- document.getElementById('pfRecommendationReason').value=p.recommendation_reason||'';
- document.getElementById('pfSkinFeatured').checked=!!p.featured;document.getElementById('pfSkinTopPick').checked=!!p.top_pick;document.getElementById('pfSkinTrending').checked=!!p.trending;
- populateSkinRecommendations(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids:[]);
- document.getElementById('pfPrice').value='';document.getElementById('pfListPrice').value='';document.getElementById('pfDiscount').value='';
- document.getElementById('productModal').classList.add('open');
+ try{
+  const p=adminProducts.find(x=>String(x.id)===String(id));
+  if(!p)throw new Error('Product not found in the skincare catalog. Refresh the Products tab and try again.');
+  if(!categories.length)await loadCategories();
+  openProductModal(false);window.skinCareImportMode=true;window.editingProductId=String(id);setSkinAdminFormMode(true);
+  document.getElementById('productModalTitle').textContent='Edit skincare product';
+  document.getElementById('productModalSub').textContent='Edit product details, image, skin guidance and the exact Amazon link. Nuvora Skin does not manage product prices.';
+  setProductForm(p);
+  document.getElementById('pfBenefits').value=p.benefits||p.why_we_picked_it||'';
+  document.getElementById('pfSkinTypes').value=p.skin_types||p.best_for||'';
+  document.getElementById('pfSkinConcerns').value=p.skin_concerns||p.skip_if||'';
+  document.getElementById('pfRecommendationReason').value=p.recommendation_reason||'';
+  document.getElementById('pfSkinFeatured').checked=!!p.featured;document.getElementById('pfSkinTopPick').checked=!!p.top_pick;document.getElementById('pfSkinTrending').checked=!!p.trending;
+  populateSkinRecommendations(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids:[]);
+  document.getElementById('pfPrice').value='';document.getElementById('pfListPrice').value='';document.getElementById('pfDiscount').value='';
+  document.getElementById('productModal').classList.add('open');
+ }catch(e){skinBuilderMessage('Could not open the product editor: '+(e.message||e),'error');}
 }
 
 adminBoot();
