@@ -1193,7 +1193,7 @@ async function emergencyCatalogFallback(){
     const rows=JSON.parse(raw);
     if(!Array.isArray(rows))throw new Error('Invalid catalog');
     const esc=v=>htmlEsc(String(v??''));
-    const safeRows=rows.filter(p=>p&&p.id&&['shop','find','learn'].includes(String(p.kind||'').toLowerCase()));
+    const safeRows=rows.filter(p=>p&&p.id&&['shop','find','learn'].includes(String(p.kind||'').toLowerCase())&&!(typeof storefrontProductNeedsReview==='function'&&storefrontProductNeedsReview(p)));
     const make=p=>{
       const img=String(p.image_url||p.image_urls?.[0]||'');
       const name=displayProductName(p.name||'Product');
@@ -1286,8 +1286,11 @@ async function loadLiveProducts(){
   const renderSafe=(id,html)=>{const el=document.getElementById(id);if(el)el.innerHTML=html;};
   const empty='<div class="empty" style="grid-column:1/-1">No published products yet.</div>';
   if(!cleanList.length)throw new Error('Catalog returned no renderable products.');
-  renderSafe('newProducts',safeCards(cleanList.slice(0,8))||empty);
-  renderSafe('randomPicks',safeCards([...cleanList].sort(()=>Math.random()-0.5).slice(0,8))||empty);
+  const featuredProducts=cleanList.slice(0,8);
+  const featuredIds=new Set(featuredProducts.map(p=>String(p.id)));
+  const discoveryProducts=[...cleanList].filter(p=>!featuredIds.has(String(p.id))).sort(()=>Math.random()-0.5).slice(0,8);
+  renderSafe('newProducts',safeCards(featuredProducts)||empty);
+  renderSafe('randomPicks',safeCards(discoveryProducts)||'<div class="empty" style="grid-column:1/-1"><strong>You’ve seen our current picks.</strong><br><span>Browse the full collection while we prepare more finds.</span></div>');
   try{renderSkinRoutineFinder()}catch(err){console.warn('Skin routine finder could not render:',err);}
   try{renderBrowse()}catch(err){console.warn('Browse catalog render failed:',err);renderSafe('browseGrid',safeCards(cleanList)||empty);}
   try{renderList('shopGrid','Shop');renderList('findGrid','Find');renderLearn()}catch(err){console.warn('Secondary catalog render failed:',err);}
