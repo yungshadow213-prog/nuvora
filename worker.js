@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-catalog-import-publish-guardrails-r35',
+          release:'nuvora-2026-10-23-manual-import-duplicate-guard-r36',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -1231,7 +1231,14 @@ async function ingestSourceProduct(sourceUrl,env){
         const beforeDp=dpIndex>=0?cleanPath.slice(0,dpIndex):cleanPath;
         const titleHint=beforeDp.split('/').pop().replace(/[-_+]+/g,' ').replace(/\b(?:dp|gp|product)\b/gi,'').replace(/\s+/g,' ').trim().replace(/\b\w/g,c=>c.toUpperCase()).slice(0,180);
         let duplicate=null;
-        try{const dup=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published,amazon_asin&amazon_asin=eq.'+encodeURIComponent(asin)+'&limit=5');if(dup.ok){const rows=await dup.json();duplicate=rows[0]||null;}}catch(e){}
+        try{
+          const dup=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published,amazon_asin&amazon_asin=eq.'+encodeURIComponent(asin)+'&limit=5');
+          if(dup.ok){const rows=await dup.json();duplicate=rows[0]||null;}
+          if(!duplicate){
+            const bySource=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published,amazon_asin&or=(amazon_source_url.ilike.*'+encodeURIComponent(asin)+'*,destination_url.ilike.*'+encodeURIComponent(asin)+'*)&limit=5');
+            if(bySource.ok){const rows=await bySource.json();duplicate=rows[0]||null;}
+          }
+        }catch(e){}
         let listing=null;
         try{listing=await scrapeAmazonListing(resolved,asin,env);if(!listing?.error){listing=normalizeAmazonListing(listing);listing=await aiPolishAmazonListing(env,listing);}}
         catch(e){listing={error:String(e?.message||e).slice(0,300)};}
