@@ -2169,7 +2169,7 @@ function renderSkinLibrary(){
     return '<article class="studio-library-item '+(selection?'is-selected':'')+'" onclick="selectSkinItem(\'product\','+JSON.stringify(id)+')">'+
      (image?'<img src="'+esc(image)+'" alt="" loading="lazy">':'<div class="studio-product-placeholder">◯</div>')+
      '<div class="studio-library-item-copy"><b>'+esc(p.name||'Untitled product')+'</b><small>'+esc(published?'Published':'Draft — not visible yet')+' · '+esc(retailerLabel(p))+'</small></div>'+
-     '<div class="studio-library-item-actions"><button type="button" onclick="event.stopPropagation();editSkinProduct('+JSON.stringify(id)+')">Edit details</button><button type="button" onclick="event.stopPropagation();addSkinProductToSection('+JSON.stringify(id)+',skinStudioSelection?.type===\'section\'?skinStudioSelection.id:null,skinStudioPageId)">＋ Place on page</button></div></article>';
+     '<div class="studio-library-item-actions"><button type="button" onclick="editSkinProduct('+JSON.stringify(id)+');event.stopPropagation()">Edit details</button><button type="button" onclick="addSkinProductToSection('+JSON.stringify(id)+',skinStudioSelection?.type===\'section\'?skinStudioSelection.id:null,skinStudioPageId);event.stopPropagation()">＋ Place on page</button></div></article>';
    }).join(''):'<div class="studio-library-empty">No skincare products found yet. Add a product by pasting its Amazon link or create one manually.</div>');
   return;
  }
