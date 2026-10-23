@@ -2789,7 +2789,7 @@ async function uploadSkinStudioImage(input,type,id,explicitFile=null){
   }
   skinBuilderMessage('Image uploaded and added to this draft. Save draft to keep it; publish when ready.','success');
  }catch(e){skinBuilderMessage('Image upload failed: '+(e.message||e),'error');}
- finally{if(label&&original)label.textContent=original;input.value='';}
+ finally{if(label&&original)label.textContent=original;if(input)input.value='';}
 }
 async function persistSkinSiteDraft(quiet=false){
  if(skinDraftSavePromise){
