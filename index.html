@@ -945,7 +945,20 @@ function renderCollections(){
  }
  root.innerHTML=available.map(item=>'<div class="cat" role="button" tabindex="0" onclick="browseCollection(\''+item.key+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();browseCollection(\''+item.key+'\')}"><h3>'+htmlEsc(item.title)+'</h3><p>'+htmlEsc(item.description)+'</p><span class="arrow">→</span></div>').join('');
 }
-function collectionMatches(p,name){if(name==='All')return true;const hay=(String(p.collection||'')+' '+String(p.name||'')+' '+String(p.desc||'')+' '+String(p.cat||'')+' '+String(p.brand||'')).toLowerCase();const rules={Gaming:['gaming','gamepad','controller','console','headset'],Student:['student','school','study','notebook','backpack','desk'],Creator:['creator','camera','microphone','tripod','drawing','design'],Desk:['desk','keyboard','mouse','monitor','organizer','lamp'],Lifestyle:['lifestyle','everyday','travel','bag','wallet','watch'],Tech:['tech','phone','computer','electronic','gadget','usb','charger']};if(hay.includes(String(name).toLowerCase()))return true;return (rules[name]||[]).some(k=>hay.includes(k));}
+function collectionMatches(p,name){
+ if(name==='All')return true;
+ const hay=(String(p.collection||'')+' '+String(p.name||'')+' '+String(p.desc||'')+' '+String(p.cat||'')+' '+String(p.brand||'')).toLowerCase();
+ const words=hay.match(/[a-z0-9]+/g)||[];
+ const rules={Gaming:['gaming','gamepad','controller','console','headset'],Student:['student','school','study','notebook','backpack','desk'],Creator:['creator','camera','microphone','tripod','drawing','design'],Desk:['desk','keyboard','mouse','monitor','organizer','lamp'],Lifestyle:['lifestyle','everyday','travel','bag','wallet','watch'],Tech:['tech','phone','computer','electronic','gadget','usb','charger']};
+ const hasTerm=term=>{
+  const parts=String(term||'').toLowerCase().match(/[a-z0-9]+/g)||[];
+  if(!parts.length)return false;
+  if(parts.length===1)return words.some(word=>word===parts[0]||word===parts[0]+'s');
+  const padded=' '+words.join(' ')+' ';
+  return padded.includes(' '+parts.join(' ')+' ');
+ };
+ return hasTerm(name)||(rules[name]||[]).some(hasTerm);
+}
 function formatPrice(value,currency='NGN'){if(value===null||value===undefined||value==='')return 'Price unavailable';const n=Number(value);if(!Number.isFinite(n))return 'Price unavailable';const code=String(currency||'NGN').toUpperCase();try{return new Intl.NumberFormat('en-NG',{style:'currency',currency:code,maximumFractionDigits:code==='NGN'?0:2}).format(n)}catch{return code+' '+n.toLocaleString()}}
 function trackEvent(event_name,product_id=null,metadata={}){fetch('/api/analytics/events',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({event_name,product_id,session_id:sessionId,metadata})}).catch(()=>{});}
 let user=localStorage.getItem('nuvoraUser')||'';
