@@ -2451,7 +2451,12 @@ function renderSkinSelectedInspector(){
   html+=field('Section background','backgroundColor',sec.backgroundColor||'#ffffff','color','7');
   if(['hero','editorial','image-block'].includes(sec.type))html+=field('Section image URL','image',sec.image||'','url','1600')+'<label class="studio-inspector-field"><span>Upload section image from your device</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'section\','+index+')"><small class="studio-inline-help">JPG, PNG, WEBP or GIF · up to 6 MB. You can also drag an image file directly onto this section in the preview.</small></label>';
    if(sec.type==='image-block'){
-    html+='<label class="studio-inspector-check"><input type="checkbox" '+(sec.imageFreePosition===true?'checked':'')+' onchange="updateSkinSection('+index+',\'imageFreePosition\',this.checked)"> Enable free image positioning</label><small class="studio-inline-help">When enabled, drag the image inside the preview to place it anywhere within its frame.</small>';
+    if(['hero','editorial'].includes(sec.type)){
+    html+='<div class="studio-inline-help">Drag the image in the preview to adjust its focal point, or use these controls for precision.</div>';
+    html+='<label class="studio-inspector-field"><span>Image focus · horizontal '+Number(sec.imagePositionX??50)+'%</span><input type="range" min="0" max="100" step="1" value="'+Number(sec.imagePositionX??50)+'" onchange="updateSkinSection('+index+',\'imagePositionX\',Number(this.value))"></label>';
+    html+='<label class="studio-inspector-field"><span>Image focus · vertical '+Number(sec.imagePositionY??50)+'%</span><input type="range" min="0" max="100" step="1" value="'+Number(sec.imagePositionY??50)+'" onchange="updateSkinSection('+index+',\'imagePositionY\',Number(this.value))"></label>';
+   }
+   html+='<label class="studio-inspector-check"><input type="checkbox" '+(sec.imageFreePosition===true?'checked':'')+' onchange="updateSkinSection('+index+',\'imageFreePosition\',this.checked)"> Enable free image positioning</label><small class="studio-inline-help">When enabled, drag the image inside the preview to place it anywhere within its frame.</small>';
     if(sec.imageFreePosition===true){
      html+='<label class="studio-inspector-field"><span>Horizontal position · '+Number(sec.imagePositionX??50)+'%</span><input type="range" min="0" max="100" step="1" value="'+Number(sec.imagePositionX??50)+'" onchange="updateSkinSection('+index+',\'imagePositionX\',Number(this.value))"></label>';
      html+='<label class="studio-inspector-field"><span>Vertical position · '+Number(sec.imagePositionY??50)+'%</span><input type="range" min="0" max="100" step="1" value="'+Number(sec.imagePositionY??50)+'" onchange="updateSkinSection('+index+',\'imagePositionY\',Number(this.value))"></label>';
@@ -2854,9 +2859,11 @@ function wireSkinStudioCanvas(){
    }
    if(data.type==='nuvora-skin-studio-update-image-position'){
      const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId));
-     if(index<0||sections[index].type!=='image-block'||sections[index].imageFreePosition!==true)return;
+     if(index<0)return;
+     const sec=sections[index],canMove=sec.type==='image-block'?sec.imageFreePosition===true:['hero','editorial'].includes(sec.type);
+     if(!canMove)return;
      const clamp=value=>Math.max(0,Math.min(100,Number.isFinite(Number(value))?Number(value):50));
-     const sec=sections[index],x=clamp(data.imagePositionX),y=clamp(data.imagePositionY);
+     const x=clamp(data.imagePositionX),y=clamp(data.imagePositionY);
      if(Math.abs(Number(sec.imagePositionX??50)-x)<1&&Math.abs(Number(sec.imagePositionY??50)-y)<1)return;
      sec.imagePositionX=x;sec.imagePositionY=y;skinStudioPageId=pageId;skinStudioSelection={type:'section',id:String(sec.id)};
      skinMarkDirty('Image position updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();return;
