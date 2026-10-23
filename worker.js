@@ -1807,9 +1807,9 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           // title rewrite on every public read: repeated cleanup can damage
           // perfectly good titles/descriptions. If a legacy description is
           // visibly fragmented, prefer the clean editorial description.
-          const publicDescription=storedDescription&&!looksFragmentedText(storedDescription)
-            ?storedDescription
-            :(curatedDescription&&!looksFragmentedText(curatedDescription)?curatedDescription:storedDescription||normalized.description);
+          const publicDescription=curatedDescription&&!looksFragmentedText(curatedDescription)
+            ?curatedDescription
+            :(storedDescription&&!looksFragmentedText(storedDescription)?storedDescription:normalized.description);
           const storedFeatures=safeText(source.features);
           const publicFeatures=storedFeatures&&!looksFragmentedText(storedFeatures)?storedFeatures:null;
           const isAmazonSource=/amazon/i.test(String(source.retailer||source.source_type||''))||!!source.amazon_asin||!!source.amazon_source_url;
@@ -2130,14 +2130,12 @@ function repairFragmentedText(value){
 }
 function looksFragmentedText(value){
   const s=String(value||'').trim(); if(!s)return false;
-  const words=s.split(/\s+/).filter(Boolean); if(words.length<12){
-    const smallFragments=s.match(/\b(?:mazon\.com|azon\.com|isit\s+the\s+tore|ack\s+cented|omatherapy\s+ndle|ndstone\s+elief|omedics\s+tore)\b/gi)||[];
-    if(smallFragments.length)return true;
-    return false;
-  }
+  const words=s.split(/\s+/).filter(Boolean);
+  const fragmentPattern=/\b(?:mazon\.com|azon\.com|isit\s+the\s+tore|ack\s+cented|omatherapy\s+ndle|ndstone\s+elief|omedics\s+tore|hydra\s+ing|trea\s+men|ma\s+cha|an\s+ioxidan|mois\s+urizer|fea\s+uring|rou\s+ine|smoo\s+her|curren\s+re\s+ailer|lis\s+ing|produc\s+labels|la\s+es\s+de\s+ails|four-s\s+ep|discovery\s+se)\b/gi;
+  const fragmentMarkers=s.match(fragmentPattern)||[];
+  if(words.length<12)return fragmentMarkers.length>0;
   const singleLetters=words.filter(w=>/^[A-Za-z]$/.test(w)).length;
   const suspicious=(s.match(/\b[A-Za-z]{2,}\s+[A-Za-z]\b/g)||[]).length;
-  const fragmentMarkers=s.match(/\b(?:mazon\.com|azon\.com|isit\s+the|tore\s+sit|ack\s+cented|ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries|rand\s+ahome|ndstone\s+elief|ometric\s+riptych|omedics\s+tore)\b/gi)||[];
   const distinctFragments=new Set(fragmentMarkers.map(marker=>marker.toLowerCase()));
   return singleLetters>=Math.max(4,Math.ceil(words.length*0.08))||suspicious>=5||distinctFragments.size>=2;
 }
