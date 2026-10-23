@@ -106,6 +106,7 @@ body{background:var(--bg)!important;color:var(--text)!important;font-family:Inte
 .catalog-search span{font-size:17px;color:#98a29b}
 .catalog-search input{border:0!important;background:transparent!important;color:var(--text)!important;padding:10px 0!important;border-radius:0!important}
 .catalog-search input::placeholder{color:#a3aba5}
+.catalog-filter-select{min-width:150px;border:1px solid #e2e8e1;border-radius:11px;background:#fff;color:var(--text);padding:10px 12px;font:inherit;font-size:11px;font-weight:750;outline:none}.catalog-filter-select:focus{border-color:#9db9a5;box-shadow:0 0 0 3px #edf5ee}
 .catalog-filter-note{display:flex;gap:7px;align-items:center;font-size:10px;color:#8a938c;white-space:nowrap}
 .filter-dot{width:6px;height:6px;background:#6ba879;border-radius:50%}
 .catalog-panel{padding:0!important;overflow:hidden}
@@ -622,6 +623,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
 
   <div class="catalog-toolbar panel">
     <div class="catalog-search"><span>⌕</span><input id="adminProductSearch" oninput="renderProducts()" placeholder="Search product name, brand or ASIN"></div>
+    <select id="adminProductFilter" class="catalog-filter-select" onchange="renderProducts()" aria-label="Filter product library"><option value="all">All products</option><option value="needs-review">Needs review</option><option value="published">Published</option><option value="drafts">Drafts</option><option value="uncategorized">Uncategorized</option></select>
     <div class="catalog-filter-note"><span class="filter-dot"></span><span>Drafts stay private until published.</span></div>
   </div>
 
@@ -1183,10 +1185,26 @@ async function refreshAmazonDraft(id){
 }
 function renderProducts(){
   const el=document.getElementById('productRows');
+  const query=String(document.getElementById('adminProductSearch')?.value||'').trim().toLowerCase();
+  const filter=String(document.getElementById('adminProductFilter')?.value||'all');
+  const visibleProducts=adminProducts.filter(p=>{
+    const searchable=[p.name,p.brand,p.amazon_asin,p.slug,p.retailer,p.category_id,p.destination_url,p.amazon_source_url].filter(Boolean).join(' ').toLowerCase();
+    if(query&&!searchable.includes(query))return false;
+    const flags=productReviewFlags(p);
+    if(filter==='needs-review'&&!flags.length)return false;
+    if(filter==='published'&&!p.published)return false;
+    if(filter==='drafts'&&p.published)return false;
+    if(filter==='uncategorized'&&p.category_id)return false;
+    return true;
+  });
+  const note=document.querySelector('.catalog-filter-note span:last-child');
+  if(note)note.textContent=adminProducts.length?visibleProducts.length+' shown · '+adminProducts.filter(p=>productReviewFlags(p).length>0).length+' need review · drafts stay private until published.':'Drafts stay private until published.';
   if(!adminProducts.length){
     el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet.</div>';
+  }else if(!visibleProducts.length){
+    el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products match this search and filter. Try another filter or clear the search.</div>';
   }else{
-    el.innerHTML=adminProducts.map(p=>{
+    el.innerHTML=visibleProducts.map(p=>{
       const dest=retailerDestination(p),label=retailerLabel(p),flags=productReviewFlags(p);
       const image=p.image_url&&/^https?:\/\//i.test(String(p.image_url))?'<img class="admin-product-thumb" src="'+esc(p.image_url)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'<span class="admin-product-thumb" aria-hidden="true"></span>';
       return '<div class="row"><div class="admin-product-leading">'+image+'<div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</div>'+(flags.length?'<div class="admin-product-flags">'+flags.map(flag=>'<span class="tag quality-warning">'+esc(flag)+'</span>').join('')+'</div>':'<div class="admin-product-flags"><span class="tag quality-good">Basic checks passed</span></div>')+'</div></div><div class="product-row-actions"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+(!p.published&&label==='Amazon'&&(p.amazon_source_url||p.source_url||p.resolved_url||p.destination_url)?'<button class="btn" data-product-refresh="'+esc(p.id)+'" onclick="refreshAmazonDraft(\''+esc(p.id)+'\')">Refresh source</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit</button><button class="btn" data-product-publish="'+esc(p.id)+'" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';
