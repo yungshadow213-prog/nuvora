@@ -42,16 +42,20 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import re
-          html=Path("index.html").read_text(encoding="utf-8")
-          scripts=re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>", html, flags=re.I)
-          inline=[s for s in scripts if s.strip()]
-          if not inline:
-              raise SystemExit("No inline scripts found in index.html")
-          for i,src in enumerate(inline,1):
-              Path(f"/tmp/nuvora-index-{i}.js").write_text(src,encoding="utf-8")
-          print(f"Extracted {len(inline)} inline script block(s).")
+          total=0
+          for name in ["index.html","beauty.html"]:
+              html=Path(name).read_text(encoding="utf-8")
+              scripts=re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>", html, flags=re.I)
+              inline=[s for s in scripts if s.strip()]
+              if not inline:
+                  raise SystemExit(f"No inline scripts found in {name}")
+              for i,src in enumerate(inline,1):
+                  Path(f"/tmp/nuvora-{Path(name).stem}-{i}.js").write_text(src,encoding="utf-8")
+              total+=len(inline)
+              print(f"{name}: extracted {len(inline)} inline script block(s).")
+          print(f"Extracted {total} storefront script block(s).")
           PY
-          for file in /tmp/nuvora-index-*.js; do
+          for file in /tmp/nuvora-index-*.js /tmp/nuvora-beauty-*.js; do
             node --check "$file"
           done
 
@@ -72,7 +76,7 @@ jobs:
           from pathlib import Path
           import re, sys
           failures=[]
-          for name in ["index.html","admin.html","edit-product.html"]:
+          for name in ["index.html","beauty.html","admin.html","edit-product.html"]:
               text=Path(name).read_text(encoding="utf-8")
               if len(re.findall(r"<script\b", text, re.I)) != len(re.findall(r"</script>", text, re.I)):
                   failures.append(f"{name}: script tag count mismatch")
