@@ -1713,7 +1713,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           if(configError)return json({error:configError},400);
         }
         if(Object.prototype.hasOwnProperty.call(patch,'skin_site_draft')&&patch.skin_site_draft!==null){
-          const draftError=validateSkinSiteConfig(patch.skin_site_draft);
+          const draftError=validateSkinSiteConfig(patch.skin_site_draft,{requireProductGrid:false});
           if(draftError)return json({error:'Skin Studio draft: '+draftError},400);
         }
         patch.updated_at=new Date().toISOString();
@@ -2145,7 +2145,7 @@ function makeProductSlug(value){
   return (base||'product')+'-'+Math.random().toString(36).slice(2,8);
 }
 
-function validateSkinSiteConfig(value){
+function validateSkinSiteConfig(value,options={}){
   if(!value||typeof value!=='object'||Array.isArray(value))return 'Skin site configuration must be an object.';
   let encoded;try{encoded=JSON.stringify(value);}catch{return 'Skin site configuration is not valid JSON.';}
   if(encoded.length>100000)return 'Skin site configuration is too large (maximum 100 KB).';
@@ -2210,7 +2210,7 @@ function validateSkinSiteConfig(value){
   const sections=Array.isArray(value.sections)?value.sections:[];
   const homeError=checkSections(sections,'Skin Studio');
   if(homeError)return homeError;
-  if(!sections.some(section=>section.visible!==false&&(section.type==='product-grid'||section.type==='featured-products')))return 'Skin Studio needs at least one visible product grid.';
+  if(options.requireProductGrid!==false&&!sections.some(section=>section.visible!==false&&(section.type==='product-grid'||section.type==='featured-products')))return 'Skin Studio needs at least one visible product grid.';
   if(value.pages!==undefined&&!Array.isArray(value.pages))return 'Skin Studio pages must be an array.';
   const pages=Array.isArray(value.pages)?value.pages:[];
   if(pages.length>30)return 'Skin Studio supports up to 30 custom pages.';
