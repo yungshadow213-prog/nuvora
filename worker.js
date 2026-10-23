@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-skin-studio-draft-workflow-r7',
+          release:'nuvora-2026-10-23-skin-studio-route-auth-r8',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });

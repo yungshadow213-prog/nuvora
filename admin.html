@@ -926,7 +926,7 @@ let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[]
 window.__nuvoraSchemaState=window.__nuvoraSchemaState||{missingProductColumns:[],productSchemaError:''};
 function validURL(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
 
-function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById('title').textContent=meta[id][0];document.getElementById('sub').textContent=meta[id][1];if(id==='settings')loadSettings();if(id==='skin-care'){loadCategories().then(()=>{renderSkinProducts();renderSkinBuilderSections();});renderSkinProducts();loadSkinSiteConfig();}if(id==='categories')loadCategories();if(id==='collections')loadCollections();if(id==='social')loadSocial();if(id==='analytics')loadAnalytics();}
+function show(id,b){document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));if(b)b.classList.add('active');document.getElementById('title').textContent=meta[id][0];document.getElementById('sub').textContent=meta[id][1];if(id==='settings')loadSettings();if(id==='skin-care'){loadCategories().then(()=>{renderSkinProducts();renderSkinBuilderSections();});renderSkinProducts();loadSkinSiteConfig();}if(id==='categories')loadCategories();if(id==='collections')loadCollections();if(id==='social')loadSocial();if(id==='analytics')loadAnalytics();}
 function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function setAdminStatus(message,type='info'){const ids=['globalAdminStatus','importStatus','shopifyImportStatus','aiImageStatus','aiCopyStatus','uploadStatus'];for(const id of ids){const el=document.getElementById(id);if(el&&message){el.textContent=String(message);el.dataset.status=type;}}} 
 async function api(path,options={},retry=true){
@@ -1739,7 +1739,8 @@ async function signInWithGoogle(){
   try{
     document.getElementById('googleSignIn').disabled=true;
     document.getElementById('googleSignIn').textContent='Opening Google…';
-    const redirectTo=new URL('/admin.html',window.location.origin).href;
+    const redirectPath=/^\/admin\/skin-studio\/?$/.test(window.location.pathname)?window.location.pathname:'/admin.html';
+    const redirectTo=new URL(redirectPath,window.location.origin).href;
     const {error}=await adminSB.auth.signInWithOAuth({provider:'google',options:{redirectTo}});
     if(error)throw error;
   }catch(e){
@@ -1749,6 +1750,8 @@ async function signInWithGoogle(){
   }
 }
 async function adminBoot(){
+  const isSkinStudioRoute=/^\/admin\/skin-studio\/?$/.test(location.pathname);
+  if(isSkinStudioRoute)document.body.classList.add('skin-studio-fullpage');
   try{
     const cfg=await fetch('/api/config').then(r=>r.json());
     if(!cfg.supabaseUrl||!cfg.supabaseAnonKey)throw new Error('Supabase is not configured. Add the server environment variables before using Admin.');
@@ -1760,16 +1763,14 @@ async function adminBoot(){
     if(!adminSession){showAuthGate();return;}
     hideAuthGate();
     document.getElementById('adminEmail').textContent='Signed in as '+(adminSession.user?.email||'admin');
-    const isSkinStudioRoute=/^\/admin\/skin-studio\/?$/.test(location.pathname);
     const openSkinStudioRoute=()=>{
       if(!isSkinStudioRoute)return;
       document.body.classList.add('skin-studio-fullpage');
-      const skinNav=document.querySelector('.nav button[onclick*="skin-care"]');
-      if(skinNav)show('skin-care',skinNav);
+      const skinNav=document.querySelector('.nav button[onclick*="/admin/skin-studio"]')||document.querySelector('.nav button[data-icon="✿"]');
+      show('skin-care',skinNav||null);
     };
     // Establish the requested workspace before ancillary health checks so a
     // transient diagnostics failure cannot strand the user on the dashboard.
-    if(isSkinStudioRoute)document.body.classList.add('skin-studio-fullpage');
     let skinProductLoadError='';
     try{
       await liveAdminProducts();
