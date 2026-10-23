@@ -2585,7 +2585,7 @@ function skinConfigValidationMessage(requireProductGrid=true){
  if(skinBuilderConfig.heroImage&&!/^https:\/\//i.test(skinBuilderConfig.heroImage))return 'Hero image must use HTTPS.';
  return '';
 }
-async async function uploadSkinStudioImage(input,type,id){
+async function uploadSkinStudioImage(input,type,id){
  const file=input?.files?.[0];if(!file)return;
  const allowed=new Set(['image/jpeg','image/png','image/webp','image/gif']);
  if(!allowed.has(file.type)||file.size>6*1024*1024){skinBuilderMessage(file.size>6*1024*1024?'Image must be 6 MB or smaller.':'Choose a JPG, PNG, WEBP or GIF image.','error');input.value='';return;}
