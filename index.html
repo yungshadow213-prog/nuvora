@@ -811,6 +811,7 @@ button,a,[role="button"],input,select,textarea{pointer-events:auto}
 
 <script>
 const products=[]; // Real catalog: populated only by published Supabase records.
+let catalogLoadState='loading';
 
 let activeCat='All',activeCollection='All',authMode='login';
 let nuvoraSB=null;
@@ -875,8 +876,10 @@ function renderSkinRoutineFinder(type=activeSkinRoutine){
  const beauty=products.filter(isSkinCareFind);
  const fit=type==='All'?beauty:beauty.filter(p=>String(p.skinTypes||p.bestFor||'').toLowerCase().includes(type.toLowerCase())||String([p.desc,p.features,p.skinConcerns].join(' ')).toLowerCase().includes(type.toLowerCase()));
  const results=fit.length?fit.slice(0,4):beauty.slice(0,4);
+ if(catalogLoadState==='loading'&&!products.length){if(sub)sub.textContent='Loading published skincare products…';root.innerHTML='<div class="nv-routine-empty">Loading skincare finds…</div>';return;}
+ if(catalogLoadState==='error'&&!products.length){if(sub)sub.textContent='The catalog could not be reached just now.';root.innerHTML='<div class="nv-routine-empty">Skincare products could not be loaded. Please refresh the page in a moment.</div>';return;}
  if(sub)sub.textContent=fit.length?('Showing '+(type==='All'?'published skincare finds':'products whose details mention '+type.toLowerCase()+' skin')+'.'):beauty.length?'No products explicitly mention '+type.toLowerCase()+' skin yet, so these are general skincare finds. Check each product label before use.':'Skincare products will appear here when they are published in the catalog.';
- root.innerHTML=results.length?results.map(card).join(''):'<div class="nv-routine-empty">No skincare products are published yet. Add and publish products in Nuvora Admin, then they will appear here automatically.</div>';
+ root.innerHTML=results.length?results.map(card).join(''):'<div class="nv-routine-empty">'+(catalogLoadState==='loaded'?'No skincare products are published yet. Add and publish a skincare product in Nuvora Admin and it will appear here automatically.':'Skincare products will appear here when the published catalog is available.')+'</div>';
 }
 function collectionMatches(p,name){if(name==='All')return true;const hay=(String(p.collection||'')+' '+String(p.name||'')+' '+String(p.desc||'')+' '+String(p.cat||'')+' '+String(p.brand||'')).toLowerCase();const rules={Gaming:['gaming','gamepad','controller','console','headset'],Student:['student','school','study','notebook','backpack','desk'],Creator:['creator','camera','microphone','tripod','drawing','design'],Desk:['desk','keyboard','mouse','monitor','organizer','lamp'],Lifestyle:['lifestyle','everyday','travel','bag','wallet','watch'],Tech:['tech','phone','computer','electronic','gadget','usb','charger']};if(hay.includes(String(name).toLowerCase()))return true;return (rules[name]||[]).some(k=>hay.includes(k));}
 function formatPrice(value,currency='NGN'){const n=Number(value);if(!Number.isFinite(n))return 'Price unavailable';const code=String(currency||'NGN').toUpperCase();try{return new Intl.NumberFormat('en-NG',{style:'currency',currency:code,maximumFractionDigits:code==='NGN'?0:2}).format(n)}catch{return code+' '+n.toLocaleString()}}
@@ -898,6 +901,7 @@ function card(p){
   const rating=Number(p.rating)||0;
   const reviews=Number(p.reviews)||0;
   const discount=p.discount!=null?Number(p.discount):null;
+  const cardPrice=/skin\\s*care|skincare/i.test(String(p.cat||''))?'Check price on Amazon':(p.retailer==='Amazon'&&!Number.isFinite(Number(p.rawPrice))?'Check price on Amazon':p.price);
   const ratingMarkup=rating>0
     ?'<div class="nv-card-rating"><span class="nv-stars">★</span><strong>'+rating.toFixed(1)+'</strong>'+(reviews?' <span>('+reviews.toLocaleString()+')</span>':'')+'</div>'
     :'';
@@ -905,9 +909,9 @@ function card(p){
   return '<article class="product nv-card" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button" aria-label="View '+htmlEsc(p.name)+'">'+
     '<button class="card-save '+(savedNow?'saved':'')+'" aria-label="Save product" onclick="event.stopPropagation();toggleSave(this.closest(\'.product\').dataset.productId)">'+(savedNow?'♥':'♡')+'</button>'+
     '<div class="prod-open"><div class="thumb">'+(image?'<img src="'+htmlEsc(image)+'" alt="'+htmlEsc(p.name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\'">':'<span class="nv-image-mark">✦</span>')+discountMarkup+'</div>'+
-    '<div class="prodtext"><div class="card-source">'+htmlEsc(source)+'</div><h4>'+htmlEsc(p.name)+'</h4>'+ratingMarkup+'<div class="card-bottom"><span class="prodprice">'+htmlEsc(p.price)+'</span><span class="card-action">View <span>→</span></span></div></div></div></article>';
+    '<div class="prodtext"><div class="card-source">'+htmlEsc(source)+'</div><h4>'+htmlEsc(p.name)+'</h4>'+ratingMarkup+'<div class="card-bottom"><span class="prodprice">'+htmlEsc(cardPrice)+'</span><span class="card-action">View <span>→</span></span></div></div></div></article>';
 }
-function renderList(id,type){const el=document.getElementById(id);if(!el)return;el.innerHTML=products.filter(p=>p.type===type).map(card).join('')||'<div class="empty" style="grid-column:1/-1"><strong>No '+String(type).toLowerCase()+' products published yet.</strong><br><span>Add and publish '+String(type).toLowerCase()+' products from Admin.</span></div>'}
+function renderList(id,type){const el=document.getElementById(id);if(!el)return;const rows=products.filter(p=>p.type===type);el.innerHTML=rows.map(card).join('')||'<div class="empty" style="grid-column:1/-1"><strong>No '+String(type).toLowerCase()+' products published yet.</strong><br><span>New published '+String(type).toLowerCase()+' listings will appear here.</span></div>';el.closest('.view')?.classList.toggle('catalog-empty',rows.length===0)}
 function renderLearn(){const el=document.getElementById('learnGrid');if(!el)return;const list=products.filter(p=>p.type==='Learn');el.innerHTML=list.length?list.map(card).join(''):'<div class="empty" style="grid-column:1/-1"><strong>No learning resources published yet.</strong><br><span>Publish a Learn product from Admin when you are ready.</span></div>'}
 function renderBrowse(){const q=(document.getElementById('searchInput')?.value||'').trim().toLowerCase();const type=(document.getElementById('typeFilter')?.value||'All');const sort=document.getElementById('sortFilter')?.value||'newest';let list=uniqueProducts(products.filter(p=>(activeCat==='All'||p.cat===activeCat)&&(activeCollection==='All'||collectionMatches(p,activeCollection))&&(type==='All'||p.type===type)&&(!q||(`${p.name} ${p.desc} ${p.cat} ${p.collection||''} ${p.brand||''}`).toLowerCase().includes(q))));if(sort==='name')list.sort((a,b)=>a.name.localeCompare(b.name));if(sort==='price-low')list.sort((a,b)=>(Number(a.rawPrice)||Infinity)-(Number(b.rawPrice)||Infinity));if(sort==='price-high')list.sort((a,b)=>(Number(b.rawPrice)||-1)-(Number(a.rawPrice)||-1));document.getElementById('browseGrid').innerHTML=list.map(card).join('')||'<div class="empty" style="grid-column:1/-1">Nothing found yet.</div>';const count=document.getElementById('browseCount');if(count)count.textContent=list.length+' '+(list.length===1?'product':'products');const cats=['All',...new Set(products.map(p=>String(p.cat||'').trim()).filter(x=>x&&x!=='Uncategorized'))];document.getElementById('chips').innerHTML=cats.map(c=>'<button class="chip '+(activeCat===c?'active':'')+'" onclick="activeCat='+JSON.stringify(c)+';activeCollection=\'All\';renderBrowse()">'+htmlEsc(c)+'</button>').join('');}
 function renderSaved(){const list=products.filter(p=>saved.includes(p.id));document.getElementById('savedGrid').innerHTML=list.map(card).join('')||'<div class="empty" style="grid-column:1/-1">Nothing saved yet. Tap ♡ on something you want to keep.</div>'}
@@ -1098,7 +1102,7 @@ window.addEventListener('popstate',()=>{const p=findProductFromPath();if(p)rende
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* LIVE INTEGRATION LAYER — sits under the existing Little Films-style UI. */
-async function loadPublicStoreSettings(){try{const r=await fetch('/api/settings',{cache:'no-store'});if(!r.ok)return;const s=await r.json();const email=document.getElementById('contactEmail');if(email&&s?.support_email)email.textContent=s.support_email;}catch(e){}}
+async function loadPublicStoreSettings(){try{const r=await fetch('/api/settings',{cache:'no-store'});if(!r.ok)return;const s=await r.json();const email=document.getElementById('contactEmail'),notice=email?.closest('.notice');if(email&&s?.support_email){email.textContent=s.support_email;if(notice)notice.hidden=false;}else if(notice)notice.hidden=true;}catch(e){const email=document.getElementById('contactEmail');if(email?.closest('.notice'))email.closest('.notice').hidden=true;}});if(!r.ok)return;const s=await r.json();const email=document.getElementById('contactEmail');if(email&&s?.support_email)email.textContent=s.support_email;}catch(e){}}
 async function bootNuvora(){
   try{
     // The public catalog must not depend on the Supabase browser SDK/CDN.
@@ -1107,6 +1111,7 @@ async function bootNuvora(){
     const routeProduct=findProductFromPath();    if(routeProduct){renderProductPage(routeProduct);showView('product');}
   }catch(e){
     console.error('Nuvora catalog unavailable:',e);
+    catalogLoadState='error';try{renderSkinRoutineFinder()}catch(_){}
     const recovered=await emergencyCatalogFallback();
     if(!recovered){
       const message='<div class="empty" style="grid-column:1/-1"><strong>Products could not be loaded.</strong><br><span>Please try again shortly.</span></div>';
@@ -1200,6 +1205,7 @@ async function loadLiveProducts(){
   }
   products.length=0;
   products.push(...mappedProducts);
+  catalogLoadState='loaded';try{renderSkinRoutineFinder()}catch(err){console.warn('Skin routine finder could not render:',err);}
   const cleanList=[];
   const seen=new Set();
   for(const p of products){
