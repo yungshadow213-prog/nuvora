@@ -1227,7 +1227,8 @@ async function ingestSourceProduct(sourceUrl,env){
             category_id=autoCategory(listing?.title||titleHint,listing?.category_path||'',listing?.brand||'',categories);
           }
         }catch(e){}
-        return json({ok:true,asin,destination_url:amazonUrl,resolved_url:resolved,title_hint:listing?.title||titleHint||'Amazon product',retailer:'Amazon',kind:'find',category_id,duplicate,listing:listing||null});
+        const safeTitleHint=listing?.title||(!productTitleQualityIssue(titleHint)?titleHint:'');
+        return json({ok:true,asin,destination_url:amazonUrl,resolved_url:resolved,title_hint:safeTitleHint,retailer:'Amazon',kind:'find',category_id,duplicate,listing:listing||null});
       }
 
 async function scrapeTemuListing(temuUrl){
