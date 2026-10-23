@@ -112,14 +112,14 @@ function cleanText(v,max=5000){return v==null?null:String(v).trim().slice(0,max)
 function productTitleQualityIssue(value){
   const name=String(value||'').trim(),words=name.match(/[A-Za-z0-9]+(?:['’][A-Za-z]+)*/g)||[];
   const isolated=words.filter(word=>/^[A-Za-z]$/.test(word)).length;
-  if(!name||/^(?:amazon(?:\\.com)?|temu)(?:\\s+product)?$/i.test(name)||/^(?:azon\\.|mazon\\.com\\b|isit the\\b)/i.test(name))return 'This title is missing a reliable product name.';
+  if(!name||/^(?:amazon(?:\.com)?|temu)(?:\s+product)?$/i.test(name)||/^(?:azon\.|mazon\.com\b|isit the\b)/i.test(name))return 'This title is missing a reliable product name.';
   if(words.length>=6&&isolated>=2)return 'This title appears incomplete or corrupted. Correct it from the retailer listing before publishing.';
-  if(/\\b(?:ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries)\\b/i.test(name)&&/\\b(?:isit|azon|rand|omedics|ahome|ndstone)\\b/i.test(name))return 'This title appears incomplete or corrupted. Correct it before publishing.';
+  if(/\b(?:ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries)\b/i.test(name)&&/\b(?:isit|azon|rand|omedics|ahome|ndstone)\b/i.test(name))return 'This title appears incomplete or corrupted. Correct it before publishing.';
   return '';
 }
 function isDisplayableProductImage(value){
   if(!validUrl(value))return false;
-  return !/(?:amazon-avatars-global|transparent-pixel|sprite|spacer|pixel\\b|tracking)/i.test(String(value).toLowerCase());
+  return !/(?:amazon-avatars-global|transparent-pixel|sprite|spacer|pixel\b|tracking)/i.test(String(value).toLowerCase());
 }
 function validateProduct(product){
   if(!product||!cleanText(product.name,180))return 'Product name is required.';
