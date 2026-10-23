@@ -1214,9 +1214,17 @@ async function ingestSourceProduct(sourceUrl,env){
         const titleHint=beforeDp.split('/').pop().replace(/[-_+]+/g,' ').replace(/\b(?:dp|gp|product)\b/gi,'').replace(/\s+/g,' ').trim().replace(/\b\w/g,c=>c.toUpperCase()).slice(0,180);
         let duplicate=null;
         try{const dup=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published,amazon_asin&amazon_asin=eq.'+encodeURIComponent(asin)+'&limit=5');if(dup.ok){const rows=await dup.json();duplicate=rows[0]||null;}}catch(e){}
+        let listing=null;
+        try{listing=await scrapeAmazonListing(resolved,asin,env);if(!listing?.error){listing=normalizeAmazonListing(listing);listing=await aiPolishAmazonListing(env,listing);}}
+        catch(e){listing={error:String(e?.message||e).slice(0,300)};}
         let category_id=null;
-        try{const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cats.ok){const categories=await cats.json();category_id=autoCategory(listing?.title||titleHint,'','',categories);}}catch(e){}
-        let listing=null; try{listing=await scrapeAmazonListing(resolved,asin,env);if(!listing?.error){listing=normalizeAmazonListing(listing);listing=await aiPolishAmazonListing(env,listing);}}catch(e){listing={error:String(e?.message||e).slice(0,300)};}
+        try{
+          const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');
+          if(cats.ok){
+            const categories=await cats.json();
+            category_id=autoCategory(listing?.title||titleHint,listing?.brand||'',listing?.category_path||'',categories);
+          }
+        }catch(e){}
         return json({ok:true,asin,destination_url:amazonUrl,resolved_url:resolved,title_hint:listing?.title||titleHint||'Amazon product',retailer:'Amazon',kind:'find',category_id,duplicate,listing:listing||null});
       }
 
