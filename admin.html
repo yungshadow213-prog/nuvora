@@ -1769,6 +1769,7 @@ async function adminBoot(){
     // Establish the requested workspace before ancillary health checks so a
     // transient diagnostics failure cannot strand the user on the dashboard.
     if(isSkinStudioRoute)document.body.classList.add('skin-studio-fullpage');
+    let skinProductLoadError='';
     try{
       await liveAdminProducts();
     }catch(e){
@@ -1779,10 +1780,10 @@ async function adminBoot(){
         return;
       }
       if(!isSkinStudioRoute)throw e;
-      openSkinStudioRoute();
-      skinBuilderMessage('The skincare product library could not be loaded: '+msg+'. The studio is open; retry the catalog after checking the connection.','error');
+      skinProductLoadError=msg||'Unknown catalog error';
     }
     openSkinStudioRoute();
+    if(skinProductLoadError)skinBuilderMessage('The skincare product library could not be loaded: '+skinProductLoadError+'. The studio is open; retry the catalog after checking the connection.','error');
     try{
       await healthCheck();
     }catch(e){
