@@ -417,6 +417,7 @@ body.skin-studio-fullpage .studio-preview-notice[hidden]{display:none!important}
 body.skin-studio-fullpage .studio-preview-notice b{font-size:15px}
 body.skin-studio-fullpage .studio-preview-notice span{max-width:320px;color:#7d8b7c;font-size:12px;line-height:1.6}
 body.skin-studio-fullpage .studio-preview-notice button{margin-top:5px;border:0;border-radius:9px;background:#2f6a40;color:#fff;padding:10px 14px;font-size:11px;font-weight:750;cursor:pointer}
+body.skin-studio-fullpage .studio-preview-notice a{margin-top:3px;color:#355c40;font-size:12px;font-weight:750;text-decoration:underline;text-underline-offset:3px}
 /* Repair pass: make the workspace scrollable and keep hidden helper UI hidden. */
 body.skin-studio-fullpage,
 body.skin-studio-fullpage .app,
@@ -2584,7 +2585,7 @@ function wireSkinStudioCanvas(){
    if(window.__nuvoraSkinPreviewTimeout)clearTimeout(window.__nuvoraSkinPreviewTimeout);
    window.__nuvoraSkinPreviewTimeout=setTimeout(()=>{
     const box=document.getElementById('skinStudioPreviewNotice');
-    if(box){box.hidden=false;box.innerHTML='<b>Preview did not respond</b><span>The separate Nuvora Skin storefront is unavailable or has not been deployed. Your draft is safe. Try reloading after the storefront is restored.</span><button type="button" onclick="reloadSkinStudioPreview()">Reload preview</button>';}
+    if(box){box.hidden=false;box.innerHTML='<b>Preview did not respond</b><span>No editor-ready signal came back from the storefront. It may be blank, not deployed, running an older build, or its preview JavaScript may have failed. Your draft is safe. Open the storefront separately to check it, then reload this preview after the storefront is working.</span><a href="'+SKIN_CLIENT_ORIGIN+'/" target="_blank" rel="noopener noreferrer">Open storefront separately ↗</a><button type="button" onclick="reloadSkinStudioPreview()">Reload preview</button>';}
    },10000);
   });
  }
