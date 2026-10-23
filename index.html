@@ -901,7 +901,7 @@ function card(p){
   const rating=Number(p.rating)||0;
   const reviews=Number(p.reviews)||0;
   const discount=p.discount!=null?Number(p.discount):null;
-  const cardPrice=/skin\\s*care|skincare/i.test(String(p.cat||''))?'Check price on Amazon':(p.retailer==='Amazon'&&!Number.isFinite(Number(p.rawPrice))?'Check price on Amazon':p.price);
+  const cardPrice=/skin\\s*care|skincare/i.test(String(p.cat||''))?'Check price on Amazon':(p.retailer==='Amazon'&&(p.rawPrice==null||p.rawPrice===''||!Number.isFinite(Number(p.rawPrice)))?'Check price on Amazon':p.price);
   const ratingMarkup=rating>0
     ?'<div class="nv-card-rating"><span class="nv-stars">★</span><strong>'+rating.toFixed(1)+'</strong>'+(reviews?' <span>('+reviews.toLocaleString()+')</span>':'')+'</div>'
     :'';
@@ -1102,7 +1102,14 @@ window.addEventListener('popstate',()=>{const p=findProductFromPath();if(p)rende
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* LIVE INTEGRATION LAYER — sits under the existing Little Films-style UI. */
-async function loadPublicStoreSettings(){try{const r=await fetch('/api/settings',{cache:'no-store'});if(!r.ok)return;const s=await r.json();const email=document.getElementById('contactEmail'),notice=email?.closest('.notice');if(email&&s?.support_email){email.textContent=s.support_email;if(notice)notice.hidden=false;}else if(notice)notice.hidden=true;}catch(e){const email=document.getElementById('contactEmail');if(email?.closest('.notice'))email.closest('.notice').hidden=true;}});if(!r.ok)return;const s=await r.json();const email=document.getElementById('contactEmail');if(email&&s?.support_email)email.textContent=s.support_email;}catch(e){}}
+async function loadPublicStoreSettings(){
+ try{
+  const r=await fetch('/api/settings',{cache:'no-store'});if(!r.ok)return;
+  const settings=await r.json(),email=document.getElementById('contactEmail'),notice=email?.closest('.notice');
+  if(email&&settings?.support_email){email.textContent=settings.support_email;if(notice)notice.hidden=false;}
+  else if(notice)notice.hidden=true;
+ }catch(e){const email=document.getElementById('contactEmail');if(email?.closest('.notice'))email.closest('.notice').hidden=true;}
+}
 async function bootNuvora(){
   try{
     // The public catalog must not depend on the Supabase browser SDK/CDN.
