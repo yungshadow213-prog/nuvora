@@ -2245,6 +2245,22 @@ function validateSkinSiteConfig(value,options={}){
   if(value.productCategoryMap&&Object.entries(value.productCategoryMap).some(([id,slug])=>String(id).length>100||String(slug).length>100))return 'A product category mapping is too long.';
   return null;
 }
+function productTitleQualityIssue(value){
+  const name=cleanText(value,180);
+  if(!name||/^(?:amazon(?:\.com)?|temu)(?:\s+product)?$/i.test(name))return 'This title is missing a real product name.';
+  if(/^(?:azon\.|mazon\.com\b|isit the\b|isit\s+the\s+tore\b)/i.test(name))return 'This title appears to contain retailer-page text instead of the product name.';
+  const words=name.match(/[A-Za-z0-9]+(?:['’][A-Za-z]+)*/g)||[];
+  const isolated=words.filter(word=>/^[A-Za-z]$/.test(word)).length;
+  if(words.length>=6&&isolated>=2)return 'This title appears incomplete or corrupted. Correct it from the retailer listing before publishing.';
+  if(words.length>=10&&looksFragmentedText(name))return 'This title appears incomplete or corrupted. Correct it from the retailer listing before publishing.';
+  if(/\b(?:ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries)\b/i.test(name)&&/\b(?:isit|azon|rand|omedics|ahome|ndstone)\b/i.test(name))return 'This title appears incomplete or corrupted. Correct it from the retailer listing before publishing.';
+  return '';
+}
+function isDisplayableProductImage(value){
+  if(!isValidHttpUrl(value))return false;
+  const url=String(value).toLowerCase();
+  return !/(?:amazon-avatars-global|transparent-pixel|aax-[^/]+\/e\/is\/|\/nav[-_]|sprite|spacer|pixel\b|tracking)/i.test(url);
+}
 function validateProduct(product){
   if(!product||typeof product!=='object')return 'Product data is required.';
   const name=cleanText(product.name,180);
@@ -2255,9 +2271,11 @@ function validateProduct(product){
   if(!['shop','find','learn'].includes(kind))return 'Product type must be shop, find, or learn.';
   if(product.display_price!==undefined&&product.display_price!==null&&(!Number.isFinite(Number(product.display_price))||Number(product.display_price)<0))return 'Product price is invalid.';
   if(product.published===true){
-    const images=Array.isArray(product.image_urls)?product.image_urls.filter(isValidHttpUrl):(isValidHttpUrl(product.image_url)?[product.image_url]:[]);
-    if(!images.length)return 'A published product needs at least one valid product image.';
+    const titleIssue=productTitleQualityIssue(name);if(titleIssue)return titleIssue;
+    const images=Array.isArray(product.image_urls)?product.image_urls.filter(isDisplayableProductImage):(isDisplayableProductImage(product.image_url)?[product.image_url]:[]);
+    if(!images.length)return 'A published product needs a real product image, not a retailer logo, placeholder, or tracking image.';
     if(!isValidHttpUrl(product.destination_url))return 'A published product needs a valid destination or affiliate URL.';
+    if(product.description&&looksFragmentedText(product.description))return 'The description appears incomplete or corrupted. Correct it before publishing.';
   }
   return null;
 }
