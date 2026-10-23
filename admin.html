@@ -673,7 +673,7 @@ body.skin-studio-fullpage .studio-product-check span{overflow-wrap:anywhere}
     </div>
   </header>
   <div id="skinBuilderStatus" class="studio-status notice" role="status" aria-live="polite">Loading your saved Skin Care site…</div>
-  <section class="studio-simple-guide" aria-label="How to use Skin Studio">
+  <section class="studio-simple-guide" aria-label="How to use Skin Studio" hidden>
     <div class="studio-simple-guide-intro"><span class="studio-simple-guide-number">START HERE</span><b>Build your page in 3 simple steps</b><small>No dragging needed — just click and edit.</small></div>
     <button type="button" class="studio-guide-step" onclick="switchSkinStudioTab('outline');selectFirstSkinSection()"><span>1</span><span><b>Choose a section</b><small>Pick a block on the left</small></span></button>
     <button type="button" class="studio-guide-step" onclick="focusSkinInspector()"><span>2</span><span><b>Edit its content</b><small>Change text, image or products</small></span></button>
@@ -954,6 +954,7 @@ body.skin-studio-fullpage .studio-product-check span{overflow-wrap:anywhere}
 <style id="skin-studio-ux-fixes">
 body.skin-studio-fullpage{min-height:100vh;height:auto;overflow:auto!important;background:#f4f6f1}
 body.skin-studio-fullpage .app{min-height:100vh;height:auto;overflow:visible}
+body.skin-studio-fullpage .main,body.skin-studio-fullpage .view.active{height:auto!important;min-height:100vh;overflow:visible!important}
 body.skin-studio-fullpage #skinSiteBuilder{overflow:visible!important;min-height:calc(100vh - 28px);height:auto!important}
 body.skin-studio-fullpage .studio-simple-guide[hidden]{display:none!important}
 body.skin-studio-fullpage .studio-layout{grid-template-columns:238px minmax(520px,1fr) 286px!important;min-height:760px;height:auto!important;overflow:visible!important}
