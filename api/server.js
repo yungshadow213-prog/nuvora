@@ -121,6 +121,13 @@ function isDisplayableProductImage(value){
   if(!validUrl(value))return false;
   return !/(?:amazon-avatars-global|transparent-pixel|sprite|spacer|pixel\\b|tracking)/i.test(String(value).toLowerCase());
 }
+function looksFragmentedProductText(value){
+  const s=String(value||'').trim();if(!s)return false;
+  const words=s.split(/\s+/).filter(Boolean);if(words.length<12)return false;
+  const singleLetters=words.filter(w=>/^[A-Za-z]$/.test(w)).length;
+  const suspicious=(s.match(/\b[A-Za-z]{2,}\s+[A-Za-z]\b/g)||[]).length;
+  return singleLetters>=Math.max(4,Math.ceil(words.length*0.08))||suspicious>=5;
+}
 function validateProduct(product){
   if(!product||!cleanText(product.name,180))return 'Product name is required.';
   if(!cleanText(product.slug,180))return 'Product slug is required.';
@@ -134,6 +141,7 @@ function validateProduct(product){
     const images=Array.isArray(product.image_urls)?product.image_urls.filter(isDisplayableProductImage):(isDisplayableProductImage(product.image_url)?[product.image_url]:[]);
     if(!images.length)return 'A published product needs a real product image, not a retailer logo, placeholder, or tracking image.';
     if(!validUrl(product.destination_url))return 'A published product needs a valid destination or affiliate URL.';
+    if(product.description&&looksFragmentedProductText(product.description))return 'The description appears incomplete or corrupted. Correct it before publishing.';
   }
   return null;
 }
