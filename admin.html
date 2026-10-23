@@ -1759,14 +1759,18 @@ async function adminBoot(){
     if(!adminSession){showAuthGate();return;}
     hideAuthGate();
     document.getElementById('adminEmail').textContent='Signed in as '+(adminSession.user?.email||'admin');
+    const isSkinStudioRoute=/^\/admin\/skin-studio\/?$/.test(location.pathname);
+    const openSkinStudioRoute=()=>{
+      if(!isSkinStudioRoute)return;
+      document.body.classList.add('skin-studio-fullpage');
+      const skinNav=document.querySelector('.nav button[onclick*="skin-care"]');
+      if(skinNav)show('skin-care',skinNav);
+    };
+    // Establish the requested workspace before ancillary health checks so a
+    // transient diagnostics failure cannot strand the user on the dashboard.
+    if(isSkinStudioRoute)document.body.classList.add('skin-studio-fullpage');
     try{
       await liveAdminProducts();
-      await healthCheck();
-      if(/^\/admin\/skin-studio\/?$/.test(location.pathname)){
-        document.body.classList.add('skin-studio-fullpage');
-        const skinNav=document.querySelector('.nav button[onclick*="skin-care"]');
-        if(skinNav)show('skin-care',skinNav);
-      }
     }catch(e){
       const msg=e.message||'';
       if(/Admin authentication required|Admin session required/i.test(msg)){
@@ -1774,7 +1778,22 @@ async function adminBoot(){
         showAuthError('You are signed in as '+(adminSession.user?.email||'your Google account')+', but Nuvora did not find admin permission for that account. If you already promoted this account in Supabase, make sure it is the same Google account and that its public.profiles row has is_admin=true.');
         return;
       }
-      throw e;
+      if(!isSkinStudioRoute)throw e;
+      openSkinStudioRoute();
+      skinBuilderMessage('The skincare product library could not be loaded: '+msg+'. The studio is open; retry the catalog after checking the connection.','error');
+    }
+    openSkinStudioRoute();
+    try{
+      await healthCheck();
+    }catch(e){
+      const msg=e.message||'System health checks could not complete.';
+      if(/Admin authentication required|Admin session required/i.test(msg)){
+        showAuthGate();
+        showAuthError('Your Nuvora admin session needs to be refreshed. Please sign in again.');
+        return;
+      }
+      if(!isSkinStudioRoute)throw e;
+      skinBuilderMessage('System health checks are temporarily unavailable: '+msg+'. Your Skin Studio workspace remains open.','warning');
     }
     adminSB.auth.onAuthStateChange((_event,session)=>{
       adminSession=session;
