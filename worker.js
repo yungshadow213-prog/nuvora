@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-storefront-curated-copy-r25',
+          release:'nuvora-2026-10-23-amazon-import-quality-r26',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -881,6 +881,8 @@ function autoCategory(title='',description='',brand='',categories=[]){
     const hay=(String(cat.name||'')+' '+String(cat.slug||'')).toLowerCase().replace(/-/g,' ');
     if(hay&&text.includes(hay))return cat.id||null;
   }
+  const skinCategory=(Array.isArray(categories)?categories:[]).find(cat=>/skin\s*care|skincare/i.test(String(cat.name||'')+' '+String(cat.slug||'')));
+  if(skinCategory&&/\b(?:skin|skincare|serum|moisturizer|moisturiser|cleanser|sunscreen|spf|toner|essence|retinol|niacinamide|hyaluronic|beauty|glass skin)\b/i.test(text))return skinCategory.id||null;
   for(const [group,words] of Object.entries(aliases)){
     if(words.some(w=>text.includes(w))){
       const cat=(Array.isArray(categories)?categories:[]).find(x=>String(x.name||'').toLowerCase().includes(group)||String(x.slug||'').toLowerCase().includes(group));
@@ -1214,10 +1216,19 @@ async function ingestSourceProduct(sourceUrl,env){
         const titleHint=beforeDp.split('/').pop().replace(/[-_+]+/g,' ').replace(/\b(?:dp|gp|product)\b/gi,'').replace(/\s+/g,' ').trim().replace(/\b\w/g,c=>c.toUpperCase()).slice(0,180);
         let duplicate=null;
         try{const dup=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published,amazon_asin&amazon_asin=eq.'+encodeURIComponent(asin)+'&limit=5');if(dup.ok){const rows=await dup.json();duplicate=rows[0]||null;}}catch(e){}
+        let listing=null;
+        try{listing=await scrapeAmazonListing(resolved,asin,env);if(!listing?.error){listing=normalizeAmazonListing(listing);listing=await aiPolishAmazonListing(env,listing);}}
+        catch(e){listing={error:String(e?.message||e).slice(0,300)};}
         let category_id=null;
-        try{const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cats.ok){const categories=await cats.json();category_id=autoCategory(listing?.title||titleHint,'','',categories);}}catch(e){}
-        let listing=null; try{listing=await scrapeAmazonListing(resolved,asin,env);if(!listing?.error){listing=normalizeAmazonListing(listing);listing=await aiPolishAmazonListing(env,listing);}}catch(e){listing={error:String(e?.message||e).slice(0,300)};}
-        return json({ok:true,asin,destination_url:amazonUrl,resolved_url:resolved,title_hint:listing?.title||titleHint||'Amazon product',retailer:'Amazon',kind:'find',category_id,duplicate,listing:listing||null});
+        try{
+          const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');
+          if(cats.ok){
+            const categories=await cats.json();
+            category_id=autoCategory(listing?.title||titleHint,listing?.category_path||'',listing?.brand||'',categories);
+          }
+        }catch(e){}
+        const safeTitleHint=listing?.title||(!productTitleQualityIssue(titleHint)?titleHint:'');
+        return json({ok:true,asin,destination_url:amazonUrl,resolved_url:resolved,title_hint:safeTitleHint,retailer:'Amazon',kind:'find',category_id,duplicate,listing:listing||null});
       }
 
 async function scrapeTemuListing(temuUrl){

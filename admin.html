@@ -1601,7 +1601,7 @@ async function useAmazonLink(){
     document.getElementById('pfRetailer').value=j.retailer||'Amazon';
     document.getElementById('pfAsin').value=j.asin||'';
     document.getElementById('pfKind').value=j.kind||'find';
-    if(j.title_hint&&!document.getElementById('pfName').value.trim())document.getElementById('pfName').value=j.title_hint;
+    if(j.title_hint&&!document.getElementById('pfName').value.trim()&&!productReviewFlags({name:j.title_hint}).includes('Title needs review'))document.getElementById('pfName').value=j.title_hint;
     if(j.category_id&&!document.getElementById('pfCategory').value.trim())document.getElementById('pfCategory').value=j.category_id;
     const a=j.listing||{};
     if(a.title)document.getElementById('pfName').value=a.title;
@@ -1633,7 +1633,7 @@ async function useAmazonLink(){
       if(a.rating!=null)captured.push('rating');
       if(a.review_count!=null)captured.push('reviews');
       if(Array.isArray(a.images)&&a.images.length)captured.push(a.images.length+' images');
-      status.textContent=(skinMode?'Amazon skincare link recognized. Skin Care category assigned automatically. ':'Amazon link recognized. ')+'ASIN '+j.asin+' detected. '+(captured.length?'Automatically captured: '+captured.join(' · ')+'. ':'')+'Review available details and save as a draft.';
+      status.textContent=!a.title&&!document.getElementById('pfName').value.trim()?'Amazon link recognized, but the page did not expose a reliable product title. Enter the exact product title manually before saving.':(skinMode?'Amazon skincare link recognized. Skin Care category assigned automatically. ':'Amazon link recognized. ')+'ASIN '+j.asin+' detected. '+(captured.length?'Automatically captured: '+captured.join(' · ')+'. ':'')+'Review available details and save as a draft.';
     }
   }catch(e){
     status.textContent='Could not prepare this Amazon link.';
