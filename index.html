@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07111f">
-<title>Nuvora — Discover things worth finding</title><meta name="description" content="Nuvora curates useful products, interesting finds and worthwhile discoveries in one place."><link rel="canonical" href="/"><meta property="og:type" content="website"><meta property="og:title" content="Nuvora — Discover things worth finding"><meta property="og:description" content="Curated products and worthwhile discoveries from Nuvora."><meta property="og:site_name" content="Nuvora">
+<title>Nuvora — Curated finds and skincare routines</title><meta name="description" content="Discover useful products, explore skincare by skin type, and find clear product guidance with Nuvora."><link rel="canonical" href="/"><meta property="og:type" content="website"><meta property="og:title" content="Nuvora — Discover things worth finding"><meta property="og:description" content="Curated products and worthwhile discoveries from Nuvora."><meta property="og:site_name" content="Nuvora">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap');
 :root{--bg:#07111f;--surface:rgba(16,28,46,.74);--surface2:#0d1b2e;--text:#f7fbff;--muted:#9bacbf;--line:rgba(255,255,255,.09);--accent:#9c7bff;--accent2:#6fd9ff;--shadow:0 22px 60px rgba(0,0,0,.35);--max:1240px}
@@ -617,6 +617,24 @@ button,a,[role="button"],input,select,textarea{pointer-events:auto}
 #authModal.open,#detailModal.open,#cartModal.open{display:flex!important}
 .product{cursor:pointer}
 .product .card-save,.product .nv-thumb,.product button{position:relative;z-index:3}
+</style><style id="nuvora-skin-routine-styles">
+.nv-routine-finder{padding:44px 0;background:linear-gradient(135deg,#f3f7f1,#fbfaf6);border-top:1px solid #e3eae0;border-bottom:1px solid #e3eae0}
+.nv-routine-wrap{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:28px;align-items:start}
+.nv-routine-copy .eyebrow{color:#57765b}.nv-routine-copy h2{margin:10px 0 12px;font-size:clamp(28px,3.4vw,42px);line-height:1.08;letter-spacing:-.045em;color:#1e3022}
+.nv-routine-copy p{max-width:430px;color:#637164;line-height:1.7;font-size:14px}
+.nv-routine-types{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
+.nv-routine-types button{border:1px solid #d4e0d2;background:#fff;border-radius:999px;padding:10px 14px;color:#344a37;font-size:12px;font-weight:750;cursor:pointer;transition:background .15s,border-color .15s}
+.nv-routine-types button[aria-pressed="true"],.nv-routine-types button:hover{background:#2e5739;color:#fff;border-color:#2e5739}
+.nv-routine-note{border-left:3px solid #88a58a;padding:10px 13px;background:rgba(255,255,255,.68);border-radius:0 10px 10px 0;color:#526553;font-size:12px;line-height:1.65}
+.nv-routine-results-head{display:flex;align-items:end;justify-content:space-between;gap:14px;margin:0 0 14px}
+.nv-routine-results-head h3{font-size:18px;color:#1f3223;margin:0 0 5px}.nv-routine-results-head p{font-size:12px;color:#718071;margin:0;line-height:1.5}
+.nv-routine-results-head button{background:transparent;border:0;color:#3f6d49;font-weight:800;font-size:12px;cursor:pointer;white-space:nowrap}
+.nv-routine-products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.nv-routine-products .product{min-width:0;border:1px solid #e1e8de!important;border-radius:15px!important;box-shadow:0 8px 22px rgba(33,54,35,.05)!important}
+.nv-routine-products .thumb{height:150px}.nv-routine-products .prodtext{padding:12px}.nv-routine-products .prodtext h4{font-size:13px;line-height:1.4}
+.nv-routine-empty{grid-column:1/-1;background:#fff;border:1px solid #e1e8de;border-radius:14px;padding:18px;color:#68786a;font-size:13px;line-height:1.6}
+@media(max-width:780px){.nv-routine-wrap{grid-template-columns:1fr;gap:20px}.nv-routine-copy h2{font-size:32px}.nv-routine-products .thumb{height:130px}}
+@media(max-width:430px){.nv-routine-products{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.nv-routine-products .thumb{height:112px}.nv-routine-products .prodtext{padding:9px}.nv-routine-types button{padding:9px 11px}}
 </style></head>
 <body>
 <div class="announcement"><div class="shell"><b>Nuvora picks, made simple.</b> Browse curated products, save your favorites, and discover something worth finding.</div></div><header class="topbar"><div class="shell nav">
@@ -629,7 +647,7 @@ button,a,[role="button"],input,select,textarea{pointer-events:auto}
 
 <aside class="menu-panel" id="menuPanel"><div class="menu-head"><span class="menu-title">Explore</span><button class="close" id="menuClose">×</button></div>
 <div class="menu-list"><button onclick="showView('home');closeMenu()">Home</button><button onclick="showView('browse');closeMenu()">Browse all</button><button onclick="showView('collections');closeMenu()">Collections</button></div>
-<div class="menu-section">Shop categories</div><div class="menu-list" id="categoryMenu"><button onclick="browseCategory('Fashion');closeMenu()">Fashion</button><button onclick="browseCategory('Baby & Kids');closeMenu()">Baby & Kids</button><button onclick="browseCategory('Home & Living');closeMenu()">Home & Living</button><button onclick="browseCategory('Electronics');closeMenu()">Electronics</button><button onclick="browseCategory('Beauty & Personal Care');closeMenu()">Beauty & Personal Care</button><button onclick="browseCategory('Sports & Fitness');closeMenu()">Sports & Fitness</button><button onclick="browseCategory('Automotive');closeMenu()">Automotive</button><button onclick="browseCategory('Pets');closeMenu()">Pets</button><button onclick="browseCategory('Gifts & Lifestyle');closeMenu()">Gifts & Lifestyle</button></div>
+<div class="menu-section">Shop categories</div><div class="menu-list" id="categoryMenu"><button onclick="browseCategory('Fashion');closeMenu()">Fashion</button><button onclick="browseCategory('Baby & Kids');closeMenu()">Baby & Kids</button><button onclick="browseCategory('Home & Living');closeMenu()">Home & Living</button><button onclick="browseCategory('Electronics');closeMenu()">Electronics</button><button onclick="browseCategory('Beauty & Personal Care');closeMenu()">Beauty & Personal Care</button><button onclick="showView('home');document.getElementById('skinRoutineFinder').scrollIntoView({behavior:'smooth',block:'start'});closeMenu()">Skin care routines</button><button onclick="browseCategory('Sports & Fitness');closeMenu()">Sports & Fitness</button><button onclick="browseCategory('Automotive');closeMenu()">Automotive</button><button onclick="browseCategory('Pets');closeMenu()">Pets</button><button onclick="browseCategory('Gifts & Lifestyle');closeMenu()">Gifts & Lifestyle</button></div>
 <div class="menu-divider"></div><div class="menu-section">Explore Nuvora</div><div class="menu-list"><button onclick="showView('about');closeMenu()">About Nuvora</button><button onclick="showView('how');closeMenu()">How We Choose</button><button onclick="showView('contact');closeMenu()">Contact</button></div>
 <div class="menu-divider"></div><div class="menu-section">Your space</div><div class="menu-list"><button onclick="showView('account');closeMenu()">My Nuvora</button><button onclick="showView('saved');closeMenu()">Saved</button><button onclick="showCart();closeMenu()">Cart</button></div>
 <div class="menu-divider"></div><div class="menu-list"><button id="menuAuthBtn" onclick="handleAccountAction();closeMenu()">Sign in</button></div></aside>
@@ -657,15 +675,6 @@ button,a,[role="button"],input,select,textarea{pointer-events:auto}
     </div>
   </section>
 
-  <section class="section nv-quick-nav">
-    <div class="shell">
-      <div class="nv-quick-links">
-        <button onclick="showView('browse')"><span>Just dropped</span><b>Latest additions</b></button>
-        <button onclick="showView('browse')"><span>Explore</span><b>All current finds</b></button>
-        <button onclick="showView('saved')"><span>Saved</span><b>Your shortlist</b></button>
-      </div>
-    </div>
-  </section>
 
   <section class="section">
     <div class="shell">
@@ -677,15 +686,28 @@ button,a,[role="button"],input,select,textarea{pointer-events:auto}
     </div>
   </section>
 
-  <section class="section nv-editorial-break">
-    <div class="shell">
-      <div>
-        <span>DISCOVER DIFFERENTLY</span>
-        <h2>Less scrolling.<br>More finding.</h2>
+  <section class="section nv-routine-finder" id="skinRoutineFinder">
+    <div class="shell nv-routine-wrap">
+      <div class="nv-routine-copy">
+        <div class="eyebrow"><i></i> Skin care, made simpler</div>
+        <h2>Find a routine for your skin.</h2>
+        <p>Start with your skin type to explore relevant Nuvora skincare finds. Keep your routine simple, introduce new products gradually, and check each product's label for suitability.</p>
+        <div class="nv-routine-types" role="group" aria-label="Choose your skin type">
+          <button type="button" data-skin-routine="Oily" aria-pressed="false" onclick="selectSkinRoutine('Oily',this)">Oily</button>
+          <button type="button" data-skin-routine="Dry" aria-pressed="false" onclick="selectSkinRoutine('Dry',this)">Dry</button>
+          <button type="button" data-skin-routine="Combination" aria-pressed="false" onclick="selectSkinRoutine('Combination',this)">Combination</button>
+          <button type="button" data-skin-routine="Normal" aria-pressed="false" onclick="selectSkinRoutine('Normal',this)">Normal</button>
+          <button type="button" data-skin-routine="Sensitive" aria-pressed="false" onclick="selectSkinRoutine('Sensitive',this)">Sensitive</button>
+        </div>
+        <div id="skinRoutineGuidance" class="nv-routine-note" aria-live="polite">Choose a skin type to see general routine guidance and relevant products. If you're unsure, start with Normal and review the product details.</div>
       </div>
-      <button class="btn" onclick="showView('collections')">Explore collections →</button>
+      <div class="nv-routine-results">
+        <div class="nv-routine-results-head"><div><h3 id="skinRoutineResultsTitle">Skincare finds</h3><p id="skinRoutineResultsSub">A small selection from the published catalog.</p></div><button type="button" onclick="browseCategory('Beauty & Personal Care')">Explore beauty →</button></div>
+        <div class="nv-routine-products" id="skinRoutineProducts"><div class="nv-routine-empty">Loading skincare finds…</div></div>
+      </div>
     </div>
   </section>
+
 
   <section class="section">
     <div class="shell">
@@ -825,6 +847,37 @@ function cleanRetailerValue(value){
 function normalizeSearchName(name){return displayProductName(name).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();}
 function formatDescription(raw){const text=cleanProductText(raw);if(!text)return '<p>Product details are provided by the retailer.</p>';const blocks=text.split(/\n+/).map(s=>s.trim()).filter(Boolean);const out=[];let list=[];const flush=()=>{if(list.length){out.push('<ul>'+list.map(x=>'<li>'+htmlEsc(x.replace(/^[-•]\s*/,''))+'</li>').join('')+'</ul>');list=[];}};blocks.forEach(b=>{if(/^[-•]\s+/.test(b))list.push(b);else{flush();out.push('<p>'+htmlEsc(b)+'</p>')}});flush();return out.join('');}
 function uniqueProducts(list){const seenName=new Set(),seenImage=new Set();return list.filter(p=>{const n=normalizeSearchName(p.name),img=String(p.image||p.image_urls?.[0]||'').trim();if(n&&seenName.has(n))return false;if(img&&seenImage.has(img))return false;if(n)seenName.add(n);if(img)seenImage.add(img);return true;});}
+let activeSkinRoutine='All';
+function skinRoutineText(type){
+ const copy={
+  Oily:'Keep the routine lightweight: a gentle cleanser, a non-heavy moisturizer, and broad-spectrum sunscreen in the daytime. Avoid adding several strong actives at once.',
+  Dry:'Prioritize a gentle cleanser, a moisturizer that supports the skin barrier, and sunscreen during the day. Add new products gradually and watch for irritation.',
+  Combination:'Use a gentle cleanser and moisturizer, then adjust texture by area if needed. Keep the routine consistent and introduce targeted products one at a time.',
+  Normal:'A simple baseline is enough for many people: gentle cleansing, moisturizer as needed, and broad-spectrum sunscreen during the day.',
+  Sensitive:'Choose fragrance-free, gentle products when possible. Patch-test new products and stop using anything that causes persistent stinging, rash, or irritation.'
+ };
+ return copy[type]||'Choose a skin type to explore general guidance. Keep the routine simple, introduce products gradually, and follow each product label.';
+}
+function isSkinCareFind(p){
+ const text=[p?.cat,p?.name,p?.desc,p?.features,p?.brand,p?.skinTypes,p?.skinConcerns].filter(Boolean).join(' ').toLowerCase();
+ return /skin care|skincare|beauty|face wash|cleanser|moisturi[sz]er|serum|sunscreen|spf\b|toner|essence|retinol|niacinamide|hyaluronic|acne|face cream|eye cream/.test(text);
+}
+function selectSkinRoutine(type){
+ activeSkinRoutine=type||'All';
+ document.querySelectorAll('[data-skin-routine]').forEach(el=>el.setAttribute('aria-pressed',String(el.dataset.skinRoutine===activeSkinRoutine)));
+ renderSkinRoutineFinder(activeSkinRoutine);
+}
+function renderSkinRoutineFinder(type=activeSkinRoutine){
+ const root=document.getElementById('skinRoutineProducts');if(!root)return;
+ const guidance=document.getElementById('skinRoutineGuidance'),title=document.getElementById('skinRoutineResultsTitle'),sub=document.getElementById('skinRoutineResultsSub');
+ if(guidance)guidance.textContent=skinRoutineText(type);
+ if(title)title.textContent=type==='All'?'Skincare finds':type+' skin picks';
+ const beauty=products.filter(isSkinCareFind);
+ const fit=type==='All'?beauty:beauty.filter(p=>String(p.skinTypes||p.bestFor||'').toLowerCase().includes(type.toLowerCase())||String([p.desc,p.features,p.skinConcerns].join(' ')).toLowerCase().includes(type.toLowerCase()));
+ const results=fit.length?fit.slice(0,4):beauty.slice(0,4);
+ if(sub)sub.textContent=fit.length?('Showing '+(type==='All'?'published skincare finds':'products whose details mention '+type.toLowerCase()+' skin')+'.'):beauty.length?'No products explicitly mention '+type.toLowerCase()+' skin yet, so these are general skincare finds. Check each product label before use.':'Skincare products will appear here when they are published in the catalog.';
+ root.innerHTML=results.length?results.map(card).join(''):'<div class="nv-routine-empty">No skincare products are published yet. Add and publish products in Nuvora Admin, then they will appear here automatically.</div>';
+}
 function collectionMatches(p,name){if(name==='All')return true;const hay=(String(p.collection||'')+' '+String(p.name||'')+' '+String(p.desc||'')+' '+String(p.cat||'')+' '+String(p.brand||'')).toLowerCase();const rules={Gaming:['gaming','gamepad','controller','console','headset'],Student:['student','school','study','notebook','backpack','desk'],Creator:['creator','camera','microphone','tripod','drawing','design'],Desk:['desk','keyboard','mouse','monitor','organizer','lamp'],Lifestyle:['lifestyle','everyday','travel','bag','wallet','watch'],Tech:['tech','phone','computer','electronic','gadget','usb','charger']};if(hay.includes(String(name).toLowerCase()))return true;return (rules[name]||[]).some(k=>hay.includes(k));}
 function formatPrice(value,currency='NGN'){const n=Number(value);if(!Number.isFinite(n))return 'Price unavailable';const code=String(currency||'NGN').toUpperCase();try{return new Intl.NumberFormat('en-NG',{style:'currency',currency:code,maximumFractionDigits:code==='NGN'?0:2}).format(n)}catch{return code+' '+n.toLocaleString()}}
 function trackEvent(event_name,product_id=null,metadata={}){fetch('/api/analytics/events',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({event_name,product_id,session_id:sessionId,metadata})}).catch(()=>{});}
@@ -1114,7 +1167,7 @@ function inferStoreCategory(p){
   for(const [name,words] of rules)if(words.some(w=>text.includes(w)))return name;
   return 'Home & Living';
 }
-function mapProduct(p){let variants=[];try{variants=Array.isArray(p.shopify_variants)?p.shopify_variants:(typeof p.shopify_variants==='string'?JSON.parse(p.shopify_variants||'[]'):[])}catch(e){variants=[]}const source=String(p.source_type||p.retailer||'').toLowerCase();const retailer=source.includes('temu')?'Temu':(source.includes('amazon')||p.amazon_asin||p.amazon_source_url?'Amazon':(p.retailer||''));return {id:p.id,slug:p.slug||p.id,name:displayProductName(p.name),rawName:p.name,type:p.kind==='find'?'Find':p.kind==='learn'?'Learn':'Shop',cat:p.category?.name||inferStoreCategory(p),collection:p.collection?.name||'',desc:p.description||'',features:p.features||'',brand:p.brand||'',availability:p.availability||'',sourceSku:p.source_sku||'',price:formatPrice(p.display_price,p.currency),rawPrice:p.display_price,currency:p.currency||'',amazonListPrice:p.amazon_list_price,amazonDiscount:p.amazon_discount_percent,amazonDeal:p.amazon_deal_text,amazonRating:p.amazon_rating,amazonReviews:p.amazon_review_count,amazonBought:p.amazon_bought_past_month,amazonBadges:Array.isArray(p.amazon_badges)?p.amazon_badges:[],amazonShipping:p.amazon_shipping_text,amazonTax:p.amazon_tax_text,rating:p.temu_rating??p.rating??p.amazon_rating,reviews:p.temu_review_count??p.review_count??p.amazon_review_count,deal:p.temu_deal_text??p.deal_text??p.amazon_deal_text,listPrice:p.temu_list_price??p.list_price??p.amazon_list_price,discount:p.temu_discount_percent??p.discount_percent??p.amazon_discount_percent,icon:'✦',image:p.image_url,image_urls:Array.isArray(p.image_urls)?p.image_urls:[],variants,options:Array.isArray(p.amazon_variations)?p.amazon_variations:[],trend:p.trending,top:p.top_pick,featured:p.featured,whyPicked:p.why_we_picked_it||'',bestFor:p.best_for||'',skipIf:p.skip_if||'',lastChecked:p.last_checked_at||p.amazon_last_synced||null,destination:p.destination_url,variantId:p.shopify_variant_id,shopifyProductId:p.shopify_product_id,retailer};}
+function mapProduct(p){let variants=[];try{variants=Array.isArray(p.shopify_variants)?p.shopify_variants:(typeof p.shopify_variants==='string'?JSON.parse(p.shopify_variants||'[]'):[])}catch(e){variants=[]}const source=String(p.source_type||p.retailer||'').toLowerCase();const retailer=source.includes('temu')?'Temu':(source.includes('amazon')||p.amazon_asin||p.amazon_source_url?'Amazon':(p.retailer||''));return {id:p.id,slug:p.slug||p.id,name:displayProductName(p.name),rawName:p.name,type:p.kind==='find'?'Find':p.kind==='learn'?'Learn':'Shop',cat:p.category?.name||inferStoreCategory(p),collection:p.collection?.name||'',desc:p.description||'',features:p.features||'',brand:p.brand||'',availability:p.availability||'',sourceSku:p.source_sku||'',price:formatPrice(p.display_price,p.currency),rawPrice:p.display_price,currency:p.currency||'',amazonListPrice:p.amazon_list_price,amazonDiscount:p.amazon_discount_percent,amazonDeal:p.amazon_deal_text,amazonRating:p.amazon_rating,amazonReviews:p.amazon_review_count,amazonBought:p.amazon_bought_past_month,amazonBadges:Array.isArray(p.amazon_badges)?p.amazon_badges:[],amazonShipping:p.amazon_shipping_text,amazonTax:p.amazon_tax_text,rating:p.temu_rating??p.rating??p.amazon_rating,reviews:p.temu_review_count??p.review_count??p.amazon_review_count,deal:p.temu_deal_text??p.deal_text??p.amazon_deal_text,listPrice:p.temu_list_price??p.list_price??p.amazon_list_price,discount:p.temu_discount_percent??p.discount_percent??p.amazon_discount_percent,icon:'✦',image:p.image_url,image_urls:Array.isArray(p.image_urls)?p.image_urls:[],variants,options:Array.isArray(p.amazon_variations)?p.amazon_variations:[],trend:p.trending,top:p.top_pick,featured:p.featured,whyPicked:p.why_we_picked_it||'',bestFor:p.best_for||'',skinTypes:p.skin_types||p.best_for||'',skinConcerns:p.skin_concerns||'',ingredients:p.ingredients||'',usageInstructions:p.usage_instructions||'',skipIf:p.skip_if||'',lastChecked:p.last_checked_at||p.amazon_last_synced||null,destination:p.destination_url,variantId:p.shopify_variant_id,shopifyProductId:p.shopify_product_id,retailer};}
 async function loadLiveProducts(){
   let lastError=null;
   let data=null;
@@ -1167,6 +1220,7 @@ async function loadLiveProducts(){
   if(!cleanList.length)throw new Error('Catalog returned no renderable products.');
   renderSafe('newProducts',safeCards(cleanList.slice(0,8))||empty);
   renderSafe('randomPicks',safeCards([...cleanList].sort(()=>Math.random()-0.5).slice(0,8))||empty);
+  try{renderSkinRoutineFinder()}catch(err){console.warn('Skin routine finder could not render:',err);}
   try{renderBrowse()}catch(err){console.warn('Browse catalog render failed:',err);renderSafe('browseGrid',safeCards(cleanList)||empty);}
   try{renderList('shopGrid','Shop');renderList('findGrid','Find');renderLearn()}catch(err){console.warn('Secondary catalog render failed:',err);}
   try{renderSaved()}catch(err){console.warn('Saved catalog render failed:',err);}

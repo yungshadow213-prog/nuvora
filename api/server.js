@@ -88,7 +88,7 @@ function validateSkinSiteConfig(value){
   if(value.sections!==undefined&&!Array.isArray(value.sections))return 'Skin Studio sections must be an array.';
   const sections=Array.isArray(value.sections)?value.sections:[];
   if(sections.length>40)return 'Skin Studio supports up to 40 sections.';
-  const types=new Set(['hero','product-grid','editorial','featured-products','category-grid']),ids=new Set();
+  const types=new Set(['hero','product-grid','editorial','featured-products','category-grid','journal-grid']),ids=new Set();
   for(const section of sections){
     if(!section||typeof section!=='object'||Array.isArray(section))return 'Every Skin Studio section must be an object.';
     if(!types.has(String(section.type||'')))return 'A Skin Studio section has an unsupported type.';
