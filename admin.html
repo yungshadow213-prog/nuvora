@@ -1154,6 +1154,7 @@ async function refreshAmazonDraft(id){
  if(buttons.some(button=>button.disabled))return;
  buttons.forEach(button=>{button.disabled=true;button.dataset.originalLabel=button.textContent;button.textContent='Refreshing…';});
  setAdminStatus('Re-reading the original Amazon listing. Your current draft will not be published automatically.','info');
+ let sourceRefreshSaved=false;
  try{
   const prepared=await api('/api/amazon/prepare',{method:'POST',body:{url:source}});
   const listing=prepared?.listing||{};
@@ -1174,9 +1175,10 @@ async function refreshAmazonDraft(id){
   if(listing.rating!=null&&Number.isFinite(Number(listing.rating)))patch.amazon_rating=Number(listing.rating);
   if(listing.review_count!=null&&Number.isFinite(Number(listing.review_count)))patch.amazon_review_count=Number(listing.review_count);
   await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body:patch});
+  sourceRefreshSaved=true;
   await liveAdminProducts();
   setAdminStatus('Source refreshed for “'+title+'”. The product remains a draft; review its details and images before publishing.','success');
- }catch(error){setAdminStatus(error.message||'Could not refresh this Amazon listing. The draft was not published.','error');}
+ }catch(error){setAdminStatus(sourceRefreshSaved?'The source refresh was saved as a draft, but the product list could not be refreshed. Reload the product library to confirm it.':(error.message||'Could not refresh this Amazon listing. The draft was not published.'),'error');}
  finally{buttons.forEach(button=>{button.disabled=false;button.textContent=button.dataset.originalLabel||'Refresh source';delete button.dataset.originalLabel;});}
 }
 function renderProducts(){
