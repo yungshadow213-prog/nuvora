@@ -681,6 +681,11 @@ button,a,[role="button"],input,select,textarea{pointer-events:auto}
 .nv-card .prodtext{display:flex;flex-direction:column;min-height:100%}.nv-card .card-bottom{margin-top:auto}
 @media(max-width:560px){.nv-card .product-summary{font-size:11px;min-height:3.6em}.nv-card .card-action{font-size:11px}}
 #cartBtn,.menu-list button[onclick*="showCart"],#view-cart,.cart-drawer-backdrop{display:none!important}
+</style><style id="nuvora-retailer-price-clarity">
+.nv-card .prodprice{display:inline-flex;align-items:center;min-height:27px;padding:5px 9px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-size:11px;font-weight:850;line-height:1.3;white-space:normal}
+.nv-price-check{display:inline-flex;align-items:center;gap:7px;margin:0 0 7px;padding:8px 11px;border-radius:10px;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:850}
+.nv-price-check:before{content:"↗";font-size:14px}
+@media(max-width:560px){.nv-card .prodprice{font-size:10px;padding:5px 7px;min-height:24px}.nv-price-check{font-size:12px}}
 </style></head>
 <body>
 <div class="announcement"><div class="shell"><b>Nuvora picks, made simple.</b> Browse curated products, save your favorites, and discover something worth finding.</div></div><header class="topbar"><div class="shell nav">
@@ -964,10 +969,11 @@ function card(p){
   const summary=cleanProductText(p.whyPicked||p.benefits||p.features||p.desc||'').replace(/\s+/g,' ').trim();
   const summaryText=summary.length>190?summary.slice(0,187).replace(/\s+\S*$/,'')+'…':summary;
   const cardAction=/amazon/i.test(String(p.retailer||''))||!!p.destination?'View product guide':'View details';
+  const retailerPriceLabel=/amazon/i.test(String(p.retailer||''))?'Check price on Amazon':(/temu/i.test(String(p.retailer||''))?'Check price on Temu':(p.type==='Shop'?p.price:''));
   return '<article class="product nv-card" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button" aria-label="View '+htmlEsc(p.name)+'">'+
     '<button class="card-save '+(savedNow?'saved':'')+'" aria-label="Save product" onclick="event.stopPropagation();toggleSave(this.closest(\'.product\').dataset.productId)">'+(savedNow?'♥':'♡')+'</button>'+
     '<div class="prod-open"><div class="thumb">'+(image?'<img src="'+htmlEsc(image)+'" alt="'+htmlEsc(p.name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\';this.parentElement.classList.add(\'image-failed\')">':'<span class="nv-image-mark">✦</span>')+'</div>'+
-    '<div class="prodtext"><div class="card-source">'+htmlEsc(source)+'</div><h4>'+htmlEsc(p.name)+'</h4>'+(summaryText?'<p class="product-summary">'+htmlEsc(summaryText)+'</p>':'')+'<div class="card-bottom"><span class="card-action">'+cardAction+' <span>→</span></span></div></div></div></article>';
+    '<div class="prodtext"><div class="card-source">'+htmlEsc(source)+'</div><h4>'+htmlEsc(p.name)+'</h4>'+(summaryText?'<p class="product-summary">'+htmlEsc(summaryText)+'</p>':'')+'<div class="card-bottom">'+(retailerPriceLabel?'<span class="prodprice">'+htmlEsc(retailerPriceLabel)+'</span>':'')+'<span class="card-action">'+cardAction+' <span>→</span></span></div></div></div></article>';
 }
 function renderList(id,type){const el=document.getElementById(id);if(!el)return;const rows=products.filter(p=>p.type===type);const empty=type==='Shop'?'<div class="empty" style="grid-column:1/-1"><strong>No direct-checkout products are available yet.</strong><br><span>Browse curated retailer finds while the direct-checkout collection is being built.</span><br><button type="button" class="button button-dark" onclick="showView(\'finds\')">Browse retailer finds</button></div>':'<div class="empty" style="grid-column:1/-1"><strong>No '+String(type).toLowerCase()+' products published yet.</strong><br><span>New published '+String(type).toLowerCase()+' listings will appear here.</span></div>';el.innerHTML=rows.map(card).join('')||empty;el.closest('.view')?.classList.toggle('catalog-empty',rows.length===0)}
 function renderLearn(){const el=document.getElementById('learnGrid');if(!el)return;const list=products.filter(p=>p.type==='Learn');el.innerHTML=list.length?list.map(card).join(''):'<div class="empty" style="grid-column:1/-1"><strong>No learning resources published yet.</strong><br><span>Publish a Learn product from Admin when you are ready.</span></div>'}
@@ -1063,9 +1069,8 @@ function renderProductPage(p){
     ?'<div class="nv-options">'+optionGroups.map(g=>'<div class="nv-option-group"><div class="nv-option-label">'+htmlEsc(g.name)+'</div><div class="nv-option-values">'+g.values.slice(0,40).map(v=>'<span class="nv-option-chip">'+htmlEsc(v)+'</span>').join('')+'</div></div>').join('')+'</div>'
     :'';
   const dealMarkup='';
-   const skincareAffiliate=String(p.cat||'').toLowerCase().replace(/[^a-z]/g,'').includes('skincare')&&String(p.retailer||'').toLowerCase().includes('amazon');
-   const amazonNoPrice=String(p.retailer||'').toLowerCase().includes('amazon')&&(p.rawPrice===null||p.rawPrice===undefined||p.rawPrice===''||!Number.isFinite(Number(p.rawPrice)));
-    const priceMarkup='';
+   const amazonProduct=/amazon/i.test(String(p.retailer||''))||!!p.amazon_asin;
+   const priceMarkup=amazonProduct?'<div class="nv-price-check">Check price on Amazon</div>':'';
   const delivery=imported['Delivery']||'';const returns=imported['Returns']||'';const seller=imported['Sold by']||'';const shipsFrom=imported['Ships from']||'';const availability=imported['Availability']||p.availability||'';const logistics=(shipping||tax||delivery||returns||availability)?'<div class="nv-info-boxes">'+(shipping?'<div class="nv-info-box"><b>Shipping & import</b><span>'+htmlEsc(shipping)+'</span></div>':'')+(tax?'<div class="nv-info-box"><b>Taxes</b><span>'+htmlEsc(tax)+'</span></div>':'')+(delivery?'<div class="nv-info-box"><b>Delivery</b><span>'+htmlEsc(delivery)+'</span></div>':'')+(returns?'<div class="nv-info-box"><b>Returns</b><span>'+htmlEsc(returns)+'</span></div>':'')+(availability?'<div class="nv-info-box"><b>Availability</b><span>'+htmlEsc(availability)+'</span></div>':'')+'</div>':'';
   const detailsRows=[];
   if(p.brand)detailsRows.push(['Brand',p.brand]);
