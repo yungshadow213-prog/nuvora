@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-admin-account-switch-r9',
+          release:'nuvora-2026-10-23-skin-studio-simple-editor-r10',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
