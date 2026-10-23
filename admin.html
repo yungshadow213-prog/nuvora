@@ -2493,17 +2493,17 @@ function previewSkinSite(){
  window.open(SKIN_CLIENT_ORIGIN+'/', '_blank','noopener');
  skinBuilderMessage('Opened the live Nuvora Skin storefront. Unsaved changes remain in the builder draft.','info');
 }
-function skinConfigValidationMessage(){
+function skinConfigValidationMessage(requireProductGrid=true){
  if(!skinSiteConfigLoaded)return 'The existing site settings did not load successfully. Reload the Skin Care workspace before saving.';
  if(!skinBuilderConfig)return 'The saved configuration has not loaded yet. Reload and retry.';
  collectSkinConfigFields();
- if(!skinBuilderConfig.sections.some(s=>s.visible!==false&&(s.type==='product-grid'||s.type==='featured-products')))return 'Keep at least one visible product grid on the homepage so shoppers can browse products.';
+ if(requireProductGrid&&!skinBuilderConfig.sections.some(s=>s.visible!==false&&(s.type==='product-grid'||s.type==='featured-products')))return 'Keep at least one visible product grid on the homepage so shoppers can browse products.';
  if(!/^#[0-9a-f]{6}$/i.test(String(skinBuilderConfig.accentColor||'')))return 'Choose a valid accent color.';
  if(skinBuilderConfig.heroImage&&!/^https:\/\//i.test(skinBuilderConfig.heroImage))return 'Hero image must use HTTPS.';
  return '';
 }
 async function saveSkinSiteDraft(){
- const validation=skinConfigValidationMessage();if(validation)return skinBuilderMessage(validation,'error');
+ const validation=skinConfigValidationMessage(false);if(validation)return skinBuilderMessage(validation,'error');
  const btn=document.querySelector('button[onclick="saveSkinSiteDraft()"]');if(btn){btn.disabled=true;btn.textContent='Saving…';}
  skinBuilderMessage('Saving a private draft…','info');
  try{
