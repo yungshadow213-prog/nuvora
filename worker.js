@@ -1464,7 +1464,8 @@ async function scrapeTemuListing(temuUrl){
         let listing=await scrapeTemuListing(temuUrl);
         if(listing?.error)return json(listing,502);
         listing.title=cleanImportedTitle(listing.title,listing.brand);
-        const titleHint=(listing?.title||'Temu product').replace(/\s+/g,' ').trim().slice(0,180);
+        if(!listing.title||productTitleQualityIssue(listing.title)||looksFragmentedText(listing.title))return json({error:'Temu returned an incomplete or corrupted product title. Nothing was imported; retry the direct listing URL or edit the source details first.'},502);
+        const titleHint=listing.title.replace(/\s+/g,' ').trim().slice(0,180);
         let category_id=null;
         try{const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cats.ok)category_id=autoCategory(titleHint,listing?.description||'','',await cats.json());}catch(e){}
         let duplicate=null;
