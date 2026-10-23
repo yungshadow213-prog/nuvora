@@ -385,6 +385,30 @@ body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:g
 .studio-site-settings[open] summary{border-bottom:1px solid #e4eae1}
 .studio-site-settings[open] .skin-builder-controls{padding:0 10px 10px}
 @media(max-width:700px){.studio-site-link-fields{grid-template-columns:1fr}.studio-site-link-row{padding:8px}}
+
+/* Skin Studio simplified, click-first workflow */
+body.skin-studio-fullpage #skinSiteBuilder{overflow:hidden}
+body.skin-studio-fullpage .studio-simple-guide{display:flex;align-items:stretch;gap:10px;padding:12px 18px;background:#f8faf7;border-bottom:1px solid #e2e8df;flex:0 0 auto}
+body.skin-studio-fullpage .studio-simple-guide-intro{display:grid;align-content:center;gap:4px;min-width:180px;padding-right:10px}
+body.skin-studio-fullpage .studio-simple-guide-number{font-size:9px;letter-spacing:1px;font-weight:900;color:#5b805f}
+body.skin-studio-fullpage .studio-simple-guide-intro>b{font-size:12px;color:#26392b}
+body.skin-studio-fullpage .studio-simple-guide-intro>small{font-size:10px;color:#788679}
+body.skin-studio-fullpage .studio-guide-step{display:flex;align-items:center;gap:9px;flex:1;min-width:0;text-align:left;border:1px solid #e0e7dc;border-radius:11px;background:#fff;padding:9px 11px;cursor:pointer}
+body.skin-studio-fullpage .studio-guide-step>span:first-child{display:grid;place-items:center;flex:0 0 25px;height:25px;border-radius:8px;background:#eaf3e8;color:#35643d;font-weight:900;font-size:11px}
+body.skin-studio-fullpage .studio-guide-step>span:last-child{display:grid;gap:3px;min-width:0}
+body.skin-studio-fullpage .studio-guide-step b{font-size:10px;color:#2b3e2f}
+body.skin-studio-fullpage .studio-guide-step small{font-size:9px;color:#7f8c7e;line-height:1.3}
+body.skin-studio-fullpage .studio-guide-add{align-self:center;white-space:nowrap;border:0;border-radius:10px;background:#2f6a40;color:white;padding:12px 14px;font-size:10px;font-weight:800;cursor:pointer}
+body.skin-studio-fullpage .studio-panel-helper{display:block;margin-top:5px;color:#879286;font-size:10px;line-height:1.4}
+body.skin-studio-fullpage .studio-section-outline{cursor:pointer}
+body.skin-studio-fullpage .studio-outline-number{display:grid;place-items:center;flex:0 0 25px;width:25px;height:25px;border-radius:8px;background:#f0f3ed;color:#6e7f6d;font-size:10px;font-weight:800;cursor:default}
+body.skin-studio-fullpage .studio-section-outline.is-selected .studio-outline-number{background:#2f6a40;color:#fff}
+body.skin-studio-fullpage .studio-product-checklist{display:grid;gap:6px;max-height:230px;overflow:auto;border:1px solid #e1e8df;border-radius:10px;padding:8px;background:#fafcf9}
+body.skin-studio-fullpage .studio-product-check{display:flex;align-items:flex-start;gap:8px;padding:7px;border-radius:7px;background:#fff;color:#344738;font-size:10px;line-height:1.4;cursor:pointer}
+body.skin-studio-fullpage .studio-product-check input{width:auto;flex:0 0 auto;margin-top:1px;accent-color:#2f6a40}
+body.skin-studio-fullpage .studio-product-check span{overflow-wrap:anywhere}
+@media(max-width:1050px){body.skin-studio-fullpage .studio-simple-guide{flex-wrap:wrap}body.skin-studio-fullpage .studio-simple-guide-intro{min-width:100%;padding-bottom:2px}body.skin-studio-fullpage .studio-guide-step{min-width:150px}}
+@media(max-width:700px){body.skin-studio-fullpage .studio-simple-guide{padding:9px;gap:6px}body.skin-studio-fullpage .studio-guide-step{flex:1 1 45%;padding:8px}body.skin-studio-fullpage .studio-guide-add{flex:1 1 100%}}
 </style>
 </head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
@@ -649,9 +673,16 @@ body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:g
     </div>
   </header>
   <div id="skinBuilderStatus" class="studio-status notice" role="status" aria-live="polite">Loading your saved Skin Care site…</div>
+  <section class="studio-simple-guide" aria-label="How to use Skin Studio">
+    <div class="studio-simple-guide-intro"><span class="studio-simple-guide-number">START HERE</span><b>Build your page in 3 simple steps</b><small>No dragging needed — just click and edit.</small></div>
+    <button type="button" class="studio-guide-step" onclick="switchSkinStudioTab('outline');selectFirstSkinSection()"><span>1</span><span><b>Choose a section</b><small>Pick a block on the left</small></span></button>
+    <button type="button" class="studio-guide-step" onclick="focusSkinInspector()"><span>2</span><span><b>Edit its content</b><small>Change text, image or products</small></span></button>
+    <button type="button" class="studio-guide-step" onclick="saveSkinSiteDraft()"><span>3</span><span><b>Save your draft</b><small>Private until you publish</small></span></button>
+    <button type="button" class="studio-guide-add" onclick="openSkinAdd('section')">＋ Add a section</button>
+  </section>
   <div class="skin-builder-layout studio-layout">
     <aside class="studio-left-panel">
-      <div class="studio-panel-head"><div><span class="section-kicker">Workspace</span><h3>Content library</h3></div><button class="btn primary studio-add-button" type="button" onclick="toggleSkinAddMenu()">+ Add</button></div>
+      <div class="studio-panel-head"><div><span class="section-kicker">STEP 1</span><h3>Page layout</h3><small class="studio-panel-helper">Click a section to edit it. Use ↑ and ↓ to move it.</small></div><button class="btn primary studio-add-button" type="button" onclick="toggleSkinAddMenu()">+ Add</button></div>
       <div id="skinStudioAddMenu" class="studio-add-menu" hidden>
         <button type="button" onclick="openSkinAdd('product')"><span>＋</span><span><b>Product</b><small>Import an Amazon link or add a product</small></span></button>
         <button type="button" onclick="openSkinAdd('page')"><span>▤</span><span><b>Page</b><small>Create a new storefront page</small></span></button>
@@ -659,7 +690,7 @@ body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:g
         <button type="button" onclick="openSkinAdd('section')"><span>▦</span><span><b>Section</b><small>Add a block to the current page</small></span></button>
       </div>
       <div class="studio-library-tabs" role="tablist" aria-label="Skin Studio content">
-        <button id="skinTabOutline" class="active" type="button" onclick="switchSkinStudioTab('outline')">Outline</button>
+        <button id="skinTabOutline" class="active" type="button" onclick="switchSkinStudioTab('outline')">Page layout</button>
         <button id="skinTabProducts" type="button" onclick="switchSkinStudioTab('products')">Products</button>
         <button id="skinTabPages" type="button" onclick="switchSkinStudioTab('pages')">Pages</button>
         <button id="skinTabCategories" type="button" onclick="switchSkinStudioTab('categories')">Categories</button>
@@ -667,11 +698,11 @@ body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:g
       <div id="skinQuickAddPanel" class="studio-quick-add" hidden></div>
       <div id="skinLibraryItems" class="studio-library-items" hidden></div>
       <div id="skinBuilderSections" class="skin-builder-sections studio-outline-list" aria-label="Page section outline"></div>
-      <div class="studio-left-foot"><span>Drag products onto a product section.</span><span>Changes stay in draft until published.</span></div>
+      <div class="studio-left-foot"><span>Click a section, then edit it on the right.</span><span>Save draft keeps changes private.</span></div>
     </aside>
     <section class="skin-builder-preview-panel studio-canvas-panel" aria-label="Live storefront canvas">
       <div class="skin-preview-head studio-canvas-head">
-        <div><b>Storefront canvas</b><small>Drag sections to reorder them. Drag products into a product grid or onto another product to rearrange.</small></div>
+        <div><b>Live page preview</b><small>This shows how your page will look. To make changes, select a section on the left and use the editor on the right.</small></div>
         <div class="studio-device-controls" aria-label="Preview size">
           <button type="button" class="active" onclick="setSkinPreviewDevice('desktop',this)">Desktop</button>
           <button type="button" onclick="setSkinPreviewDevice('tablet',this)">Tablet</button>
@@ -684,7 +715,7 @@ body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:g
       </div>
     </section>
     <aside class="studio-right-panel">
-      <div class="studio-inspector-heading"><div><span class="section-kicker">Inspector</span><h3 id="skinInspectorTitle">Select an item</h3><p id="skinInspectorSubtitle">Select a section, product, page or category to edit its details.</p></div></div>
+      <div class="studio-inspector-heading"><div><span class="section-kicker">STEP 2</span><h3 id="skinInspectorTitle">Edit selected item</h3><p id="skinInspectorSubtitle">Choose a section on the left. Its settings will appear here.</p></div></div>
       <div id="skinSelectedInspector" class="studio-selected-inspector"><div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b><p>Select an item in the left panel or click a section in the storefront preview.</p></div></div>
       <details class="studio-site-settings">
         <summary><span><b>Whole-site settings</b><small>Header, navigation, footer, brand and product pages</small></span><span class="studio-chevron">⌄</span></summary>
@@ -2113,11 +2144,11 @@ function renderSkinLibrary(){
  if(!skinBuilderConfig){root.innerHTML='<div class="studio-library-empty">Loading your site content…</div>';return;}
  if(skinStudioTab==='products'){
   const rows=adminProducts.filter(isSkinProduct).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
-  root.innerHTML='<div class="studio-product-add-actions"><button type="button" class="studio-outline-add" onclick="openSkinManualProduct()">＋ Add manually</button><button type="button" class="studio-outline-add" onclick="openSkinProduct()">↗ Import Amazon link</button></div><p class="studio-inline-help">Drag a published product into a product grid on the canvas. Select a product to assign its category, or use Edit for all product fields.</p>'+
+  root.innerHTML='<div class="studio-product-add-actions"><button type="button" class="studio-outline-add" onclick="openSkinManualProduct()">＋ Add manually</button><button type="button" class="studio-outline-add" onclick="openSkinProduct()">↗ Import Amazon link</button></div><p class="studio-inline-help">Click a product to edit its category. To show products on a page, select a Product grid section and tick the products you want.</p>'+
    (rows.length?rows.map(p=>{
     const id=String(p.id),image=skinImageOf(p),published=!!p.published;
     const selection=skinStudioSelection?.type==='product'&&String(skinStudioSelection.id)===id;
-    return '<article class="studio-library-item '+(selection?'is-selected':'')+'" draggable="'+(published?'true':'false')+'" ondragstart="skinProductDragStart(event,'+JSON.stringify(id)+')" onclick="selectSkinItem(\'product\','+JSON.stringify(id)+')">'+
+    return '<article class="studio-library-item '+(selection?'is-selected':'')+'" onclick="selectSkinItem(\'product\','+JSON.stringify(id)+')">'+
      (image?'<img src="'+esc(image)+'" alt="" loading="lazy">':'<div class="studio-product-placeholder">◯</div>')+
      '<div class="studio-library-item-copy"><b>'+esc(p.name||'Untitled product')+'</b><small>'+esc(published?'Published':'Draft — not visible yet')+' · '+esc(retailerLabel(p))+'</small></div>'+
      '<div class="studio-library-item-actions"><button type="button" onclick="event.stopPropagation();editSkinProduct('+JSON.stringify(id)+')">Edit</button></div></article>';
@@ -2146,8 +2177,8 @@ function renderSkinBuilderSections(){
  root.innerHTML=sections.map((sec,index)=>{
   const selected=skinStudioSelection?.type==='section'&&String(skinStudioSelection.id)===String(sec.id);
   const visible=sec.visible!==false;
-  return '<article class="studio-section-outline '+(selected?'is-selected':'')+'" draggable="true" data-section-index="'+index+'" onclick="selectSkinItem(\'section\','+JSON.stringify(String(sec.id))+')" ondragstart="skinBuilderDragStart(event,'+index+')" ondragover="event.preventDefault()" ondrop="skinBuilderDrop(event,'+index+')">'+
-   '<span class="studio-outline-grip" title="Drag to reorder">⠿</span><div class="studio-section-outline-copy"><b>'+esc(sec.title||typeLabels[sec.type]||sec.type||'Section')+'</b><small>'+esc(typeLabels[sec.type]||'Section')+' · '+(visible?'Visible':'Hidden')+'</small></div>'+
+  return '<article class="studio-section-outline '+(selected?'is-selected':'')+'" data-section-index="'+index+'" onclick="selectSkinItem(\'section\','+JSON.stringify(String(sec.id))+')">'+
+   '<span class="studio-outline-grip studio-outline-number" aria-hidden="true">'+(index+1)+'</span><div class="studio-section-outline-copy"><b>'+esc(sec.title||typeLabels[sec.type]||sec.type||'Section')+'</b><small>'+esc(typeLabels[sec.type]||'Section')+' · '+(visible?'Visible':'Hidden')+'</small></div>'+
    '<div class="studio-section-outline-actions"><button type="button" title="Move up" '+(index===0?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',-1)">↑</button><button type="button" title="Move down" '+(index===sections.length-1?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',1)">↓</button><button type="button" title="'+(visible?'Hide':'Show')+'" onclick="event.stopPropagation();toggleSkinSectionVisibility('+index+')">'+(visible?'◉':'○')+'</button></div></article>';
  }).join('')||'<div class="studio-library-empty">This page has no sections yet. Use + Add → Section to start building it.</div>';
  renderSkinLibrary();
@@ -2173,7 +2204,7 @@ function renderSkinSelectedInspector(){
    html+='<label class="studio-inspector-field"><span>Product filter</span><select onchange="updateSkinSection('+index+',\'filter\',this.value)">'+[['all','All eligible skincare products'],['featured','Featured picks'],['top_pick','Top picks'],['trending','Trending picks']].map(([v,l])=>'<option value="'+v+'" '+(sec.filter===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
    html+='<label class="studio-inspector-field"><span>Category filter</span><select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+skinStoreCategoryOptions().map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
    html+='<label class="studio-inspector-field"><span>Columns</span><select onchange="updateSkinSection('+index+',\'columns\',Number(this.value))">'+[2,3,4].map(n=>'<option value="'+n+'" '+(Number(sec.columns||4)===n?'selected':'')+'>'+n+' columns</option>').join('')+'</select></label>';
-   html+='<label class="studio-inspector-field"><span>Exact products in this section</span><select multiple size="7" onchange="updateSkinSection('+index+',\'product_ids\',Array.from(this.selectedOptions).map(o=>o.value))">'+skinProductOptions().map(p=>'<option value="'+esc(p.id)+'" '+(activeIds.has(String(p.id))?'selected':'')+'>'+esc(p.name)+'</option>').join('')+'</select></label><p class="studio-inline-help">The order here is the display order. You can also drag cards directly in the canvas or drag a product from the left library into this grid.</p>';
+   html+='<div class="studio-inspector-field"><span>Choose products to show</span><p class="studio-inline-help">Tick the products you want to appear in this section. Untick to remove them.</p><div class="studio-product-checklist">'+(skinProductOptions().length?skinProductOptions().map(p=>'<label class="studio-product-check"><input type="checkbox" '+(activeIds.has(String(p.id))?'checked':'')+' onchange="toggleSkinSectionProduct('+index+','+JSON.stringify(String(p.id))+',this.checked)"><span>'+esc(p.name)+'</span></label>').join(''):'<p class="studio-inline-help">No skincare products yet. Use + Add → Product first.</p>')+'</div></div>';
   }
   if(sec.type==='category-grid'){
    html+='<label class="studio-inspector-field"><span>Show category</span><select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+skinStoreCategoryOptions().map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
@@ -2383,6 +2414,9 @@ function updateSkinSection(index,key,value){
  else {renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();}
  queueSkinStudioPreview();
 }
+function selectFirstSkinSection(){const section=skinSectionsFor()[0];if(section)selectSkinItem('section',section.id);else openSkinAdd('section');}
+function focusSkinInspector(){const panel=document.querySelector('.studio-right-panel');if(panel)panel.scrollTo({top:0,behavior:'smooth'});const root=document.getElementById('skinSelectedInspector');if(root)root.scrollIntoView({block:'nearest',behavior:'smooth'});if(!skinStudioSelection||skinStudioSelection.type==='none')selectFirstSkinSection();}
+function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;const ids=new Set((sec.product_ids||[]).map(String));if(checked)ids.add(String(productId));else ids.delete(String(productId));updateSkinSection(index,'product_ids',[...ids]);}
 function toggleSkinSectionVisibility(index){
  const sec=skinSectionsFor()[index];if(!sec)return;sec.visible=sec.visible===false;
  skinMarkDirty('Section visibility changed in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
