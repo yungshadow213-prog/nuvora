@@ -905,7 +905,7 @@ function renderSkinRoutineFinder(type=activeSkinRoutine){
  if(catalogLoadState==='loading'&&!products.length){if(sub)sub.textContent='Loading published skincare products…';root.innerHTML='<div class="nv-routine-empty">Loading skincare finds…</div>';return;}
  if(catalogLoadState==='error'&&!products.length){if(sub)sub.textContent='The catalog could not be reached just now.';root.innerHTML='<div class="nv-routine-empty">Skincare products could not be loaded. <button type="button" class="nv-catalog-retry" onclick="retryNuvoraCatalog()">Try again</button></div>';return;}
  if(sub)sub.textContent=fit.length?('Showing '+(type==='All'?'published skincare finds':'products whose details mention '+type.toLowerCase()+' skin')+'.'):beauty.length?'No products explicitly mention '+type.toLowerCase()+' skin yet, so these are general skincare finds. Check each product label before use.':'Skincare products will appear here when they are published in the catalog.';
- root.innerHTML=results.length?results.map(card).join(''):'<div class="nv-routine-empty">'+(catalogLoadState==='loaded'?'No skincare products are published yet. Add and publish a skincare product in Nuvora Admin and it will appear here automatically.':'Skincare products will appear here when the published catalog is available.')+'</div>';
+ root.innerHTML=(catalogLoadState==='cached'?'<div class="nv-routine-empty nv-catalog-cached-note">Showing saved skincare results while the live catalog reconnects. <button type="button" class="nv-catalog-retry" onclick="retryNuvoraCatalog()">Retry connection</button></div>':'')+(results.length?results.map(card).join(''):'<div class="nv-routine-empty">'+(catalogLoadState==='loaded'?'No skincare products are published yet. Add and publish a skincare product in Nuvora Admin and it will appear here automatically.':'Skincare products will appear here when the published catalog is available.')+'</div>');
 }
 function renderCollections(){
  const root=document.getElementById('collectionGrid');if(!root)return;
@@ -1257,11 +1257,14 @@ function storefrontProductNeedsReview(row){
 }
 async function loadLiveProducts(){
   let lastError=null;
-  let data=null;
+  let data=null,usedCatalogCache=false;
   for(let attempt=0;attempt<2;attempt++){
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),10000);
     try{
       const response=await fetch('/api/products?catalog='+Date.now(),{
         cache:'no-store',
+        signal:controller.signal,
         headers:{accept:'application/json, text/plain, */*'}
       });
       const raw=await response.text();
@@ -1273,10 +1276,26 @@ async function loadLiveProducts(){
       break;
     }catch(err){
       lastError=err;
-      if(attempt===0)await new Promise(resolve=>setTimeout(resolve,250));
-    }
+      if(attempt===0)await new Promise(resolve=>setTimeout(resolve,350));
+    }finally{clearTimeout(timeout);}
+  }
+  if(!Array.isArray(data)){
+    try{
+      const cached=JSON.parse(localStorage.getItem('nuvoraPublicCatalogCacheV1')||'null');
+      const age=Date.now()-Number(cached?.savedAt||0);
+      if(Array.isArray(cached?.rows)&&cached.rows.length&&age>=0&&age<7*24*60*60*1000){
+        data=cached.rows;usedCatalogCache=true;
+        console.warn('Live catalog unavailable; using the last verified public catalog cache.');
+      }
+    }catch(cacheError){}
   }
   if(!Array.isArray(data))throw lastError||new Error('Products could not be loaded.');
+  if(!usedCatalogCache){
+    try{
+      const cacheRows=data.filter(row=>row&&!storefrontProductNeedsReview(row));
+      if(cacheRows.length)localStorage.setItem('nuvoraPublicCatalogCacheV1',JSON.stringify({savedAt:Date.now(),rows:cacheRows.slice(0,250)}));
+    }catch(cacheError){}
+  }
   const mappedProducts=[];
   for(const row of data){
     if(!row||!['shop','find','learn'].includes(String(row.kind||'').toLowerCase()))continue;
@@ -1288,7 +1307,9 @@ async function loadLiveProducts(){
   }
   products.length=0;
   products.push(...mappedProducts);
-  catalogLoadState='loaded';try{renderSkinRoutineFinder()}catch(err){console.warn('Skin routine finder could not render:',err);}try{renderCollections()}catch(err){console.warn('Collection list could not render:',err);}
+  catalogLoadState=usedCatalogCache?'cached':'loaded';
+  if(usedCatalogCache)showPageStatus('Showing recently saved product data while Nuvora reconnects.','info');
+  try{renderSkinRoutineFinder()}catch(err){console.warn('Skin routine finder could not render:',err);}try{renderCollections()}catch(err){console.warn('Collection list could not render:',err);}
   const cleanList=[];
   const seen=new Set();
   for(const p of products){
