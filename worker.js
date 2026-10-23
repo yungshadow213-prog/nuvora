@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-skin-studio-route-resilience-r5',
+          release:'nuvora-2026-10-23-skin-studio-draft-workflow-r6',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -1711,6 +1711,10 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         if(Object.prototype.hasOwnProperty.call(patch,'skin_site_config')){
           const configError=validateSkinSiteConfig(patch.skin_site_config);
           if(configError)return json({error:configError},400);
+        }
+        if(Object.prototype.hasOwnProperty.call(patch,'skin_site_draft')&&patch.skin_site_draft!==null){
+          const draftError=validateSkinSiteConfig(patch.skin_site_draft);
+          if(draftError)return json({error:'Skin Studio draft: '+draftError},400);
         }
         patch.updated_at=new Date().toISOString();
         const r=await supabaseRest(env,'PATCH','store_settings',patch,'?id=eq.true'); if(!r.ok)return json({error:await r.text()},400);

@@ -644,6 +644,7 @@ body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:g
       <div class="studio-save-state"><span class="studio-save-dot"></span><span id="skinStudioSaveLabel">Saved version loaded</span></div>
       <button class="btn" type="button" onclick="openSkinSiteSettings()">Edit whole site</button>
       <button class="btn" type="button" onclick="previewSkinSite()">View live ↗</button>
+      <button class="btn" type="button" onclick="saveSkinSiteDraft()">Save draft</button>
       <button class="btn primary studio-publish-button" type="button" onclick="saveSkinSiteConfig()">Publish changes</button>
     </div>
   </header>
@@ -1807,7 +1808,7 @@ async function adminBoot(){
 }
 
 const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
-let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='';
+let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinSiteDraftExists=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='';
 const defaultSkinSiteConfig=()=>({
   version:3,template:'soft-editorial',accentColor:'#66745f',
   announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
@@ -2033,15 +2034,17 @@ async function loadSkinSiteConfig(){
  try{
   const settings=await api('/api/admin/settings');
   if(!settings||typeof settings!=='object')throw new Error('The settings endpoint returned an invalid response.');
-  skinBuilderConfig=mergeSkinSiteConfig(settings.skin_site_config);
+  skinSiteDraftExists=!!(settings.skin_site_draft&&typeof settings.skin_site_draft==='object'&&!Array.isArray(settings.skin_site_draft));
+  skinBuilderConfig=mergeSkinSiteConfig(skinSiteDraftExists?settings.skin_site_draft:settings.skin_site_config);
   skinStudioPageId='home';
   skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||'hero'};
   fillSkinConfigFields();
   skinSiteConfigLoaded=true;
-  skinSetSavedLabel('Saved version loaded');
-  skinBuilderMessage('Your saved site layout is loaded. Edit the canvas or use the manual controls, then publish your changes.','success');
+  skinSetSavedLabel(skinSiteDraftExists?'Saved draft loaded':'Published version loaded');
+  skinBuilderMessage(skinSiteDraftExists?'Your saved draft is loaded. It is private and will not affect the live storefront until you publish.':'The published site settings are loaded. Save a draft to keep your work private, or publish when you are ready.','success');
   if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
  }catch(e){
+  skinSiteDraftExists=false;
   skinBuilderConfig=mergeSkinConfigForRecovery();
   fillSkinConfigFields();
   skinBuilderMessage('Could not load saved settings: '+(e.message||'unknown error')+'. Publishing is disabled to protect your existing live configuration.','error');
@@ -2490,20 +2493,38 @@ function previewSkinSite(){
  window.open(SKIN_CLIENT_ORIGIN+'/', '_blank','noopener');
  skinBuilderMessage('Opened the live Nuvora Skin storefront. Unsaved changes remain in the builder draft.','info');
 }
-async function saveSkinSiteConfig(){
- if(!skinSiteConfigLoaded)return skinBuilderMessage('The existing site settings did not load successfully. Reload the Skin Care workspace before publishing.','error');
- if(!skinBuilderConfig)return skinBuilderMessage('The saved configuration has not loaded yet. Reload and retry.','error');
+function skinConfigValidationMessage(){
+ if(!skinSiteConfigLoaded)return 'The existing site settings did not load successfully. Reload the Skin Care workspace before saving.';
+ if(!skinBuilderConfig)return 'The saved configuration has not loaded yet. Reload and retry.';
  collectSkinConfigFields();
- if(!skinBuilderConfig.sections.some(s=>s.visible!==false&&(s.type==='product-grid'||s.type==='featured-products')))return skinBuilderMessage('Keep at least one visible product grid on the homepage so shoppers can browse products.','error');
- if(!/^#[0-9a-f]{6}$/i.test(String(skinBuilderConfig.accentColor||'')))return skinBuilderMessage('Choose a valid accent color.','error');
- if(skinBuilderConfig.heroImage&&!/^https:\/\//i.test(skinBuilderConfig.heroImage))return skinBuilderMessage('Hero image must use HTTPS.','error');
+ if(!skinBuilderConfig.sections.some(s=>s.visible!==false&&(s.type==='product-grid'||s.type==='featured-products')))return 'Keep at least one visible product grid on the homepage so shoppers can browse products.';
+ if(!/^#[0-9a-f]{6}$/i.test(String(skinBuilderConfig.accentColor||'')))return 'Choose a valid accent color.';
+ if(skinBuilderConfig.heroImage&&!/^https:\/\//i.test(skinBuilderConfig.heroImage))return 'Hero image must use HTTPS.';
+ return '';
+}
+async function saveSkinSiteDraft(){
+ const validation=skinConfigValidationMessage();if(validation)return skinBuilderMessage(validation,'error');
+ const btn=document.querySelector('button[onclick="saveSkinSiteDraft()"]');if(btn){btn.disabled=true;btn.textContent='Saving…';}
+ skinBuilderMessage('Saving a private draft…','info');
+ try{
+  const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_draft:skinBuilderConfig}});
+  skinBuilderConfig=mergeSkinSiteConfig(response?.skin_site_draft||skinBuilderConfig);
+  skinSiteDraftExists=true;
+  fillSkinConfigFields();sendSkinStudioPreview();skinSetSavedLabel('Draft saved');
+  skinBuilderMessage('Draft saved privately. The live storefront is unchanged until you publish.','success');
+ }catch(e){skinBuilderMessage('Draft save failed: '+(e.message||'unknown error')+'. The published storefront is unchanged.','error');}
+ finally{if(btn){btn.disabled=false;btn.textContent='Save draft';}}
+}
+async function saveSkinSiteConfig(){
+ const validation=skinConfigValidationMessage();if(validation)return skinBuilderMessage(validation,'error');
  const btn=document.querySelector('button[onclick="saveSkinSiteConfig()"]');if(btn){btn.disabled=true;btn.textContent='Publishing…';}
  skinBuilderMessage('Publishing the current site draft…','info');
  try{
-  const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_config:skinBuilderConfig}});
+  const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_config:skinBuilderConfig,skin_site_draft:null}});
   skinBuilderConfig=mergeSkinSiteConfig(response?.skin_site_config||skinBuilderConfig);
+  skinSiteDraftExists=false;
   fillSkinConfigFields();sendSkinStudioPreview();skinSetSavedLabel('All changes published');
-  skinBuilderMessage('Published. The live Nuvora Skin site now uses this saved configuration.','success');
+  skinBuilderMessage('Published. The live Nuvora Skin site now uses this saved configuration. Your saved draft has been cleared.','success');
  }catch(e){skinBuilderMessage('Publish failed: '+(e.message||'unknown error')+'. No live changes were confirmed.','error');}
  finally{if(btn){btn.disabled=false;btn.textContent='Publish changes';}}
 }
