@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-amazon-draft-repair-r31',
+          release:'nuvora-2026-10-23-affiliate-catalog-safety-r32',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
