@@ -1222,11 +1222,12 @@ function mapProduct(p){let variants=[];try{variants=Array.isArray(p.shopify_vari
 function storefrontProductNeedsReview(row){
  const title=String(row?.name||'').trim(),words=title.match(/[A-Za-z0-9]+(?:['’][A-Za-z]+)*/g)||[];
  const isolated=words.filter(word=>/^[A-Za-z]$/.test(word)).length;
- if(!title||/^(?:amazon(?:\\.com)?|temu)(?:\\s+product)?$/i.test(title)||/^(?:azon\\.|mazon\\.com\\b|isit the\\b)/i.test(title))return true;
+ if(!title||/^(?:amazon(?:\.com)?|temu)(?:\s+product)?$/i.test(title)||/^(?:azon\.|mazon\.com\b|isit the\b)/i.test(title))return true;
  if(words.length>=6&&isolated>=2)return true;
- if(/\\b(?:ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries)\\b/i.test(title)&&/\\b(?:isit|azon|rand|omedics|ahome|ndstone)\\b/i.test(title))return true;
+ if(/\b(?:ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries)\b/i.test(title)&&/\b(?:isit|azon|rand|omedics|ahome|ndstone)\b/i.test(title))return true;
  const images=[row?.image_url,...(Array.isArray(row?.image_urls)?row.image_urls:[])].filter(Boolean);
- if(!images.some(image=>/^https?:\\/\\//i.test(String(image))&&!/(?:amazon-avatars-global|transparent-pixel|sprite|spacer|pixel\\b|tracking)/i.test(String(image))))return true;
+ const blocked=/(?:amazon-avatars-global|transparent-pixel|sprite|spacer|pixel\b|tracking)/i;
+ if(!images.some(image=>{try{const url=new URL(String(image));return /^https?:$/.test(url.protocol)&&!blocked.test(url.href);}catch{return false;}}))return true;
  return false;
 }
 async function loadLiveProducts(){
