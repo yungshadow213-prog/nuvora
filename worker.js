@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-skin-studio-free-image-positioning-r29',
+          release:'nuvora-2026-10-23-skin-studio-image-focal-controls-r30',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
