@@ -1128,7 +1128,7 @@ function productReviewFlags(p){
  if(brokenName)flags.push('Title needs review');
  const source=String(p?.source_type||p?.retailer||'').toLowerCase();
  const sourceUrl=String(p?.amazon_source_url||p?.source_url||p?.resolved_url||p?.destination_url||'');
- const sourceAsin=sourceUrl.match(/(?:\\/dp\\/|\\/gp\\/product\\/|\\/gp\\/aw\\/d\\/|[?&]asin=)([A-Z0-9]{10})/i)?.[1]?.toUpperCase()||'';
+ const sourceAsin=sourceUrl.match(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|[?&]asin=)([A-Z0-9]{10})/i)?.[1]?.toUpperCase()||'';
  const storedAsin=String(p?.amazon_asin||'').trim().toUpperCase();
  if(source.includes('amazon')&&storedAsin&&sourceAsin&&storedAsin!==sourceAsin)flags.push('ASIN mismatch');
  if(source.includes('amazon')&&storedAsin&&adminProducts.some(other=>String(other?.id)!==String(p?.id)&&String(other?.source_type||other?.retailer||'').toLowerCase().includes('amazon')&&String(other?.amazon_asin||'').trim().toUpperCase()===storedAsin))flags.push('Possible duplicate');
