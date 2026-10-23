@@ -2760,7 +2760,11 @@ async function uploadSkinStudioImage(input,type,id){
  finally{if(label&&original)label.textContent=original;input.value='';}
 }
 async function persistSkinSiteDraft(quiet=false){
- if(skinDraftSavePromise)return skinDraftSavePromise;
+ if(skinDraftSavePromise){
+  await skinDraftSavePromise;
+  if(JSON.stringify(mergeSkinSiteConfig(skinBuilderConfig))!==skinDraftLastSavedPayload)return persistSkinSiteDraft(quiet);
+  return skinBuilderConfig;
+ }
  const validation=skinConfigValidationMessage(false);
  if(validation){skinBuilderMessage(validation,'error');throw new Error(validation);}
  collectSkinConfigFields();
