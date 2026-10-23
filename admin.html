@@ -1127,7 +1127,7 @@ function productReviewFlags(p){
  const image=String(p?.image_url||p?.image_urls?.[0]||'');
  if(!image||/(?:amazon-avatars-global|transparent-pixel|sprite|spacer|pixel\b|tracking)/i.test(image))flags.push('Image needs review');
  if(!p?.category_id)flags.push('Uncategorized');
- if(p?.description){const description=String(p.description),parts=description.split(/\s+/).filter(Boolean),single=(description.match(/\b[A-Za-z]\b/g)||[]).length;if(parts.length>=12&&single>=Math.max(4,Math.ceil(parts.length*.08)))flags.push('Description needs review');}
+ if(p?.description){const description=String(p.description),parts=description.split(/\s+/).filter(Boolean),single=(description.match(/\b[A-Za-z]\b/g)||[]).length,brokenFragments=/\b(?:mazon\.com|azon\.com|isit\s+the|tore\s+sit|ack\s+cented|ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries|rand\s+ahome|ndstone\s+elief|ometric\s+riptych|omedics\s+tore)\b/i.test(description);if(brokenFragments||(parts.length>=12&&single>=Math.max(4,Math.ceil(parts.length*.08))))flags.push('Description needs review');}
  const destination=String(p?.destination_url||p?.amazon_source_url||p?.source_url||'').trim();
  const retailer=String(p?.retailer||p?.source_type||'').toLowerCase();
  const asin=String(p?.amazon_asin||'').trim().toUpperCase();
