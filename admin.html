@@ -2790,13 +2790,14 @@ async function saveSkinSiteDraft(){
  finally{if(btn){btn.disabled=false;btn.textContent='Save draft';}}
 }
 async function saveSkinSiteConfig(){
+ if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
  const validation=skinConfigValidationMessage();if(validation)return skinBuilderMessage(validation,'error');
  const btn=document.querySelector('button[onclick="saveSkinSiteConfig()"]');if(btn){btn.disabled=true;btn.textContent='Publishing…';}
  skinBuilderMessage('Publishing the current site draft…','info');
  try{
   const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_config:skinBuilderConfig,skin_site_draft:null}});
   skinBuilderConfig=mergeSkinSiteConfig(response?.skin_site_config||skinBuilderConfig);
-  skinSiteDraftExists=false;
+  skinSiteDraftExists=false;skinDraftLastSavedPayload=JSON.stringify(skinBuilderConfig);
   fillSkinConfigFields();sendSkinStudioPreview();skinSetSavedLabel('All changes published');
   skinBuilderMessage('Published. The live Nuvora Skin site now uses this saved configuration. Your saved draft has been cleared.','success');
  }catch(e){skinBuilderMessage('Publish failed: '+(e.message||'unknown error')+'. No live changes were confirmed.','error');}
