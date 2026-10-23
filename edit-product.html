@@ -20,7 +20,7 @@ main{max-width:1280px;margin:auto;padding:28px 24px 70px}.layout{display:grid;gr
 @media(max-width:900px){.layout{grid-template-columns:1fr}.header-inner{padding:13px 15px}.header .actions .btn:not(.primary){display:none}main{padding:18px 12px 50px}.panel{padding:15px}.hero-image{max-height:none}.source-grid{grid-template-columns:1fr}.source-wide{grid-column:auto}}
 @media(max-width:560px){.grid2{grid-template-columns:1fr}.gallery{grid-template-columns:repeat(4,1fr)}.title{font-size:17px}.header-inner{gap:8px}.actions{gap:5px}.btn{padding:9px 10px}}
 </style>
-</head>
+<style id="nuvora-gallery-controls">.gallery-tools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.gallery-tools .btn{font-size:12px}.gallery-tools .btn:disabled{opacity:.45;cursor:not-allowed}</style></head>
 <body>
 <header class="header"><div class="header-inner">
 <a class="back" href="/admin">← Admin</a>
@@ -39,7 +39,8 @@ main{max-width:1280px;margin:auto;padding:28px 24px 70px}.layout{display:grid;gr
 <div class="panel"><h2>Product guide</h2><p>Optional customer-facing information. Add only details supported by the listing or reliable research.</p><div class="field"><label>Key features / highlights</label><textarea id="features" placeholder="A few useful facts customers should know"></textarea></div><div class="field"><label>Benefits / why it is worth a look</label><textarea id="benefits" placeholder="What it does and who may find it useful"></textarea></div><div class="grid2"><div class="field"><label>Ingredients (if relevant)</label><textarea id="ingredients" placeholder="Verified ingredients only"></textarea></div><div class="field"><label>How to use (if relevant)</label><textarea id="usage" placeholder="Directions and frequency from the product label"></textarea></div></div><div class="grid2"><div class="field"><label>Suitable for / skin types</label><textarea id="skinTypes" placeholder="Optional suitability notes"></textarea></div><div class="field"><label>Skin concerns / best for</label><textarea id="skinConcerns" placeholder="Optional use cases or concerns"></textarea></div></div><div class="field"><label>Warnings / cautions</label><textarea id="warnings" placeholder="Precautions or important limitations"></textarea></div></div>
 <div class="panel"><h2>Product images</h2><p>Keep the source gallery or replace/add images. AI-generated images are added as new gallery images so the original is never lost.</p>
 <div class="hero-image" id="hero"></div><div class="gallery" id="gallery"></div>
-<div class="gallery-add"><input type="file" id="imageFiles" accept="image/*" multiple><button class="btn" id="uploadBtn">Upload</button></div>
+<div class="gallery-tools"><button class="btn" id="moveImageLeft" type="button">Move earlier</button><button class="btn" id="moveImageRight" type="button">Move later</button><button class="btn" id="removeImage" type="button">Remove image</button></div>
+<div class="gallery-add"><input type="file" id="imageFiles" accept="image/jpeg,image/png,image/webp,image/gif" multiple><button class="btn" id="uploadBtn">Upload from device</button></div>
 </div>
 <div class="panel"><h2>AI image studio</h2><p>Generate a merchandising image from the current product image while keeping the product identity as the reference.</p>
 <div class="ai-box"><div class="field" style="margin-top:0"><label>Style instruction</label><textarea id="aiPrompt" placeholder="Clean ecommerce studio image, premium neutral background, product clearly visible"></textarea></div><div class="ai-actions"><button class="btn primary" id="aiBtn">Generate image</button><button class="btn" id="useAiBtn" disabled>Use generated image</button></div><div class="ai-preview" id="aiPreview"><img id="aiImg" alt="AI preview"></div><div class="readonly-note" id="aiStatus" style="margin-top:10px">Ready.</div></div>
@@ -82,9 +83,21 @@ function render(){
  $('publishBtn').textContent=product.published?'Unpublish':'Publish';
 }
 function renderGallery(){
- const hero=$('hero');const src=images[selected]||'';hero.innerHTML=src?'<img src="'+esc(src)+'" alt="'+esc(product.name||'Product')+'">':'<span style="color:#98a29b">No image</span>';
- $('gallery').innerHTML=images.map((u,i)=>'<button class="thumb '+(i===selected?'active':'')+'" data-i="'+i+'"><img src="'+esc(u)+'" alt=""></button>').join('');
- document.querySelectorAll('.thumb').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.i);renderGallery()});
+  const hero=$('hero'),src=images[selected]||'';
+  hero.innerHTML=src?'<img src="'+esc(src)+'" alt="'+esc(product.name||'Product')+'">':'<span style="color:#98a29b">No image selected. Upload one from your device.</span>';
+  $('gallery').innerHTML=images.map((u,i)=>'<button class="thumb '+(i===selected?'active':'')+'" data-i="'+i+'" aria-label="Select image '+(i+1)+'"><img src="'+esc(u)+'" alt=""></button>').join('');
+  document.querySelectorAll('.thumb').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.i);renderGallery()});
+  $('moveImageLeft').disabled=selected<=0;$('moveImageRight').disabled=selected<0||selected>=images.length-1;$('removeImage').disabled=!images.length;
+}
+function moveImage(direction){
+  const target=selected+direction;if(target<0||target>=images.length)return;
+  [images[selected],images[target]]=[images[target],images[selected]];selected=target;renderGallery();
+  save().catch(e=>msg('Image order could not be saved: '+e.message,true));
+}
+function removeImage(){
+  if(selected<0||selected>=images.length)return;
+  images.splice(selected,1);selected=Math.max(0,Math.min(selected,images.length-1));renderGallery();
+  save().then(()=>msg('Image removed from the product gallery.')).catch(e=>msg('Image removal could not be saved: '+e.message,true));
 }
 function renderSource(){
   const fields=[
@@ -131,16 +144,30 @@ async function publish(){
   }finally{button.disabled=false;button.textContent=oldLabel;}
 }
 async function upload(){
- const files=[...$('imageFiles').files];if(!files.length)return msg('Choose one or more images first.',true);if(!sb)return msg('Supabase is not connected.',true);
- for(const file of files){if(!file.type.startsWith('image/'))throw new Error(file.name+' is not an image.');if(file.size>6*1024*1024)throw new Error(file.name+' is larger than 6 MB.');
- const ext=(file.name.split('.').pop()||'jpg').replace(/[^a-z0-9]/gi,'')||'jpg';const path='products/'+crypto.randomUUID()+'.'+ext;const r=await sb.storage.from('product-images').upload(path,file,{cacheControl:'31536000',upsert:false});if(r.error)throw r.error;const u=sb.storage.from('product-images').getPublicUrl(path).data.publicUrl;images.push(u);}
- selected=images.length-1;await save();$('imageFiles').value='';msg('Image uploaded and saved.');}
+  const files=[...$('imageFiles').files];if(!files.length)return msg('Choose one or more images first.',true);if(!sb)return msg('Supabase is not connected.',true);
+  const allowed=new Set(['image/jpeg','image/png','image/webp','image/gif']),button=$('uploadBtn'),oldLabel=button.textContent;
+  if(button.disabled)return;button.disabled=true;button.textContent='Uploading…';
+  try{
+    for(const file of files){
+      if(!allowed.has(file.type))throw new Error(file.name+' must be JPG, PNG, WEBP or GIF.');
+      if(file.size>6*1024*1024)throw new Error(file.name+' is larger than 6 MB.');
+      const ext=({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'})[file.type];
+      const path='products/'+crypto.randomUUID()+'.'+ext;
+      const r=await sb.storage.from('product-images').upload(path,file,{cacheControl:'31536000',contentType:file.type,upsert:false});
+      if(r.error)throw r.error;
+      const u=sb.storage.from('product-images').getPublicUrl(path).data.publicUrl;
+      if(!u?.startsWith('https://'))throw new Error('Could not create a public image URL.');
+      images.push(u);
+    }
+    selected=images.length-1;renderGallery();await save();$('imageFiles').value='';msg('Images uploaded and saved.');
+  }finally{button.disabled=false;button.textContent=oldLabel;}
+}
 async function generateAI(){
  if(!images[0])throw new Error('Add a product image first.');$('aiBtn').disabled=true;$('aiStatus').textContent='Generating…';
  try{const fd=new FormData();fd.append('image_url',images[0]);fd.append('size','1024x1024');fd.append('prompt','Create a professional ecommerce advertising image for the exact product in the reference. Preserve the product identity, shape, colors, materials, branding and important physical details. '+($('aiPrompt').value.trim()||'Clean premium ecommerce studio presentation, uncluttered background.'));const r=await fetch('/api/admin/ai/image',{method:'POST',headers:{Authorization:'Bearer '+session.access_token},body:fd});let j={};try{j=await r.json()}catch{}if(!r.ok)throw new Error(j.error||'AI image generation failed.');generated=j.image;$('aiImg').src=generated;$('aiPreview').style.display='block';$('useAiBtn').disabled=false;$('aiStatus').textContent='Generated. Use it to add this image to the product gallery.';}finally{$('aiBtn').disabled=false;}}
 async function useAI(){
  if(!generated)return;const res=await fetch(generated);const blob=await res.blob();const file=new File([blob],'nuvora-ai-'+crypto.randomUUID()+'.png',{type:blob.type||'image/png'});const ext='png';const path='products/'+crypto.randomUUID()+'.'+ext;const r=await sb.storage.from('product-images').upload(path,file,{cacheControl:'31536000',upsert:false});if(r.error)throw r.error;images.push(sb.storage.from('product-images').getPublicUrl(path).data.publicUrl);selected=images.length-1;await save();$('useAiBtn').disabled=true;generated=null;msg('AI image added to the product gallery.');}
-$('saveBtn').onclick=()=>save().catch(e=>msg(e.message,true));$('syncBtn').onclick=()=>syncSource().catch(e=>msg(e.message,true));$('publishBtn').onclick=()=>publish().catch(e=>msg(e.message,true));$('uploadBtn').onclick=()=>upload().catch(e=>msg(e.message,true));$('aiBtn').onclick=()=>generateAI().catch(e=>{$('aiStatus').textContent=e.message;msg(e.message,true)});$('useAiBtn').onclick=()=>useAI().catch(e=>msg(e.message,true));$('previewBtn').onclick=()=>{if(product?.slug)window.open('/product/'+encodeURIComponent(product.slug),'_blank','noopener');else msg('This product does not have a valid slug yet.',true)};
+$('saveBtn').onclick=()=>save().catch(e=>msg(e.message,true));$('syncBtn').onclick=()=>syncSource().catch(e=>msg(e.message,true));$('publishBtn').onclick=()=>publish().catch(e=>msg(e.message,true));$('uploadBtn').onclick=()=>upload().catch(e=>msg(e.message,true));$('moveImageLeft').onclick=()=>moveImage(-1);$('moveImageRight').onclick=()=>moveImage(1);$('removeImage').onclick=()=>removeImage();$('aiBtn').onclick=()=>generateAI().catch(e=>{$('aiStatus').textContent=e.message;msg(e.message,true)});$('useAiBtn').onclick=()=>useAI().catch(e=>msg(e.message,true));$('previewBtn').onclick=()=>{if(product?.slug)window.open('/product/'+encodeURIComponent(product.slug),'_blank','noopener');else msg('This product does not have a valid slug yet.',true)};
 (async()=>{try{const cfg=await fetch('/api/config').then(r=>r.json());sb=supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);const s=await sb.auth.getSession();session=s.data.session;if(!session){location.href='/admin';return;}const id=new URLSearchParams(location.search).get('id');if(!id)throw new Error('Product ID is missing.');product=await api('/api/admin/products/'+encodeURIComponent(id));render();}catch(e){document.body.innerHTML='<main style="padding:40px;font-family:system-ui"><h2>Could not open product</h2><p>'+esc(e.message)+'</p><a href="/admin">Back to admin</a></main>';}})();
 </script>
 </body></html>
