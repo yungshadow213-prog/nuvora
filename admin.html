@@ -1144,6 +1144,43 @@ function productReviewFlags(p){
  if(asin&&Array.isArray(adminProducts)&&adminProducts.some(other=>String(other?.id)!==String(p?.id)&&String(other?.amazon_asin||'').trim().toUpperCase()===asin))flags.push('Duplicate ASIN');
  return flags;
 }
+async function refreshAmazonDraft(id){
+ const p=adminProducts.find(item=>String(item.id)===String(id));
+ if(!p){setAdminStatus('This product is no longer in the current catalog. Refresh the product library and try again.','error');return;}
+ if(p.published){setAdminStatus('Unpublish this product before refreshing its source. Refreshing always saves as a draft for review.','error');return;}
+ const source=String(p.amazon_source_url||p.source_url||p.resolved_url||p.destination_url||'').trim();
+ if(!/^https?:\/\/(?:www\.)?amazon\./i.test(source)){setAdminStatus('No Amazon source URL is saved for this draft. Open Edit and add the original Amazon listing URL.','error');return;}
+ const buttons=[...document.querySelectorAll('[data-product-refresh]')].filter(button=>String(button.dataset.productRefresh)===String(id));
+ if(buttons.some(button=>button.disabled))return;
+ buttons.forEach(button=>{button.disabled=true;button.dataset.originalLabel=button.textContent;button.textContent='Refreshing…';});
+ setAdminStatus('Re-reading the original Amazon listing. Your current draft will not be published automatically.','info');
+ let sourceRefreshSaved=false;
+ try{
+  const prepared=await api('/api/amazon/prepare',{method:'POST',body:{url:source}});
+  const listing=prepared?.listing||{};
+  const title=String(listing.title||'').trim();
+  const titleFlags=productReviewFlags({...p,name:title});
+  if(!title||titleFlags.includes('Title needs review'))throw new Error('Amazon did not return a reliable product title. Your existing draft was left unchanged.');
+  const patch={name:title,published:false,last_checked_at:new Date().toISOString(),amazon_last_synced:new Date().toISOString()};
+  if(listing.brand&&String(listing.brand).trim())patch.brand=String(listing.brand).trim().slice(0,180);
+  const description=String(listing.description||'').trim();
+  const descriptionWords=description.split(/\s+/).filter(Boolean);
+  const fragmentedDescription=descriptionWords.length>=12&&(((description.match(/\b[A-Za-z]\b/g)||[]).length>=Math.max(4,Math.ceil(descriptionWords.length*.08)))||((description.match(/\b[A-Za-z]{2,}\s+[A-Za-z]\b/g)||[]).length>=5));
+  if(description.length>=40&&!fragmentedDescription)patch.description=description.slice(0,12000);
+  const rawFeatures=listing.features;
+  const features=Array.isArray(rawFeatures)?rawFeatures.filter(Boolean).join('\n'):String(rawFeatures||'').trim();
+  if(features)patch.features=features.slice(0,12000);
+  const images=Array.isArray(listing.images)?[...new Set(listing.images.filter(validURL))].slice(0,30):[];
+  if(images.length){patch.image_urls=images;patch.image_url=images[0];}
+  if(listing.rating!=null&&Number.isFinite(Number(listing.rating)))patch.amazon_rating=Number(listing.rating);
+  if(listing.review_count!=null&&Number.isFinite(Number(listing.review_count)))patch.amazon_review_count=Number(listing.review_count);
+  await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body:patch});
+  sourceRefreshSaved=true;
+  await liveAdminProducts();
+  setAdminStatus('Source refreshed for “'+title+'”. The product remains a draft; review its details and images before publishing.','success');
+ }catch(error){setAdminStatus(sourceRefreshSaved?'The source refresh was saved as a draft, but the product list could not be refreshed. Reload the product library to confirm it.':(error.message||'Could not refresh this Amazon listing. The draft was not published.'),'error');}
+ finally{buttons.forEach(button=>{button.disabled=false;button.textContent=button.dataset.originalLabel||'Refresh source';delete button.dataset.originalLabel;});}
+}
 function renderProducts(){
   const el=document.getElementById('productRows');
   if(!adminProducts.length){
@@ -1152,7 +1189,7 @@ function renderProducts(){
     el.innerHTML=adminProducts.map(p=>{
       const dest=retailerDestination(p),label=retailerLabel(p),flags=productReviewFlags(p);
       const image=p.image_url&&/^https?:\/\//i.test(String(p.image_url))?'<img class="admin-product-thumb" src="'+esc(p.image_url)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'<span class="admin-product-thumb" aria-hidden="true"></span>';
-      return '<div class="row"><div class="admin-product-leading">'+image+'<div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</div>'+(flags.length?'<div class="admin-product-flags">'+flags.map(flag=>'<span class="tag quality-warning">'+esc(flag)+'</span>').join('')+'</div>':'<div class="admin-product-flags"><span class="tag quality-good">Basic checks passed</span></div>')+'</div></div><div class="product-row-actions"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit</button><button class="btn" data-product-publish="'+esc(p.id)+'" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';
+      return '<div class="row"><div class="admin-product-leading">'+image+'<div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</div>'+(flags.length?'<div class="admin-product-flags">'+flags.map(flag=>'<span class="tag quality-warning">'+esc(flag)+'</span>').join('')+'</div>':'<div class="admin-product-flags"><span class="tag quality-good">Basic checks passed</span></div>')+'</div></div><div class="product-row-actions"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+(!p.published&&label==='Amazon'&&(p.amazon_source_url||p.source_url||p.resolved_url||p.destination_url)?'<button class="btn" data-product-refresh="'+esc(p.id)+'" onclick="refreshAmazonDraft(\''+esc(p.id)+'\')">Refresh source</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit</button><button class="btn" data-product-publish="'+esc(p.id)+'" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';
     }).join('');
   }
   updateCounts();
