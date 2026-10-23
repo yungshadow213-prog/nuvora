@@ -793,7 +793,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
             <div class="field full"><label for="skinCfgHeroEyebrow">Eyebrow</label><input id="skinCfgHeroEyebrow" maxlength="100"></div>
             <div class="field full"><label for="skinCfgHeroTitle">Headline</label><input id="skinCfgHeroTitle" maxlength="180"></div>
             <div class="field full"><label for="skinCfgHeroDescription">Description</label><textarea id="skinCfgHeroDescription" maxlength="1200"></textarea></div>
-            <div class="field full"><label for="skinCfgHeroImage">Hero image URL</label><input id="skinCfgHeroImage" type="url" placeholder="https://…"><div class="muted">Use an image you own or have permission to use. Product image uploads remain in the product editor.</div></div>
+            <div class="field full"><label for="skinCfgHeroImage">Hero image URL</label><input id="skinCfgHeroImage" type="url" placeholder="https://…"><label style="display:grid;gap:6px;margin-top:8px;font-size:11px;color:#647267;font-weight:750">Or upload a hero image from your device<input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,'hero','home')" style="width:100%;padding:9px;border:1px solid #dfe6dd;border-radius:9px;background:#fbfcfa"></label><div class="muted">Use an image you own or have permission to use. JPG, PNG, WEBP or GIF · up to 6 MB.</div></div>
             <div class="field"><label for="skinCfgHeroButton">Button label</label><input id="skinCfgHeroButton" maxlength="45"></div>
           </div>
         </section>
@@ -1080,7 +1080,7 @@ function renderSkinProducts(){
   if(notice)notice.textContent=cat?'Using category “'+cat.name+'”. Products assigned to this category are routed to Nuvora Skin.':'Create the Skin Care category first; the setup button will create it without changing existing products.';
   renderSkinBuilderSections();
   if(!rows.length){el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No skincare products yet. Use “Add skincare product” to import an Amazon listing; Nuvora assigns the Skin Care category automatically.</div>';return;}
-  el.innerHTML=rows.map(p=>{const dest=retailerDestination(p),label=retailerLabel(p);return '<div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+'</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+'<button class="btn" onclick="editSkinProduct(\''+p.id+'\')">Edit</button><button class="btn" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';}).join('');
+  el.innerHTML=rows.map(p=>{const dest=retailerDestination(p),label=retailerLabel(p);return '<div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+'</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" type="button" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+'<button class="btn" type="button" onclick="editSkinProduct('+esc(JSON.stringify(String(p.id)))+')">Edit</button><button class="btn" type="button" onclick="togglePublish('+esc(JSON.stringify(String(p.id)))+')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" type="button" onclick="removeProduct('+esc(JSON.stringify(String(p.id)))+')">Delete</button></div></div>';}).join('');
 }
 async function ensureSkinCategory(openForm=false){
   try{
@@ -1237,8 +1237,8 @@ function setProductForm(p){
   const skinConcerns=document.getElementById('pfSkinConcerns');if(skinConcerns)skinConcerns.value=p.skin_concerns||'';
   const skinAvoid=document.getElementById('pfSkinAvoid');if(skinAvoid)skinAvoid.value=p.skip_if||'';
   const recommendationReason=document.getElementById('pfRecommendationReason');if(recommendationReason)recommendationReason.value=p.recommendation_reason||'';
-  const imgs=p.image_urls||((p.image_url)?[p.image_url]:[]);
-  document.getElementById('pfImages').value=imgs.filter(Boolean).join('\\n');
+  const imgs=Array.isArray(p.image_urls)&&p.image_urls.length?p.image_urls:(p.image_url?[p.image_url]:[]);
+  document.getElementById('pfImages').value=imgs.filter(Boolean).join('\n');
   renderProductImages();
 }
 async function uploadProductImages(){
@@ -1278,7 +1278,7 @@ function renderProductImages(){
 }
 function removeProductImage(i){
   const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean); urls.splice(i,1);
-  document.getElementById('pfImages').value=urls.join('\\n'); renderProductImages();
+  document.getElementById('pfImages').value=urls.join('\n'); renderProductImages();
 }
 async function openAIStudio(){
   document.body.classList.add('admin-workspace-open');
@@ -1568,9 +1568,9 @@ async function saveProductDraft(){
     skip_if:window.skinCareImportMode?(document.getElementById('pfSkinAvoid').value.trim()||null):null,
     recommended_product_ids:window.skinCareImportMode?Array.from(document.getElementById('pfRecommendedProducts').selectedOptions).map(o=>o.value):[],
     recommendation_reason:window.skinCareImportMode?(document.getElementById('pfRecommendationReason').value.trim()||null):null,
-    featured:window.skinCareImportMode?document.getElementById('pfSkinFeatured').checked:!!adminProducts.find(x=>x.id===window.editingProductId)?.featured,
-    top_pick:window.skinCareImportMode?document.getElementById('pfSkinTopPick').checked:!!adminProducts.find(x=>x.id===window.editingProductId)?.top_pick,
-    trending:window.skinCareImportMode?document.getElementById('pfSkinTrending').checked:!!adminProducts.find(x=>x.id===window.editingProductId)?.trending,
+    featured:window.skinCareImportMode?document.getElementById('pfSkinFeatured').checked:!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.featured,
+    top_pick:window.skinCareImportMode?document.getElementById('pfSkinTopPick').checked:!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.top_pick,
+    trending:window.skinCareImportMode?document.getElementById('pfSkinTrending').checked:!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.trending,
     ingredients:document.getElementById('pfIngredients').value.trim()||null,usage_instructions:document.getElementById('pfUsage').value.trim()||null,product_warnings:document.getElementById('pfWarnings').value.trim()||null,product_size:document.getElementById('pfProductSize').value.trim()||null,
     image_url:images[0]||null,image_urls:images,display_price:window.skinCareImportMode?null:(document.getElementById('pfPrice').value===''?null:Number(document.getElementById('pfPrice').value)),
     amazon_list_price:window.skinCareImportMode?null:(document.getElementById('pfListPrice').value===''?null:Number(document.getElementById('pfListPrice').value)),
@@ -1586,7 +1586,7 @@ async function saveProductDraft(){
     sourcinbox_product_url:document.getElementById('pfSourcinboxUrl').value.trim()||null,
     sourcinbox_product_id:document.getElementById('pfSourcinboxId').value.trim()||null,
     supplier_cost:document.getElementById('pfSupplierCost').value===''?null:Number(document.getElementById('pfSupplierCost').value),
-    published:window.editingProductId?!!adminProducts.find(x=>x.id===window.editingProductId)?.published:false
+    published:window.editingProductId?!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.published:false
   };
   if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer='Amazon';}
   try{
@@ -2125,7 +2125,7 @@ function collectSkinConfigFields(){
  skinBuilderConfig.productGuideFields=skinBuilderConfig.productGuideFields||{};
  Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig.productGuideFields[key]=!!el.checked;});
  const hero=skinBuilderConfig.sections.find(x=>x.type==='hero');
- if(hero){hero.title=skinBuilderConfig.heroTitle;hero.eyebrow=skinBuilderConfig.heroEyebrow;hero.text=skinBuilderConfig.heroDescription;if(!hero.image)hero.image=skinBuilderConfig.heroImage;}
+ if(hero){hero.title=skinBuilderConfig.heroTitle;hero.eyebrow=skinBuilderConfig.heroEyebrow;hero.text=skinBuilderConfig.heroDescription;hero.image=skinBuilderConfig.heroImage;}
  const editorial=skinBuilderConfig.sections.find(x=>x.type==='editorial');
  if(editorial){editorial.title=skinBuilderConfig.approachTitle;editorial.eyebrow=skinBuilderConfig.approachEyebrow;editorial.text=skinBuilderConfig.approachBody;}
 }
@@ -2254,7 +2254,7 @@ function renderSkinSelectedInspector(){
   let html='<label class="studio-inspector-field"><span>Section type</span><select onchange="updateSkinSection('+index+',\'type\',this.value)">'+Object.entries(types).map(([val,label])=>'<option value="'+val+'" '+(sec.type===val?'selected':'')+'>'+label+'</option>').join('')+'</select></label>';
   html+=field('Section title','title',sec.title,'text','180')+field('Small heading / eyebrow','eyebrow',sec.eyebrow,'text','100')+field('Supporting text','text',sec.text,'textarea','3000');
   html+=field('Section background','backgroundColor',sec.backgroundColor||'#ffffff','color','7');
-  if(sec.type==='hero'||sec.type==='editorial')html+=field('Section image URL','image',sec.image||'','url','1600');
+  if(sec.type==='hero'||sec.type==='editorial')html+=field('Section image URL','image',sec.image||'','url','1600')+'<label class="studio-inspector-field"><span>Upload section image from your device</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'section\','+index+')"><small class="studio-inline-help">JPG, PNG, WEBP or GIF · up to 6 MB.</small></label>';
   html+='<label class="studio-inspector-check"><input type="checkbox" '+(sec.visible!==false?'checked':'')+' onchange="updateSkinSection('+index+',\'visible\',this.checked)"> Show this section on the published page</label>';
   if(sec.type==='product-grid'||sec.type==='featured-products'){
    const activeIds=new Set((sec.product_ids||[]).map(String));
@@ -2352,7 +2352,7 @@ function toggleSkinAddMenu(){
 }
 function openSkinAdd(type){
  const menu=document.getElementById('skinStudioAddMenu');if(menu)menu.hidden=true;
- if(type==='product'){switchSkinStudioTab('products');const quick=document.getElementById('skinQuickAddPanel');if(quick)quick.hidden=true;renderSkinLibrary();return;}
+ if(type==='product'){openSkinManualProduct();return;}
  skinQuickAddType=type;
  const panel=document.getElementById('skinQuickAddPanel');if(!panel)return;
  panel.hidden=false;
@@ -2663,6 +2663,11 @@ async function uploadSkinStudioImage(input,type,id){
    updateSkinSection(Number(id),'image',data.publicUrl);
   }else if(type==='category'){
    updateSkinCategory(String(id),'image',data.publicUrl);
+  }else if(type==='hero'){
+   skinBuilderConfig.heroImage=data.publicUrl;
+   const hero=(skinBuilderConfig.sections||[]).find(section=>section.type==='hero');if(hero)hero.image=data.publicUrl;
+   const heroField=document.getElementById('skinCfgHeroImage');if(heroField)heroField.value=data.publicUrl;
+   skinMarkDirty('Hero image added to the draft.');renderSkinStudioAll();queueSkinStudioPreview();
   }
   skinBuilderMessage('Image uploaded and added to this draft. Save draft to keep it; publish when ready.','success');
  }catch(e){skinBuilderMessage('Image upload failed: '+(e.message||e),'error');}
@@ -2728,12 +2733,14 @@ async function openSkinManualProduct(){
   document.getElementById('amazonUrlInput').placeholder='Optional: paste an Amazon product link to import details';
   populateSkinRecommendations();
   document.getElementById('productModal').classList.add('open');
+  document.getElementById('pfName')?.focus();
  }catch(e){skinBuilderMessage('Could not open manual product editor: '+(e.message||e),'error');}
 }
 async function editSkinProduct(id){
  try{
-  const p=adminProducts.find(x=>String(x.id)===String(id));
-  if(!p)throw new Error('Product not found in the skincare catalog. Refresh the Products tab and try again.');
+  let p=adminProducts.find(x=>String(x.id)===String(id));
+  if(!p){await liveAdminProducts();p=adminProducts.find(x=>String(x.id)===String(id));}
+  if(!p)throw new Error('Product not found in the skincare catalog after refreshing the catalog. Try reloading Skin Studio.');
   if(!categories.length)await loadCategories();
   openProductModal(false);window.skinCareImportMode=true;window.editingProductId=String(id);setSkinAdminFormMode(true);
   document.getElementById('productModalTitle').textContent='Edit skincare product';
@@ -2747,6 +2754,7 @@ async function editSkinProduct(id){
   populateSkinRecommendations(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids:[]);
   document.getElementById('pfPrice').value='';document.getElementById('pfListPrice').value='';document.getElementById('pfDiscount').value='';
   document.getElementById('productModal').classList.add('open');
+  document.getElementById('pfName')?.focus();
  }catch(e){skinBuilderMessage('Could not open the product editor: '+(e.message||e),'error');}
 }
 
