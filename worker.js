@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-manual-import-duplicate-guard-r36',
+          release:'nuvora-2026-10-23-fail-closed-publish-guard-r37',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -323,15 +323,14 @@ async function publishProductRecord(env,id,patch={}){
   if(!merged.destination_url)return {ok:false,status:400,error:'This product has no valid retailer URL. Import the retailer link or provide a destination URL before publishing.'};
   const validation=validateProduct(merged);
   if(validation)return {ok:false,status:400,error:validation};
-  const amazonIdentity=asinFromUrl(merged.amazon_source_url||merged.destination_url)||String(merged.amazon_asin||'').trim();
+  const amazonIdentity=asinFromUrl(merged.destination_url)||asinFromUrl(merged.amazon_source_url)||String(merged.amazon_asin||'').trim();
   const amazonLike=/amazon/i.test(String(merged.retailer||merged.source_type||''))||!!amazonIdentity;
   if(amazonLike&&amazonIdentity){
     const duplicateQuery='?select=id,name,amazon_asin,amazon_source_url,destination_url&published=eq.true&id=neq.'+encodeURIComponent(id)+'&or=(amazon_asin.eq.'+encodeURIComponent(amazonIdentity)+',amazon_source_url.ilike.*'+encodeURIComponent(amazonIdentity)+'*,destination_url.ilike.*'+encodeURIComponent(amazonIdentity)+'*)&limit=1';
     const duplicateResponse=await supabaseRest(env,'GET','products',undefined,duplicateQuery);
-    if(duplicateResponse.ok){
-      const duplicate=(await duplicateResponse.json())?.[0];
-      if(duplicate)return {ok:false,status:409,error:'This Amazon product is already published as “'+cleanText(duplicate.name,180)+'”. Unpublish or edit the existing listing instead of publishing a duplicate.'};
-    }
+    if(!duplicateResponse.ok)return {ok:false,status:502,error:'Could not verify whether this Amazon product is already published. Please retry before publishing.'};
+    const duplicate=(await duplicateResponse.json())?.[0];
+    if(duplicate)return {ok:false,status:409,error:'This Amazon product is already published as “'+cleanText(duplicate.name,180)+'”. Unpublish or edit the existing listing instead of publishing a duplicate.'};
   }
   const write={published:true,slug:merged.slug,destination_url:destination,updated_at:new Date().toISOString()};
   if(patch.amazon_source_url||current.amazon_source_url)write.amazon_source_url=patch.amazon_source_url||current.amazon_source_url;
