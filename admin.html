@@ -468,6 +468,19 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
 .quality-good{background:#eaf5ec!important;border-color:#c7e4ce!important;color:#2f6840!important}
 .product-row-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
 @media(max-width:700px){.admin-product-thumb{width:44px;height:44px;flex-basis:44px}.product-row-actions{justify-content:flex-start;width:100%}}
+</style><style id="nuvora-catalog-health-cards">
+.catalog-health-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 16px}
+.catalog-health-card{appearance:none;width:100%;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;padding:15px 16px;border:1px solid var(--line);border-radius:15px;background:var(--paper);color:var(--ink);cursor:pointer;transition:border-color .18s,transform .18s,box-shadow .18s}
+.catalog-health-card:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:0 8px 22px rgba(25,40,30,.06)}
+.catalog-health-card strong{display:block;font-size:24px;line-height:1.1;letter-spacing:-.04em}
+.catalog-health-card span{display:block;margin-top:5px;font-size:11px;line-height:1.4;color:var(--muted)}
+.catalog-health-card em{font-style:normal;font-size:17px;color:var(--muted)}
+.catalog-health-card.attention{border-color:#e9cba5;background:#fffaf4}
+.catalog-health-card.attention strong,.catalog-health-card.attention em{color:#92551b}
+.catalog-health-card.healthy{border-color:#cfe2d2;background:#f7fbf7}
+.catalog-health-card.healthy strong{color:#326744}
+@media(max-width:900px){.catalog-health-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.catalog-health-grid{gap:7px}.catalog-health-card{padding:12px 11px;border-radius:12px}.catalog-health-card strong{font-size:21px}.catalog-health-card span{font-size:10px}}
 </style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
 <button data-icon="↥" onclick="show('import',this)">Import</button>
@@ -628,6 +641,12 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
     <div class="catalog-filter-note"><span class="filter-dot"></span><span>Drafts stay private until published.</span></div>
   </div>
 
+  <div class="catalog-health-grid" aria-label="Catalog health summary">
+    <button class="catalog-health-card" type="button" onclick="setCatalogFilter('published')"><div><strong id="catalogHealthPublished">—</strong><span>Published products</span></div><em>↗</em></button>
+    <button class="catalog-health-card" type="button" onclick="setCatalogFilter('drafts')"><div><strong id="catalogHealthDrafts">—</strong><span>Private drafts</span></div><em>↗</em></button>
+    <button class="catalog-health-card attention" type="button" onclick="setCatalogFilter('needs-review')"><div><strong id="catalogHealthReview">—</strong><span>Need a quality review</span></div><em>↗</em></button>
+    <button class="catalog-health-card" type="button" onclick="setCatalogFilter('uncategorized')"><div><strong id="catalogHealthUncategorized">—</strong><span>Uncategorized</span></div><em>↗</em></button>
+  </div>
   <div class="panel catalog-panel">
     <div class="catalog-panel-head"><div><span class="section-kicker">Live catalog</span><h2>Product library</h2></div><span class="library-note">Edit · Publish · Delete</span></div>
     <div id="productRows" class="product-library"></div>
@@ -1222,6 +1241,21 @@ async function refreshFlaggedAmazonDrafts(){
    if(button){button.disabled=false;button.textContent=button.dataset.originalLabel||'Repair flagged Amazon drafts';delete button.dataset.originalLabel;}
  }
 }
+function setCatalogFilter(filter){
+ const select=document.getElementById('adminProductFilter');
+ if(select)select.value=filter;
+ renderProducts();
+ document.getElementById('productRows')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderCatalogHealth(){
+ const count=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=String(value);};
+ count('catalogHealthPublished',adminProducts.filter(p=>p.published).length);
+ count('catalogHealthDrafts',adminProducts.filter(p=>!p.published).length);
+ count('catalogHealthReview',adminProducts.filter(p=>productReviewFlags(p).length>0).length);
+ count('catalogHealthUncategorized',adminProducts.filter(p=>!p.category_id).length);
+ const review=document.querySelector('.catalog-health-card.attention');
+ if(review)review.classList.toggle('healthy',adminProducts.length>0&&adminProducts.every(p=>productReviewFlags(p).length===0));
+}
 function renderProducts(){
   const el=document.getElementById('productRows');
   const query=String(document.getElementById('adminProductSearch')?.value||'').trim().toLowerCase();
@@ -1249,6 +1283,7 @@ function renderProducts(){
       return '<div class="row"><div class="admin-product-leading">'+image+'<div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</div>'+(flags.length?'<div class="admin-product-flags">'+flags.map(flag=>'<span class="tag quality-warning">'+esc(flag)+'</span>').join('')+'</div>':'<div class="admin-product-flags"><span class="tag quality-good">Basic checks passed</span></div>')+'</div></div><div class="product-row-actions"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+(!p.published&&label==='Amazon'&&(p.amazon_source_url||p.source_url||p.resolved_url||p.destination_url)?'<button class="btn" data-product-refresh="'+esc(p.id)+'" onclick="refreshAmazonDraft(\''+esc(p.id)+'\')">Refresh source</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit</button><button class="btn" data-product-publish="'+esc(p.id)+'" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';
     }).join('');
   }
+  renderCatalogHealth();
   updateCounts();
 }
 function openRetailerLink(url){
