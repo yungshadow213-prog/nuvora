@@ -1619,9 +1619,9 @@ async function saveProductDraft(){
     top_pick:window.skinCareImportMode?document.getElementById('pfSkinTopPick').checked:!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.top_pick,
     trending:window.skinCareImportMode?document.getElementById('pfSkinTrending').checked:!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.trending,
     ingredients:document.getElementById('pfIngredients').value.trim()||null,usage_instructions:document.getElementById('pfUsage').value.trim()||null,product_warnings:document.getElementById('pfWarnings').value.trim()||null,product_size:document.getElementById('pfProductSize').value.trim()||null,
-    image_url:images[0]||null,image_urls:images,display_price:window.skinCareImportMode?null:(document.getElementById('pfPrice').value===''?null:Number(document.getElementById('pfPrice').value)),
-    amazon_list_price:window.skinCareImportMode?null:(document.getElementById('pfListPrice').value===''?null:Number(document.getElementById('pfListPrice').value)),
-    amazon_discount_percent:window.skinCareImportMode?null:(document.getElementById('pfDiscount').value===''?null:Number(document.getElementById('pfDiscount').value)),
+    image_url:images[0]||null,image_urls:images,display_price:null,
+    amazon_list_price:null,
+    amazon_discount_percent:null,
     amazon_deal_text:document.getElementById('pfDeal').value.trim()||null,amazon_rating:document.getElementById('pfRating').value===''?null:Number(document.getElementById('pfRating').value),
     amazon_review_count:document.getElementById('pfReviews').value===''?null:Number(document.getElementById('pfReviews').value),amazon_bought_past_month:document.getElementById('pfBought').value.trim()||null,
     amazon_shipping_text:document.getElementById('pfShipping').value.trim()||null,amazon_tax_text:document.getElementById('pfTax').value.trim()||null,amazon_variations:parseProductVariations(document.getElementById('pfVariations').value),
@@ -2833,8 +2833,9 @@ async function saveSkinSiteConfig(){
 }
 function setSkinAdminFormMode(enabled){
  document.body.classList.toggle('skin-admin-mode',!!enabled);
- const hideIds=['pfKind','pfSource','pfPrice','pfListPrice','pfDiscount','pfCurrency','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax','pfVariations','pfCategory','pfCollection','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost'];
- hideIds.forEach(id=>{const el=document.getElementById(id),field=el?.closest('.field');if(field)field.style.display=enabled?'none':'';});
+ const priceIds=['pfPrice','pfListPrice','pfDiscount','pfCurrency','pfDeal'];
+ const hideIds=['pfKind','pfSource',...priceIds,'pfRating','pfReviews','pfBought','pfShipping','pfTax','pfVariations','pfCategory','pfCollection','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost'];
+ hideIds.forEach(id=>{const el=document.getElementById(id),field=el?.closest('.field');if(field)field.style.display=(enabled||priceIds.includes(id))?'none':'';});
  const discover=document.getElementById('amazonSearchUrlInput')?.closest('.importbar');if(discover)discover.style.display=enabled?'none':'';
  const discoveryStatus=document.getElementById('amazonDiscoveryStatus');if(discoveryStatus)discoveryStatus.style.display=enabled?'none':'';
  const retailer=document.getElementById('pfRetailer');if(retailer){retailer.readOnly=!!enabled;if(enabled)retailer.value='Amazon';}
