@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-catalog-quality-r21',
+          release:'nuvora-2026-10-23-import-quality-r22',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -1104,27 +1104,24 @@ async function ingestSourceProduct(sourceUrl,env){
             const dup=await supabaseRest(env,'GET','products',undefined,identityQuery);
             const rows=dup.ok?await dup.json():[];
             if(rows[0]){skipped++;results.push({ok:true,status:'skipped',retailer,source_url:sourceUrl,name:rows[0].name||'Existing product',reason:'Already imported',id:rows[0].id,duration_ms:Date.now()-started});continue;}
-            const title=smartProductTitle(listing.title||'',listing.brand||'') || (()=>{try{
-              const u=new URL(listing.resolved_url||sourceUrl);
-              const path=decodeURIComponent(u.pathname).split('/').filter(Boolean);
-              const dp=path.findIndex(x=>x.toLowerCase()==='dp');
-              const raw=dp>0?path[dp-1]:path[path.length-1];
-              return smartProductTitle(String(raw||'').replace(/[-_+]+/g,' '),listing.brand||'') || (retailer+' product');
-            }catch{return retailer+' product';}})();
-            if(title===retailer+' product'&&looksFragmentedText(String(listing.title||'')))throw new Error('The retailer returned unreadable product text. Try the direct product URL again or use the Amazon API fallback.');
-            const images=dedupeImages(listing.images,60);
+            const rawTitle=cleanText(listing.title,300);
+            const titleIssue=productTitleQualityIssue(rawTitle);
+            if(!rawTitle||titleIssue||looksFragmentedText(rawTitle))throw new Error(titleIssue||'The retailer returned unreadable product text. This link was not saved. Try the direct product URL again or use a retailer API fallback.');
+            const title=smartProductTitle(rawTitle,listing.brand||'');
+            if(!title||productTitleQualityIssue(title)||looksFragmentedText(title))throw new Error('The product title could not be cleaned reliably. This link was not saved; correct the source details and retry.');
+            const normalized=normalizeAmazonListing(listing);
+            const images=dedupeImages(normalized.images,60);
             if(!images.length)throw new Error('The retailer did not expose a usable product image.');
-            const features=Array.isArray(listing.features)?listing.features.filter(Boolean).slice(0,20):[];
-            let description=cleanMultilineText(listing.description,12000)||'';
+            const features=Array.isArray(normalized.features)?normalized.features.filter(Boolean).slice(0,20):[];
+            let description=cleanMultilineText(normalized.description,12000)||'';
             if(description.length<120){
               const detailParts=[];
-              if(Array.isArray(listing.features))detailParts.push(...listing.features.map(v=>cleanMultilineText(v,500)).filter(v=>v&&v.length>10).slice(0,10));
-              if(Array.isArray(listing.specifications))detailParts.push(...listing.specifications.map(x=>cleanMultilineText(Array.isArray(x)?String(x[0])+': '+String(x[1]):String(x),500)).filter(v=>v&&v.length>4).slice(0,10));
-              const intro=listing.brand?String(listing.brand)+' presents '+String(title)+'.':'This product, '+String(title)+', is described by the following source details.';
+              if(Array.isArray(normalized.features))detailParts.push(...normalized.features.map(v=>cleanMultilineText(v,500)).filter(v=>v&&v.length>10).slice(0,10));
+              if(Array.isArray(normalized.specifications))detailParts.push(...normalized.specifications.map(x=>cleanMultilineText(Array.isArray(x)?String(x[0])+': '+String(x[1]):String(x),500)).filter(v=>v&&v.length>4).slice(0,10));
+              const intro=normalized.brand?String(normalized.brand)+' presents '+String(title)+'.':'This product, '+String(title)+', is described by the following source details.';
               description=cleanMultilineText(intro+(detailParts.length?'\n\nKey details: '+detailParts.join(' • '):''),12000);
             }
             description=description||null;
-            const normalized=normalizeAmazonListing(listing);
             const category_id=autoCategory(title,description,normalized.brand,categories);
             const product={
               name:title,kind:'find',brand:normalized.brand||null,description,features:features.join('\n')||null,
@@ -1467,7 +1464,8 @@ async function scrapeTemuListing(temuUrl){
         let listing=await scrapeTemuListing(temuUrl);
         if(listing?.error)return json(listing,502);
         listing.title=cleanImportedTitle(listing.title,listing.brand);
-        const titleHint=(listing?.title||'Temu product').replace(/\s+/g,' ').trim().slice(0,180);
+        if(!listing.title||productTitleQualityIssue(listing.title)||looksFragmentedText(listing.title))return json({error:'Temu returned an incomplete or corrupted product title. Nothing was imported; retry the direct listing URL or edit the source details first.'},502);
+        const titleHint=listing.title.replace(/\s+/g,' ').trim().slice(0,180);
         let category_id=null;
         try{const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cats.ok)category_id=autoCategory(titleHint,listing?.description||'','',await cats.json());}catch(e){}
         let duplicate=null;
@@ -1809,9 +1807,9 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           // title rewrite on every public read: repeated cleanup can damage
           // perfectly good titles/descriptions. If a legacy description is
           // visibly fragmented, prefer the clean editorial description.
-          const publicDescription=storedDescription&&!looksFragmentedText(storedDescription)
-            ?storedDescription
-            :(curatedDescription&&!looksFragmentedText(curatedDescription)?curatedDescription:storedDescription||normalized.description);
+          const publicDescription=curatedDescription&&!looksFragmentedText(curatedDescription)
+            ?curatedDescription
+            :(storedDescription&&!looksFragmentedText(storedDescription)?storedDescription:normalized.description);
           const storedFeatures=safeText(source.features);
           const publicFeatures=storedFeatures&&!looksFragmentedText(storedFeatures)?storedFeatures:null;
           const isAmazonSource=/amazon/i.test(String(source.retailer||source.source_type||''))||!!source.amazon_asin||!!source.amazon_source_url;
@@ -2132,14 +2130,12 @@ function repairFragmentedText(value){
 }
 function looksFragmentedText(value){
   const s=String(value||'').trim(); if(!s)return false;
-  const words=s.split(/\s+/).filter(Boolean); if(words.length<12){
-    const smallFragments=s.match(/\b(?:mazon\.com|azon\.com|isit\s+the\s+tore|ack\s+cented|omatherapy\s+ndle|ndstone\s+elief|omedics\s+tore)\b/gi)||[];
-    if(smallFragments.length)return true;
-    return false;
-  }
+  const words=s.split(/\s+/).filter(Boolean);
+  const fragmentPattern=/\b(?:mazon\.com|azon\.com|isit\s+the\s+tore|ack\s+cented|omatherapy\s+ndle|ndstone\s+elief|omedics\s+tore|hydra\s+ing|trea\s+men|ma\s+cha|an\s+ioxidan|mois\s+urizer|fea\s+uring|rou\s+ine|smoo\s+her|curren\s+re\s+ailer|lis\s+ing|produc\s+labels|la\s+es\s+de\s+ails|four-s\s+ep|discovery\s+se)\b/gi;
+  const fragmentMarkers=s.match(fragmentPattern)||[];
+  if(words.length<12)return fragmentMarkers.length>0;
   const singleLetters=words.filter(w=>/^[A-Za-z]$/.test(w)).length;
   const suspicious=(s.match(/\b[A-Za-z]{2,}\s+[A-Za-z]\b/g)||[]).length;
-  const fragmentMarkers=s.match(/\b(?:mazon\.com|azon\.com|isit\s+the|tore\s+sit|ack\s+cented|ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries|rand\s+ahome|ndstone\s+elief|ometric\s+riptych|omedics\s+tore)\b/gi)||[];
   const distinctFragments=new Set(fragmentMarkers.map(marker=>marker.toLowerCase()));
   return singleLetters>=Math.max(4,Math.ceil(words.length*0.08))||suspicious>=5||distinctFragments.size>=2;
 }
