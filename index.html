@@ -698,7 +698,7 @@ button,a,[role="button"],input,select,textarea{pointer-events:auto}
 
 <aside class="menu-panel" id="menuPanel"><div class="menu-head"><span class="menu-title">Explore</span><button class="close" id="menuClose">×</button></div>
 <div class="menu-list"><button onclick="showView('home');closeMenu()">Home</button><button onclick="showView('browse');closeMenu()">Browse all</button><button onclick="showView('collections');closeMenu()">Collections</button></div>
-<div class="menu-section">Shop categories</div><div class="menu-list" id="categoryMenu"><button onclick="browseCategory('Fashion');closeMenu()">Fashion</button><button onclick="browseCategory('Baby & Kids');closeMenu()">Baby & Kids</button><button onclick="browseCategory('Home & Living');closeMenu()">Home & Living</button><button onclick="browseCategory('Electronics');closeMenu()">Electronics</button><button onclick="browseCategory('Beauty & Personal Care');closeMenu()">Beauty & Personal Care</button><button onclick="showView('home');document.getElementById('skinRoutineFinder').scrollIntoView({behavior:'smooth',block:'start'});closeMenu()">Skin care routines</button><button onclick="browseCategory('Sports & Fitness');closeMenu()">Sports & Fitness</button><button onclick="browseCategory('Automotive');closeMenu()">Automotive</button><button onclick="browseCategory('Pets');closeMenu()">Pets</button><button onclick="browseCategory('Gifts & Lifestyle');closeMenu()">Gifts & Lifestyle</button></div>
+<div class="menu-section">Shop categories</div><div class="menu-list" id="categoryMenu"><button onclick="showView('browse');closeMenu()">All products</button><button onclick="showView('home');document.getElementById('skinRoutineFinder').scrollIntoView({behavior:'smooth',block:'start'});closeMenu()">Skin care routines</button></div>
 <div class="menu-divider"></div><div class="menu-section">Explore Nuvora</div><div class="menu-list"><button onclick="showView('about');closeMenu()">About Nuvora</button><button onclick="showView('how');closeMenu()">How We Choose</button><button onclick="showView('contact');closeMenu()">Contact</button></div>
 <div class="menu-divider"></div><div class="menu-section">Your space</div><div class="menu-list"><button onclick="showView('account');closeMenu()">My Nuvora</button><button onclick="showView('saved');closeMenu()">Saved</button><button onclick="showCart();closeMenu()">Cart</button></div>
 <div class="menu-divider"></div><div class="menu-list"><button id="menuAuthBtn" onclick="handleAccountAction();closeMenu()">Sign in</button></div></aside>
@@ -715,11 +715,7 @@ button,a,[role="button"],input,select,textarea{pointer-events:auto}
           <input id="homeSearchInput" type="search" placeholder="Search products, brands, or categories…" autocomplete="off">
           <button type="submit">Search</button>
         </form>
-        <div class="home-tools">
-          <button onclick="browseCategory('Tech')">Tech</button>
-          <button onclick="browseCategory('Fashion')">Fashion</button>
-          <button onclick="browseCategory('Home & Living')">Home & Living</button>
-          <button onclick="browseCategory('Baby & Kids')">Baby & Kids</button>
+        <div class="home-tools" id="homeCategoryChips">
           <button onclick="showView('browse')">All products</button>
         </div>
       </div>
@@ -1242,6 +1238,7 @@ async function emergencyCatalogFallback(){
     if(!Array.isArray(rows))throw new Error('Invalid catalog');
     const esc=v=>htmlEsc(String(v??''));
     const safeRows=rows.filter(p=>p&&p.id&&['shop','find','learn'].includes(String(p.kind||'').toLowerCase())&&!storefrontProductNeedsReview(p));
+    renderCategoryNavigation(safeRows.map(mapProduct));
     const make=p=>{
       const img=String(p.image_url||p.image_urls?.[0]||'');
       const name=displayProductName(p.name||'Product');
@@ -1271,6 +1268,13 @@ function inferStoreCategory(p){
   ];
   for(const [name,words] of rules)if(words.some(w=>text.includes(w)))return name;
   return 'Home & Living';
+}
+function renderCategoryNavigation(sourceRows=products){
+ const cats=[...new Set((Array.isArray(sourceRows)?sourceRows:[]).map(p=>String(p?.cat||p?.category?.name||inferStoreCategory(p)||'').trim()).filter(name=>name&&name!=='Uncategorized'))].sort((a,b)=>a.localeCompare(b));
+ const home=document.getElementById('homeCategoryChips');
+ if(home)home.innerHTML=cats.slice(0,4).map(cat=>'<button type="button" onclick="browseCategory('+JSON.stringify(cat)+')">'+htmlEsc(cat)+'</button>').join('')+'<button type="button" onclick="showView(\'browse\')">All products</button>';
+ const menu=document.getElementById('categoryMenu');
+ if(menu)menu.innerHTML=(cats.length?cats.map(cat=>'<button type="button" onclick="browseCategory('+JSON.stringify(cat)+');closeMenu()">'+htmlEsc(cat)+'</button>').join(''):'<button type="button" onclick="showView(\'browse\');closeMenu()">All products</button>')+'<button type="button" onclick="showView(\'home\');document.getElementById(\'skinRoutineFinder\').scrollIntoView({behavior:\'smooth\',block:\'start\'});closeMenu()">Skin care routines</button>';
 }
 function mapProduct(p){let variants=[];try{variants=Array.isArray(p.shopify_variants)?p.shopify_variants:(typeof p.shopify_variants==='string'?JSON.parse(p.shopify_variants||'[]'):[])}catch(e){variants=[]}const source=String(p.source_type||p.retailer||'').toLowerCase();const retailer=source.includes('temu')?'Temu':(source.includes('amazon')||p.amazon_asin||p.amazon_source_url?'Amazon':(p.retailer||''));return {id:p.id,slug:p.slug||p.id,name:displayProductName(p.name),rawName:p.name,type:(retailer==='Amazon'||retailer==='Temu'||p.kind==='find')?'Find':p.kind==='learn'?'Learn':'Shop',cat:p.category?.name||inferStoreCategory(p),collection:p.collection?.name||'',desc:p.store_description||p.description||'',features:p.features||'',brand:p.brand||'',availability:p.availability||'',sourceSku:p.source_sku||'',recommendedProductIds:Array.isArray(p.recommended_product_ids)?p.recommended_product_ids:[],recommendationReason:p.recommendation_reason||'',ingredients:p.ingredients||'',usageInstructions:p.usage_instructions||'',productWarnings:p.product_warnings||'',skinTypes:p.skin_types||p.best_for||'',skinConcerns:p.skin_concerns||'',benefits:p.benefits||'',price:p.display_price==null?(retailer==='Amazon'?'Check price on Amazon':(retailer==='Temu'?'Check price on Temu':'Price unavailable')):formatPrice(p.display_price,p.currency),rawPrice:p.display_price,currency:p.currency||'',amazonListPrice:p.amazon_list_price,amazonDiscount:p.amazon_discount_percent,amazonDeal:p.amazon_deal_text,amazonRating:p.amazon_rating,amazonReviews:p.amazon_review_count,amazonBought:p.amazon_bought_past_month,amazonBadges:Array.isArray(p.amazon_badges)?p.amazon_badges:[],amazonShipping:p.amazon_shipping_text,amazonTax:p.amazon_tax_text,rating:p.temu_rating??p.rating??p.amazon_rating,reviews:p.temu_review_count??p.review_count??p.amazon_review_count,deal:p.temu_deal_text??p.deal_text??p.amazon_deal_text,listPrice:p.temu_list_price??p.list_price??p.amazon_list_price,discount:p.temu_discount_percent??p.discount_percent??p.amazon_discount_percent,icon:'✦',image:p.image_url||(Array.isArray(p.image_urls)?p.image_urls[0]:null),image_urls:Array.isArray(p.image_urls)?p.image_urls:[],variants,options:Array.isArray(p.amazon_variations)?p.amazon_variations:[],trend:p.trending,top:p.top_pick,featured:p.featured,whyPicked:p.why_we_picked_it||'',bestFor:p.best_for||'',skipIf:p.skip_if||'',lastChecked:p.last_checked_at||p.amazon_last_synced||null,destination:p.destination_url,variantId:p.shopify_variant_id,shopifyProductId:p.shopify_product_id,retailer};}
 function storefrontProductNeedsReview(row){
@@ -1336,6 +1340,7 @@ async function loadLiveProducts(){
   }
   products.length=0;
   products.push(...mappedProducts);
+  renderCategoryNavigation(products);
   catalogLoadState=usedCatalogCache?'cached':'loaded';
   if(usedCatalogCache)showPageStatus('Showing recently saved product data while Nuvora reconnects.','info');
   try{renderSkinRoutineFinder()}catch(err){console.warn('Skin routine finder could not render:',err);}try{renderCollections()}catch(err){console.warn('Collection list could not render:',err);}
