@@ -410,6 +410,13 @@ body.skin-studio-fullpage .studio-product-check span{overflow-wrap:anywhere}
 @media(max-width:1050px){body.skin-studio-fullpage .studio-simple-guide{flex-wrap:wrap}body.skin-studio-fullpage .studio-simple-guide-intro{min-width:100%;padding-bottom:2px}body.skin-studio-fullpage .studio-guide-step{min-width:150px}}
 @media(max-width:700px){body.skin-studio-fullpage .studio-simple-guide{padding:9px;gap:6px}body.skin-studio-fullpage .studio-guide-step{flex:1 1 45%;padding:8px}body.skin-studio-fullpage .studio-guide-add{flex:1 1 100%}}
 
+/* Preview handshake feedback for a storefront that has not answered yet. */
+body.skin-studio-fullpage .studio-canvas-inner{position:relative}
+body.skin-studio-fullpage .studio-preview-notice{position:absolute;z-index:4;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:28px;text-align:center;background:#fbfcfa;color:#314333}
+body.skin-studio-fullpage .studio-preview-notice[hidden]{display:none!important}
+body.skin-studio-fullpage .studio-preview-notice b{font-size:15px}
+body.skin-studio-fullpage .studio-preview-notice span{max-width:320px;color:#7d8b7c;font-size:12px;line-height:1.6}
+body.skin-studio-fullpage .studio-preview-notice button{margin-top:5px;border:0;border-radius:9px;background:#2f6a40;color:#fff;padding:10px 14px;font-size:11px;font-weight:750;cursor:pointer}
 /* Repair pass: make the workspace scrollable and keep hidden helper UI hidden. */
 body.skin-studio-fullpage,
 body.skin-studio-fullpage .app,
@@ -739,11 +746,11 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
           <button type="button" class="active" onclick="setSkinPreviewDevice('desktop',this)">Desktop</button>
           <button type="button" onclick="setSkinPreviewDevice('tablet',this)">Tablet</button>
           <button type="button" onclick="setSkinPreviewDevice('mobile',this)">Mobile</button>
-          <button type="button" class="studio-refresh-button" onclick="refreshSkinStudioPreview()" title="Refresh draft preview">↻</button>
+          <button type="button" class="studio-refresh-button" onclick="reloadSkinStudioPreview()" title="Reload storefront preview">↻</button>
         </div>
       </div>
       <div id="skinPreviewFrameOuter" class="studio-canvas-viewport" data-device="desktop">
-        <div class="studio-canvas-inner"><iframe id="skinStudioPreview" title="Nuvora Skin storefront — editable preview" src="https://client-store-platform.rayyung713.workers.dev/?preview=admin&studioPreview=initial"></iframe></div>
+        <div class="studio-canvas-inner"><div id="skinStudioPreviewNotice" class="studio-preview-notice" role="status" aria-live="polite"><b>Connecting to Nuvora Skin…</b><span>Waiting for the storefront preview to respond.</span></div><iframe id="skinStudioPreview" title="Nuvora Skin storefront — editable preview" src="https://client-store-platform.rayyung713.workers.dev/?preview=admin&studioPreview=initial"></iframe></div>
       </div>
     </section>
     <aside class="studio-right-panel">
@@ -2546,6 +2553,14 @@ function sendSkinStudioPreview(){
  if(!frame||!skinBuilderConfig||!frame.contentWindow)return;
  frame.contentWindow.postMessage({type:'nuvora-skin-studio-preview',config:skinBuilderConfig},SKIN_CLIENT_ORIGIN);
 }
+function reloadSkinStudioPreview(){
+ if(!document.body.classList.contains('skin-studio-fullpage')||!skinBuilderConfig)return;
+ collectSkinConfigFields();
+ const frame=document.getElementById('skinStudioPreview');if(!frame)return;
+ const notice=document.getElementById('skinStudioPreviewNotice');
+ if(notice){notice.hidden=false;notice.innerHTML='<b>Reloading storefront preview…</b><span>Waiting for Nuvora Skin to respond.</span>';}
+ frame.src=SKIN_CLIENT_ORIGIN+'/?preview=admin&studioPreview='+Date.now()+(skinStudioPageId!=='home'?'&page='+encodeURIComponent(skinStudioPageId):'');
+}
 function refreshSkinStudioPreview(){
  if(!document.body.classList.contains('skin-studio-fullpage')||!skinBuilderConfig)return;
  collectSkinConfigFields();
@@ -2560,13 +2575,25 @@ let skinStudioPreviewTimer=null;
 function queueSkinStudioPreview(){if(skinStudioPreviewTimer)clearTimeout(skinStudioPreviewTimer);skinStudioPreviewTimer=setTimeout(refreshSkinStudioPreview,450);}
 function wireSkinStudioCanvas(){
  const frame=document.getElementById('skinStudioPreview');if(!frame)return;
- if(!frame.dataset.canvasWired){frame.dataset.canvasWired='1';frame.addEventListener('load',sendSkinStudioPreview);}
+ if(!frame.dataset.canvasWired){
+  frame.dataset.canvasWired='1';
+  frame.addEventListener('load',()=>{
+   sendSkinStudioPreview();
+   const notice=document.getElementById('skinStudioPreviewNotice');
+   if(notice){notice.hidden=false;notice.innerHTML='<b>Waiting for the storefront…</b><span>Checking for the live preview connection.</span>';}
+   if(window.__nuvoraSkinPreviewTimeout)clearTimeout(window.__nuvoraSkinPreviewTimeout);
+   window.__nuvoraSkinPreviewTimeout=setTimeout(()=>{
+    const box=document.getElementById('skinStudioPreviewNotice');
+    if(box){box.hidden=false;box.innerHTML='<b>Preview did not respond</b><span>The separate Nuvora Skin storefront is unavailable or has not been deployed. Your draft is safe. Try reloading after the storefront is restored.</span><button type="button" onclick="reloadSkinStudioPreview()">Reload preview</button>';}
+   },10000);
+  });
+ }
  if(!window.__nuvoraSkinStudioBridgeWired){
   window.__nuvoraSkinStudioBridgeWired=true;
   window.addEventListener('message',event=>{
    if(event.origin!==SKIN_CLIENT_ORIGIN||event.source!==document.getElementById('skinStudioPreview')?.contentWindow||!event.data)return;
    const data=event.data;
-   if(data.type==='nuvora-skin-studio-ready'){sendSkinStudioPreview();return;}
+   if(data.type==='nuvora-skin-studio-ready'){if(window.__nuvoraSkinPreviewTimeout)clearTimeout(window.__nuvoraSkinPreviewTimeout);const notice=document.getElementById('skinStudioPreviewNotice');if(notice)notice.hidden=true;sendSkinStudioPreview();return;}
    if(!skinBuilderConfig)return;
    if(data.type==='nuvora-skin-studio-request-add-product'){
     skinStudioPageId=data.pageId||'home';skinStudioSelection={type:'section',id:String(data.sectionId||'')};
