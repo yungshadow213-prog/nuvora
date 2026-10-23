@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-fresh-catalog-reads-r23',
+          release:'nuvora-2026-10-23-live-catalog-no-cache-r24',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -2334,6 +2334,10 @@ async function supabaseRest(env,method,table,payload=null,query=''){
     headers['Pragma']='no-cache';
   }
   const options={method,headers};
+  if(String(method).toUpperCase()==='GET'){
+    // Bypass any upstream Cloudflare cache rule on Supabase REST reads.
+    options.cf={cacheTtl:0,cacheEverything:false};
+  }
   if(payload!==undefined&&payload!==null){
     options.body=JSON.stringify(payload);
   }
