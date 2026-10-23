@@ -1631,32 +1631,40 @@ function openProductForm(){openProductModal(false)}
 async function createProduct(product){openProductModal(false);setProductForm(product)}
 async function amazonImport(){showImportPage('amazon')}
 async function togglePublish(id){
-  try{
-    const p=adminProducts.find(x=>x.id===id);
-    if(!p)throw new Error('Product not found.');
-    const publishing=!p.published;
-    const destination=retailerDestination(p);
-    const body={published:publishing,updated_at:new Date().toISOString()};
-    if(publishing){
-      body.destination_url=destination||null;
-      body.amazon_source_url=p.amazon_source_url||p.source_url||null;
-    }
-    const path='/api/admin/products/'+encodeURIComponent(id);
-    if(publishing){
-      try{
-        await api(path+'/publish',{method:'POST',body});
-      }catch(primaryError){
-        const message=String(primaryError?.message||'');
-        if(/API route not found|404|publish route/i.test(message)){
-          await api(path,{method:'PATCH',body});
-        }else throw primaryError;
-      }
-    }else{
-      await api(path,{method:'PATCH',body});
-    }
-    await liveAdminProducts();
-    setAdminStatus(publishing?'Product published successfully — now visible in the storefront.':'Product moved back to draft.');
-  }catch(e){setAdminStatus(e.message||'Publish failed.')}
+ const studio=document.body.classList.contains('skin-studio-fullpage');
+ const p=adminProducts.find(x=>String(x.id)===String(id));
+ if(!p){
+  const message='Product not found in the current catalog. Refresh the product library and try again.';
+  if(studio)skinBuilderMessage(message,'error');else setAdminStatus(message,'error');
+  return;
+ }
+ const publishing=!p.published,label=String(p.name||'Product');
+ const body={published:publishing,updated_at:new Date().toISOString()};
+ if(publishing){
+  const destination=retailerDestination(p);
+  body.destination_url=destination||null;
+  body.amazon_source_url=p.amazon_source_url||p.source_url||null;
+ }
+ const path='/api/admin/products/'+encodeURIComponent(String(id));
+ if(studio)skinBuilderMessage((publishing?'Publishing ':'Moving back to draft: ')+label+'…','info');
+ else setAdminStatus((publishing?'Publishing ':'Moving back to draft: ')+label+'…');
+ try{
+  // PATCH is the supported product update route in the admin API.
+  await api(path,{method:'PATCH',body});
+  await liveAdminProducts();
+  if(studio){
+   renderSkinLibrary();
+   renderSkinSelectedInspector();
+   renderSkinBuilderSections();
+   refreshSkinStudioPreview();
+   skinBuilderMessage(publishing?label+' is published. Publish the page changes too if you placed it in a section.':label+' is now a draft and hidden from shoppers.','success');
+  }else{
+   setAdminStatus(publishing?label+' published successfully — now visible in the storefront.':label+' moved back to draft.');
+  }
+ }catch(e){
+  const message=(e.message||'Publish failed.')+' No publish change was confirmed.';
+  if(studio)skinBuilderMessage(message,'error');else setAdminStatus(message,'error');
+ }
 }
 let lastDiscoveredProductIds=[];
 function discoveredMetric(p){
@@ -2535,8 +2543,8 @@ function skinProductsForSection(sec){
  return list;
 }
 function addSkinProductToSection(productId,targetId,pageId){
- const product=adminProducts.find(p=>String(p.id)===String(productId));if(!product)return skinBuilderMessage('That product could not be found. Refresh the product library and try again.','error');
- if(!product.published)return skinBuilderMessage('Publish this product from the manual product editor before placing it into the live page. Draft products are not displayed to shoppers.','warning');
+ const product=adminProducts.find(p=>String(p.id)===String(productId));
+ if(!product)return skinBuilderMessage('That product could not be found. Refresh the product library and try again.','error');
  let sections=skinSectionsFor(pageId),sec=sections.find(s=>String(s.id)===String(targetId));
  if(!sec||!['product-grid','featured-products'].includes(sec.type))sec=sections.find(s=>s.visible!==false&&['product-grid','featured-products'].includes(s.type));
  if(!sec){sec={id:'section-'+Date.now().toString(36),type:'product-grid',visible:true,title:'New skincare picks',eyebrow:'The edit',text:'',filter:'all',columns:3,product_ids:[]};sections.push(sec);}
@@ -2544,7 +2552,10 @@ function addSkinProductToSection(productId,targetId,pageId){
  if(!ids.length)ids=skinProductsForSection(sec).map(p=>String(p.id));
  if(!ids.includes(String(productId)))ids.push(String(productId));
  sec.product_ids=ids.slice(0,60);skinStudioPageId=pageId||'home';skinStudioSelection={type:'section',id:String(sec.id)};
- skinMarkDirty('Product placed in “'+(sec.title||'Product grid')+'”. Publish to make the placement public.');renderSkinStudioAll();queueSkinStudioPreview();
+ const message=product.published
+  ?'Product placed in “'+(sec.title||'Product grid')+'”. Publish the page changes to make this placement public.'
+  :'Product added to “'+(sec.title||'Product grid')+'” in your draft. Publish the product, then publish the page changes to make it visible to shoppers.';
+ skinMarkDirty(message);renderSkinStudioAll();queueSkinStudioPreview();
 }
 function moveSkinProductInSection(productId,targetProductId,sectionId,pageId){
  const sections=skinSectionsFor(pageId),sec=sections.find(s=>String(s.id)===String(sectionId));
