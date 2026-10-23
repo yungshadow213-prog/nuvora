@@ -2373,7 +2373,7 @@ function selectSkinItem(type,id){
  else if(type==='page'){const page=skinCurrentPage(id);skinStudioSelection={type:'page',id:String(page?.slug||id)};switchSkinStudioTab('pages');renderSkinLibrary();}
  else if(type==='category'){skinStudioSelection={type:'category',id:String(id)};switchSkinStudioTab('categories');renderSkinLibrary();}
  else if(type==='default-category'){skinStudioSelection={type:'default-category',id:String(id)};switchSkinStudioTab('categories');renderSkinLibrary();}
- renderSkinSelectedInspector();
+ renderSkinSelectedInspector();syncSkinPreviewActionbar();
 }
 function setSkinStudioPage(pageId){
  skinStudioPageId=pageId==='home'?'home':String(pageId);
