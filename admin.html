@@ -1006,7 +1006,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
       </div>
       <div class="modal-actions">
         <button class="btn" onclick="closeProductModal()">Cancel</button>
-        <button class="btn primary" onclick="saveProductDraft()">Save Draft</button>
+        <button class="btn primary" id="productSaveBtn" onclick="saveProductDraft()">Save Draft</button>
       </div>
     </div>
   </div>
@@ -1309,7 +1309,7 @@ function setProductForm(p){
   document.getElementById('pfTax').value=p.amazon_tax_text||'';
   document.getElementById('pfCategory').value=p.category_id||'';
   document.getElementById('pfCollection').value=p.collection_id||'';
-  document.getElementById('pfDescription').value=p.description||'';
+  document.getElementById('pfDescription').value=window.skinCareImportMode?(p.store_description||p.description||''):(p.description||'');
   document.getElementById('pfFeatures').value=p.features||'';document.getElementById('pfIngredients').value=p.ingredients||'';document.getElementById('pfUsage').value=p.usage_instructions||'';document.getElementById('pfWarnings').value=p.product_warnings||'';document.getElementById('pfProductSize').value=p.product_size||'';try{const v=Array.isArray(p.amazon_variations)?p.amazon_variations:[];document.getElementById('pfVariations').value=v.map(x=>x.name+': '+(Array.isArray(x.values)?x.values.join(', '):'')).join('\n')}catch(e){document.getElementById('pfVariations').value='';}
   document.getElementById('pfDestination').value=p.destination_url||'';
   document.getElementById('pfAsin').value=p.amazon_asin||'';
@@ -1652,14 +1652,19 @@ function parseProductVariations(raw){
   }).filter(Boolean).slice(0,20);
 }
 async function saveProductDraft(){
-  const name=document.getElementById('pfName').value.trim(); if(!name){setAdminStatus('Product title is required.','error');return;}
+  if(window.productSaveInProgress)return;
+  window.productSaveInProgress=true;
+  const saveButton=document.getElementById('productSaveBtn');
+  if(saveButton){saveButton.disabled=true;saveButton.dataset.originalLabel=saveButton.textContent;saveButton.textContent='Saving…';}
+  const releaseSave=()=>{window.productSaveInProgress=false;if(saveButton){saveButton.disabled=false;saveButton.textContent=saveButton.dataset.originalLabel||'Save Draft';delete saveButton.dataset.originalLabel;}};
+  const name=document.getElementById('pfName').value.trim(); if(!name){setAdminStatus('Product title is required.','error');releaseSave();return;}
   let skinCategory=null;
   try{if(window.skinCareImportMode)skinCategory=await ensureSkinCategory(false);}
-  catch(e){setAdminStatus('Could not verify the Skin Care category. The product was not saved: '+(e.message||e),'error');return;}
+  catch(e){setAdminStatus('Could not verify the Skin Care category. The product was not saved: '+(e.message||e),'error');releaseSave();return;}
   const images=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   const product={
     name,kind:window.skinCareImportMode?'shop':document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
-    description:document.getElementById('pfDescription').value.trim()||null,features:document.getElementById('pfFeatures').value.trim()||null,
+    description:window.skinCareImportMode?(adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.description||document.getElementById('pfDescription').value.trim()||null):(document.getElementById('pfDescription').value.trim()||null),features:document.getElementById('pfFeatures').value.trim()||null,
     benefits:window.skinCareImportMode?(document.getElementById('pfBenefits').value.trim()||null):null,
     skin_types:window.skinCareImportMode?(document.getElementById('pfSkinTypes').value.trim()||null):null,
     skin_concerns:window.skinCareImportMode?(document.getElementById('pfSkinConcerns').value.trim()||null):null,
@@ -1686,7 +1691,7 @@ async function saveProductDraft(){
     supplier_cost:document.getElementById('pfSupplierCost').value===''?null:Number(document.getElementById('pfSupplierCost').value),
     published:window.editingProductId?!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.published:false
   };
-  if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer='Amazon';}
+  if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer='Amazon';product.store_description=document.getElementById('pfDescription').value.trim()||null;}
   try{
     const existingId=window.editingProductId||null;
     const existing=existingId?adminProducts.find(x=>String(x.id)===String(existingId)):null;
@@ -1703,7 +1708,7 @@ async function saveProductDraft(){
       await api('/api/admin/products',{method:'POST',body:{...product,slug}});
     }
     const wasEditing=!!window.editingProductId; closeProductModal(); window.skinCareImportMode=false; await liveAdminProducts(); setAdminStatus(wasEditing?'Product updated.':(skinCategory?'Skincare product saved as a draft in Skin Care.':'Product saved as a draft.'));
-  }catch(e){setAdminStatus(e.message)}
+  }catch(e){setAdminStatus(e.message)}finally{releaseSave();}
 }
 async function editProduct(id){
   if(!id)return;
@@ -2957,7 +2962,8 @@ async function editSkinProduct(id){
   setProductForm(p);
   document.getElementById('pfBenefits').value=p.benefits||p.why_we_picked_it||'';
   document.getElementById('pfSkinTypes').value=p.skin_types||p.best_for||'';
-  document.getElementById('pfSkinConcerns').value=p.skin_concerns||p.skip_if||'';
+  document.getElementById('pfSkinConcerns').value=p.skin_concerns||'';
+   document.getElementById('pfSkinAvoid').value=p.skip_if||'';
   document.getElementById('pfRecommendationReason').value=p.recommendation_reason||'';
   document.getElementById('pfSkinFeatured').checked=!!p.featured;document.getElementById('pfSkinTopPick').checked=!!p.top_pick;document.getElementById('pfSkinTrending').checked=!!p.trending;
   populateSkinRecommendations(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids:[]);
