@@ -1147,6 +1147,8 @@ function productReviewFlags(p){
  const brokenName=!name||/^(?:amazon(?:\.com)?|temu)(?:\s+product)?$/i.test(name)||/^(?:azon\.|mazon\.com\b|isit the\b)/i.test(name)||(words.length>=6&&isolated>=2)||(/\b(?:ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries)\b/i.test(name)&&/\b(?:isit|azon|rand|omedics|ahome|ndstone)\b/i.test(name));
  if(brokenName)flags.push('Title needs review');
  const source=String(p?.source_type||p?.retailer||'').toLowerCase();
+ const retailerIdentity=[p?.source_type,p?.retailer,p?.destination_url,p?.amazon_source_url,p?.source_url].filter(Boolean).join(' ').toLowerCase();
+ if(String(p?.kind||'').toLowerCase()==='shop'&&/\b(?:amazon|temu)\b/i.test(retailerIdentity))flags.push('Affiliate link should be a Find');
  const sourceUrl=String(p?.amazon_source_url||p?.source_url||p?.resolved_url||p?.destination_url||'');
  const sourceAsin=sourceUrl.match(/(?:\/dp\/|\/gp\/product\/|\/gp\/aw\/d\/|[?&]asin=)([A-Z0-9]{10})/i)?.[1]?.toUpperCase()||'';
  const storedAsin=String(p?.amazon_asin||'').trim().toUpperCase();
