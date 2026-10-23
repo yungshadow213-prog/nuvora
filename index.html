@@ -660,6 +660,19 @@ button,a,[role="button"],input,select,textarea{pointer-events:auto}
 @media(max-width:900px){.hero-grid{grid-template-columns:1fr;gap:24px}.hero-art{min-height:320px;max-width:620px;width:100%;margin:auto}.product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.product .thumb{height:clamp(150px,35vw,240px)}.product-layout{grid-template-columns:1fr;gap:24px}.product-gallery{position:static}.product-main-image{height:min(90vw,540px);min-height:260px}}
 @media(max-width:560px){.shell{width:min(calc(100% - 26px),var(--max))}.nav{height:66px}.hero{padding-top:34px}.hero-copy{font-size:16px}.hero-actions{flex-wrap:wrap}.hero-actions .btn{flex:1 1 auto}.hero-art{min-height:270px}.art-title{font-size:29px}.category-grid{grid-template-columns:1fr;gap:10px}.cat{min-height:125px}.product-grid{gap:10px}.product{border-radius:16px}.product .thumb{height:clamp(128px,43vw,190px)}.prodtext{padding:11px 11px 13px}.prodtext h4{font-size:13px;min-height:4.2em}.card-bottom{align-items:flex-start;flex-direction:column;gap:5px}.product-buy-row{grid-template-columns:1fr 1fr}.product-qty{grid-column:1/-1}.section-head h2{font-size:22px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style><style id="nuvora-store-quality-pass">
+/* Consistent image recovery, focus states and mobile catalogue controls. */
+.product .thumb.image-failed{display:grid;place-items:center;background:linear-gradient(145deg,#172b3c,#25213d)}
+.product .thumb.image-failed:after{content:"✦";font-size:28px;color:#9db5c2;opacity:.8}
+.product .thumb.image-failed img{display:none!important}
+.nv-routine-finder :focus-visible,.browse-toolbar :focus-visible,.product :focus-visible{outline:3px solid #83c7d9;outline-offset:3px}
+.nv-routine-types button{min-height:42px}
+.nv-routine-products .product{height:100%;display:flex;flex-direction:column}
+.nv-routine-products .prod-open{height:100%;display:flex;flex-direction:column}
+.nv-routine-products .prodtext{flex:1;display:flex;flex-direction:column}
+.nv-routine-products .card-bottom{margin-top:auto;padding-top:12px}
+.nv-routine-empty a,.empty a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.product,.nv-routine-types button{transition:none!important}.product:hover{transform:none!important}}
 </style></head>
 <body>
 <div class="announcement"><div class="shell"><b>Nuvora picks, made simple.</b> Browse curated products, save your favorites, and discover something worth finding.</div></div><header class="topbar"><div class="shell nav">
@@ -933,7 +946,7 @@ function card(p){
   const discountMarkup=discount!=null&&discount>0?'<span class="nv-card-discount">'+htmlEsc(String(discount).replace(/\.0$/,''))+'% OFF</span>':'';
   return '<article class="product nv-card" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button" aria-label="View '+htmlEsc(p.name)+'">'+
     '<button class="card-save '+(savedNow?'saved':'')+'" aria-label="Save product" onclick="event.stopPropagation();toggleSave(this.closest(\'.product\').dataset.productId)">'+(savedNow?'♥':'♡')+'</button>'+
-    '<div class="prod-open"><div class="thumb">'+(image?'<img src="'+htmlEsc(image)+'" alt="'+htmlEsc(p.name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\'">':'<span class="nv-image-mark">✦</span>')+discountMarkup+'</div>'+
+    '<div class="prod-open"><div class="thumb">'+(image?'<img src="'+htmlEsc(image)+'" alt="'+htmlEsc(p.name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\';this.parentElement.classList.add(\'image-failed\')">':'<span class="nv-image-mark">✦</span>')+discountMarkup+'</div>'+
     '<div class="prodtext"><div class="card-source">'+htmlEsc(source)+'</div><h4>'+htmlEsc(p.name)+'</h4>'+ratingMarkup+'<div class="card-bottom"><span class="prodprice">'+htmlEsc(cardPrice)+'</span><span class="card-action">View <span>→</span></span></div></div></div></article>';
 }
 function renderList(id,type){const el=document.getElementById(id);if(!el)return;const rows=products.filter(p=>p.type===type);el.innerHTML=rows.map(card).join('')||'<div class="empty" style="grid-column:1/-1"><strong>No '+String(type).toLowerCase()+' products published yet.</strong><br><span>New published '+String(type).toLowerCase()+' listings will appear here.</span></div>';el.closest('.view')?.classList.toggle('catalog-empty',rows.length===0)}
@@ -1180,7 +1193,7 @@ async function emergencyCatalogFallback(){
       const name=displayProductName(p.name||'Product');
       const retailer=p.retailer||'Nuvora';
       const price=formatPrice(p.display_price,p.currency);
-      return '<article class="product nv-card" data-product-id="'+esc(p.id)+'" tabindex="0" role="button" aria-label="View '+esc(name)+'"><div class="prod-open"><div class="thumb">'+(String(img).startsWith('http://')||String(img).startsWith('https://')?'<img src="'+esc(img)+'" alt="'+esc(name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\'">':'<span class="nv-image-mark">✦</span>')+'</div><div class="prodtext"><div class="card-source">'+esc(retailer)+'</div><h4>'+esc(name)+'</h4><div class="card-bottom"><span class="prodprice">'+esc(price)+'</span><span class="card-action">View <span>→</span></span></div></div></div></article>';
+      return '<article class="product nv-card" data-product-id="'+esc(p.id)+'" tabindex="0" role="button" aria-label="View '+esc(name)+'"><div class="prod-open"><div class="thumb">'+(String(img).startsWith('http://')||String(img).startsWith('https://')?'<img src="'+esc(img)+'" alt="'+esc(name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\';this.parentElement.classList.add(\'image-failed\')">':'<span class="nv-image-mark">✦</span>')+'</div><div class="prodtext"><div class="card-source">'+esc(retailer)+'</div><h4>'+esc(name)+'</h4><div class="card-bottom"><span class="prodprice">'+esc(price)+'</span><span class="card-action">View <span>→</span></span></div></div></div></article>';
     };
     const html=safeRows.map(make).join('');
     ['newProducts','randomPicks','browseGrid'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html||'<div class="empty" style="grid-column:1/-1">No published products yet.</div>';});
