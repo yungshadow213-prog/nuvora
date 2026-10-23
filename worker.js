@@ -2198,7 +2198,7 @@ function validateSkinSiteConfig(value,options={}){
       if(section.image){try{if(new URL(section.image).protocol!=='https:')return label+' section image must use HTTPS.';}catch{return label+' section image URL is invalid.';}}
       if(section.backgroundColor!==undefined&&section.backgroundColor!==''&&!/^#[0-9a-f]{6}$/i.test(String(section.backgroundColor)))return label+' section background color is invalid.';
       if(section.imageAlignment!==undefined&&!['left','center','right'].includes(String(section.imageAlignment)))return label+' image alignment must be left, center, or right.';
-      if(section.imageWidth!==undefined&&![20,30,40,50,60,70,80,90,100].includes(Number(section.imageWidth)))return label+' image width must be between 20% and 100%.
+      if(section.imageWidth!==undefined&&![20,30,40,50,60,70,80,90,100].includes(Number(section.imageWidth)))return label+' image width must be between 20% and 100%.';
       if(section.product_ids!==undefined){
         if(!Array.isArray(section.product_ids)||section.product_ids.length>60)return 'A '+label.toLowerCase()+' section can place up to 60 products.';
         if(section.product_ids.some(id=>!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id))))return 'A placed product has an invalid product ID.';
