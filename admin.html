@@ -1124,6 +1124,8 @@ function productReviewFlags(p){
  const isolated=words.filter(w=>/^[A-Za-z]$/.test(w)).length;
  const brokenName=!name||/^(?:amazon(?:\.com)?|temu)(?:\s+product)?$/i.test(name)||/^(?:azon\.|mazon\.com\b|isit the\b)/i.test(name)||(words.length>=6&&isolated>=2)||(/\b(?:ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries)\b/i.test(name)&&/\b(?:isit|azon|rand|omedics|ahome|ndstone)\b/i.test(name));
  if(brokenName)flags.push('Title needs review');
+ const brand=String(p?.brand||'').trim();
+ if(brand&&/\b(?:mazon\.com|azon\.com|isit\s+the|tore\s+sit|ack\s+cented|ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries|rand\s+ahome|ndstone\s+elief|ometric\s+riptych|omedics\s+tore)\b/i.test(brand))flags.push('Brand needs review');
  const image=String(p?.image_url||p?.image_urls?.[0]||'');
  if(!image||/(?:amazon-avatars-global|transparent-pixel|sprite|spacer|pixel\b|tracking)/i.test(image))flags.push('Image needs review');
  if(!p?.category_id)flags.push('Uncategorized');
