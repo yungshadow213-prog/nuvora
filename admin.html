@@ -2622,7 +2622,7 @@ function selectSkinPreviewDevice(device,button){
  if(button)button.classList.add('active');
 }
 function setSkinPreviewDevice(device,button){selectSkinPreviewDevice(device,button);}
-function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();}
+function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();syncSkinPreviewActionbar();}
 function updateSkinSection(index,key,value){
  const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;
  sec[key]=value;
