@@ -1106,9 +1106,9 @@ async function loadPublicStoreSettings(){
  try{
   const r=await fetch('/api/settings',{cache:'no-store'});if(!r.ok)return;
   const settings=await r.json(),email=document.getElementById('contactEmail'),notice=email?.closest('.notice');
-  if(email&&settings?.support_email){email.textContent=settings.support_email;if(notice)notice.hidden=false;}
-  else if(notice)notice.hidden=true;
- }catch(e){const email=document.getElementById('contactEmail');if(email?.closest('.notice'))email.closest('.notice').hidden=true;}
+  if(email&&settings?.support_email){email.textContent=settings.support_email;if(notice)notice.style.display='';}
+  else if(notice)notice.style.display='none';
+ }catch(e){const email=document.getElementById('contactEmail');if(email?.closest('.notice'))email.closest('.notice').style.display='none';}
 }
 async function bootNuvora(){
   try{
@@ -1234,8 +1234,8 @@ async function loadLiveProducts(){
   const discovery=cleanList.filter(p=>!newestIds.has(String(p.id))).sort(()=>Math.random()-0.5).slice(0,8);
   const newestSection=document.getElementById('newProducts')?.closest('.section');
   const discoverySection=document.getElementById('randomPicks')?.closest('.section');
-  if(newestSection)newestSection.hidden=!newest.length;
-  if(discoverySection)discoverySection.hidden=!discovery.length;
+  if(newestSection)newestSection.style.display=newest.length?'':'none';
+  if(discoverySection)discoverySection.style.display=discovery.length?'':'none';
   renderSafe('newProducts',safeCards(newest)||empty);
   renderSafe('randomPicks',safeCards(discovery));
   try{renderSkinRoutineFinder()}catch(err){console.warn('Skin routine finder could not render:',err);}
