@@ -97,6 +97,10 @@ function validateSkinSiteConfig(value){
     if(section.title!==undefined&&String(section.title).length>180)return 'Skin Studio section titles are limited to 180 characters.';
     if(section.text!==undefined&&String(section.text).length>3000)return 'Skin Studio section text is too long.';
     if(section.eyebrow!==undefined&&String(section.eyebrow).length>100)return 'Skin Studio section eyebrows are limited to 100 characters.';
+    if(section.imageAlignment!==undefined&&!['left','center','right'].includes(String(section.imageAlignment)))return 'Skin Studio image alignment must be left, center, or right.';
+    if(section.imageWidth!==undefined&&![20,30,40,50,60,70,80,90,100].includes(Number(section.imageWidth)))return 'Skin Studio image width must be between 20% and 100%.';
+    if(section.imageFreePosition!==undefined&&typeof section.imageFreePosition!=='boolean')return 'Skin Studio free image positioning must be a boolean.';
+    for(const key of ['imagePositionX','imagePositionY'])if(section[key]!==undefined&&(!Number.isFinite(Number(section[key]))||Number(section[key])<0||Number(section[key])>100))return 'Skin Studio image positions must be between 0% and 100%.';
     if(section.product_ids!==undefined){
       if(!Array.isArray(section.product_ids)||section.product_ids.length>60)return 'A Skin Studio section can place up to 60 products.';
       if(section.product_ids.some(id=>!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id))))return 'A placed product has an invalid product ID.';
