@@ -1207,13 +1207,14 @@ async function retryNuvoraCatalog(){
 }
 window.retryNuvoraCatalog=retryNuvoraCatalog;
 async function emergencyCatalogFallback(){
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),8000);
   try{
-    const r=await fetch('/api/products?emergency='+Date.now(),{cache:'no-store',headers:{accept:'application/json'}});
+    const r=await fetch('/api/products?emergency='+Date.now(),{cache:'no-store',signal:controller.signal,headers:{accept:'application/json'}});
     const raw=await r.text();
     const rows=JSON.parse(raw);
     if(!Array.isArray(rows))throw new Error('Invalid catalog');
     const esc=v=>htmlEsc(String(v??''));
-    const safeRows=rows.filter(p=>p&&p.id&&['shop','find','learn'].includes(String(p.kind||'').toLowerCase()));
+    const safeRows=rows.filter(p=>p&&p.id&&['shop','find','learn'].includes(String(p.kind||'').toLowerCase())&&!storefrontProductNeedsReview(p));
     const make=p=>{
       const img=String(p.image_url||p.image_urls?.[0]||'');
       const name=displayProductName(p.name||'Product');
@@ -1225,7 +1226,7 @@ async function emergencyCatalogFallback(){
     ['newProducts','randomPicks','browseGrid'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=html||'<div class="empty" style="grid-column:1/-1">No published products yet.</div>';});
     const count=document.getElementById('browseCount');if(count)count.textContent=safeRows.length+' '+(safeRows.length===1?'product':'products');
     return true;
-  }catch(err){console.error('Emergency catalog fallback failed:',err);return false;}
+  }catch(err){console.error('Emergency catalog fallback failed:',err);return false;}finally{clearTimeout(timeout);}
 }
 function inferStoreCategory(p){
   const text=String([p.name,p.description,p.features,p.brand,p.category?.name].filter(Boolean).join(' ')).toLowerCase();
