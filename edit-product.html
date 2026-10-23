@@ -32,10 +32,11 @@ main{max-width:1280px;margin:auto;padding:28px 24px 70px}.layout{display:grid;gr
 <section>
 <div class="panel"><h2>What you can change</h2><p>Nuvora automatically keeps the source information below. This workspace is intentionally focused on the things you actually control.</p>
 <div class="grid2"><div class="field"><label>Store title</label><input id="name" autocomplete="off"></div><div class="field"><label>Brand / maker</label><input id="brand" autocomplete="organization" placeholder="Brand name"></div></div>
-<div class="grid2"><div class="field"><label>Store price</label><input id="price" type="number" step="0.01" min="0" placeholder="Leave blank if not verified"></div><div class="field"><label>Customer-facing retailer / affiliate URL</label><input id="destinationUrl" type="url" inputmode="url" placeholder="https://…"></div></div>
+<div class="field"><label>Customer-facing retailer / affiliate URL</label><input id="destinationUrl" type="url" inputmode="url" placeholder="Paste the exact Amazon Associates link or retailer URL"></div>
 <div class="readonly-note" style="margin-top:12px">Paste the exact tracked affiliate URL you want customers to open. The imported source URL is kept separately for source refresh. For Amazon items, check that the link includes your Associates tracking tag.</div>
 <div class="field"><label>Store description override <span style="font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label><textarea id="description" placeholder="Leave unchanged if you want Nuvora to use the imported source description."></textarea></div>
 </div>
+<div class="panel"><h2>Product guide</h2><p>Optional customer-facing information. Add only details supported by the listing or reliable research.</p><div class="field"><label>Key features / highlights</label><textarea id="features" placeholder="A few useful facts customers should know"></textarea></div><div class="field"><label>Benefits / why it is worth a look</label><textarea id="benefits" placeholder="What it does and who may find it useful"></textarea></div><div class="grid2"><div class="field"><label>Ingredients (if relevant)</label><textarea id="ingredients" placeholder="Verified ingredients only"></textarea></div><div class="field"><label>How to use (if relevant)</label><textarea id="usage" placeholder="Directions and frequency from the product label"></textarea></div></div><div class="grid2"><div class="field"><label>Suitable for / skin types</label><textarea id="skinTypes" placeholder="Optional suitability notes"></textarea></div><div class="field"><label>Skin concerns / best for</label><textarea id="skinConcerns" placeholder="Optional use cases or concerns"></textarea></div></div><div class="field"><label>Warnings / cautions</label><textarea id="warnings" placeholder="Precautions or important limitations"></textarea></div></div>
 <div class="panel"><h2>Product images</h2><p>Keep the source gallery or replace/add images. AI-generated images are added as new gallery images so the original is never lost.</p>
 <div class="hero-image" id="hero"></div><div class="gallery" id="gallery"></div>
 <div class="gallery-add"><input type="file" id="imageFiles" accept="image/*" multiple><button class="btn" id="uploadBtn">Upload</button></div>
@@ -75,9 +76,9 @@ function val(x){return x===null||x===undefined||x===''?'Not provided by source':
 function render(){
  $('pageTitle').firstChild.textContent=(product.name||'Product')+' ';
  $('status').textContent=product.published?'Published':'Draft';
- $('name').value=product.name||'';$('brand').value=product.brand||'';$('price').value=product.display_price??'';$('destinationUrl').value=product.destination_url||product.amazon_source_url||product.source_url||'';$('description').value=product.description||'';
+ $('name').value=product.name||'';$('brand').value=product.brand||'';$('destinationUrl').value=product.destination_url||product.amazon_source_url||product.source_url||'';$('description').value=product.store_description||product.description||'';$('features').value=product.features||'';$('benefits').value=product.benefits||product.why_we_picked_it||'';$('ingredients').value=product.ingredients||'';$('usage').value=product.usage_instructions||'';$('skinTypes').value=product.skin_types||product.best_for||'';$('skinConcerns').value=product.skin_concerns||'';$('warnings').value=product.product_warnings||product.skip_if||'';
  $('category').textContent=val(product.category?.name||product.category_id);$('collection').textContent=val(product.collection?.name||product.collection_id);$('retailer').textContent=val(product.retailer||product.source_type);$('asin').textContent=val(product.amazon_asin||product.sourcinbox_product_id||product.id);
- images=[...(Array.isArray(product.image_urls)?product.image_urls:[]).filter(Boolean)];if(product.image_url&&!images.includes(product.image_url))images.unshift(product.image_url);renderGallery();renderSource();
+ images=[...new Set([product.image_url,...(Array.isArray(product.image_urls)?product.image_urls:[])].filter(Boolean))];selected=0;renderGallery();renderSource();
  $('publishBtn').textContent=product.published?'Unpublish':'Publish';
 }
 function renderGallery(){
@@ -86,16 +87,13 @@ function renderGallery(){
  document.querySelectorAll('.thumb').forEach(b=>b.onclick=()=>{selected=Number(b.dataset.i);renderGallery()});
 }
 function renderSource(){
- const fields=[
- ['Brand',product.brand],['Current source price',product.amazon_current_price!=null?product.amazon_current_price+' '+(product.currency||''):null],
- ['List price',product.amazon_list_price],['Discount',product.amazon_discount_percent!=null?product.amazon_discount_percent+'%':null],
- ['Deal',product.amazon_deal_text],['Rating',product.amazon_rating!=null?product.amazon_rating+' / 5':null],
- ['Review count',product.amazon_review_count],['Bought recently',product.amazon_bought_past_month],
- ['Availability',product.availability],['Shipping',product.amazon_shipping_text],
- ['Taxes',product.amazon_tax_text],['Variants',Array.isArray(product.amazon_variations)&&product.amazon_variations.length?product.amazon_variations.map(v=>v.name+': '+(v.values||[]).join(', ')).join(' · '):null],
- ['Product number',product.source_sku||product.amazon_asin],['Related products',Array.isArray(product.source_related_products)&&product.source_related_products.length?product.source_related_products.length+' related source products':null],['Source image gallery',Array.isArray(product.source_image_urls)?product.source_image_urls.length+' images captured':null],['Source URL',product.amazon_source_url||product.destination_url],['Last source sync',product.amazon_last_synced?new Date(product.amazon_last_synced).toLocaleString():null]
- ];
- $('sourceGrid').innerHTML=fields.map(([k,v])=>'<div class="source-item '+(k==='Source URL'?'source-wide':'')+'"><b>'+esc(k)+'</b><span>'+esc(val(v))+'</span></div>').join('');
+  const fields=[
+  ['Brand',product.brand],['Availability',product.availability],['Shipping information',product.amazon_shipping_text],
+  ['Key features',product.features],['Ingredients',product.ingredients],['Directions',product.usage_instructions],
+  ['Product number',product.source_sku||product.amazon_asin],['Available variants',Array.isArray(product.amazon_variations)&&product.amazon_variations.length?product.amazon_variations.map(v=>v.name+': '+(v.values||[]).join(', ')).join(' · '):null],
+  ['Related products',Array.isArray(product.source_related_products)&&product.source_related_products.length?product.source_related_products.length+' related source products':null],['Source image gallery',Array.isArray(product.source_image_urls)?product.source_image_urls.length+' images captured':null],['Source URL',product.amazon_source_url||product.source_url||product.destination_url],['Last source sync',product.amazon_last_synced?new Date(product.amazon_last_synced).toLocaleString():null]
+  ];
+  $('sourceGrid').innerHTML=fields.map(([k,v])=>'<div class="source-item '+(k==='Source URL'?'source-wide':'')+'"><b>'+esc(k)+'</b><span>'+esc(val(v))+'</span></div>').join('');
 }
 async function save(){
   const destinationUrl=$('destinationUrl').value.trim();
@@ -103,11 +101,11 @@ async function save(){
     let parsed;try{parsed=new URL(destinationUrl)}catch{throw new Error('Enter a valid retailer or affiliate URL.');}
     if(!['http:','https:'].includes(parsed.protocol)||/(?:https?:\/\/[^\s]+){2,}/i.test(destinationUrl))throw new Error('The retailer URL appears invalid or contains multiple links.');
   }
-  const body={name:$('name').value.trim(),brand:$('brand').value.trim()||null,display_price:$('price').value===''?null:Number($('price').value),destination_url:destinationUrl||null,description:$('description').value.trim()||null,image_url:images[0]||null,image_urls:images,updated_at:new Date().toISOString()};
+  const body={name:$('name').value.trim(),brand:$('brand').value.trim()||null,destination_url:destinationUrl||null,store_description:$('description').value.trim()||null,features:$('features').value.trim()||null,benefits:$('benefits').value.trim()||null,ingredients:$('ingredients').value.trim()||null,usage_instructions:$('usage').value.trim()||null,skin_types:$('skinTypes').value.trim()||null,skin_concerns:$('skinConcerns').value.trim()||null,product_warnings:$('warnings').value.trim()||null,display_price:null,amazon_list_price:null,amazon_discount_percent:null,amazon_deal_text:null,image_url:images[0]||null,image_urls:images,updated_at:new Date().toISOString()};
   if(!body.name)throw new Error('Product title is required.');
-  if(body.display_price!==null&&(!Number.isFinite(body.display_price)||body.display_price<0))throw new Error('Price is invalid.');
-  product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body});
-  render();msg('Product details, brand, retailer link and images saved.');
+  const button=$('saveBtn'),oldLabel=button.textContent;if(button.disabled)return;button.disabled=true;button.textContent='Saving…';
+  try{product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body});render();msg('Product guide, retailer link and images saved.');}
+  finally{button.disabled=false;button.textContent=oldLabel;}
 }
 async function syncSource(){
  const btn=$('syncBtn');btn.disabled=true;btn.textContent='Syncing…';
@@ -118,14 +116,19 @@ async function syncSource(){
  finally{btn.disabled=false;btn.textContent='Sync source';}
 }
 async function publish(){
-  const next=!product.published;
-  if(next){
-    product=await api('/api/admin/products/'+encodeURIComponent(product.id)+'/publish',{method:'POST',body:{destination_url:product.destination_url||product.amazon_source_url||null,amazon_source_url:product.amazon_source_url||null}});
-  }else{
-    product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body:{published:false,updated_at:new Date().toISOString()}});
-  }
-  render();
-  msg(next?'Product published to the storefront.':'Product unpublished.');
+  const button=$('publishBtn');if(button.disabled)return;
+  const next=!product.published,oldLabel=button.textContent;button.disabled=true;button.textContent=next?'Publishing…':'Unpublishing…';
+  try{
+    if(next){
+      const destination=$('destinationUrl').value.trim();
+      if(!destination)throw new Error('Add the exact retailer or affiliate URL before publishing.');
+      if(!images.length)throw new Error('Add at least one product image before publishing.');
+      product=await api('/api/admin/products/'+encodeURIComponent(product.id)+'/publish',{method:'POST',body:{destination_url:destination,amazon_source_url:product.amazon_source_url||null}});
+    }else{
+      product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body:{published:false,updated_at:new Date().toISOString()}});
+    }
+    render();msg(next?'Product published to the storefront.':'Product unpublished.');
+  }finally{button.disabled=false;button.textContent=oldLabel;}
 }
 async function upload(){
  const files=[...$('imageFiles').files];if(!files.length)return msg('Choose one or more images first.',true);if(!sb)return msg('Supabase is not connected.',true);
