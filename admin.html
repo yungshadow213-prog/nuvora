@@ -2069,7 +2069,8 @@ function mergeSkinSiteConfig(raw){
  for(const [key,max] of Object.entries(builtInPageText))cfg[key]=String(src[key]??base[key]).slice(0,max);
  cfg.sections=cleanSections(src.sections,base.sections);
  if(Number(src.version||0)<2&&!cfg.sections.some(x=>x.type==='journal-grid'))cfg.sections.push({id:'journal',type:'journal-grid',visible:true,title:'Little notes for everyday skin.',eyebrow:'The journal',text:'Practical notes for building a routine at your own pace.',columns:3,product_ids:[]});
-  if(Number(src.version||0)<4&&!cfg.sections.some(x=>x.type==='routine-finder')){const heroIndex=cfg.sections.findIndex(x=>x.type==='hero');cfg.sections.splice(heroIndex>=0?heroIndex+1:0,0,{id:'routine-finder',type:'routine-finder',visible:true,title:'Find your routine, one step at a time.',eyebrow:'YOUR SKIN, YOUR PACE',text:'Choose a skin type to explore relevant finds. These labels are browsing aids, not a guarantee of suitability.'});};
+  if(Number(src.version||0)<4&&!cfg.sections.some(x=>x.type==='routine-finder')){const heroIndex=cfg.sections.findIndex(x=>x.type==='hero');cfg.sections.splice(heroIndex>=0?heroIndex+1:0,0,{id:'routine-finder',type:'routine-finder',visible:true,title:'Find your routine, one step at a time.',eyebrow:'YOUR SKIN, YOUR PACE',text:'Choose a skin type to explore relevant finds. These labels are browsing aids, not a guarantee of suitability.'});}
+  cfg.version=4;;
  cfg.pages=Array.isArray(src.pages)?src.pages.slice(0,30).map((p,i)=>({
   id:String(p.id||p.slug||('page-'+(i+1))).slice(0,80),
   title:String(p.title||'Untitled page').slice(0,120),
