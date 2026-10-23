@@ -1104,27 +1104,24 @@ async function ingestSourceProduct(sourceUrl,env){
             const dup=await supabaseRest(env,'GET','products',undefined,identityQuery);
             const rows=dup.ok?await dup.json():[];
             if(rows[0]){skipped++;results.push({ok:true,status:'skipped',retailer,source_url:sourceUrl,name:rows[0].name||'Existing product',reason:'Already imported',id:rows[0].id,duration_ms:Date.now()-started});continue;}
-            const title=smartProductTitle(listing.title||'',listing.brand||'') || (()=>{try{
-              const u=new URL(listing.resolved_url||sourceUrl);
-              const path=decodeURIComponent(u.pathname).split('/').filter(Boolean);
-              const dp=path.findIndex(x=>x.toLowerCase()==='dp');
-              const raw=dp>0?path[dp-1]:path[path.length-1];
-              return smartProductTitle(String(raw||'').replace(/[-_+]+/g,' '),listing.brand||'') || (retailer+' product');
-            }catch{return retailer+' product';}})();
-            if(title===retailer+' product'&&looksFragmentedText(String(listing.title||'')))throw new Error('The retailer returned unreadable product text. Try the direct product URL again or use the Amazon API fallback.');
-            const images=dedupeImages(listing.images,60);
+            const rawTitle=cleanText(listing.title,300);
+            const titleIssue=productTitleQualityIssue(rawTitle);
+            if(!rawTitle||titleIssue||looksFragmentedText(rawTitle))throw new Error(titleIssue||'The retailer returned unreadable product text. This link was not saved. Try the direct product URL again or use a retailer API fallback.');
+            const title=smartProductTitle(rawTitle,listing.brand||'');
+            if(!title||productTitleQualityIssue(title)||looksFragmentedText(title))throw new Error('The product title could not be cleaned reliably. This link was not saved; correct the source details and retry.');
+            const normalized=normalizeAmazonListing(listing);
+            const images=dedupeImages(normalized.images,60);
             if(!images.length)throw new Error('The retailer did not expose a usable product image.');
-            const features=Array.isArray(listing.features)?listing.features.filter(Boolean).slice(0,20):[];
-            let description=cleanMultilineText(listing.description,12000)||'';
+            const features=Array.isArray(normalized.features)?normalized.features.filter(Boolean).slice(0,20):[];
+            let description=cleanMultilineText(normalized.description,12000)||'';
             if(description.length<120){
               const detailParts=[];
-              if(Array.isArray(listing.features))detailParts.push(...listing.features.map(v=>cleanMultilineText(v,500)).filter(v=>v&&v.length>10).slice(0,10));
-              if(Array.isArray(listing.specifications))detailParts.push(...listing.specifications.map(x=>cleanMultilineText(Array.isArray(x)?String(x[0])+': '+String(x[1]):String(x),500)).filter(v=>v&&v.length>4).slice(0,10));
-              const intro=listing.brand?String(listing.brand)+' presents '+String(title)+'.':'This product, '+String(title)+', is described by the following source details.';
+              if(Array.isArray(normalized.features))detailParts.push(...normalized.features.map(v=>cleanMultilineText(v,500)).filter(v=>v&&v.length>10).slice(0,10));
+              if(Array.isArray(normalized.specifications))detailParts.push(...normalized.specifications.map(x=>cleanMultilineText(Array.isArray(x)?String(x[0])+': '+String(x[1]):String(x),500)).filter(v=>v&&v.length>4).slice(0,10));
+              const intro=normalized.brand?String(normalized.brand)+' presents '+String(title)+'.':'This product, '+String(title)+', is described by the following source details.';
               description=cleanMultilineText(intro+(detailParts.length?'\n\nKey details: '+detailParts.join(' • '):''),12000);
             }
             description=description||null;
-            const normalized=normalizeAmazonListing(listing);
             const category_id=autoCategory(title,description,normalized.brand,categories);
             const product={
               name:title,kind:'find',brand:normalized.brand||null,description,features:features.join('\n')||null,
