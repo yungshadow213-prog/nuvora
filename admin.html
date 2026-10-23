@@ -467,6 +467,13 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
 .quality-good{background:#eaf5ec!important;border-color:#c7e4ce!important;color:#2f6840!important}
 .product-row-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
 @media(max-width:700px){.admin-product-thumb{width:44px;height:44px;flex-basis:44px}.product-row-actions{justify-content:flex-start;width:100%}}
+</style><style id="admin-catalog-filter-polish">
+.catalog-filter-chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.catalog-filter-chip{border:1px solid var(--line);background:var(--panel,#fff);color:var(--muted);border-radius:999px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer}
+.catalog-filter-chip[aria-pressed="true"]{background:var(--ink,#26352b);border-color:var(--ink,#26352b);color:#fff}
+.catalog-filter-chip:focus-visible{outline:3px solid #8ab6a0;outline-offset:2px}
+.catalog-result-count{font-size:12px;color:var(--muted);margin:10px 2px 0}
+@media(max-width:640px){.catalog-filter-chip{padding:8px 10px}.catalog-toolbar{align-items:stretch}}
 </style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
 <button data-icon="↥" onclick="show('import',this)">Import</button>
@@ -621,8 +628,15 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
   </div>
 
   <div class="catalog-toolbar panel">
-    <div class="catalog-search"><span>⌕</span><input id="adminProductSearch" oninput="renderProducts()" placeholder="Search product name, brand or ASIN"></div>
+    <div class="catalog-search"><span>⌕</span><input id="adminProductSearch" oninput="renderProducts()" placeholder="Search name, brand, ASIN or retailer" aria-label="Search product catalog"></div>
     <div class="catalog-filter-note"><span class="filter-dot"></span><span>Drafts stay private until published.</span></div>
+    <div class="catalog-filter-chips" role="group" aria-label="Filter products">
+      <button type="button" class="catalog-filter-chip" data-catalog-filter="all" aria-pressed="true" onclick="setAdminProductFilter('all')">All products</button>
+      <button type="button" class="catalog-filter-chip" data-catalog-filter="published" aria-pressed="false" onclick="setAdminProductFilter('published')">Published</button>
+      <button type="button" class="catalog-filter-chip" data-catalog-filter="drafts" aria-pressed="false" onclick="setAdminProductFilter('drafts')">Drafts</button>
+      <button type="button" class="catalog-filter-chip" data-catalog-filter="review" aria-pressed="false" onclick="setAdminProductFilter('review')">Needs review</button>
+    </div>
+    <div class="catalog-result-count" id="catalogResultCount" aria-live="polite"></div>
   </div>
 
   <div class="panel catalog-panel">
@@ -1032,6 +1046,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .btn{white-space:nowrap}
 <style id="skin-studio-clutter-removal">body.skin-studio-fullpage #skin-care>.skin-studio-hero,body.skin-studio-fullpage #skin-care>.skin-studio-stats,body.skin-studio-fullpage #skin-care>.skin-studio-section-head,body.skin-studio-fullpage #skin-care>.skin-studio-tools{display:none!important}body.skin-studio-fullpage #skin-care>.skin-site-builder{margin-top:0!important}body.skin-studio-fullpage .studio-toolbar .studio-overline{display:none}</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],bulkReview:['Import Review','Review, edit and publish the products from your latest bulk discovery.'],products:['Products','Manage Shop, Finds, and Learn listings.'],'skin-care':['Skin Care','Manage the dedicated Nuvora Skin skincare and beauty storefront.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['Settings','Connections and store configuration.']};
 let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[],collections=[],socialPosts=[];
+let adminProductFilter='all';
 window.__nuvoraSchemaState=window.__nuvoraSchemaState||{missingProductColumns:[],productSchemaError:''};
 function validURL(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
 
@@ -1181,16 +1196,32 @@ async function refreshAmazonDraft(id){
  }catch(error){setAdminStatus(sourceRefreshSaved?'The source refresh was saved as a draft, but the product list could not be refreshed. Reload the product library to confirm it.':(error.message||'Could not refresh this Amazon listing. The draft was not published.'),'error');}
  finally{buttons.forEach(button=>{button.disabled=false;button.textContent=button.dataset.originalLabel||'Refresh source';delete button.dataset.originalLabel;});}
 }
+function setAdminProductFilter(filter){
+  adminProductFilter=['all','published','drafts','review'].includes(filter)?filter:'all';
+  document.querySelectorAll('[data-catalog-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.catalogFilter===adminProductFilter)));
+  renderProducts();
+}
 function renderProducts(){
   const el=document.getElementById('productRows');
+  const query=String(document.getElementById('adminProductSearch')?.value||'').trim().toLowerCase();
+  const filteredProducts=adminProducts.filter(p=>{
+    const searchable=[p.name,p.brand,p.amazon_asin,p.retailer,p.source_type,p.category_name,p.category,p.slug,p.destination_url,p.amazon_source_url].filter(Boolean).join(' ').toLowerCase();
+    if(query&&!searchable.includes(query))return false;
+    if(adminProductFilter==='published'&&!p.published)return false;
+    if(adminProductFilter==='drafts'&&p.published)return false;
+    if(adminProductFilter==='review'&&!productReviewFlags(p).length)return false;
+    return true;
+  });
+  document.getElementById('catalogResultCount')?.replaceChildren(document.createTextNode(filteredProducts.length+' of '+adminProducts.length+' products'));
   if(!adminProducts.length){
     el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet.</div>';
   }else{
-    el.innerHTML=adminProducts.map(p=>{
+    el.innerHTML=filteredProducts.map(p=>{
       const dest=retailerDestination(p),label=retailerLabel(p),flags=productReviewFlags(p);
       const image=p.image_url&&/^https?:\/\//i.test(String(p.image_url))?'<img class="admin-product-thumb" src="'+esc(p.image_url)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'<span class="admin-product-thumb" aria-hidden="true"></span>';
       return '<div class="row"><div class="admin-product-leading">'+image+'<div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</div>'+(flags.length?'<div class="admin-product-flags">'+flags.map(flag=>'<span class="tag quality-warning">'+esc(flag)+'</span>').join('')+'</div>':'<div class="admin-product-flags"><span class="tag quality-good">Basic checks passed</span></div>')+'</div></div><div class="product-row-actions"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+(!p.published&&label==='Amazon'&&(p.amazon_source_url||p.source_url||p.resolved_url||p.destination_url)?'<button class="btn" data-product-refresh="'+esc(p.id)+'" onclick="refreshAmazonDraft(\''+esc(p.id)+'\')">Refresh source</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit</button><button class="btn" data-product-publish="'+esc(p.id)+'" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';
     }).join('');
+    if(!filteredProducts.length)el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">'+(adminProducts.length?'No products match this search or filter. Try another filter or clear the search.':'No products yet.')+'</div>';
   }
   updateCounts();
 }
