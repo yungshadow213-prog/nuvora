@@ -881,6 +881,8 @@ function autoCategory(title='',description='',brand='',categories=[]){
     const hay=(String(cat.name||'')+' '+String(cat.slug||'')).toLowerCase().replace(/-/g,' ');
     if(hay&&text.includes(hay))return cat.id||null;
   }
+  const skinCategory=(Array.isArray(categories)?categories:[]).find(cat=>/skin\\s*care|skincare/i.test(String(cat.name||'')+' '+String(cat.slug||'')));
+  if(skinCategory&&/\\b(?:skin|skincare|serum|moisturizer|moisturiser|cleanser|sunscreen|spf|toner|essence|retinol|niacinamide|hyaluronic|beauty|glass skin)\\b/i.test(text))return skinCategory.id||null;
   for(const [group,words] of Object.entries(aliases)){
     if(words.some(w=>text.includes(w))){
       const cat=(Array.isArray(categories)?categories:[]).find(x=>String(x.name||'').toLowerCase().includes(group)||String(x.slug||'').toLowerCase().includes(group));
@@ -1222,7 +1224,7 @@ async function ingestSourceProduct(sourceUrl,env){
           const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');
           if(cats.ok){
             const categories=await cats.json();
-            category_id=autoCategory(listing?.title||titleHint,listing?.brand||'',listing?.category_path||'',categories);
+            category_id=autoCategory(listing?.title||titleHint,listing?.category_path||'',listing?.brand||'',categories);
           }
         }catch(e){}
         return json({ok:true,asin,destination_url:amazonUrl,resolved_url:resolved,title_hint:listing?.title||titleHint||'Amazon product',retailer:'Amazon',kind:'find',category_id,duplicate,listing:listing||null});
