@@ -109,6 +109,18 @@ function validateSkinSiteConfig(value){
 }
 
 function cleanText(v,max=5000){return v==null?null:String(v).trim().slice(0,max)||null}
+function productTitleQualityIssue(value){
+  const name=String(value||'').trim(),words=name.match(/[A-Za-z0-9]+(?:['’][A-Za-z]+)*/g)||[];
+  const isolated=words.filter(word=>/^[A-Za-z]$/.test(word)).length;
+  if(!name||/^(?:amazon(?:\\.com)?|temu)(?:\\s+product)?$/i.test(name)||/^(?:azon\\.|mazon\\.com\\b|isit the\\b)/i.test(name))return 'This title is missing a reliable product name.';
+  if(words.length>=6&&isolated>=2)return 'This title appears incomplete or corrupted. Correct it from the retailer listing before publishing.';
+  if(/\\b(?:ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries)\\b/i.test(name)&&/\\b(?:isit|azon|rand|omedics|ahome|ndstone)\\b/i.test(name))return 'This title appears incomplete or corrupted. Correct it before publishing.';
+  return '';
+}
+function isDisplayableProductImage(value){
+  if(!validUrl(value))return false;
+  return !/(?:amazon-avatars-global|transparent-pixel|sprite|spacer|pixel\\b|tracking)/i.test(String(value).toLowerCase());
+}
 function validateProduct(product){
   if(!product||!cleanText(product.name,180))return 'Product name is required.';
   if(!cleanText(product.slug,180))return 'Product slug is required.';
@@ -117,6 +129,12 @@ function validateProduct(product){
   for(const k of ['destination_url','amazon_source_url','image_url'])if(product[k]&&!validUrl(product[k]))return `${k} must be a valid http(s) URL.`;
   if(product.image_urls!==undefined&&!Array.isArray(product.image_urls))return 'image_urls must be an array.';
   if(Array.isArray(product.image_urls)&&product.image_urls.length>30)return 'A product can have at most 30 images.';
+  if(product.published===true){
+    const titleIssue=productTitleQualityIssue(product.name);if(titleIssue)return titleIssue;
+    const images=Array.isArray(product.image_urls)?product.image_urls.filter(isDisplayableProductImage):(isDisplayableProductImage(product.image_url)?[product.image_url]:[]);
+    if(!images.length)return 'A published product needs a real product image, not a retailer logo, placeholder, or tracking image.';
+    if(!validUrl(product.destination_url))return 'A published product needs a valid destination or affiliate URL.';
+  }
   return null;
 }
 const server=http.createServer(async(req,res)=>{
