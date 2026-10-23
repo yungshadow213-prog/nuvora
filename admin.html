@@ -1117,7 +1117,7 @@ async function ensureSkinCategory(openForm=false){
     renderSkinProducts();return cat;
   }catch(e){setAdminStatus('Could not set up Skin Care: '+(e.message||e));throw e;}
 }
-async function openSkinProduct(){await ensureSkinCategory(true);window.skinCareImportMode=true;setSkinAdminFormMode(true);document.getElementById('productModalTitle').textContent='Import Amazon skincare';document.getElementById('productModalSub').textContent='Paste an Amazon skincare link. Nuvora will assign the Skin Care category and capture available listing details automatically. Price is managed on Amazon.';document.getElementById('amazonUrlInput').placeholder='Paste an Amazon skincare product or affiliate link';populateSkinRecommendations();}
+async function openSkinProduct(){await ensureSkinCategory(true);window.skinCareImportMode=true;setSkinAdminFormMode(true);document.getElementById('productModalTitle').textContent='Import Amazon skincare';document.getElementById('productModalSub').textContent='Paste an Amazon skincare link. Nuvora will assign the Skin Care category and capture available listing details automatically. Price is managed on Amazon.';document.getElementById('amazonUrlInput').placeholder='Paste an Amazon skincare product or affiliate link';const saveButton=document.getElementById('productSaveBtn');if(saveButton)saveButton.textContent='Save skincare draft';populateSkinRecommendations();}
 function productReviewFlags(p){
  const flags=[];
  const name=String(p?.name||'').trim(),words=name.match(/[A-Za-z0-9]+(?:['’][A-Za-z]+)*/g)||[];
@@ -2959,6 +2959,7 @@ async function editSkinProduct(id){
   openProductModal(false);window.skinCareImportMode=true;window.editingProductId=String(id);setSkinAdminFormMode(true);
   document.getElementById('productModalTitle').textContent='Edit skincare product';
   document.getElementById('productModalSub').textContent='Edit product details, image, skin guidance and the exact Amazon link. Nuvora Skin does not manage product prices.';
+  const saveButton=document.getElementById('productSaveBtn');if(saveButton)saveButton.textContent='Save changes';
   setProductForm(p);
   document.getElementById('pfBenefits').value=p.benefits||p.why_we_picked_it||'';
   document.getElementById('pfSkinTypes').value=p.skin_types||p.best_for||'';
