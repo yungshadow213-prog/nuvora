@@ -31,7 +31,9 @@ main{max-width:1280px;margin:auto;padding:28px 24px 70px}.layout{display:grid;gr
 <div class="layout">
 <section>
 <div class="panel"><h2>What you can change</h2><p>Nuvora automatically keeps the source information below. This workspace is intentionally focused on the things you actually control.</p>
-<div class="grid2"><div class="field"><label>Store title</label><input id="name"></div><div class="field"><label>Store price</label><input id="price" type="number" step="0.01" min="0"></div></div>
+<div class="grid2"><div class="field"><label>Store title</label><input id="name" autocomplete="off"></div><div class="field"><label>Brand / maker</label><input id="brand" autocomplete="organization" placeholder="Brand name"></div></div>
+<div class="grid2"><div class="field"><label>Store price</label><input id="price" type="number" step="0.01" min="0" placeholder="Leave blank if not verified"></div><div class="field"><label>Customer-facing retailer / affiliate URL</label><input id="destinationUrl" type="url" inputmode="url" placeholder="https://…"></div></div>
+<div class="readonly-note" style="margin-top:12px">Paste the exact tracked affiliate URL you want customers to open. The imported source URL is kept separately for source refresh. For Amazon items, check that the link includes your Associates tracking tag.</div>
 <div class="field"><label>Store description override <span style="font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label><textarea id="description" placeholder="Leave unchanged if you want Nuvora to use the imported source description."></textarea></div>
 </div>
 <div class="panel"><h2>Product images</h2><p>Keep the source gallery or replace/add images. AI-generated images are added as new gallery images so the original is never lost.</p>
@@ -73,7 +75,7 @@ function val(x){return x===null||x===undefined||x===''?'Not provided by source':
 function render(){
  $('pageTitle').firstChild.textContent=(product.name||'Product')+' ';
  $('status').textContent=product.published?'Published':'Draft';
- $('name').value=product.name||'';$('price').value=product.display_price??'';$('description').value=product.description||'';
+ $('name').value=product.name||'';$('brand').value=product.brand||'';$('price').value=product.display_price??'';$('destinationUrl').value=product.destination_url||product.amazon_source_url||product.source_url||'';$('description').value=product.description||'';
  $('category').textContent=val(product.category?.name||product.category_id);$('collection').textContent=val(product.collection?.name||product.collection_id);$('retailer').textContent=val(product.retailer||product.source_type);$('asin').textContent=val(product.amazon_asin||product.sourcinbox_product_id||product.id);
  images=[...(Array.isArray(product.image_urls)?product.image_urls:[]).filter(Boolean)];if(product.image_url&&!images.includes(product.image_url))images.unshift(product.image_url);renderGallery();renderSource();
  $('publishBtn').textContent=product.published?'Unpublish':'Publish';
@@ -96,9 +98,17 @@ function renderSource(){
  $('sourceGrid').innerHTML=fields.map(([k,v])=>'<div class="source-item '+(k==='Source URL'?'source-wide':'')+'"><b>'+esc(k)+'</b><span>'+esc(val(v))+'</span></div>').join('');
 }
 async function save(){
- const body={name:$('name').value.trim(),display_price:$('price').value===''?null:Number($('price').value),description:$('description').value.trim()||null,image_url:images[0]||null,image_urls:images,updated_at:new Date().toISOString()};
- if(!body.name)throw new Error('Product title is required.');if(body.display_price!==null&&(!Number.isFinite(body.display_price)||body.display_price<0))throw new Error('Price is invalid.');
- product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body});render();msg('Product changes saved.');}
+  const destinationUrl=$('destinationUrl').value.trim();
+  if(destinationUrl){
+    let parsed;try{parsed=new URL(destinationUrl)}catch{throw new Error('Enter a valid retailer or affiliate URL.');}
+    if(!['http:','https:'].includes(parsed.protocol)||/(?:https?:\/\/[^\s]+){2,}/i.test(destinationUrl))throw new Error('The retailer URL appears invalid or contains multiple links.');
+  }
+  const body={name:$('name').value.trim(),brand:$('brand').value.trim()||null,display_price:$('price').value===''?null:Number($('price').value),destination_url:destinationUrl||null,description:$('description').value.trim()||null,image_url:images[0]||null,image_urls:images,updated_at:new Date().toISOString()};
+  if(!body.name)throw new Error('Product title is required.');
+  if(body.display_price!==null&&(!Number.isFinite(body.display_price)||body.display_price<0))throw new Error('Price is invalid.');
+  product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body});
+  render();msg('Product details, brand, retailer link and images saved.');
+}
 async function syncSource(){
  const btn=$('syncBtn');btn.disabled=true;btn.textContent='Syncing…';
  try{
