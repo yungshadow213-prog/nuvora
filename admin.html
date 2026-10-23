@@ -1192,7 +1192,7 @@ async function refreshAmazonDraft(id){
  finally{buttons.forEach(button=>{button.disabled=false;button.textContent=button.dataset.originalLabel||'Refresh source';delete button.dataset.originalLabel;});}
 }
 async function refreshFlaggedAmazonDrafts(){
- const sourceIssueFlags=new Set(['Title needs review','Brand needs review','Description needs review','Image needs review']);
+ const sourceIssueFlags=new Set(['Title needs review','Brand needs review','Description needs review','Image needs review','ASIN mismatch']);
  const candidates=adminProducts.filter(p=>{
    if(p.published||retailerLabel(p)!=='Amazon')return false;
    if(!productReviewFlags(p).some(flag=>sourceIssueFlags.has(flag)))return false;
