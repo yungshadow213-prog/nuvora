@@ -2198,10 +2198,10 @@ function renderSkinLibrary(){
    (rows.length?rows.map(p=>{
     const id=String(p.id),image=skinImageOf(p),published=!!p.published;
     const selection=skinStudioSelection?.type==='product'&&String(skinStudioSelection.id)===id;
-    return '<article class="studio-library-item '+(selection?'is-selected':'')+'" onclick="selectSkinItem(\'product\','+JSON.stringify(id)+')">'+
+    return '<article class="studio-library-item '+(selection?'is-selected':'')+'" onclick="selectSkinItem(\'product\','+esc(JSON.stringify(id))+')">'+
      (image?'<img src="'+esc(image)+'" alt="" loading="lazy">':'<div class="studio-product-placeholder">◯</div>')+
      '<div class="studio-library-item-copy"><b>'+esc(p.name||'Untitled product')+'</b><small>'+esc(published?'Published':'Draft — not visible yet')+' · '+esc(retailerLabel(p))+'</small></div>'+
-     '<div class="studio-library-item-actions"><button type="button" onclick="editSkinProduct('+JSON.stringify(id)+');event.stopPropagation()">Edit details</button><button type="button" onclick="addSkinProductToSection('+JSON.stringify(id)+',skinStudioSelection?.type===\'section\'?skinStudioSelection.id:null,skinStudioPageId);event.stopPropagation()">＋ Place on page</button></div></article>';
+     '<div class="studio-library-item-actions"><button type="button" onclick="editSkinProduct('+esc(JSON.stringify(id))+');event.stopPropagation()">Edit details</button><button type="button" onclick="addSkinProductToSection('+esc(JSON.stringify(id))+',skinStudioSelection?.type===\'section\'?skinStudioSelection.id:null,skinStudioPageId);event.stopPropagation()">＋ Place on page</button></div></article>';
    }).join(''):'<div class="studio-library-empty">No skincare products found yet. Add a product by pasting its Amazon link or create one manually.</div>');
   return;
  }
@@ -2272,10 +2272,10 @@ function renderSkinSelectedInspector(){
   setHead('Product settings',String(p.name||'Skincare product'));
   root.innerHTML=(image?'<img src="'+esc(image)+'" alt="" style="display:block;width:100%;max-height:190px;object-fit:cover;border:1px solid #e3e9e1;border-radius:10px;margin-bottom:12px">':'')+
    '<p class="studio-inline-help">'+esc(p.published?'Published product':'Draft product — publish before placing it in a live grid')+' · '+esc(retailerLabel(p))+'</p>'+
-   '<label class="studio-inspector-field"><span>Storefront category</span><select onchange="assignSkinProductCategory('+JSON.stringify(id)+',this.value)"><option value="">Automatic product type</option>'+cats.map(cat=>'<option value="'+esc(cat.slug)+'" '+(current===String(cat.slug)||current===String(cat.id)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>'+
+   '<label class="studio-inspector-field"><span>Storefront category</span><select onchange="assignSkinProductCategory('+esc(JSON.stringify(id))+',this.value)"><option value="">Automatic product type</option>'+cats.map(cat=>'<option value="'+esc(cat.slug)+'" '+(current===String(cat.slug)||current===String(cat.id)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>'+
    '<p class="studio-inline-help">This category controls where the product appears in Nuvora Skin. It does not change the main Nuvora product taxonomy.</p>'+
    (dest?'<a class="btn" style="display:inline-flex;margin:0 0 12px" href="'+esc(dest)+'" target="_blank" rel="noopener noreferrer">Check saved retailer link ↗</a>':'<div class="notice" style="font-size:10px">No specific retailer link is saved yet. Add the exact Amazon link in the product editor before publishing.</div>')+
-   '<div class="studio-inspector-actions"><button class="btn primary" type="button" onclick="editSkinProduct('+JSON.stringify(id)+')">Edit product details</button><button class="btn" type="button" onclick="togglePublish('+JSON.stringify(id)+')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" type="button" onclick="removeProduct('+JSON.stringify(id)+');renderSkinLibrary()">Delete</button></div>';
+   '<div class="studio-inspector-actions"><button class="btn primary" type="button" onclick="editSkinProduct('+esc(JSON.stringify(id))+')">Edit product details</button><button class="btn" type="button" onclick="togglePublish('+esc(JSON.stringify(id))+')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" type="button" onclick="removeProduct('+esc(JSON.stringify(id))+');renderSkinLibrary()">Delete</button></div>';
   return;
  }
  if(selection.type==='page'){
