@@ -386,7 +386,7 @@ body.skin-studio-fullpage .studio-library-item[draggable="true"]:active{cursor:g
 .studio-site-settings[open] .skin-builder-controls{padding:0 10px 10px}
 @media(max-width:700px){.studio-site-link-fields{grid-template-columns:1fr}.studio-site-link-row{padding:8px}}
 </style>
-</head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
+</head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
 <button data-icon="↥" onclick="show('import',this)">Import</button>
 <button data-icon="▣" onclick="show('products',this)">Products</button>
@@ -1731,7 +1731,18 @@ async function createSocialPost(){const title=document.getElementById('socialTit
 async function markSocialReady(id){try{await api('/api/admin/social-posts/'+encodeURIComponent(id),{method:'PATCH',body:{status:'ready'}});await loadSocial();}catch(e){setAdminStatus(e.message)}}
 async function deleteSocial(id){try{await api('/api/admin/social-posts/'+encodeURIComponent(id),{method:'DELETE'});await loadSocial();}catch(e){setAdminStatus(e.message)}}
 document.addEventListener('input',e=>{if(e.target&&e.target.id==='pfImages')renderProductImages();});
-async function signOutAdmin(){try{if(adminSB)await adminSB.auth.signOut()}finally{location.href='/'}}
+async function signOutAdmin(){try{if(adminSB)await adminSB.auth.signOut({scope:'local'})}finally{location.href='/'}}
+async function switchAdminAccount(){
+  const button=document.getElementById('switchGoogleAccount');
+  if(button){button.disabled=true;button.textContent='Signing out…'}
+  try{
+    if(adminSB)await adminSB.auth.signOut({scope:'local'});
+    await signInWithGoogle();
+  }catch(e){
+    if(button){button.disabled=false;button.textContent='Sign out / switch Google account'}
+    showAuthError(e.message||'Could not switch Google accounts. Please try again.');
+  }
+}
 function showAuthError(message){const e=document.getElementById('authError');e.textContent=message;e.style.display='block';}
 function showAuthGate(){document.getElementById('authGate').style.display='grid';}
 function hideAuthGate(){document.getElementById('authGate').style.display='none';}
@@ -1741,7 +1752,7 @@ async function signInWithGoogle(){
     document.getElementById('googleSignIn').textContent='Opening Google…';
     const redirectPath=/^\/admin\/skin-studio\/?$/.test(window.location.pathname)?window.location.pathname:'/admin.html';
     const redirectTo=new URL(redirectPath,window.location.origin).href;
-    const {error}=await adminSB.auth.signInWithOAuth({provider:'google',options:{redirectTo}});
+    const {error}=await adminSB.auth.signInWithOAuth({provider:'google',options:{redirectTo,queryParams:{prompt:'select_account'}}});
     if(error)throw error;
   }catch(e){
     document.getElementById('googleSignIn').disabled=false;
@@ -1801,7 +1812,7 @@ async function adminBoot(){
     adminSB.auth.onAuthStateChange((_event,session)=>{
       adminSession=session;
       adminUser=session?.user||null;
-      if(!session)location.href='/';
+      if(!session)showAuthGate();
     });
   }catch(e){
     document.body.innerHTML='<div style="min-height:100vh;display:grid;place-items:center;background:#07111f;color:white;font-family:Inter,system-ui"><div style="text-align:center;max-width:520px;padding:24px"><h2>Nuvora Admin</h2><p style="color:#9aa8bd">'+esc(e.message)+'</p><button class="btn" onclick="location.href=\'/\'">Return to store</button></div></div>';
