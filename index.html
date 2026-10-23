@@ -160,6 +160,7 @@ body{background:radial-gradient(circle at 8% 0%,rgba(183,210,189,.28),transparen
 .nv-card{background:#fff;border-color:#e0e7e1;box-shadow:0 10px 28px rgba(35,52,40,.055)}.nv-card:hover{border-color:#bcd1c0;box-shadow:0 18px 42px rgba(35,52,40,.10)}.nv-card .thumb{background:#eef3ef}.nv-card .prodtext{background:linear-gradient(180deg,#fff,#fbfcfa)}
 @media(max-width:700px){.topbar{background:rgba(247,248,245,.92)}.hero{padding-top:44px}}
 
+.nv-catalog-retry{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;padding:8px 14px;border:1px solid currentColor;border-radius:999px;background:transparent;color:inherit;font:inherit;font-weight:600;cursor:pointer}.nv-catalog-retry:hover,.nv-catalog-retry:focus-visible{background:rgba(255,255,255,.7);outline-offset:3px}
 </style>
 <style id="nuvora-clean-redesign">
 :root{--bg:#f6f7f5;--surface:#fff;--surface2:#f0f2ef;--text:#172019;--muted:#6f786f;--line:#e3e7e2;--accent:#1d5c4a;--accent2:#dceee8;--shadow:0 12px 34px rgba(24,36,28,.08)}
@@ -877,7 +878,7 @@ function renderSkinRoutineFinder(type=activeSkinRoutine){
  const fit=type==='All'?beauty:beauty.filter(p=>String(p.skinTypes||p.bestFor||'').toLowerCase().includes(type.toLowerCase())||String([p.desc,p.features,p.skinConcerns].join(' ')).toLowerCase().includes(type.toLowerCase()));
  const results=fit.length?fit.slice(0,4):beauty.slice(0,4);
  if(catalogLoadState==='loading'&&!products.length){if(sub)sub.textContent='Loading published skincare products…';root.innerHTML='<div class="nv-routine-empty">Loading skincare finds…</div>';return;}
- if(catalogLoadState==='error'&&!products.length){if(sub)sub.textContent='The catalog could not be reached just now.';root.innerHTML='<div class="nv-routine-empty">Skincare products could not be loaded. Please refresh the page in a moment.</div>';return;}
+ if(catalogLoadState==='error'&&!products.length){if(sub)sub.textContent='The catalog could not be reached just now.';root.innerHTML='<div class="nv-routine-empty">Skincare products could not be loaded. <button type="button" class="nv-catalog-retry" onclick="retryNuvoraCatalog()">Try again</button></div>';return;}
  if(sub)sub.textContent=fit.length?('Showing '+(type==='All'?'published skincare finds':'products whose details mention '+type.toLowerCase()+' skin')+'.'):beauty.length?'No products explicitly mention '+type.toLowerCase()+' skin yet, so these are general skincare finds. Check each product label before use.':'Skincare products will appear here when they are published in the catalog.';
  root.innerHTML=results.length?results.map(card).join(''):'<div class="nv-routine-empty">'+(catalogLoadState==='loaded'?'No skincare products are published yet. Add and publish a skincare product in Nuvora Admin and it will appear here automatically.':'Skincare products will appear here when the published catalog is available.')+'</div>';
 }
@@ -1121,7 +1122,7 @@ async function bootNuvora(){
     catalogLoadState='error';try{renderSkinRoutineFinder()}catch(_){}
     const recovered=await emergencyCatalogFallback();
     if(!recovered){
-      const message='<div class="empty" style="grid-column:1/-1"><strong>Products could not be loaded.</strong><br><span>Please try again shortly.</span></div>';
+      const message='<div class="empty" style="grid-column:1/-1"><strong>Products could not be loaded.</strong><br><span>Check your connection and try again.</span><br><button type="button" class="nv-catalog-retry" onclick="retryNuvoraCatalog()">Retry catalog</button></div>';
       const a=document.getElementById('newProducts'),b=document.getElementById('randomPicks'),g=document.getElementById('browseGrid');
       if(a)a.innerHTML=message;if(b)b.innerHTML=message;if(g)g.innerHTML=message;
     }
@@ -1142,6 +1143,27 @@ async function bootNuvora(){
     });
   }catch(e){console.warn('Nuvora account backend unavailable:',e.message)}
 }
+async function retryNuvoraCatalog(){
+  const targets=['newProducts','randomPicks','browseGrid'];
+  const loading='<div class="empty" style="grid-column:1/-1">Refreshing the catalog…</div>';
+  targets.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=loading;});
+  catalogLoadState='loading';
+  try{
+    await loadLiveProducts();
+    const routeProduct=findProductFromPath();
+    if(routeProduct){renderProductPage(routeProduct);showView('product');}
+  }catch(error){
+    console.warn('Manual catalog retry failed:',error);
+    catalogLoadState='error';
+    try{renderSkinRoutineFinder()}catch(_){}
+    const recovered=await emergencyCatalogFallback();
+    if(!recovered){
+      const message='<div class="empty" style="grid-column:1/-1"><strong>Products could not be loaded.</strong><br><span>Check your connection and try again.</span><br><button type="button" class="nv-catalog-retry" onclick="retryNuvoraCatalog()">Retry catalog</button></div>';
+      targets.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=message;});
+    }
+  }
+}
+window.retryNuvoraCatalog=retryNuvoraCatalog;
 async function emergencyCatalogFallback(){
   try{
     const r=await fetch('/api/products?emergency='+Date.now(),{cache:'no-store',headers:{accept:'application/json'}});
