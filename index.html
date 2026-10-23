@@ -1346,7 +1346,7 @@ async function loadLiveProducts(){
   const safeCards=list=>list.map(p=>{
     try{return card(p)}catch(err){
       console.warn('Product card render failed',p?.id,err);
-      return '<article class="product nv-card" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button"><div class="thumb">'+(p.image?'<img src="'+htmlEsc(p.image)+'" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover">':'<span class="nv-image-mark">✦</span>')+'</div><div class="prodtext"><div class="card-source">'+htmlEsc(p.retailer||'Nuvora')+'</div><h4>'+htmlEsc(p.name||'Product')+'</h4><div class="card-bottom"><span class="prodprice">'+htmlEsc(p.price||'Price unavailable')+'</span><span class="card-action">View <span>→</span></span></div></div></article>';
+      return '<article class="product nv-card" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button"><div class="thumb">'+(p.image?'<img src="'+htmlEsc(p.image)+'" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover">':'<span class="nv-image-mark">✦</span>')+'</div><div class="prodtext"><div class="card-source">'+htmlEsc(p.retailer||'Nuvora')+'</div><h4>'+htmlEsc(p.name||'Product')+'</h4><div class="card-bottom"><span class="card-action">View product guide →</span></div></div></article>';
     }
   }).join('');
   const renderSafe=(id,html)=>{const el=document.getElementById(id);if(el)el.innerHTML=html;};
