@@ -1230,9 +1230,14 @@ async function loadLiveProducts(){
   }).join('');
   const renderSafe=(id,html)=>{const el=document.getElementById(id);if(el)el.innerHTML=html;};
   const empty='<div class="empty" style="grid-column:1/-1">No published products yet.</div>';
-  if(!cleanList.length)throw new Error('Catalog returned no renderable products.');
-  renderSafe('newProducts',safeCards(cleanList.slice(0,8))||empty);
-  renderSafe('randomPicks',safeCards([...cleanList].sort(()=>Math.random()-0.5).slice(0,8))||empty);
+  const newest=cleanList.slice(0,8),newestIds=new Set(newest.map(p=>String(p.id)));
+  const discovery=cleanList.filter(p=>!newestIds.has(String(p.id))).sort(()=>Math.random()-0.5).slice(0,8);
+  const newestSection=document.getElementById('newProducts')?.closest('.section');
+  const discoverySection=document.getElementById('randomPicks')?.closest('.section');
+  if(newestSection)newestSection.hidden=!newest.length;
+  if(discoverySection)discoverySection.hidden=!discovery.length;
+  renderSafe('newProducts',safeCards(newest)||empty);
+  renderSafe('randomPicks',safeCards(discovery));
   try{renderSkinRoutineFinder()}catch(err){console.warn('Skin routine finder could not render:',err);}
   try{renderBrowse()}catch(err){console.warn('Browse catalog render failed:',err);renderSafe('browseGrid',safeCards(cleanList)||empty);}
   try{renderList('shopGrid','Shop');renderList('findGrid','Find');renderLearn()}catch(err){console.warn('Secondary catalog render failed:',err);}
