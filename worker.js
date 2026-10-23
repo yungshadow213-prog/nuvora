@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-catalog-quality-r20',
+          release:'nuvora-2026-10-23-catalog-quality-r21',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -1839,7 +1839,12 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             shopify_variants:Array.isArray(source.shopify_variants)?source.shopify_variants:[],
           };
           return publicProduct;
-        }),200,storefront==='beauty'?{'access-control-allow-origin':'https://client-store-platform.rayyung713.workers.dev','vary':'Origin'}:{});
+        }),200,{
+          'cache-control':'no-store, no-cache, must-revalidate, max-age=0',
+          'pragma':'no-cache',
+          'vary':'Origin',
+          ...(storefront==='beauty'?{'access-control-allow-origin':'https://client-store-platform.rayyung713.workers.dev'}:{})
+        });
       }
       async function supabaseProductWrite(env,method,product,query=''){
         const payload={...product};
