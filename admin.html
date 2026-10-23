@@ -617,6 +617,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
       <button class="btn retailer-btn" disabled>Shopify · Coming soon</button>
       <button class="btn" onclick="showImportPage('amazon')">Amazon</button>
       <button class="btn" onclick="showImportPage('temu')">Temu</button><button class="btn primary" onclick="showImportPage('amazon')">Smart Import</button>
+      <button class="btn" type="button" id="refreshFlaggedAmazonDraftsBtn" onclick="refreshFlaggedAmazonDrafts()">Repair flagged Amazon drafts</button>
       <button class="btn primary" onclick="openProductModal(false)">+ Add product</button>
     </div>
   </div>
@@ -1154,12 +1155,12 @@ function productReviewFlags(p){
 }
 async function refreshAmazonDraft(id){
  const p=adminProducts.find(item=>String(item.id)===String(id));
- if(!p){setAdminStatus('This product is no longer in the current catalog. Refresh the product library and try again.','error');return;}
+ if(!p){setAdminStatus('This product is no longer in the current catalog. Refresh the product library and try again.','error');return false;}
  if(p.published){setAdminStatus('Unpublish this product before refreshing its source. Refreshing always saves as a draft for review.','error');return;}
  const source=String(p.amazon_source_url||p.source_url||p.resolved_url||p.destination_url||'').trim();
  if(!/^https?:\/\/(?:www\.)?amazon\./i.test(source)){setAdminStatus('No Amazon source URL is saved for this draft. Open Edit and add the original Amazon listing URL.','error');return;}
  const buttons=[...document.querySelectorAll('[data-product-refresh]')].filter(button=>String(button.dataset.productRefresh)===String(id));
- if(buttons.some(button=>button.disabled))return;
+ if(buttons.some(button=>button.disabled))return false;
  buttons.forEach(button=>{button.disabled=true;button.dataset.originalLabel=button.textContent;button.textContent='Refreshing…';});
  setAdminStatus('Re-reading the original Amazon listing. Your current draft will not be published automatically.','info');
  let sourceRefreshSaved=false;
@@ -1186,8 +1187,40 @@ async function refreshAmazonDraft(id){
   sourceRefreshSaved=true;
   await liveAdminProducts();
   setAdminStatus('Source refreshed for “'+title+'”. The product remains a draft; review its details and images before publishing.','success');
- }catch(error){setAdminStatus(sourceRefreshSaved?'The source refresh was saved as a draft, but the product list could not be refreshed. Reload the product library to confirm it.':(error.message||'Could not refresh this Amazon listing. The draft was not published.'),'error');}
+   return true;
+ }catch(error){setAdminStatus(sourceRefreshSaved?'The source refresh was saved as a draft, but the product list could not be refreshed. Reload the product library to confirm it.':(error.message||'Could not refresh this Amazon listing. The draft was not published.'),'error');return sourceRefreshSaved;}
  finally{buttons.forEach(button=>{button.disabled=false;button.textContent=button.dataset.originalLabel||'Refresh source';delete button.dataset.originalLabel;});}
+}
+async function refreshFlaggedAmazonDrafts(){
+ const sourceIssueFlags=new Set(['Title needs review','Brand needs review','Description needs review','Image needs review']);
+ const candidates=adminProducts.filter(p=>{
+   if(p.published||retailerLabel(p)!=='Amazon')return false;
+   if(!productReviewFlags(p).some(flag=>sourceIssueFlags.has(flag)))return false;
+   const source=String(p.amazon_source_url||p.source_url||p.resolved_url||p.destination_url||'').trim();
+   return /^https?:\/\/(?:www\.)?amazon\./i.test(source);
+ });
+ if(!candidates.length){setAdminStatus('No flagged Amazon drafts with a recoverable source link were found. Edit any item without a source link manually.','info');return;}
+ if(!window.confirm('Refresh '+candidates.length+' flagged Amazon draft(s) from their saved source links? This runs one at a time, updates only drafts, and never publishes automatically.'))return;
+ const button=document.getElementById('refreshFlaggedAmazonDraftsBtn');
+ if(button?.disabled)return;
+ if(button){button.disabled=true;button.dataset.originalLabel=button.textContent;}
+ let refreshed=0,failed=0;
+ try{
+   for(let index=0;index<candidates.length;index++){
+     const item=candidates[index];
+     if(button)button.textContent='Refreshing '+(index+1)+'/'+candidates.length+'…';
+     setAdminStatus('Refreshing source '+(index+1)+' of '+candidates.length+': '+item.name+'. The product will remain a draft.','info');
+     const ok=await refreshAmazonDraft(item.id);
+     if(ok)refreshed++;else failed++;
+     if(index<candidates.length-1)await new Promise(resolve=>setTimeout(resolve,900));
+   }
+   await liveAdminProducts();
+   setAdminStatus('Source repair finished: '+refreshed+' refreshed, '+failed+' need manual review. All refreshed products remain drafts until you review and publish them.',failed?'error':'success');
+ }catch(error){
+   setAdminStatus('Source repair stopped early. '+refreshed+' refreshed, '+failed+' failed so far. Your products remain drafts. '+(error.message||''),'error');
+ }finally{
+   if(button){button.disabled=false;button.textContent=button.dataset.originalLabel||'Repair flagged Amazon drafts';delete button.dataset.originalLabel;}
+ }
 }
 function renderProducts(){
   const el=document.getElementById('productRows');
