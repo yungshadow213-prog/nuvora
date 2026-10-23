@@ -1712,6 +1712,10 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const configError=validateSkinSiteConfig(patch.skin_site_config);
           if(configError)return json({error:configError},400);
         }
+        if(Object.prototype.hasOwnProperty.call(patch,'skin_site_draft')&&patch.skin_site_draft!==null){
+          const draftError=validateSkinSiteConfig(patch.skin_site_draft);
+          if(draftError)return json({error:'Skin Studio draft: '+draftError},400);
+        }
         patch.updated_at=new Date().toISOString();
         const r=await supabaseRest(env,'PATCH','store_settings',patch,'?id=eq.true'); if(!r.ok)return json({error:await r.text()},400);
         return json((await r.json())[0]||null);
