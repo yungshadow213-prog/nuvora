@@ -881,8 +881,8 @@ function autoCategory(title='',description='',brand='',categories=[]){
     const hay=(String(cat.name||'')+' '+String(cat.slug||'')).toLowerCase().replace(/-/g,' ');
     if(hay&&text.includes(hay))return cat.id||null;
   }
-  const skinCategory=(Array.isArray(categories)?categories:[]).find(cat=>/skin\\s*care|skincare/i.test(String(cat.name||'')+' '+String(cat.slug||'')));
-  if(skinCategory&&/\\b(?:skin|skincare|serum|moisturizer|moisturiser|cleanser|sunscreen|spf|toner|essence|retinol|niacinamide|hyaluronic|beauty|glass skin)\\b/i.test(text))return skinCategory.id||null;
+  const skinCategory=(Array.isArray(categories)?categories:[]).find(cat=>/skin\s*care|skincare/i.test(String(cat.name||'')+' '+String(cat.slug||'')));
+  if(skinCategory&&/\b(?:skin|skincare|serum|moisturizer|moisturiser|cleanser|sunscreen|spf|toner|essence|retinol|niacinamide|hyaluronic|beauty|glass skin)\\b/i.test(text))return skinCategory.id||null;
   for(const [group,words] of Object.entries(aliases)){
     if(words.some(w=>text.includes(w))){
       const cat=(Array.isArray(categories)?categories:[]).find(x=>String(x.name||'').toLowerCase().includes(group)||String(x.slug||'').toLowerCase().includes(group));
