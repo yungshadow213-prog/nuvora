@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-catalog-quality-r21',
+          release:'nuvora-2026-10-23-import-quality-r22',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
