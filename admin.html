@@ -1568,9 +1568,9 @@ async function saveProductDraft(){
     skip_if:window.skinCareImportMode?(document.getElementById('pfSkinAvoid').value.trim()||null):null,
     recommended_product_ids:window.skinCareImportMode?Array.from(document.getElementById('pfRecommendedProducts').selectedOptions).map(o=>o.value):[],
     recommendation_reason:window.skinCareImportMode?(document.getElementById('pfRecommendationReason').value.trim()||null):null,
-    featured:window.skinCareImportMode?document.getElementById('pfSkinFeatured').checked:!!adminProducts.find(x=>x.id===window.editingProductId)?.featured,
-    top_pick:window.skinCareImportMode?document.getElementById('pfSkinTopPick').checked:!!adminProducts.find(x=>x.id===window.editingProductId)?.top_pick,
-    trending:window.skinCareImportMode?document.getElementById('pfSkinTrending').checked:!!adminProducts.find(x=>x.id===window.editingProductId)?.trending,
+    featured:window.skinCareImportMode?document.getElementById('pfSkinFeatured').checked:!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.featured,
+    top_pick:window.skinCareImportMode?document.getElementById('pfSkinTopPick').checked:!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.top_pick,
+    trending:window.skinCareImportMode?document.getElementById('pfSkinTrending').checked:!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.trending,
     ingredients:document.getElementById('pfIngredients').value.trim()||null,usage_instructions:document.getElementById('pfUsage').value.trim()||null,product_warnings:document.getElementById('pfWarnings').value.trim()||null,product_size:document.getElementById('pfProductSize').value.trim()||null,
     image_url:images[0]||null,image_urls:images,display_price:window.skinCareImportMode?null:(document.getElementById('pfPrice').value===''?null:Number(document.getElementById('pfPrice').value)),
     amazon_list_price:window.skinCareImportMode?null:(document.getElementById('pfListPrice').value===''?null:Number(document.getElementById('pfListPrice').value)),
@@ -1586,7 +1586,7 @@ async function saveProductDraft(){
     sourcinbox_product_url:document.getElementById('pfSourcinboxUrl').value.trim()||null,
     sourcinbox_product_id:document.getElementById('pfSourcinboxId').value.trim()||null,
     supplier_cost:document.getElementById('pfSupplierCost').value===''?null:Number(document.getElementById('pfSupplierCost').value),
-    published:window.editingProductId?!!adminProducts.find(x=>x.id===window.editingProductId)?.published:false
+    published:window.editingProductId?!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.published:false
   };
   if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer='Amazon';}
   try{
@@ -2738,8 +2738,9 @@ async function openSkinManualProduct(){
 }
 async function editSkinProduct(id){
  try{
-  const p=adminProducts.find(x=>String(x.id)===String(id));
-  if(!p)throw new Error('Product not found in the skincare catalog. Refresh the Products tab and try again.');
+  let p=adminProducts.find(x=>String(x.id)===String(id));
+  if(!p){await liveAdminProducts();p=adminProducts.find(x=>String(x.id)===String(id));}
+  if(!p)throw new Error('Product not found in the skincare catalog after refreshing the catalog. Try reloading Skin Studio.');
   if(!categories.length)await loadCategories();
   openProductModal(false);window.skinCareImportMode=true;window.editingProductId=String(id);setSkinAdminFormMode(true);
   document.getElementById('productModalTitle').textContent='Edit skincare product';
