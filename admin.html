@@ -1132,7 +1132,8 @@ function productReviewFlags(p){
  const retailer=String(p?.retailer||p?.source_type||'').toLowerCase();
  const asin=String(p?.amazon_asin||'').trim().toUpperCase();
  const isAmazon=retailer.includes('amazon')||!!asin||/amazon\./i.test(destination);
- if(!/^https?:\/\//i.test(destination)||/(?:https?:\/\/[^\s]+){2,}/i.test(destination))flags.push('Retailer link needs review');
+ const needsRetailerLink=isAmazon||retailer.includes('temu')||(String(p?.kind||'').toLowerCase()==='find'&&!p?.shopify_product_id);
+ if(needsRetailerLink&&(!/^https?:\/\//i.test(destination)||/(?:https?:\/\/[^\s]+){2,}/i.test(destination)))flags.push('Retailer link needs review');
  if(asin&&destination){
    const linkedAsin=destination.match(/\/(?:dp|gp\/product|gp\/aw\/d)\/([A-Z0-9]{10})(?:[/?]|$)/i)?.[1]||destination.match(/[?&]asin=([A-Z0-9]{10})(?:&|$)/i)?.[1];
    if(linkedAsin&&linkedAsin.toUpperCase()!==asin)flags.push('ASIN mismatch');
