@@ -1736,6 +1736,11 @@ async function saveProductDraft(){
 }
 async function editProduct(id){
   if(!id)return;
+  const product=adminProducts.find(item=>String(item.id)===String(id));
+  if(product&&isSkinProduct(product)){
+    await editSkinProduct(id);
+    return;
+  }
   window.location.href='/edit-product.html?id='+encodeURIComponent(id);
 }
 function openProductForm(){openProductModal(false)}
@@ -2995,7 +3000,11 @@ async function editSkinProduct(id){
   document.getElementById('pfPrice').value='';document.getElementById('pfListPrice').value='';document.getElementById('pfDiscount').value='';
   document.getElementById('productModal').classList.add('open');
   document.getElementById('pfName')?.focus();
- }catch(e){skinBuilderMessage('Could not open the product editor: '+(e.message||e),'error');}
+ }catch(e){
+  const message='Could not open the product editor: '+(e.message||e);
+  if(document.body.classList.contains('skin-studio-fullpage'))skinBuilderMessage(message,'error');
+  else setAdminStatus(message,'error');
+ }
 }
 
 adminBoot();
