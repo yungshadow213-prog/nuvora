@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-import-quality-r22',
+          release:'nuvora-2026-10-23-fresh-catalog-reads-r23',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -1807,9 +1807,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           // title rewrite on every public read: repeated cleanup can damage
           // perfectly good titles/descriptions. If a legacy description is
           // visibly fragmented, prefer the clean editorial description.
-          const publicDescription=curatedDescription&&!looksFragmentedText(curatedDescription)
-            ?curatedDescription
-            :(storedDescription&&!looksFragmentedText(storedDescription)?storedDescription:normalized.description);
+          const publicDescription=curatedDescription
+            ||(storedDescription&&!looksFragmentedText(storedDescription)?storedDescription:normalized.description);
           const storedFeatures=safeText(source.features);
           const publicFeatures=storedFeatures&&!looksFragmentedText(storedFeatures)?storedFeatures:null;
           const isAmazonSource=/amazon/i.test(String(source.retailer||source.source_type||''))||!!source.amazon_asin||!!source.amazon_source_url;
@@ -2327,7 +2326,14 @@ async function adminUser(request,env){
 }
 async function supabaseRest(env,method,table,payload=null,query=''){
   const url=env.SUPABASE_URL+'/rest/v1/'+table+String(query||'');
-  const options={method,headers:{...sbHeaders(env,true),'Prefer':'return=representation'}};
+  const headers={...sbHeaders(env,true),'Prefer':'return=representation'};
+  // Catalog and admin reads must reflect the latest saved record. Some edge
+  // paths can retain GET responses even when the browser requests no-store.
+  if(String(method).toUpperCase()==='GET'){
+    headers['Cache-Control']='no-cache, no-store, max-age=0';
+    headers['Pragma']='no-cache';
+  }
+  const options={method,headers};
   if(payload!==undefined&&payload!==null){
     options.body=JSON.stringify(payload);
   }
