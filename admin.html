@@ -2168,7 +2168,7 @@ function renderSkinLibrary(){
     return '<article class="studio-library-item '+(selection?'is-selected':'')+'" onclick="selectSkinItem(\'product\','+JSON.stringify(id)+')">'+
      (image?'<img src="'+esc(image)+'" alt="" loading="lazy">':'<div class="studio-product-placeholder">◯</div>')+
      '<div class="studio-library-item-copy"><b>'+esc(p.name||'Untitled product')+'</b><small>'+esc(published?'Published':'Draft — not visible yet')+' · '+esc(retailerLabel(p))+'</small></div>'+
-     '<div class="studio-library-item-actions"><button type="button" onclick="event.stopPropagation();editSkinProduct('+JSON.stringify(id)+')">Edit</button></div></article>';
+     '<div class="studio-library-item-actions"><button type="button" onclick="event.stopPropagation();editSkinProduct('+JSON.stringify(id)+')">Edit details</button><button type="button" onclick="event.stopPropagation();addSkinProductToSection('+JSON.stringify(id)+',skinStudioSelection?.type===\'section\'?skinStudioSelection.id:null,skinStudioPageId)">＋ Place on page</button></div></article>';
    }).join(''):'<div class="studio-library-empty">No skincare products found yet. Add a product by pasting its Amazon link or create one manually.</div>');
   return;
  }
@@ -2500,6 +2500,14 @@ function moveSkinProductInSection(productId,targetProductId,sectionId,pageId){
  const [item]=ids.splice(from,1);ids.splice(ids.indexOf(String(targetProductId)),0,item);sec.product_ids=ids.slice(0,60);
  skinStudioPageId=pageId||'home';skinStudioSelection={type:'section',id:String(sectionId)};skinMarkDirty('Product order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
+function requestSkinSectionImageUpload(sectionId,pageId='home'){
+ skinStudioPageId=pageId||'home';
+ const sections=skinSectionsFor(skinStudioPageId),index=sections.findIndex(section=>String(section.id)===String(sectionId));
+ if(index<0)return skinBuilderMessage('Select a page section before changing its image.','error');
+ const input=document.createElement('input');input.type='file';input.accept='image/jpeg,image/png,image/webp,image/gif';input.style.display='none';
+ input.addEventListener('change',()=>{if(input.files?.length)uploadSkinStudioImage(input,'section',index);input.remove();},{once:true});
+ document.body.appendChild(input);input.click();
+}
 function sendSkinStudioPreview(){
  const frame=document.getElementById('skinStudioPreview');
  if(!frame||!skinBuilderConfig||!frame.contentWindow)return;
@@ -2527,6 +2535,17 @@ function wireSkinStudioCanvas(){
    const data=event.data;
    if(data.type==='nuvora-skin-studio-ready'){sendSkinStudioPreview();return;}
    if(!skinBuilderConfig)return;
+   if(data.type==='nuvora-skin-studio-request-add-product'){
+    skinStudioPageId=data.pageId||'home';skinStudioSelection={type:'section',id:String(data.sectionId||'')};
+    switchSkinStudioTab('products');renderSkinLibrary();
+    skinBuilderMessage('Choose “＋ Place on page” beside a product, or use the Add product button to create/import one.','info');return;
+   }
+   if(data.type==='nuvora-skin-studio-request-image-upload'){requestSkinSectionImageUpload(data.sectionId,data.pageId||'home');return;}
+   if(data.type==='nuvora-skin-studio-update-section-field'){
+    const sections=skinSectionsFor(data.pageId||'home'),index=sections.findIndex(section=>String(section.id)===String(data.sectionId));
+    if(index<0||!['title','eyebrow','text'].includes(data.key))return;
+    skinStudioPageId=data.pageId||'home';updateSkinSection(index,data.key,String(data.value??''));return;
+   }
    if(data.type==='nuvora-skin-studio-select-section'){
     skinStudioPageId=data.pageId||'home';
     skinStudioSelection={type:'section',id:String(data.sectionId||'')};
