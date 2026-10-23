@@ -458,7 +458,16 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
  body.skin-studio-fullpage .studio-right-panel{grid-column:auto;max-height:none;min-height:0}
 }
 </style>
-</head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
+<style id="nuvora-admin-quality-polish">
+.admin-product-thumb{width:54px;height:54px;flex:0 0 54px;border-radius:12px;object-fit:cover;background:#f2f0ea;border:1px solid var(--line)}
+.admin-product-leading{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
+.admin-product-leading>div{min-width:0}.admin-product-leading b{display:block;overflow-wrap:anywhere}
+.admin-product-flags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.quality-warning{background:#fff3e5!important;border-color:#edc18c!important;color:#8a4b11!important}
+.quality-good{background:#eaf5ec!important;border-color:#c7e4ce!important;color:#2f6840!important}
+.product-row-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:700px){.admin-product-thumb{width:44px;height:44px;flex-basis:44px}.product-row-actions{justify-content:flex-start;width:100%}}
+</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
 <button data-icon="↥" onclick="show('import',this)">Import</button>
 <button data-icon="▣" onclick="show('products',this)">Products</button>
@@ -1109,14 +1118,26 @@ async function ensureSkinCategory(openForm=false){
   }catch(e){setAdminStatus('Could not set up Skin Care: '+(e.message||e));throw e;}
 }
 async function openSkinProduct(){await ensureSkinCategory(true);window.skinCareImportMode=true;setSkinAdminFormMode(true);document.getElementById('productModalTitle').textContent='Import Amazon skincare';document.getElementById('productModalSub').textContent='Paste an Amazon skincare link. Nuvora will assign the Skin Care category and capture available listing details automatically. Price is managed on Amazon.';document.getElementById('amazonUrlInput').placeholder='Paste an Amazon skincare product or affiliate link';populateSkinRecommendations();}
+function productReviewFlags(p){
+ const flags=[];
+ const name=String(p?.name||'').trim(),words=name.match(/[A-Za-z0-9]+(?:['’][A-Za-z]+)*/g)||[];
+ const isolated=words.filter(w=>/^[A-Za-z]$/.test(w)).length;
+ if(!name||/^(?:amazon(?:\.com)?|temu)(?:\s+product)?$/i.test(name)||/^(?:azon\.|mazon\.com\b|isit the\b)/i.test(name)||(words.length>=6&&isolated>=2)||(/\b(?:ndles|omatherapy|rfect|ristmas|lentine|rthdays|iversaries)\b/i.test(name)&&/\b(?:isit|azon|rand|omedics|ahome|ndstone)\b/i.test(name)))flags.push('Title needs review');
+ const image=String(p?.image_url||'');
+ if(!image||/(?:amazon-avatars-global|transparent-pixel|sprite|spacer|pixel\b|tracking)/i.test(image))flags.push('Image needs review');
+ if(!p?.category_id)flags.push('Uncategorized');
+ if(p?.description&&(String(p.description).match(/\b[A-Za-z]\b/g)||[]).length>=5)flags.push('Description needs review');
+ return flags;
+}
 function renderProducts(){
   const el=document.getElementById('productRows');
   if(!adminProducts.length){
     el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet.</div>';
   }else{
     el.innerHTML=adminProducts.map(p=>{
-      const dest=retailerDestination(p),label=retailerLabel(p);
-      return '<div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit</button><button class="btn" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';
+      const dest=retailerDestination(p),label=retailerLabel(p),flags=productReviewFlags(p);
+      const image=p.image_url&&/^https?:\/\//i.test(String(p.image_url))?'<img class="admin-product-thumb" src="'+esc(p.image_url)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'<span class="admin-product-thumb" aria-hidden="true"></span>';
+      return '<div class="row"><div class="admin-product-leading">'+image+'<div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</div>'+(flags.length?'<div class="admin-product-flags">'+flags.map(flag=>'<span class="tag quality-warning">'+esc(flag)+'</span>').join('')+'</div>':'<div class="admin-product-flags"><span class="tag quality-good">Basic checks passed</span></div>')+'</div></div><div class="product-row-actions"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit</button><button class="btn" data-product-publish="'+esc(p.id)+'" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';
     }).join('');
   }
   updateCounts();
@@ -1640,11 +1661,15 @@ function openProductForm(){openProductModal(false)}
 async function createProduct(product){openProductModal(false);setProductForm(product)}
 async function amazonImport(){showImportPage('amazon')}
 async function togglePublish(id){
+ const publishButtons=[...document.querySelectorAll('[data-product-publish]')].filter(button=>String(button.dataset.productPublish)===String(id));
+ if(publishButtons.some(button=>button.disabled))return;
+ publishButtons.forEach(button=>{button.disabled=true;button.dataset.originalLabel=button.textContent;button.textContent='Working…';});
  const studio=document.body.classList.contains('skin-studio-fullpage');
  const p=adminProducts.find(x=>String(x.id)===String(id));
  if(!p){
   const message='Product not found in the current catalog. Refresh the product library and try again.';
   if(studio)skinBuilderMessage(message,'error');else setAdminStatus(message,'error');
+  publishButtons.forEach(button=>{button.disabled=false;button.textContent=button.dataset.originalLabel||'Publish';});
   return;
  }
  const publishing=!p.published,label=String(p.name||'Product');
@@ -1673,6 +1698,8 @@ async function togglePublish(id){
  }catch(e){
   const message=(e.message||'Publish failed.')+' No publish change was confirmed.';
   if(studio)skinBuilderMessage(message,'error');else setAdminStatus(message,'error');
+ }finally{
+  publishButtons.forEach(button=>{button.disabled=false;button.textContent=button.dataset.originalLabel||button.textContent;delete button.dataset.originalLabel;});
  }
 }
 let lastDiscoveredProductIds=[];
