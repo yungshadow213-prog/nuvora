@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-skin-guide-interaction-r33',
+          release:'nuvora-2026-10-23-skin-guide-modal-visibility-r34',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
