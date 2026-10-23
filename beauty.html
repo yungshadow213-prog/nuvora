@@ -163,7 +163,7 @@ function isAmazonProduct(p){return /amazon/i.test(String(p.retailer||p.source_ty
 function productButtonLabel(p){return isAmazonProduct(p)?'Check price on Amazon':'Check retailer';}
 function renderProductCard(p){
  const image=productImage(p),dest=safeUrl(p.destination_url);
- return '<article class="card" data-product-id="'+esc(p.id)+'"><div class="photo">'+(image?'<img src="'+esc(image)+'" alt="'+esc(p.name)+'" loading="lazy">':'<div class="empty">Image coming soon</div>')+'<span class="badge">'+esc(p.category?.name||'Skin edit')+'</span><button class="pin" aria-label="Save '+esc(p.name)+' to Pinterest" onclick="window.open('+JSON.stringify(pinUrl(p))+',\'_blank\',\'noopener\')">P</button></div><div class="card-copy"><div class="brandline">'+esc(p.brand||'NUVORA SKIN')+'</div><button class="product-name product-name-button" onclick="openProductDetails('+JSON.stringify(String(p.id))+')">'+esc(p.name)+'</button><p class="desc">'+esc(p.store_description||p.description||'A considered find for your everyday routine.')+'</p><div class="card-bottom"><button class="detail-btn" onclick="openProductDetails('+JSON.stringify(String(p.id))+')">View product guide</button>'+(dest?'<a class="buy" href="'+esc(dest)+'" target="_blank" rel="sponsored noopener noreferrer" onclick="trackClick('+JSON.stringify(String(p.id))+')">'+productButtonLabel(p)+' ↗</a>':'<span class="buy">Retailer link not set</span>')+'</div></div></article>';
+ return '<article class="card" data-product-id="'+esc(p.id)+'"><div class="photo">'+(image?'<img src="'+esc(image)+'" alt="'+esc(p.name)+'" loading="lazy">':'<div class="empty">Image coming soon</div>')+'<span class="badge">'+esc(p.category?.name||'Skin edit')+'</span><button class="pin" aria-label="Save '+esc(p.name)+' to Pinterest" onclick="window.open('+JSON.stringify(pinUrl(p))+',\'_blank\',\'noopener\')">P</button></div><div class="card-copy"><div class="brandline">'+esc(p.brand||'NUVORA SKIN')+'</div><button type="button" class="product-name product-name-button" data-open-product="'+esc(p.id)+'">'+esc(p.name)+'</button><p class="desc">'+esc(p.store_description||p.description||'A considered find for your everyday routine.')+'</p><div class="card-bottom"><button type="button" class="detail-btn" data-open-product="'+esc(p.id)+'">View product guide</button>'+(dest?'<a class="buy" href="'+esc(dest)+'" target="_blank" rel="sponsored noopener noreferrer" onclick="trackClick('+JSON.stringify(String(p.id))+')">'+productButtonLabel(p)+' ↗</a>':'<span class="buy">Retailer link not set</span>')+'</div></div></article>';
 }
 function filteredProducts(section){
  let list=[...products];
@@ -275,6 +275,12 @@ function openProductDetails(id){
 function closeProductDetails(){
  $('productDetailBackdrop').classList.remove('open');document.body.style.overflow='';if(location.hash.startsWith('#product-'))history.replaceState(null,'',location.pathname+location.search);lastFocusedElement?.focus?.();
 }
+document.addEventListener('click',event=>{
+ const trigger=event.target instanceof Element?event.target.closest('[data-open-product]'):null;
+ if(!trigger)return;
+ event.preventDefault();
+ openProductDetails(trigger.getAttribute('data-open-product'));
+});
 document.addEventListener('keydown',e=>{
  const dialog=$('productDetailBackdrop');if(!dialog.classList.contains('open'))return;
  if(e.key==='Escape'){closeProductDetails();return;}
