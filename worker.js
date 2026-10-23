@@ -2305,6 +2305,8 @@ function validateProduct(product){
   if(!['shop','find','learn'].includes(kind))return 'Product type must be shop, find, or learn.';
   if(product.display_price!==undefined&&product.display_price!==null&&(!Number.isFinite(Number(product.display_price))||Number(product.display_price)<0))return 'Product price is invalid.';
   if(product.published===true){
+    const retailerIdentity=[product.retailer,product.source_type,product.destination_url,product.amazon_source_url,product.source_url].filter(Boolean).join(' ').toLowerCase();
+    if(kind==='shop'&&/\b(?:amazon|temu)\b/i.test(retailerIdentity))return 'Amazon and Temu affiliate links must use the Finds catalog, not direct-checkout Shop products.';
     const titleIssue=productTitleQualityIssue(name);if(titleIssue)return titleIssue;
     const images=Array.isArray(product.image_urls)?product.image_urls.filter(isDisplayableProductImage):(isDisplayableProductImage(product.image_url)?[product.image_url]:[]);
     if(!images.length)return 'A published product needs a real product image, not a retailer logo, placeholder, or tracking image.';
