@@ -409,6 +409,37 @@ body.skin-studio-fullpage .studio-product-check input{width:auto;flex:0 0 auto;m
 body.skin-studio-fullpage .studio-product-check span{overflow-wrap:anywhere}
 @media(max-width:1050px){body.skin-studio-fullpage .studio-simple-guide{flex-wrap:wrap}body.skin-studio-fullpage .studio-simple-guide-intro{min-width:100%;padding-bottom:2px}body.skin-studio-fullpage .studio-guide-step{min-width:150px}}
 @media(max-width:700px){body.skin-studio-fullpage .studio-simple-guide{padding:9px;gap:6px}body.skin-studio-fullpage .studio-guide-step{flex:1 1 45%;padding:8px}body.skin-studio-fullpage .studio-guide-add{flex:1 1 100%}}
+
+/* Repair pass: make the workspace scrollable and keep hidden helper UI hidden. */
+body.skin-studio-fullpage,
+body.skin-studio-fullpage .app,
+body.skin-studio-fullpage .main,
+body.skin-studio-fullpage #skin-care.view,
+body.skin-studio-fullpage #skinSiteBuilder{height:auto!important;min-height:100vh;overflow:visible!important}
+body.skin-studio-fullpage .main{padding:0!important}
+body.skin-studio-fullpage #skin-care.view{display:flex!important;flex-direction:column}
+body.skin-studio-fullpage #skinSiteBuilder{flex:0 0 auto}
+body.skin-studio-fullpage .studio-layout{grid-template-columns:240px minmax(460px,1fr) 300px!important;flex:0 0 auto;min-height:calc(100vh - 125px);overflow:visible!important}
+body.skin-studio-fullpage .studio-left-panel,
+body.skin-studio-fullpage .studio-right-panel{overflow:visible!important;min-height:600px}
+body.skin-studio-fullpage .studio-canvas-panel{min-height:720px;overflow:hidden!important}
+body.skin-studio-fullpage .studio-canvas-viewport{min-height:620px}
+body.skin-studio-fullpage .studio-canvas-inner{min-height:600px}
+body.skin-studio-fullpage .studio-simple-guide[hidden],
+body.skin-studio-fullpage [hidden]{display:none!important}
+body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{display:inline-flex;align-items:center;justify-content:center;background:#edf4eb!important;border-color:#dce8d8!important;color:#315739!important}
+@media(max-width:1180px){
+ body.skin-studio-fullpage .studio-layout{grid-template-columns:230px minmax(0,1fr)!important}
+ body.skin-studio-fullpage .studio-right-panel{grid-column:1/-1;max-height:none;min-height:0;border-top:1px solid #dfe5dc}
+ body.skin-studio-fullpage .studio-canvas-panel{grid-column:2;grid-row:1;min-height:700px}
+}
+@media(max-width:760px){
+ body.skin-studio-fullpage .studio-layout{grid-template-columns:minmax(0,1fr)!important}
+ body.skin-studio-fullpage .studio-left-panel{min-height:480px;max-height:none}
+ body.skin-studio-fullpage .studio-canvas-panel{grid-column:auto;grid-row:auto;min-height:650px}
+ body.skin-studio-fullpage .studio-canvas-viewport{min-height:580px}
+ body.skin-studio-fullpage .studio-right-panel{grid-column:auto;max-height:none;min-height:0}
+}
 </style>
 </head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
@@ -666,6 +697,7 @@ body.skin-studio-fullpage .studio-product-check span{overflow-wrap:anywhere}
     </div>
     <div class="studio-toolbar-actions">
       <div class="studio-save-state"><span class="studio-save-dot"></span><span id="skinStudioSaveLabel">Saved version loaded</span></div>
+      <button class="btn" type="button" onclick="openSkinAdd('product')">+ Add product</button>
       <button class="btn" type="button" onclick="openSkinSiteSettings()">Edit whole site</button>
       <button class="btn" type="button" onclick="previewSkinSite()">View live ↗</button>
       <button class="btn" type="button" onclick="saveSkinSiteDraft()">Save draft</button>
