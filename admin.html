@@ -2634,6 +2634,9 @@ function wireSkinStudioCanvas(){
    if(data.type==='nuvora-skin-studio-move-product'){moveSkinProductInSection(data.productId,data.targetProductId,data.sectionId,data.pageId||'home');return;}
   });
  }
+ // The iframe can finish loading before DOMContentLoaded wires the listeners.
+ // Send the current draft after the listener is attached; the client re-acknowledges it.
+ sendSkinStudioPreview();
 }
 function previewSkinSite(){
  window.open(SKIN_CLIENT_ORIGIN+'/', '_blank','noopener');
