@@ -891,6 +891,7 @@ function autoCategory(title='',description='',brand='',categories=[]){
 }
 function cleanImportedTitle(value,brand=''){
   let t=amazonDecode(value).replace(/\s+/g,' ').trim();
+  if(looksFragmentedText(t)||productTitleQualityIssue(t))return '';
   t=t.replace(/^Amazon\.com\s*[:|-]\s*/i,'').replace(/\s*[|·]\s*(?:Amazon|Temu)\s*$/i,'');
   t=t.replace(/^\s*(?:Visit the|Shop)\s+[^:]{1,80}\s*(?:Store|Brand)?\s*[:|-]\s*/i,'');
   t=t.replace(/\b(?:official|best seller|#1 best seller|hot sale|trending|must have)\b/gi,'');
@@ -928,7 +929,7 @@ function dedupeImages(values,max=60){
 }
 function smartProductTitle(value,brand=''){
   let t=htmlText(amazonDecode(value)).replace(/\s+/g,' ').trim();
-  if(looksFragmentedText(t))return '';
+  if(looksFragmentedText(t)||productTitleQualityIssue(t))return '';
   t=t.replace(/^(?:Amazon\.com|Amazon)\s*[:|-]\s*/i,'');
   t=t.replace(/\s*[|·]\s*(?:Amazon|Temu).*$/i,'');
   t=t.replace(/\b(?:official|best seller|#1 best seller|hot sale|trending|must have|new arrival)\b/gi,'');
@@ -1217,7 +1218,7 @@ async function ingestSourceProduct(sourceUrl,env){
         let duplicate=null;
         try{const dup=await supabaseRest(env,'GET','products',undefined,'?select=id,name,published,amazon_asin&amazon_asin=eq.'+encodeURIComponent(asin)+'&limit=5');if(dup.ok){const rows=await dup.json();duplicate=rows[0]||null;}}catch(e){}
         let category_id=null;
-        try{const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cats.ok){const categories=await cats.json();category_id=autoCategory(titleHint,'','',categories);}}catch(e){}
+        try{const cats=await supabaseRest(env,'GET','categories',undefined,'?select=id,slug,name');if(cats.ok){const categories=await cats.json();category_id=autoCategory(listing?.title||titleHint,'','',categories);}}catch(e){}
         let listing=null; try{listing=await scrapeAmazonListing(resolved,asin,env);if(!listing?.error){listing=normalizeAmazonListing(listing);listing=await aiPolishAmazonListing(env,listing);}}catch(e){listing={error:String(e?.message||e).slice(0,300)};}
         return json({ok:true,asin,destination_url:amazonUrl,resolved_url:resolved,title_hint:listing?.title||titleHint||'Amazon product',retailer:'Amazon',kind:'find',category_id,duplicate,listing:listing||null});
       }
