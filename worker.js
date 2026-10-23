@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-skin-guide-modal-visibility-r34',
+          release:'nuvora-2026-10-23-catalog-import-publish-guardrails-r35',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -1966,8 +1966,26 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             if(!result.ok)return json({error:result.error},result.status||400);
             return json(result.product);
           }
-          const validation=validateProduct({...merged,name:merged.name,slug:merged.slug,kind:merged.kind});
+          // Editing an existing listing must remain possible even if its legacy content needs repair.
+          // Apply the full publish gate only when the admin explicitly publishes; validate edited fields themselves below.
+          const validation=validateProduct({...merged,name:merged.name,slug:merged.slug,kind:merged.kind,published:false});
           if(validation)return json({error:validation},400);
+          if(merged.published===true){
+            if(Object.prototype.hasOwnProperty.call(patch,'name')){
+              const titleIssue=productTitleQualityIssue(merged.name);
+              if(titleIssue)return json({error:titleIssue},400);
+            }
+            const imageTouched=Object.prototype.hasOwnProperty.call(patch,'image_url')||Object.prototype.hasOwnProperty.call(patch,'image_urls');
+            if(imageTouched){
+              const images=Array.isArray(patch.image_urls)?patch.image_urls.filter(isDisplayableProductImage):(isDisplayableProductImage(patch.image_url)?[patch.image_url]:[]);
+              if(!images.length)return json({error:'A published product needs a real product image. Replace the image or move the listing to draft first.'},400);
+            }
+            if(Object.prototype.hasOwnProperty.call(patch,'destination_url')&&!isValidHttpUrl(merged.destination_url))return json({error:'Enter a valid retailer destination URL or move the listing to draft first.'},400);
+            if(Object.prototype.hasOwnProperty.call(patch,'description')||Object.prototype.hasOwnProperty.call(patch,'store_description')){
+              const customerDescription=cleanText(merged.store_description,12000)||cleanText(merged.description,12000);
+              if(customerDescription&&looksFragmentedText(customerDescription))return json({error:'The customer-facing description appears incomplete or corrupted. Correct it or move the listing to draft first.'},400);
+            }
+          }
           if(typeof patch.description==='string')patch.description=cleanMultilineText(patch.description,12000);
           if(typeof patch.features==='string')patch.features=cleanMultilineText(patch.features,12000);
           if(typeof patch.brand==='string')patch.brand=cleanText(patch.brand,180);
