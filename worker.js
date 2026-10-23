@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-23-skin-studio-direct-preview-r14',
+          release:'nuvora-2026-10-23-full-store-quality-r15',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
