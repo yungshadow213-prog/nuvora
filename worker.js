@@ -294,8 +294,8 @@ function resolveProductDestination(current={},patch={}){
 }
 async function publishProductRecord(env,id,patch={}){
   // Read only the core fields first so optional legacy columns never block publish.
-  const coreFields=['id','name','slug','kind','image_url','image_urls','display_price','currency','destination_url','published','created_at','updated_at'];
-  const optionalFields=['retailer','provider','source_type','source_sku','amazon_asin','amazon_source_url','source_url','resolved_url','sourcinbox_product_url','temu_source_url'];
+  const coreFields=['id','name','slug','kind','image_url','image_urls','description','display_price','currency','destination_url','published','created_at','updated_at'];
+  const optionalFields=['retailer','provider','source_type','source_sku','amazon_asin','amazon_source_url','source_url','resolved_url','sourcinbox_product_url','temu_source_url','store_description'];
   const fields=[...coreFields,...optionalFields];
   let current=null,readError='';
   for(let attempt=0;attempt<=optionalFields.length;attempt++){
@@ -323,6 +323,16 @@ async function publishProductRecord(env,id,patch={}){
   if(!merged.destination_url)return {ok:false,status:400,error:'This product has no valid retailer URL. Import the retailer link or provide a destination URL before publishing.'};
   const validation=validateProduct(merged);
   if(validation)return {ok:false,status:400,error:validation};
+  const amazonIdentity=asinFromUrl(merged.amazon_source_url||merged.destination_url)||String(merged.amazon_asin||'').trim();
+  const amazonLike=/amazon/i.test(String(merged.retailer||merged.source_type||''))||!!amazonIdentity;
+  if(amazonLike&&amazonIdentity){
+    const duplicateQuery='?select=id,name,amazon_asin,amazon_source_url,destination_url&published=eq.true&id=neq.'+encodeURIComponent(id)+'&or=(amazon_asin.eq.'+encodeURIComponent(amazonIdentity)+',amazon_source_url.ilike.*'+encodeURIComponent(amazonIdentity)+'*,destination_url.ilike.*'+encodeURIComponent(amazonIdentity)+'*)&limit=1';
+    const duplicateResponse=await supabaseRest(env,'GET','products',undefined,duplicateQuery);
+    if(duplicateResponse.ok){
+      const duplicate=(await duplicateResponse.json())?.[0];
+      if(duplicate)return {ok:false,status:409,error:'This Amazon product is already published as “'+cleanText(duplicate.name,180)+'”. Unpublish or edit the existing listing instead of publishing a duplicate.'};
+    }
+  }
   const write={published:true,slug:merged.slug,destination_url:destination,updated_at:new Date().toISOString()};
   if(patch.amazon_source_url||current.amazon_source_url)write.amazon_source_url=patch.amazon_source_url||current.amazon_source_url;
   const result=await supabaseProductWrite(env,'PATCH',write,'?id=eq.'+encodeURIComponent(id));
@@ -2317,7 +2327,8 @@ function validateProduct(product){
     const images=Array.isArray(product.image_urls)?product.image_urls.filter(isDisplayableProductImage):(isDisplayableProductImage(product.image_url)?[product.image_url]:[]);
     if(!images.length)return 'A published product needs a real product image, not a retailer logo, placeholder, or tracking image.';
     if(!isValidHttpUrl(product.destination_url))return 'A published product needs a valid destination or affiliate URL.';
-    if(product.description&&looksFragmentedText(product.description))return 'The description appears incomplete or corrupted. Correct it before publishing.';
+    const customerDescription=cleanText(product.store_description,12000)||cleanText(product.description,12000);
+    if(customerDescription&&looksFragmentedText(customerDescription))return 'The customer-facing description appears incomplete or corrupted. Correct it before publishing.';
   }
   return null;
 }
