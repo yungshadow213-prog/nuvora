@@ -520,7 +520,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
       <div class="quick-grid">
         <button class="quick-card" onclick="showImportPage('amazon')"><span class="quick-icon">A</span><span><b>Amazon import</b><small>Paste a product link and pull listing data.</small></span><em>→</em></button>
         <button class="quick-card" onclick="openSourcinBoxImport()"><span class="quick-icon">S</span><span><b>SourcinBox import</b><small>Bring supplier products into Nuvora as drafts.</small></span><em>→</em></button>
-        <button class="quick-card" onclick="showImportPage('temu')"><span class="quick-icon">T</span><span><b>Temu import</b><small>Capture prices, images, specs and highlights.</small></span><em>→</em></button>
+        <button class="quick-card" onclick="showImportPage('temu')"><span class="quick-icon">T</span><span><b>Temu import</b><small>Capture images, product details and highlights.</small></span><em>→</em></button>
         <button class="quick-card" onclick="openProductModal(false)"><span class="quick-icon">+</span><span><b>Manual product</b><small>Create a listing from scratch.</small></span><em>→</em></button>
         <button class="quick-card" onclick="show('products',document.querySelector('.nav button:nth-child(3)'))"><span class="quick-icon">↗</span><span><b>Review drafts</b><small>Clean up imported products before publishing.</small></span><em>→</em></button>
       </div>
@@ -579,7 +579,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
       <div class="smart-import-bottom">
         <div class="smart-hint"><span>✓</span> Titles cleaned</div>
         <div class="smart-hint"><span>✓</span> Images captured</div>
-        <div class="smart-hint"><span>✓</span> Price & rating captured when exposed</div>
+        <div class="smart-hint"><span>✓</span> Product details captured when exposed</div>
         <div class="smart-hint"><span>✓</span> Category suggested</div>
         <button id="smartImportButton" class="btn primary smart-run" onclick="runSmartImport()">Import as drafts</button>
       </div>
@@ -590,7 +590,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
       <div class="import-step"><b>02</b><span><strong>Clean</strong><small>Navigation noise and promotional clutter are removed.</small></span></div>
       <div class="import-step"><b>03</b><span><strong>Organize</strong><small>Category, retailer and product fields are normalized.</small></span></div>
       <div class="import-step"><b>04</b><span><strong>Save</strong><small>Every successful item becomes a private draft.</small></span></div>
-      <div class="import-truth"><b>Truth-first import</b><span>Nuvora does not invent a price, shipping promise, rating or specification when the source page does not expose it.</span></div>
+      <div class="import-truth"><b>Truth-first import</b><span>Nuvora keeps product guidance factual and does not invent ingredients, benefits, directions or specifications.</span></div>
     </aside>
   </div>
 
@@ -653,7 +653,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
     </div>
     <div id="bulkReviewRows" class="product-library"></div>
   </div>
-  <div class="notice" style="margin-top:14px"><b>Full importer pipeline:</b> source URL → product extraction → title cleanup → description cleanup → image normalization → price/list-price/discount → rating/reviews → availability/shipping → variants → brand/category → duplicate detection → draft → edit → publish.</div>
+  <div class="notice" style="margin-top:14px"><b>Full importer pipeline:</b> source URL → product extraction → title cleanup → description cleanup → image normalization → product guidance → availability/shipping → variants → brand/category → duplicate detection → draft → edit → publish.</div>
 </section>
 <section id="skin-care" class="view skin-studio">
   <div class="skin-studio-hero">
@@ -1707,9 +1707,9 @@ let lastDiscoveredProductIds=[];
 function discoveredMetric(p){
   const checks=[
     !!(p.name&&p.name.length>8),!!p.description,!!p.image_url||!!(Array.isArray(p.image_urls)&&p.image_urls.length),
-    p.amazon_current_price!=null||p.display_price!=null,p.amazon_list_price!=null,p.amazon_discount_percent!=null,
-    p.amazon_rating!=null,p.amazon_review_count!=null,!!p.availability,!!p.amazon_shipping_text,
-    !!p.brand,!!p.amazon_asin,Array.isArray(p.amazon_variations)&&p.amazon_variations.length
+    !!p.availability,!!p.amazon_shipping_text,!!p.brand,!!p.amazon_asin,
+    Array.isArray(p.amazon_variations)&&p.amazon_variations.length>0,!!p.features,!!p.benefits,
+    !!(p.category_id||p.category),!!(p.destination_url||p.amazon_source_url||p.source_url)
   ];
   return checks.filter(Boolean).length+'/'+checks.length;
 }
@@ -1723,12 +1723,13 @@ function renderDiscoveredProducts(){
   if(!selected.length){box.innerHTML='<div class="empty" style="padding:30px;text-align:center">No products from this discovery are available. Return to Smart Import and run Discover 20 again.</div>';return;}
   box.innerHTML=selected.map(p=>{
     const dest=retailerDestination(p),label=retailerLabel(p),image=Array.isArray(p.image_urls)&&p.image_urls[0]?p.image_urls[0]:p.image_url||'';
-    const price=p.amazon_current_price??p.display_price, list=p.amazon_list_price, discount=p.amazon_discount_percent, rating=p.amazon_rating, reviews=p.amazon_review_count, vars=Array.isArray(p.amazon_variations)?p.amazon_variations.length:0;
+    const vars=Array.isArray(p.amazon_variations)?p.amazon_variations.length:0;
     const dataBits=[
-      price!=null?'<b>'+esc(p.currency||'USD')+' '+esc(String(price))+'</b>':'No price',
-      rating!=null?'★ '+esc(String(rating))+(reviews!=null?' · '+esc(String(reviews))+' reviews':''):'No rating',
-      discount!=null?esc(String(discount))+'% off':'No discount',
-      p.availability?esc(String(p.availability)):'Availability not captured',
+      p.description?'Description ready':'Description needs review',
+      p.benefits?'Benefits captured':'Benefits need review',
+      p.ingredients?'Ingredients captured':'Ingredients not captured',
+      p.usage_instructions?'Usage guidance captured':'Usage guidance not captured',
+      p.skin_types?'Skin types captured':'Skin types not captured',
       vars?esc(String(vars))+' variants':'No variants'
     ];
     return '<div class="row" style="align-items:flex-start;gap:14px;padding:16px 0"><input class="bulk-discovered-check" type="checkbox" value="'+esc(p.id)+'" checked style="margin-top:8px"><span style="width:86px;height:86px;border-radius:12px;overflow:hidden;background:var(--panel-2);display:block;flex:none">'+(image?'<img src="'+esc(image)+'" alt="" style="width:100%;height:100%;object-fit:cover">':'')+'</span><div style="min-width:0;flex:1"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div style="min-width:220px;flex:1"><b style="display:block;font-size:15px;line-height:1.35">'+esc(p.name||'Untitled product')+'</b><span class="muted">'+esc(p.brand||'Brand not captured')+' · '+esc(label)+(p.amazon_asin?' · ASIN '+esc(p.amazon_asin):'')+'</span></div><span class="tag">'+(p.published?'Published':'Draft')+'</span></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin:10px 0">'+dataBits.map(x=>'<span class="tag">'+x+'</span>').join('')+'</div><div class="muted" style="display:flex;gap:14px;flex-wrap:wrap;font-size:12px"><span>Data captured: <b>'+discoveredMetric(p)+'</b></span><span>'+(p.amazon_shipping_text?esc(p.amazon_shipping_text):'Shipping not captured')+'</span><span>'+(p.description?'Description ready':'Description missing')+'</span></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:11px">'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Source</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit full listing</button><button class="btn danger" onclick="deleteOneDiscovered(\''+p.id+'\')">Delete</button><button class="btn primary" onclick="publishOneDiscovered(\''+p.id+'\')">'+(p.published?'Published':'Publish')+'</button></div></div></div>';
