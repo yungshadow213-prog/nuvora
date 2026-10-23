@@ -91,7 +91,7 @@ body.template-sage-botanical{--cream:#eef1e7;--paper:#fbfcf7;--ink:#2b382a;--mut
 <div class="disclosure" id="affiliateDisclosure">Affiliate disclosure: Some links may be affiliate links. If you buy through them, Nuvora may earn a commission at no extra cost to you. Retailer prices, availability, ingredients, and product claims can change; confirm details on the retailer’s site.</div>
 <footer class="footer"><div class="footer-inner"><span>© <span id="year"></span> Nuvora Skin · A Nuvora storefront</span><span><a href="/">Main Nuvora</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a></span></div></footer>
 
-<div id="productDetailBackdrop" class="detail-backdrop" role="presentation" onclick="if(event.target===this)closeProductDetails()">
+<div id="productDetailBackdrop" class="detail-backdrop" role="presentation" aria-hidden="true" onclick="if(event.target===this)closeProductDetails()">
   <section class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
     <div class="detail-head"><span>Nuvora Skin · Product guide</span><button class="detail-close" aria-label="Close product details" onclick="closeProductDetails()">×</button></div>
     <div id="productDetailContent" class="detail-content"></div>
@@ -269,11 +269,15 @@ function openProductDetails(id){
  (guide.usage?detailBlock('How to use',p.usage_instructions,false,'Directions are not included in this guide. Follow the manufacturer’s current instructions.'):'')+
  (guide.warnings?detailBlock('Warnings & cautions',p.product_warnings,false,'No specific product cautions have been added to this guide. Review the current packaging and retailer information.'):'')+
  recHtml+'<div class="actions">'+priceButton+'</div><div class="detail-note">Product details may change and are not medical advice. Confirm ingredients, directions, and cautions against the current product packaging and retailer listing. Introduce active ingredients carefully and seek qualified advice for persistent or severe skin concerns.</div></div>';
- $('productDetailBackdrop').classList.add('open');document.body.style.overflow='hidden';$('productDetailBackdrop').querySelector('.detail-close').focus();
+ const backdrop=$('productDetailBackdrop');
+ backdrop.classList.add('open');backdrop.style.display='flex';backdrop.setAttribute('aria-hidden','false');
+ document.body.style.overflow='hidden';backdrop.querySelector('.detail-close').focus();
  if(location.hash!=='#product-'+encodeURIComponent(id))history.replaceState(null,'','#product-'+encodeURIComponent(id));
 }
 function closeProductDetails(){
- $('productDetailBackdrop').classList.remove('open');document.body.style.overflow='';if(location.hash.startsWith('#product-'))history.replaceState(null,'',location.pathname+location.search);lastFocusedElement?.focus?.();
+ const backdrop=$('productDetailBackdrop');
+ backdrop.classList.remove('open');backdrop.style.display='none';backdrop.setAttribute('aria-hidden','true');
+ document.body.style.overflow='';if(location.hash.startsWith('#product-'))history.replaceState(null,'',location.pathname+location.search);lastFocusedElement?.focus?.();
 }
 document.addEventListener('click',event=>{
  const trigger=event.target instanceof Element?event.target.closest('[data-open-product]'):null;
