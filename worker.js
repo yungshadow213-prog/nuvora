@@ -1098,7 +1098,7 @@ async function ingestSourceProduct(sourceUrl,env){
             const listing=await ingestSourceProduct(sourceUrl,env);
             if(!listing||listing.error)throw new Error(listing?.error||'Product data could not be read from the source.');
             const retailer=listing.retailer||detectRetailer(sourceUrl);
-            const sourceId=listing.source_id||listing.asin||listing.id||listing.sku||sourceProductId(listing.resolved_url||sourceUrl);
+            const sourceId=sourceProductId(sourceUrl)||sourceProductId(listing.resolved_url)||listing.source_id||listing.asin||listing.id||listing.sku;
             if(!sourceId)throw new Error('The source did not expose a stable product ID.');
             const identityQuery=retailer==='Amazon'
               ?'?select=id,name,published,amazon_asin&amazon_asin=eq.'+encodeURIComponent(sourceId)+'&limit=1'
@@ -1116,13 +1116,15 @@ async function ingestSourceProduct(sourceUrl,env){
             if(!images.length)throw new Error('The retailer did not expose a usable product image.');
             const features=Array.isArray(normalized.features)?normalized.features.filter(Boolean).slice(0,20):[];
             let description=cleanMultilineText(normalized.description,12000)||'';
-            if(description.length<120){
+            if(description.length<120||looksFragmentedText(description)){
               const detailParts=[];
-              if(Array.isArray(normalized.features))detailParts.push(...normalized.features.map(v=>cleanMultilineText(v,500)).filter(v=>v&&v.length>10).slice(0,10));
-              if(Array.isArray(normalized.specifications))detailParts.push(...normalized.specifications.map(x=>cleanMultilineText(Array.isArray(x)?String(x[0])+': '+String(x[1]):String(x),500)).filter(v=>v&&v.length>4).slice(0,10));
-              const intro=normalized.brand?String(normalized.brand)+' presents '+String(title)+'.':'This product, '+String(title)+', is described by the following source details.';
-              description=cleanMultilineText(intro+(detailParts.length?'\n\nKey details: '+detailParts.join(' • '):''),12000);
+              if(Array.isArray(normalized.features))detailParts.push(...normalized.features.map(v=>cleanMultilineText(v,500)).filter(v=>v&&v.length>10&&!looksFragmentedText(v)).slice(0,10));
+              if(Array.isArray(normalized.specifications))detailParts.push(...normalized.specifications.map(x=>cleanMultilineText(Array.isArray(x)?String(x[0])+': '+String(x[1]):String(x),500)).filter(v=>v&&v.length>4&&!looksFragmentedText(v)).slice(0,10));
+              const intro=normalized.brand?String(normalized.brand)+' presents '+String(title)+'.':'Product details for '+String(title)+' are provided by the retailer.';
+              const fallback=cleanMultilineText(intro+(detailParts.length?'\n\nKey details: '+detailParts.join(' • '):''),12000);
+              description=fallback&&!looksFragmentedText(fallback)?fallback:'';
             }
+            if(looksFragmentedText(description))description='';
             description=description||null;
             const category_id=autoCategory(title,description,normalized.brand,categories);
             const product={
