@@ -2229,6 +2229,8 @@ function validateSkinSiteConfig(value,options={}){
       if(section.backgroundColor!==undefined&&section.backgroundColor!==''&&!/^#[0-9a-f]{6}$/i.test(String(section.backgroundColor)))return label+' section background color is invalid.';
       if(section.imageAlignment!==undefined&&!['left','center','right'].includes(String(section.imageAlignment)))return label+' image alignment must be left, center, or right.';
       if(section.imageWidth!==undefined&&![20,30,40,50,60,70,80,90,100].includes(Number(section.imageWidth)))return label+' image width must be between 20% and 100%.';
+      if(section.imageFreePosition!==undefined&&typeof section.imageFreePosition!=='boolean')return label+' free image positioning must be a boolean.';
+      for(const key of ['imagePositionX','imagePositionY'])if(section[key]!==undefined&&(!Number.isFinite(Number(section[key]))||Number(section[key])<0||Number(section[key])>100))return label+' image positions must be between 0% and 100%.';
       if(section.product_ids!==undefined){
         if(!Array.isArray(section.product_ids)||section.product_ids.length>60)return 'A '+label.toLowerCase()+' section can place up to 60 products.';
         if(section.product_ids.some(id=>!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id))))return 'A placed product has an invalid product ID.';
