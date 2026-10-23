@@ -467,6 +467,17 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
 .quality-good{background:#eaf5ec!important;border-color:#c7e4ce!important;color:#2f6840!important}
 .product-row-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
 @media(max-width:700px){.admin-product-thumb{width:44px;height:44px;flex-basis:44px}.product-row-actions{justify-content:flex-start;width:100%}}
+</style><style id="nuvora-catalog-health-css">
+.catalog-health{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
+.catalog-health-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:var(--paper)}
+.catalog-health-card strong{display:block;font-size:23px;letter-spacing:-.04em;color:var(--ink)}
+.catalog-health-card span{display:block;margin-top:3px;color:var(--muted);font-size:11px;line-height:1.4}
+.catalog-health-card button{flex:0 0 auto}
+.catalog-health-card.alert{border-color:#edc18c;background:#fffaf3}
+.catalog-health-card.alert strong{color:#8a4b11}
+.catalog-health-card.good{border-color:#c7e4ce;background:#f6fbf6}
+.catalog-health-card.good strong{color:#2f6840}
+@media(max-width:720px){.catalog-health{grid-template-columns:1fr}.catalog-health-card{padding:12px 14px}}
 </style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
 <button data-icon="↥" onclick="show('import',this)">Import</button>
@@ -620,6 +631,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
     </div>
   </div>
 
+  <div class="catalog-health" id="catalogHealth" aria-live="polite"></div>
   <div class="catalog-toolbar panel">
     <div class="catalog-search"><span>⌕</span><input id="adminProductSearch" oninput="renderProducts()" placeholder="Search product name, brand or ASIN"></div>
     <div class="catalog-filter-note"><span class="filter-dot"></span><span>Drafts stay private until published.</span></div>
@@ -1130,18 +1142,40 @@ function productReviewFlags(p){
  if(p?.description){const description=String(p.description),parts=description.split(/\s+/).filter(Boolean),single=(description.match(/\b[A-Za-z]\b/g)||[]).length;if(parts.length>=12&&single>=Math.max(4,Math.ceil(parts.length*.08)))flags.push('Description needs review');}
  return flags;
 }
+let productReviewFilter='all';
+function setProductReviewFilter(filter){
+ productReviewFilter=filter==='review'?'review':'all';
+ renderProducts();
+}
+function renderCatalogHealth(){
+ const el=document.getElementById('catalogHealth');if(!el)return;
+ const published=adminProducts.filter(p=>p.published);
+ const needsReview=adminProducts.filter(p=>productReviewFlags(p).length>0);
+ const publishedReview=published.filter(p=>productReviewFlags(p).length>0);
+ el.innerHTML='<div class="catalog-health-card '+(publishedReview.length?'alert':'good')+'"><div><strong>'+publishedReview.length+'</strong><span>Published items needing review</span></div><button class="btn" type="button" onclick="setProductReviewFilter(\'review\')">Review items</button></div><div class="catalog-health-card '+(needsReview.length?'alert':'good')+'"><div><strong>'+needsReview.length+'</strong><span>Products with quality flags</span></div><button class="btn" type="button" onclick="setProductReviewFilter(\'review\')">Show flagged</button></div><div class="catalog-health-card"><div><strong>'+published.length+'</strong><span>Currently published · drafts stay private</span></div><button class="btn" type="button" onclick="setProductReviewFilter(\'all\')">View all</button></div>';
+}
 function renderProducts(){
-  const el=document.getElementById('productRows');
-  if(!adminProducts.length){
-    el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet.</div>';
-  }else{
-    el.innerHTML=adminProducts.map(p=>{
-      const dest=retailerDestination(p),label=retailerLabel(p),flags=productReviewFlags(p);
-      const image=p.image_url&&/^https?:\/\//i.test(String(p.image_url))?'<img class="admin-product-thumb" src="'+esc(p.image_url)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'<span class="admin-product-thumb" aria-hidden="true"></span>';
-      return '<div class="row"><div class="admin-product-leading">'+image+'<div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</div>'+(flags.length?'<div class="admin-product-flags">'+flags.map(flag=>'<span class="tag quality-warning">'+esc(flag)+'</span>').join('')+'</div>':'<div class="admin-product-flags"><span class="tag quality-good">Basic checks passed</span></div>')+'</div></div><div class="product-row-actions"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit</button><button class="btn" data-product-publish="'+esc(p.id)+'" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';
-    }).join('');
-  }
-  updateCounts();
+ const el=document.getElementById('productRows');
+ if(!el)return;
+ renderCatalogHealth();
+ const search=String(document.getElementById('adminProductSearch')?.value||'').trim().toLowerCase();
+ const rows=adminProducts.filter(p=>{
+   if(productReviewFilter==='review'&&!productReviewFlags(p).length)return false;
+   if(!search)return true;
+   return [p.name,p.brand,p.amazon_asin,p.asin,p.kind,p.retailer,p.description].some(value=>String(value||'').toLowerCase().includes(search));
+ });
+ if(!adminProducts.length){
+   el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet. Use “+ Add product” or Smart Import to get started.</div>';
+ }else if(!rows.length){
+   el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">'+(productReviewFilter==='review'?'No flagged products match the current search.':'No products match your search.')+' <button class="btn" type="button" onclick="setProductReviewFilter(\'all\');document.getElementById(\'adminProductSearch\').value=\'\';renderProducts()">Clear filters</button></div>';
+ }else{
+   el.innerHTML=rows.map(p=>{
+     const dest=retailerDestination(p),label=retailerLabel(p),flags=productReviewFlags(p);
+     const image=p.image_url&&/^https?:\/\//i.test(String(p.image_url))?'<img class="admin-product-thumb" src="'+esc(p.image_url)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'<span class="admin-product-thumb" aria-hidden="true"></span>';
+     return '<div class="row"><div class="admin-product-leading">'+image+'<div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</div>'+(flags.length?'<div class="admin-product-flags">'+flags.map(flag=>'<span class="tag quality-warning">'+esc(flag)+'</span>').join('')+'</div>':'<div class="admin-product-flags"><span class="tag quality-good">Basic checks passed</span></div>')+'</div></div><div class="product-row-actions"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit</button><button class="btn" data-product-publish="'+esc(p.id)+'" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';
+   }).join('');
+ }
+ updateCounts();
 }
 function openRetailerLink(url){
   const value=String(url||'').trim();
