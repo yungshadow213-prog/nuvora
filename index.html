@@ -679,6 +679,8 @@ button,a,[role="button"],input,select,textarea{pointer-events:auto}
 .nv-card .card-action{display:inline-flex;align-items:center;gap:8px;color:var(--accent);font-size:12px;font-weight:800}
 .nv-card .prodtext{display:flex;flex-direction:column;min-height:100%}.nv-card .card-bottom{margin-top:auto}
 @media(max-width:560px){.nv-card .product-summary{font-size:11px;min-height:3.6em}.nv-card .card-action{font-size:11px}}
+</style><style id="nuvora-affiliate-store-presentation">
+#cartBtn,.menu-list button[onclick*="showCart"],#view-cart,.cart-drawer-backdrop{display:none!important}
 </style></head>
 <body>
 <div class="announcement"><div class="shell"><b>Nuvora picks, made simple.</b> Browse curated products, save your favorites, and discover something worth finding.</div></div><header class="topbar"><div class="shell nav">
@@ -946,7 +948,7 @@ function card(p){
   const reviews=Number(p.reviews)||0;
   const summary=cleanProductText(p.whyPicked||p.benefits||p.features||p.desc||'').replace(/\s+/g,' ').trim();
   const summaryText=summary.length>190?summary.slice(0,187).replace(/\s+\S*$/,'')+'…':summary;
-  const ratingMarkup=rating>0?'<div class="nv-card-rating"><span class="nv-stars">★</span><strong>'+rating.toFixed(1)+'</strong>'+(reviews?' <span>('+reviews.toLocaleString()+')</span>':'')+'</div>':'';
+  const ratingMarkup='';
   const cardAction=/amazon/i.test(String(p.retailer||''))||!!p.destination?'View product guide':'View details';
   return '<article class="product nv-card" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button" aria-label="View '+htmlEsc(p.name)+'">'+
     '<button class="card-save '+(savedNow?'saved':'')+'" aria-label="Save product" onclick="event.stopPropagation();toggleSave(this.closest(\'.product\').dataset.productId)">'+(savedNow?'♥':'♡')+'</button>'+
@@ -1046,7 +1048,7 @@ function renderProductPage(p){
   const optionMarkup=optionGroups.length
     ?'<div class="nv-options">'+optionGroups.map(g=>'<div class="nv-option-group"><div class="nv-option-label">'+htmlEsc(g.name)+'</div><div class="nv-option-values">'+g.values.slice(0,40).map(v=>'<span class="nv-option-chip">'+htmlEsc(v)+'</span>').join('')+'</div></div>').join('')+'</div>'
     :'';
-  const dealMarkup=deal?'<div class="nv-deal">✦ '+htmlEsc(deal)+'</div>':'';
+  const dealMarkup='';
   const priceMarkup='';
   const delivery=imported['Delivery']||'';const returns=imported['Returns']||'';const seller=imported['Sold by']||'';const shipsFrom=imported['Ships from']||'';const availability=imported['Availability']||p.availability||'';const logistics=(shipping||tax||delivery||returns||availability)?'<div class="nv-info-boxes">'+(shipping?'<div class="nv-info-box"><b>Shipping & import</b><span>'+htmlEsc(shipping)+'</span></div>':'')+(tax?'<div class="nv-info-box"><b>Taxes</b><span>'+htmlEsc(tax)+'</span></div>':'')+(delivery?'<div class="nv-info-box"><b>Delivery</b><span>'+htmlEsc(delivery)+'</span></div>':'')+(returns?'<div class="nv-info-box"><b>Returns</b><span>'+htmlEsc(returns)+'</span></div>':'')+(availability?'<div class="nv-info-box"><b>Availability</b><span>'+htmlEsc(availability)+'</span></div>':'')+'</div>':'';
   const detailsRows=[];
@@ -1055,9 +1057,9 @@ function renderProductPage(p){
   const externalRetailer=/amazon/i.test(String(p.retailer||''))||!!p.amazon_asin||!!p.amazon_source_url;
   if(!externalRetailer&&p.rating)detailsRows.push(['Rating',Number(p.rating).toFixed(1)+' / 5']);
   if(!externalRetailer&&p.reviews)detailsRows.push(['Reviews',Number(p.reviews).toLocaleString()]);
-  if(p.amazonBought)detailsRows.push(['Bought recently',p.amazonBought]);if(p.lastChecked)detailsRows.push(['Last checked',new Date(p.lastChecked).toLocaleDateString()]);
+  /* Retailer-specific sales counts and timestamps are not presented as Nuvora product facts. */
   /* Retailer prices and currency are intentionally omitted; the retailer listing is the source for live pricing. */
-  if(p.amazonDeal)detailsRows.push(['Deal',p.amazonDeal]);
+  /* Retailer deals and discounts are omitted from Nuvora's product guide. */
   if(p.retailer)detailsRows.push(['Retailer',p.retailer]);if(p.sourceSku)detailsRows.push(['Product number',p.sourceSku]);if(seller)detailsRows.push(['Sold by',seller]);if(shipsFrom)detailsRows.push(['Ships from',shipsFrom]);if(imported['Department'])detailsRows.push(['Department',imported['Department']]);if(imported['Category'])detailsRows.push(['Category path',imported['Category']]);if(imported['Best Sellers Rank'])detailsRows.push(['Best sellers rank',imported['Best Sellers Rank']]);
   const detailGrid=detailsRows.length?'<div class="nv-specs">'+detailsRows.map(([k,v])=>'<div class="nv-spec"><b>'+htmlEsc(k)+'</b><span>'+htmlEsc(v)+'</span></div>').join('')+'</div>':'';
   const buyLabel=p.destination?('View on '+(p.retailer||'retailer')):'View product';
@@ -1069,7 +1071,7 @@ function renderProductPage(p){
   document.getElementById('productQtyMinus')?.addEventListener('click',()=>{qty=Math.max(1,qty-1);document.getElementById('productQty').textContent=qty});
   document.getElementById('productQtyPlus')?.addEventListener('click',()=>{qty=Math.min(20,qty+1);document.getElementById('productQty').textContent=qty});
   document.getElementById('productSave')?.addEventListener('click',()=>toggleSave(p.id));
-  const add=()=>{const v=resolveVariant();if(p.type==='Shop'){addCartItem(p.id,v.id,v.title||'',qty);trackEvent('add_to_cart',String(p.id),{variant_id:v.id,quantity:qty});}};
+  const add=()=>{if(p.destination){showToast('Continue to the retailer from the product guide.');return;}const v=resolveVariant();if(p.type==='Shop'){addCartItem(p.id,v.id,v.title||'',qty);trackEvent('add_to_cart',String(p.id),{variant_id:v.id,quantity:qty});}};
   document.getElementById('productAdd')?.addEventListener('click',add);
   document.getElementById('productBuy')?.addEventListener('click',()=>{if(p.destination){trackEvent('retailer_click',String(p.id),{retailer:p.retailer||''});window.location.href=p.destination;}else if(p.type==='Shop'){const v=resolveVariant();beginCheckout([{productId:p.id,variantId:v.id,shopifyProductId:p.shopifyProductId,variantTitle:v.title||'',selectedOptions:v.selectedOptions||[],quantity:qty}],document.getElementById('productBuy'));}else{showToast('Retailer link is not available yet.');}});
   document.getElementById('detailsToggle')?.addEventListener('click',()=>{const body=document.getElementById('detailsBody');const btn=document.getElementById('detailsToggle');if(!body)return;const closed=body.style.display==='none';body.style.display=closed?'block':'none';btn.lastElementChild.textContent=closed?'−':'＋';});
