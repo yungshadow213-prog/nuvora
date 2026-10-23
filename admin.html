@@ -722,16 +722,9 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
     </div>
   </header>
   <div id="skinBuilderStatus" class="studio-status notice" role="status" aria-live="polite">Loading your saved Skin Care site…</div>
-  <section class="studio-simple-guide" aria-label="How to use Skin Studio" hidden>
-    <div class="studio-simple-guide-intro"><span class="studio-simple-guide-number">START HERE</span><b>Build your page in 3 simple steps</b><small>No dragging needed — just click and edit.</small></div>
-    <button type="button" class="studio-guide-step" onclick="switchSkinStudioTab('outline');selectFirstSkinSection()"><span>1</span><span><b>Choose a section</b><small>Pick a block on the left</small></span></button>
-    <button type="button" class="studio-guide-step" onclick="focusSkinInspector()"><span>2</span><span><b>Edit its content</b><small>Change text, image or products</small></span></button>
-    <button type="button" class="studio-guide-step" onclick="saveSkinSiteDraft()"><span>3</span><span><b>Save your draft</b><small>Private until you publish</small></span></button>
-    <button type="button" class="studio-guide-add" onclick="openSkinAdd('section')">＋ Add a section</button>
-  </section>
-  <div class="skin-builder-layout studio-layout">
+    <div class="skin-builder-layout studio-layout">
     <aside class="studio-left-panel">
-      <div class="studio-panel-head"><div><span class="section-kicker">STEP 1</span><h3>Page layout</h3><small class="studio-panel-helper">Click a section to edit it. Use ↑ and ↓ to move it.</small></div><button class="btn primary studio-add-button" type="button" onclick="toggleSkinAddMenu()">+ Add</button></div>
+      <div class="studio-panel-head"><div><span class="section-kicker">PAGE CONTENT</span><h3>Page layout</h3><small class="studio-panel-helper">Click a section to edit it. Use ↑ and ↓ to move it.</small></div><button class="btn primary studio-add-button" type="button" onclick="toggleSkinAddMenu()">+ Add</button></div>
       <div id="skinStudioAddMenu" class="studio-add-menu" hidden>
         <button type="button" onclick="openSkinAdd('product')"><span>＋</span><span><b>Product</b><small>Import an Amazon link or add a product</small></span></button>
         <button type="button" onclick="openSkinAdd('page')"><span>▤</span><span><b>Page</b><small>Create a new storefront page</small></span></button>
@@ -747,11 +740,11 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
       <div id="skinQuickAddPanel" class="studio-quick-add" hidden></div>
       <div id="skinLibraryItems" class="studio-library-items" hidden></div>
       <div id="skinBuilderSections" class="skin-builder-sections studio-outline-list" aria-label="Page section outline"></div>
-      <div class="studio-left-foot"><span>Click a section, then edit it on the right.</span><span>Save draft keeps changes private.</span></div>
+      <div class="studio-left-foot"><span>Drag to reorder. Double-click preview text to edit.</span><span>Changes auto-save privately; publish when ready.</span></div>
     </aside>
     <section class="skin-builder-preview-panel studio-canvas-panel" aria-label="Live storefront canvas">
       <div class="skin-preview-head studio-canvas-head">
-        <div><b>Live page preview</b><small>This shows how your page will look. To make changes, select a section on the left and use the editor on the right.</small></div>
+        <div><b>Live page preview</b><small>Edit the page directly: double-click text, click sections to select them, drag sections or products to rearrange, and use the toolbar below to move, replace images, or delete.</small></div>
         <div class="studio-device-controls" aria-label="Preview size">
           <button type="button" class="active" onclick="setSkinPreviewDevice('desktop',this)">Desktop</button>
           <button type="button" onclick="setSkinPreviewDevice('tablet',this)">Tablet</button>
@@ -773,7 +766,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
       </div>
     </section>
     <aside class="studio-right-panel">
-      <div class="studio-inspector-heading"><div><span class="section-kicker">STEP 2</span><h3 id="skinInspectorTitle">Edit selected item</h3><p id="skinInspectorSubtitle">Choose a section on the left. Its settings will appear here.</p></div></div>
+      <div class="studio-inspector-heading"><div><span class="section-kicker">PREVIEW ACTIONS</span><h3 id="skinInspectorTitle">Edit selected item</h3><p id="skinInspectorSubtitle">Choose a section on the left. Its settings will appear here.</p></div></div>
       <div id="skinSelectedInspector" class="studio-selected-inspector"><div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b><p>Select an item in the left panel or click a section in the storefront preview.</p></div></div>
       <details class="studio-site-settings">
         <summary><span><b>Whole-site settings</b><small>Header, navigation, footer, brand and product pages</small></span><span class="studio-chevron">⌄</span></summary>
