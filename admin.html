@@ -311,15 +311,17 @@ body.skin-studio-fullpage .studio-site-settings .skin-builder-fields textarea{mi
 body.skin-studio-fullpage .studio-site-settings .skin-guide-vis{display:grid;grid-template-columns:1fr;gap:7px}
 body.skin-studio-fullpage .studio-site-settings .skin-guide-vis label{font-size:10px}
 body.skin-studio-fullpage .studio-status[hidden]{display:none!important}
-body.skin-studio-fullpage .studio-library-item{display:flex;align-items:center;gap:8px;padding:8px;border:1px solid #e3e9e1;border-radius:10px;background:#fff;margin-bottom:7px;cursor:pointer}
+body.skin-studio-fullpage .studio-products-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;align-items:stretch}
+body.skin-studio-fullpage .studio-library-item{display:flex;flex-direction:column;align-items:stretch;gap:7px;min-width:0;padding:9px;border:1px solid #e3e9e1;border-radius:11px;background:#fff;margin:0;cursor:pointer;overflow:hidden}
 body.skin-studio-fullpage .studio-library-item.is-selected{border-color:#9ab69a;background:#f4f8f2;box-shadow:0 0 0 2px #eaf2e8}
-body.skin-studio-fullpage .studio-library-item img{width:42px;height:47px;flex:0 0 42px;object-fit:cover;border-radius:7px;background:#edf0ea}
+body.skin-studio-fullpage .studio-library-item img,body.skin-studio-fullpage .studio-library-item>.studio-product-placeholder{width:100%;height:100px;flex:0 0 100px;object-fit:contain;border-radius:8px;background:#f5f7f3}
 body.skin-studio-fullpage .studio-library-item-copy{min-width:0;flex:1}
-body.skin-studio-fullpage .studio-library-item-copy b{display:block;font-size:10px;line-height:1.35;color:#364739;overflow-wrap:anywhere}
-body.skin-studio-fullpage .studio-library-item-copy small{display:block;margin-top:3px;color:#909b90;font-size:9px;line-height:1.35}
-body.skin-studio-fullpage .studio-library-item-actions{display:flex;gap:3px;flex-shrink:0}
-body.skin-studio-fullpage .studio-library-item-actions button{border:1px solid #e1e7df;border-radius:7px;background:#fff;color:#738172;padding:5px;font-size:9px;cursor:pointer}
+body.skin-studio-fullpage .studio-library-item-copy b{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;font-size:10px;line-height:1.4;color:#364739;overflow-wrap:anywhere}
+body.skin-studio-fullpage .studio-library-item-copy small{display:block;margin-top:4px;color:#909b90;font-size:9px;line-height:1.35}
+body.skin-studio-fullpage .studio-library-item-actions{display:grid;grid-template-columns:1fr;gap:5px;flex-shrink:0}
+body.skin-studio-fullpage .studio-library-item-actions button{border:1px solid #e1e7df;border-radius:7px;background:#fff;color:#738172;padding:6px 5px;font-size:9px;line-height:1.25;cursor:pointer}
 body.skin-studio-fullpage .studio-library-item-actions button:hover{background:#eff5ec;color:#35553a}
+@media(max-width:390px){body.skin-studio-fullpage .studio-products-grid{grid-template-columns:1fr}}
 body.skin-studio-fullpage .studio-section-outline{display:flex;align-items:flex-start;gap:8px;padding:10px 8px;margin-bottom:5px;border:1px solid transparent;border-radius:10px;background:transparent;cursor:pointer}
 body.skin-studio-fullpage .studio-section-outline.is-selected{border-color:#dce8d9;background:#edf4eb}
 body.skin-studio-fullpage .studio-section-outline[draggable="true"]{cursor:grab}
@@ -2201,16 +2203,16 @@ function renderSkinLibrary(){
  if(skinStudioTab==='outline'){root.innerHTML='';return;}
  if(!skinBuilderConfig){root.innerHTML='<div class="studio-library-empty">Loading your site content…</div>';return;}
  if(skinStudioTab==='products'){
-  const rows=adminProducts.filter(isSkinProduct).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
-  root.innerHTML='<div class="studio-product-add-actions"><button type="button" class="studio-outline-add" onclick="openSkinManualProduct()">＋ Add manually</button><button type="button" class="studio-outline-add" onclick="openSkinProduct()">↗ Import Amazon link</button></div><p class="studio-inline-help">Click a product to edit its category. To show products on a page, select a Product grid section and tick the products you want.</p>'+
-   (rows.length?rows.map(p=>{
+  const rows=adminProducts.filter(isSkinProduct).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))).filter((p,index,list)=>list.findIndex(other=>String(other.name||'').trim().toLowerCase()===String(p.name||'').trim().toLowerCase()&&String(other.amazonUrl||other.amazon_url||other.affiliateUrl||other.affiliate_url||'').trim()===String(p.amazonUrl||p.amazon_url||p.affiliateUrl||p.affiliate_url||'').trim())===index);
+  root.innerHTML='<div class="studio-product-add-actions"><button type="button" class="studio-outline-add" onclick="openSkinManualProduct()">＋ Add manually</button><button type="button" class="studio-outline-add" onclick="openSkinProduct()">↗ Import Amazon link</button></div><p class="studio-inline-help">Products are shown side by side. Choose Edit details to change a product, or Place on page to add it to the selected product section.</p>'+
+   (rows.length?'<div class="studio-products-grid">'+rows.map(p=>{
     const id=String(p.id),image=skinImageOf(p),published=!!p.published;
     const selection=skinStudioSelection?.type==='product'&&String(skinStudioSelection.id)===id;
     return '<article class="studio-library-item '+(selection?'is-selected':'')+'" onclick="selectSkinItem(\'product\','+esc(JSON.stringify(id))+')">'+
      (image?'<img src="'+esc(image)+'" alt="" loading="lazy">':'<div class="studio-product-placeholder">◯</div>')+
      '<div class="studio-library-item-copy"><b>'+esc(p.name||'Untitled product')+'</b><small>'+esc(published?'Published':'Draft — not visible yet')+' · '+esc(retailerLabel(p))+'</small></div>'+
      '<div class="studio-library-item-actions"><button type="button" onclick="editSkinProduct('+esc(JSON.stringify(id))+');event.stopPropagation()">Edit details</button><button type="button" onclick="addSkinProductToSection('+esc(JSON.stringify(id))+',skinStudioSelection?.type===\'section\'?skinStudioSelection.id:null,skinStudioPageId);event.stopPropagation()">＋ Place on page</button></div></article>';
-   }).join(''):'<div class="studio-library-empty">No skincare products found yet. Add a product by pasting its Amazon link or create one manually.</div>');
+   }).join('')+'</div>':'<div class="studio-library-empty">No skincare products found yet. Add a product by pasting its Amazon link or create one manually.</div>');
   return;
  }
  if(skinStudioTab==='pages'){
