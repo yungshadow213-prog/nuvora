@@ -2827,17 +2827,35 @@ async function saveSkinSiteDraft(){
 }
 async function saveSkinSiteConfig(){
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
- const validation=skinConfigValidationMessage();if(validation)return skinBuilderMessage(validation,'error');
- const btn=document.querySelector('button[onclick="saveSkinSiteConfig()"]');if(btn){btn.disabled=true;btn.textContent='Publishing…';}
- skinBuilderMessage('Publishing the current site draft…','info');
+ const btn=document.querySelector('button[onclick="saveSkinSiteConfig()"]');
+ if(btn?.disabled)return;
+ if(btn){btn.disabled=true;btn.textContent='Publishing…';}
+ skinBuilderMessage('Preparing the latest edits for publishing…','info');
  try{
-  const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_config:skinBuilderConfig,skin_site_draft:null}});
-  skinBuilderConfig=mergeSkinSiteConfig(response?.skin_site_config||skinBuilderConfig);
-  skinSiteDraftExists=false;skinDraftLastSavedPayload=JSON.stringify(skinBuilderConfig);
+  // Wait for any in-flight autosave to finish before clearing the draft. Otherwise a
+  // late draft PATCH could recreate a draft after the published config has changed.
+  if(skinDraftSavePromise){try{await skinDraftSavePromise;}catch(e){/* The publish request below sends the current editor state directly. */}}
+  const validation=skinConfigValidationMessage();
+  if(validation){skinBuilderMessage(validation,'error');return;}
+  collectSkinConfigFields();
+  const payload=mergeSkinSiteConfig(skinBuilderConfig);
+  skinBuilderMessage('Publishing the current site draft…','info');
+  const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_config:payload,skin_site_draft:null}});
+  if(!response?.skin_site_config||typeof response.skin_site_config!=='object')throw new Error('The server did not confirm the published site configuration.');
+  const published=mergeSkinSiteConfig(response.skin_site_config);
+  const check=await api('/api/admin/settings');
+  if(!check?.skin_site_config||typeof check.skin_site_config!=='object')throw new Error('The published configuration could not be read back. Reload the workspace before retrying.');
+  const verified=mergeSkinSiteConfig(check.skin_site_config);
+  if(JSON.stringify(verified)!==JSON.stringify(published))throw new Error('The published configuration does not match the saved result. Reload the workspace before retrying.');
+  if(check.skin_site_draft&&typeof check.skin_site_draft==='object')throw new Error('The site published, but a private draft is still present. Reload the workspace and verify the live page before retrying.');
+  skinBuilderConfig=verified;skinSiteDraftExists=false;skinDraftLastSavedPayload=JSON.stringify(verified);
   fillSkinConfigFields();sendSkinStudioPreview();skinSetSavedLabel('All changes published');
-  skinBuilderMessage('Published. The live Nuvora Skin site now uses this saved configuration. Your saved draft has been cleared.','success');
- }catch(e){skinBuilderMessage('Publish failed: '+(e.message||'unknown error')+'. No live changes were confirmed.','error');}
- finally{if(btn){btn.disabled=false;btn.textContent='Publish changes';}}
+  skinBuilderMessage('Published and verified. The live Nuvora Skin site now uses this configuration, and the private draft is cleared.','success');
+ }catch(e){
+  skinBuilderMessage('Publish could not be verified: '+(e.message||'unknown error')+'. Reload the workspace and check the live site before retrying.','error');
+ }finally{
+  if(btn){btn.disabled=false;btn.textContent='Publish changes';}
+ }
 }
 function setSkinAdminFormMode(enabled){
  document.body.classList.toggle('skin-admin-mode',!!enabled);
