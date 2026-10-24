@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-skin-studio-persistence-placement-r51',
+          release:'nuvora-2026-10-24-published-product-edit-persistence-r52',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -344,7 +344,17 @@ async function publishProductRecord(env,id,patch={}){
     const duplicate=(await duplicateResponse.json())?.[0];
     if(duplicate)return {ok:false,status:409,error:'This Amazon product is already published as “'+cleanText(duplicate.name,180)+'”. Unpublish or edit the existing listing instead of publishing a duplicate.'};
   }
-  const write={published:true,slug:merged.slug,destination_url:destination,updated_at:new Date().toISOString()};
+  const write={...patch,published:true,slug:merged.slug,destination_url:destination,updated_at:new Date().toISOString()};
+  // Product edits can arrive through this endpoint when the listing is already published.
+  // Persist those edited fields as well as the publication status; previously this
+  // path only wrote the publish metadata, silently discarding edited guide content.
+  if(typeof write.name==='string')write.name=cleanText(write.name,180);
+  if(typeof write.description==='string')write.description=cleanMultilineText(write.description,12000);
+  if(typeof write.store_description==='string')write.store_description=cleanMultilineText(write.store_description,12000);
+  if(typeof write.features==='string')write.features=cleanMultilineText(write.features,12000);
+  if(typeof write.brand==='string')write.brand=cleanText(write.brand,180);
+  if(Array.isArray(write.image_urls))write.image_urls=write.image_urls.filter(isValidHttpUrl).slice(0,30);
+  if(write.image_url&&!isValidHttpUrl(write.image_url))write.image_url=null;
   if(skincareAffiliate)write.kind='find';
   if(patch.amazon_source_url||current.amazon_source_url)write.amazon_source_url=patch.amazon_source_url||current.amazon_source_url;
   const result=await supabaseProductWrite(env,'PATCH',write,'?id=eq.'+encodeURIComponent(id));
