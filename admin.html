@@ -1069,7 +1069,19 @@ async function api(path,options={},retry=true){
     requestOptions.body=JSON.stringify(requestOptions.body);
   }
   let r;
-  try{r=await fetch(path,requestOptions);}catch(e){throw new Error('Cannot reach Nuvora. Check the Cloudflare deployment and try again.');}
+  const controller=new AbortController();
+  const callerSignal=requestOptions.signal;
+  const timeout=setTimeout(()=>controller.abort(new DOMException('Request timed out','TimeoutError')),45000);
+  if(callerSignal){
+    if(callerSignal.aborted)controller.abort(callerSignal.reason);
+    else callerSignal.addEventListener('abort',()=>controller.abort(callerSignal.reason),{once:true});
+  }
+  requestOptions.signal=controller.signal;
+  try{r=await fetch(path,requestOptions);}
+  catch(e){
+    if(controller.signal.aborted)throw new Error('Nuvora took too long to respond. The request was stopped after 45 seconds. Check the status message before retrying so you do not duplicate a change.');
+    throw new Error('Cannot reach Nuvora. Check the connection and try again.');
+  }finally{clearTimeout(timeout);}
   if(r.status===401&&retry&&adminSB){
     try{
       const refreshed=await adminSB.auth.refreshSession();
@@ -1866,11 +1878,27 @@ async function togglePublish(id){
   body.amazon_source_url=p.amazon_source_url||p.source_url||null;
  }
  const path='/api/admin/products/'+encodeURIComponent(String(id));
+ if(publishing&&!retailerDestination(p)){
+  const message='Add the exact retailer/Amazon product link before publishing this product.';
+  if(studio)skinBuilderMessage(message,'error');else setAdminStatus(message,'error');
+  publishButtons.forEach(button=>{button.disabled=false;button.textContent=button.dataset.originalLabel||'Publish';delete button.dataset.originalLabel;});
+  return;
+ }
+ if(publishing&&!skinImageOf(p)){
+  const message='Add a main product image before publishing. You can upload one from your device in Edit product details.';
+  if(studio)skinBuilderMessage(message,'error');else setAdminStatus(message,'error');
+  publishButtons.forEach(button=>{button.disabled=false;button.textContent=button.dataset.originalLabel||'Publish';delete button.dataset.originalLabel;});
+  return;
+ }
  if(studio)skinBuilderMessage((publishing?'Publishing ':'Moving back to draft: ')+label+'…','info');
  else setAdminStatus((publishing?'Publishing ':'Moving back to draft: ')+label+'…');
  try{
-  // PATCH is the supported product update route in the admin API.
-  await api(path,{method:'PATCH',body});
+  if(publishing){
+   const publishResult=await api(path+'/publish',{method:'POST',body:{destination_url:body.destination_url,amazon_source_url:body.amazon_source_url}});
+   if(!publishResult?.ok||publishResult.product?.published!==true)throw new Error('The publish endpoint did not confirm that the product is live.');
+  }else{
+   await api(path,{method:'PATCH',body});
+  }
   await liveAdminProducts();
   const verifiedProduct=adminProducts.find(item=>String(item.id)===String(id));
   if(!verifiedProduct||!!verifiedProduct.published!==publishing)throw new Error('The server did not confirm the requested product status after refreshing the catalog.');
@@ -2808,9 +2836,9 @@ function addSkinProductToSection(productId,targetId,pageId){
  if(!ids.includes(String(productId)))ids.push(String(productId));
  sec.product_ids=ids.slice(0,60);skinStudioPageId=pageId||'home';skinStudioSelection={type:'section',id:String(sec.id)};
  const message=product.published
-  ?'Product placed in “'+(sec.title||'Product grid')+'”. Publish the page changes to make this placement public.'
-  :'Product added to “'+(sec.title||'Product grid')+'” in your draft. Publish the product, then publish the page changes to make it visible to shoppers.';
- skinMarkDirty(message);renderSkinStudioAll();queueSkinStudioPreview();
+  ?'Product placed in “'+(sec.title||'Product grid')+'”. The preview is updating. Publish the page changes to make this placement public.'
+  :'Product added to “'+(sec.title||'Product grid')+'” in your draft. Publish this product before it can appear in the public storefront; the page placement will stay in your draft.';
+ skinMarkDirty(message);renderSkinStudioAll();refreshSkinStudioPreview();
 }
 function moveSkinProductInSection(productId,targetProductId,sectionId,pageId){
  const sections=skinSectionsFor(pageId),sec=sections.find(s=>String(s.id)===String(sectionId));
@@ -3008,6 +3036,7 @@ async function uploadSkinStudioImage(input,type,id,explicitFile=null){
  finally{if(label&&original)label.textContent=original;if(input)input.value='';}
 }
 async function persistSkinSiteDraft(quiet=false){
+ let saveVerified=false;
  collectSkinConfigFields();
  const validation=skinConfigValidationMessage(false);
  if(validation){skinBuilderMessage(validation,'error');throw new Error(validation);}
@@ -3027,6 +3056,7 @@ async function persistSkinSiteDraft(quiet=false){
   if(!check?.skin_site_draft||typeof check.skin_site_draft!=='object')throw new Error('The server accepted the request but the saved draft could not be read back. Your published site is unchanged.');
   const verified=mergeSkinSiteConfig(check.skin_site_draft);
   if(JSON.stringify(verified)!==confirmedJson)throw new Error('The saved draft did not match the latest edits. Your published site is unchanged; retry Save draft.');
+  saveVerified=true;
   skinSiteDraftExists=true;skinDraftLastSavedPayload=JSON.stringify(verified);
   const latest=JSON.stringify(mergeSkinSiteConfig(skinBuilderConfig));
   if(latest===serialized){skinBuilderConfig=verified;fillSkinConfigFields();sendSkinStudioPreview();skinSetSavedLabel('Draft saved');}
@@ -3037,7 +3067,12 @@ async function persistSkinSiteDraft(quiet=false){
  skinDraftSavePromise=task;
  try{return await task;}
  catch(e){skinBuilderMessage('Draft save failed: '+(e.message||'unknown error')+'. Your published storefront is unchanged.','error');throw e;}
- finally{skinDraftSavePromise=null;if(JSON.stringify(mergeSkinSiteConfig(skinBuilderConfig))!==skinDraftLastSavedPayload)queueSkinDraftAutosave();}
+ finally{
+  skinDraftSavePromise=null;
+  // A failed save must not recursively schedule retries. Only queue a follow-up
+  // after success when newer edits were made while the request was in flight.
+  if(saveVerified&&JSON.stringify(mergeSkinSiteConfig(skinBuilderConfig))!==skinDraftLastSavedPayload)queueSkinDraftAutosave();
+ }
 }
 async function saveSkinSiteDraft(){
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
