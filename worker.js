@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-skin-studio-save-verify-r42',
+          release:'nuvora-2026-10-24-gemini-skin-assistant-r43',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -2085,6 +2085,96 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             return json({error:'Nuvora AI reference-image generation is unavailable for the configured Cloudflare model on this deployment. The current image workflow uses FLUX.2 Klein.'},403);
           }
           return json({error:'Nuvora AI image generation failed: '+(message||'Cloudflare Workers AI returned an unknown error.')},502);
+        }
+      }
+
+      if(url.pathname==='/api/admin/ai/skin-product'&&request.method==='POST'){
+        const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        if(!env.GEMINI_API_KEY)return json({error:'Gemini is not configured yet. Add GEMINI_API_KEY as a Cloudflare Worker secret; do not put the key in the browser or product form.'},503);
+        const input=await body(request,64*1024);
+        const sourceUrl=String(input.url||'').trim();
+        let parsed;
+        try{parsed=new URL(sourceUrl);}catch{return json({error:'Paste a valid Amazon product URL first.'},400);}
+        if(!['http:','https:'].includes(parsed.protocol)||!amazonHost(parsed.hostname))return json({error:'Use the exact Amazon product link for this assistant.'},400);
+        let listing;
+        try{listing=await scrapeAmazonListing(sourceUrl,asinFromUrl(sourceUrl),env);}
+        catch(e){return json({error:'Could not read the Amazon listing: '+String(e?.message||e).slice(0,300)},422);}
+        if(!listing||listing.error)return json({error:String(listing?.error||'Amazon did not return readable product details. Try the direct product URL.')},422);
+        const sourceFacts={
+          title:cleanText(listing.title,500),
+          brand:cleanText(listing.brand,180),
+          description:cleanMultilineText(listing.description,8000),
+          features:Array.isArray(listing.features)?listing.features.map(x=>cleanText(x,500)).filter(Boolean).slice(0,15):[],
+          specifications:listing.specifications&&typeof listing.specifications==='object'?listing.specifications:{},
+          category_path:cleanText(listing.category_path,800),
+          size:cleanText(listing.size||listing.product_size,120),
+          rating:listing.rating??null,
+          review_count:listing.review_count??null,
+          availability:cleanText(listing.availability,180),
+          asin:cleanText(listing.asin||asinFromUrl(sourceUrl),30)
+        };
+        const schema={
+          type:'object',
+          properties:{
+            name:{type:'string'},
+            brand:{type:'string'},
+            overview:{type:'string'},
+            benefits:{type:'array',items:{type:'string'}},
+            skin_types:{type:'array',items:{type:'string'}},
+            skin_concerns:{type:'array',items:{type:'string'}},
+            ingredients:{type:'array',items:{type:'string'}},
+            usage_instructions:{type:'string'},
+            product_warnings:{type:'string'},
+            size:{type:'string'},
+            confidence_notes:{type:'array',items:{type:'string'}}
+          },
+          required:['name','brand','overview','benefits','skin_types','skin_concerns','ingredients','usage_instructions','product_warnings','size','confidence_notes']
+        };
+        const prompt='Prepare structured fields for a skincare product editor. Treat the supplied retailer data as the only source of product-specific facts. Do not invent ingredients, percentages, certifications, claims, suitability, directions, warnings, or sizes. If a field is not supported by the supplied data, return an empty string or empty array and add a short note to confidence_notes. Do not give medical advice. Keep overview to 1-3 concise sentences. Benefits, skin types, skin concerns and ingredients should be short list items. Do not include price or retailer review-count text in the customer-facing copy. The exact Amazon URL is '+sourceUrl+'. Retailer source data: '+JSON.stringify(sourceFacts);
+        try{
+          const model=String(env.GEMINI_MODEL||'gemini-3.8-flash').replace(/[^a-zA-Z0-9._-]/g,'');
+          const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',{
+            method:'POST',
+            headers:{'x-goog-api-key':String(env.GEMINI_API_KEY),'content-type':'application/json'},
+            body:JSON.stringify({
+              contents:[{role:'user',parts:[{text:prompt}]}],
+              generationConfig:{responseFormat:{text:{mimeType:'APPLICATION_JSON',schema}}}
+            })
+          });
+          const payload=await response.json().catch(()=>({}));
+          if(!response.ok){
+            const providerMessage=String(payload?.error?.message||'').slice(0,240);
+            return json({error:'Gemini could not structure this listing ('+response.status+'). '+(providerMessage||'Check the Gemini API key and model configuration.')},502);
+          }
+          const raw=(payload?.candidates?.[0]?.content?.parts||[]).map(part=>String(part.text||'')).join('').trim();
+          if(!raw) return json({error:'Gemini returned no structured product fields. Try again or fill the fields manually.'},502);
+          let result;
+          try{result=JSON.parse(raw);}catch{return json({error:'Gemini returned an invalid structured response. Try again.'},502);}
+          const textField=(value,max=4000)=>cleanMultilineText(typeof value==='string'?value:'',max);
+          const listField=value=>Array.isArray(value)?value.map(item=>textField(item,400)).filter(Boolean).slice(0,20):[];
+          return json({
+            ok:true,provider:'gemini',model,
+            product:{
+              name:textField(result.name,180)||sourceFacts.title,
+              brand:textField(result.brand,180)||sourceFacts.brand,
+              overview:textField(result.overview,3000),
+              benefits:listField(result.benefits),
+              skin_types:listField(result.skin_types),
+              skin_concerns:listField(result.skin_concerns),
+              ingredients:listField(result.ingredients),
+              usage_instructions:textField(result.usage_instructions,5000),
+              product_warnings:textField(result.product_warnings,5000),
+              size:textField(result.size,120)||sourceFacts.size,
+              rating:sourceFacts.rating,
+              review_count:sourceFacts.review_count,
+              asin:sourceFacts.asin,
+              source_url:sourceUrl,
+              images:Array.isArray(listing.images)?listing.images.filter(isValidHttpUrl).slice(0,20):[],
+              confidence_notes:listField(result.confidence_notes)
+            }
+          });
+        }catch(e){
+          return json({error:'Gemini product extraction failed: '+String(e?.message||e).slice(0,300)},502);
         }
       }
 
