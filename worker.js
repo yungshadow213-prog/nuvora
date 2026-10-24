@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-gemini-skin-assistant-r43',
+          release:'nuvora-2026-10-24-skin-availability-gemini-r44',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -2147,6 +2147,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
               rating:sourceFacts.rating,
               review_count:sourceFacts.review_count,
               asin:sourceFacts.asin,
+              availability:/\b(?:out of stock|currently unavailable|unavailable|sold out)\b/i.test(sourceFacts.availability)?'unavailable':/\b(?:in stock|available now|available)\b/i.test(sourceFacts.availability)?'available':null,
               source_url:sourceUrl,
               images:Array.isArray(listing.images)?listing.images.filter(isValidHttpUrl).slice(0,20):[],
               confidence_notes:listField(result.confidence_notes)
