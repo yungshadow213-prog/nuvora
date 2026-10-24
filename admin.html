@@ -1003,6 +1003,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
         <div class="field"><label>Currency</label><input id="pfCurrency" value="USD" placeholder="USD"></div>
         <div class="field"><label>Deal badge</label><input id="pfDeal" placeholder="Limited time deal"></div>
         <div class="field"><label>Retailer rating (out of 5)</label><input id="pfRating" type="number" step="0.1" min="0" max="5" placeholder="3.5" oninput="updateRetailerRatingPreview()"><div id="pfRatingPreview" class="retailer-rating-preview">Enter the retailer’s original rating. This is separate from Nuvora customer reviews.</div></div>
+        <div class="field skin-only-field"><label>Availability (verified)</label><select id="pfAvailability"><option value="">Unknown — hide indicator</option><option value="available">Available · green dot</option><option value="unavailable">Unavailable · red dot</option></select><div class="muted">Set this only when the retailer’s current listing confirms the status. Unknown shows no dot.</div></div>
         <div class="field"><label>Retailer review count (optional)</label><input id="pfReviews" type="number" step="1" min="0" placeholder="1934"><div class="muted">Retailer review counts are not Nuvora customer reviews.</div></div>
         <div class="field"><label>Bought in past month</label><input id="pfBought" placeholder="9K+"></div>
         <div class="field full"><label>Shipping / import text</label><input id="pfShipping" placeholder="Shipping & Import Charges..."></div>
@@ -1589,7 +1590,7 @@ async function generateSkinProductWithGemini(){
   const entries=[
    ['pfName',p.name],['pfBrand',p.brand],['pfDescription',p.overview],
    ['pfFeatures',p.benefits],['pfBenefits',p.benefits],['pfSkinTypes',p.skin_types],
-   ['pfSkinConcerns',p.skin_concerns],['pfIngredients',p.ingredients],
+   ['pfSkinConcerns',p.skin_concerns],['pfIngredients',p.ingredients],['pfAvailability',p.availability],
    ['pfUsage',p.usage_instructions],['pfSkinAvoid',p.product_warnings],
    ['pfWarnings',p.product_warnings],['pfProductSize',p.size],['pfRating',p.rating],
    ['pfAsin',p.asin]
@@ -1850,6 +1851,7 @@ async function saveProductDraft(){
     top_pick:window.skinCareImportMode?document.getElementById('pfSkinTopPick').checked:!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.top_pick,
     trending:window.skinCareImportMode?document.getElementById('pfSkinTrending').checked:!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.trending,
     ingredients:normalizeProductText(document.getElementById('pfIngredients').value)||null,usage_instructions:normalizeProductText(document.getElementById('pfUsage').value)||null,product_warnings:normalizeProductText(document.getElementById('pfWarnings').value)||null,product_size:document.getElementById('pfProductSize').value.trim()||null,
+    availability:window.skinCareImportMode?(document.getElementById('pfAvailability')?.value||null):(currentProduct?.availability??null),
     image_url:images[0]||null,image_urls:images,display_price:null,
     amazon_list_price:null,
     amazon_discount_percent:null,
@@ -3187,6 +3189,7 @@ async function openSkinManualProduct(){
   document.getElementById('pfSource').value='amazon';
   document.getElementById('pfCategory').value=cat?.id||'';
   document.getElementById('pfRetailer').value='Amazon';
+  document.getElementById('pfAvailability').value='';
   document.getElementById('pfPrice').value='';
   document.getElementById('pfListPrice').value='';
   document.getElementById('pfDiscount').value='';
@@ -3214,6 +3217,8 @@ async function editSkinProduct(id){
    document.getElementById('pfSkinAvoid').value=p.skip_if||'';
   document.getElementById('pfRecommendationReason').value=p.recommendation_reason||'';
   document.getElementById('pfSkinFeatured').checked=!!p.featured;document.getElementById('pfSkinTopPick').checked=!!p.top_pick;document.getElementById('pfSkinTrending').checked=!!p.trending;
+  const availabilityValue=String(p.availability||'').trim().toLowerCase();
+  document.getElementById('pfAvailability').value=/^(?:available|in stock|instock|yes|true|in-stock)$/.test(availabilityValue)?'available':/^(?:unavailable|out of stock|out-of-stock|sold out|sold-out|no|false)$/.test(availabilityValue)?'unavailable':'';
   populateSkinRecommendations(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids:[]);
   document.getElementById('pfPrice').value='';document.getElementById('pfListPrice').value='';document.getElementById('pfDiscount').value='';
   document.getElementById('productModal').classList.add('open');
