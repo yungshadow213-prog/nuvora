@@ -1032,6 +1032,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
       <div class="modal-actions">
         <button class="btn" onclick="closeProductModal()">Cancel</button>
         <button class="btn primary" id="productSaveBtn" onclick="saveProductDraft()">Save Draft</button>
+        <button class="btn" id="productPublishBtn" style="display:none" type="button" onclick="saveProductDraft(true)">Save &amp; publish</button>
       </div>
     </div>
   </div>
@@ -1820,13 +1821,14 @@ function productSaveMessage(message,type='info'){
  const box=document.getElementById('productSaveFeedback');if(box){box.hidden=false;box.textContent=String(message);box.dataset.status=type;}
  setAdminStatus(message,type);if(document.body.classList.contains('skin-studio-fullpage'))skinBuilderMessage(message,type);
 }
-function normalizeProductText(value){return String(value??'').replace(/\r\n?/g,'\n').split('\n').map(line=>line.replace(/[\t ]+/g,' ').trim()).join('\n').replace(/\n{3,}/g,'\n\n').trim();}
-async function saveProductDraft(){
+function normalizeProductText(value){return String(value??'').replace(/<br\s*\/?\s*>/gi,'\n').replace(/<\/(?:p|div|li|h[1-6])\s*>/gi,'\n').replace(/<li\b[^>]*>/gi,'• ').replace(/<[^>]+>/g,'').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/&lt;/gi,'<').replace(/&gt;/gi,'>').replace(/\r\n?/g,'\n').split('\n').map(line=>line.replace(/[\t\u00a0 ]+/g,' ').trim()).join('\n').replace(/\n{3,}/g,'\n\n').trim();}
+async function saveProductDraft(publishAfterSave=false){
   if(window.productSaveInProgress)return;
   window.productSaveInProgress=true;
-  const saveButton=document.getElementById('productSaveBtn');
+  const saveButton=document.getElementById('productSaveBtn'),publishButton=document.getElementById('productPublishBtn');
   if(saveButton){saveButton.disabled=true;saveButton.dataset.originalLabel=saveButton.textContent;saveButton.textContent='Saving…';}
-  const releaseSave=()=>{window.productSaveInProgress=false;if(saveButton){saveButton.disabled=false;saveButton.textContent=saveButton.dataset.originalLabel||'Save Draft';delete saveButton.dataset.originalLabel;}};
+  if(publishButton&&publishAfterSave){publishButton.disabled=true;publishButton.textContent='Saving & publishing…';}
+  const releaseSave=()=>{window.productSaveInProgress=false;if(saveButton){saveButton.disabled=false;saveButton.textContent=saveButton.dataset.originalLabel||'Save Draft';delete saveButton.dataset.originalLabel;}if(publishButton){publishButton.disabled=false;publishButton.textContent='Save & publish';}};
   const name=document.getElementById('pfName').value.trim(); if(!name){productSaveMessage('Product title is required.','error');releaseSave();return;}
   let skinCategory=null;
   try{if(window.skinCareImportMode)skinCategory=await ensureSkinCategory(false);}
@@ -1840,7 +1842,7 @@ async function saveProductDraft(){
   if(reviewCountRaw!==''&&(!Number.isInteger(retailerReviewCount)||retailerReviewCount<0)){productSaveMessage('Retailer review count must be a whole number of zero or more.','error');releaseSave();return;}
   const product={
     name,kind:window.skinCareImportMode?'find':document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
-    description:window.skinCareImportMode?(normalizeProductText(adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.description||document.getElementById('pfDescription').value)||null):(normalizeProductText(document.getElementById('pfDescription').value)||null),features:normalizeProductText(document.getElementById('pfFeatures').value)||null,
+    description:normalizeProductText(document.getElementById('pfDescription').value)||null,features:normalizeProductText(document.getElementById('pfFeatures').value)||null,
     benefits:window.skinCareImportMode?(normalizeProductText(document.getElementById('pfBenefits').value)||null):null,
     skin_types:window.skinCareImportMode?(normalizeProductText(document.getElementById('pfSkinTypes').value)||null):null,
     skin_concerns:window.skinCareImportMode?(normalizeProductText(document.getElementById('pfSkinConcerns').value)||null):null,
@@ -1913,6 +1915,11 @@ async function saveProductDraft(){
     }
     if(document.body.classList.contains('skin-studio-fullpage')){renderSkinStudioAll();reloadSkinStudioPreview();}
     if(refreshProblem)productSaveMessage(refreshProblem,'info');
+    if(publishAfterSave&&!refreshProblem){
+      const latestProduct=adminProducts.find(item=>String(item.id)===savedId);
+      if(latestProduct?.published)productSaveMessage('Product details saved and the listing remains published.','success');
+      else await togglePublish(savedId);
+    }
   }catch(e){productSaveMessage('Product save was not confirmed: '+(e.message||'unknown error')+'. The editor remains open so you can retry after checking the message.','error')}finally{releaseSave();}
 }
 async function editProduct(id){
@@ -2314,6 +2321,7 @@ const defaultSkinSiteConfig=()=>({
   sections:[
     {id:'hero',type:'hero',visible:true,title:'Care that feels like you.'},
      {id:'routine-finder',type:'routine-finder',visible:true,title:'Find your routine, one step at a time.',eyebrow:'YOUR SKIN, YOUR PACE',text:'Choose a skin type to explore relevant finds. These labels are browsing aids, not a guarantee of suitability.'},
+    {id:'home-categories',type:'category-grid',visible:true,title:'Browse skincare by category',eyebrow:'FIND YOUR FOCUS',text:'Explore cleansers, treatments, hydration and sun protection.'},
     {id:'edit',type:'product-grid',visible:true,title:'What’s in the edit',eyebrow:'Curated, not crowded',text:'Product picks are added by the Nuvora team. Explore skincare finds and helpful guides.',filter:'all',columns:4,product_ids:[]},
     {id:'approach',type:'editorial',visible:true,title:'Good finds. Clear choices.',eyebrow:'A gentler way to discover',text:'Nuvora Skin is a focused corner of Nuvora for skincare and beauty discoveries. Check ingredient lists, product directions, and suitability before buying.'},
     {id:'journal',type:'journal-grid',visible:true,title:'Little notes for everyday skin.',eyebrow:'The journal',text:'Practical notes for building a routine at your own pace.',columns:3,product_ids:[]}
@@ -2323,7 +2331,7 @@ function mergeSkinSiteConfig(raw){
  const base=defaultSkinSiteConfig(),src=raw&&typeof raw==='object'?raw:{},cfg={...base,...src};
  const cleanSections=(items,fallback=[])=>Array.isArray(items)&&items.length?items.slice(0,40).map((x,i)=>({
   id:String(x.id||('section-'+(i+1))).slice(0,80),
-  type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block'].includes(x.type)?x.type:'product-grid',
+  type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block'].includes(x.type)?x.type:'product-grid',
   visible:x.visible!==false,title:String(x.title||'New section').slice(0,180),
   eyebrow:String(x.eyebrow||'').slice(0,100),text:String(x.text||'').slice(0,3000),
   image:String(x.image||'').slice(0,1600),
@@ -2336,7 +2344,11 @@ function mergeSkinSiteConfig(raw){
   imageWidth:[20,30,40,50,60,70,80,90,100].includes(Number(x.imageWidth))?Number(x.imageWidth):70,
    imageFreePosition:x.imageFreePosition===true,
    imagePositionX:x.imagePositionX!==undefined&&Number.isFinite(Number(x.imagePositionX))?Math.max(0,Math.min(100,Number(x.imagePositionX))):50,
-   imagePositionY:x.imagePositionY!==undefined&&Number.isFinite(Number(x.imagePositionY))?Math.max(0,Math.min(100,Number(x.imagePositionY))):50
+   imagePositionY:x.imagePositionY!==undefined&&Number.isFinite(Number(x.imagePositionY))?Math.max(0,Math.min(100,Number(x.imagePositionY))):50,
+  textAlignment:['left','center','right'].includes(x.textAlignment)?x.textAlignment:'left',
+  titleFontSize:x.titleFontSize!==undefined&&x.titleFontSize!==null&&x.titleFontSize!==''&&Number.isFinite(Number(x.titleFontSize))?Math.max(20,Math.min(88,Number(x.titleFontSize))):null,
+  bodyFontSize:x.bodyFontSize!==undefined&&x.bodyFontSize!==null&&x.bodyFontSize!==''&&Number.isFinite(Number(x.bodyFontSize))?Math.max(10,Math.min(26,Number(x.bodyFontSize))):null,
+  sectionPadding:x.sectionPadding!==undefined&&x.sectionPadding!==null&&x.sectionPadding!==''&&Number.isFinite(Number(x.sectionPadding))?Math.max(16,Math.min(160,Number(x.sectionPadding))):null
  })):fallback;
  const cleanLinks=(items,fallback,max=20)=>Array.isArray(items)?items.slice(0,max).map((item,i)=>({
   id:String(item.id||('site-link-'+(i+1))).slice(0,80),
@@ -2367,7 +2379,9 @@ function mergeSkinSiteConfig(raw){
  cfg.sections=cleanSections(src.sections,base.sections);
  if(Number(src.version||0)<2&&!cfg.sections.some(x=>x.type==='journal-grid'))cfg.sections.push({id:'journal',type:'journal-grid',visible:true,title:'Little notes for everyday skin.',eyebrow:'The journal',text:'Practical notes for building a routine at your own pace.',columns:3,product_ids:[]});
   if(Number(src.version||0)<4&&!cfg.sections.some(x=>x.type==='routine-finder')){const heroIndex=cfg.sections.findIndex(x=>x.type==='hero');cfg.sections.splice(heroIndex>=0?heroIndex+1:0,0,{id:'routine-finder',type:'routine-finder',visible:true,title:'Find your routine, one step at a time.',eyebrow:'YOUR SKIN, YOUR PACE',text:'Choose a skin type to explore relevant finds. These labels are browsing aids, not a guarantee of suitability.'});}
-  cfg.version=5;;
+  if(!cfg.sections.some(x=>x.type==='routine-finder')){const heroIndex=cfg.sections.findIndex(x=>x.type==='hero');cfg.sections.splice(heroIndex>=0?heroIndex+1:0,0,{id:'routine-finder',type:'routine-finder',visible:true,title:'Find your routine, one step at a time.',eyebrow:'YOUR SKIN, YOUR PACE',text:'Choose a skin type to explore relevant finds. These labels are browsing aids, not a guarantee of suitability.'});}
+  if(!cfg.sections.some(x=>x.type==='category-grid')){const routineIndex=cfg.sections.findIndex(x=>x.type==='routine-finder'),gridIndex=cfg.sections.findIndex(x=>['product-grid','featured-products'].includes(x.type)),insertAt=routineIndex>=0?routineIndex+1:(gridIndex>=0?gridIndex:0);cfg.sections.splice(insertAt,0,{id:'home-categories',type:'category-grid',visible:true,title:'Browse skincare by category',eyebrow:'FIND YOUR FOCUS',text:'Explore cleansers, treatments, hydration and sun protection.'});}
+  cfg.version=5;
  cfg.pages=Array.isArray(src.pages)?src.pages.slice(0,30).map((p,i)=>({
   id:String(p.id||p.slug||('page-'+(i+1))).slice(0,80),
   title:String(p.title||'Untitled page').slice(0,120),
@@ -3206,6 +3220,7 @@ function setSkinAdminFormMode(enabled){
  const sourceField=document.getElementById('pfSource');if(sourceField&&enabled)sourceField.value='amazon';
  const retailer=document.getElementById('pfRetailer');if(retailer){retailer.readOnly=!!enabled;if(enabled)retailer.value='Amazon';}
  document.querySelectorAll('.skin-only-field').forEach(el=>el.style.display=enabled?'':'none');
+ const publishButton=document.getElementById('productPublishBtn');if(publishButton)publishButton.style.display=enabled?'inline-flex':'none';
 }
 function populateSkinRecommendations(selectedIds=[]){
  const el=document.getElementById('pfRecommendedProducts');if(!el)return;
