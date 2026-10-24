@@ -344,7 +344,7 @@ async function publishProductRecord(env,id,patch={}){
     const duplicate=(await duplicateResponse.json())?.[0];
     if(duplicate)return {ok:false,status:409,error:'This Amazon product is already published as “'+cleanText(duplicate.name,180)+'”. Unpublish or edit the existing listing instead of publishing a duplicate.'};
   }
-  const write={...patch,published:true,slug:merged.slug,destination_url:destination,updated_at:new Date().toISOString()};
+  const write={...patch,published:true,kind:merged.kind,category_id:merged.category_id,slug:merged.slug,destination_url:destination,updated_at:new Date().toISOString()};
   // Product edits can arrive through this endpoint when the listing is already published.
   // Persist those edited fields as well as the publication status; previously this
   // path only wrote the publish metadata, silently discarding edited guide content.
