@@ -3158,7 +3158,7 @@ async function persistSkinSiteDraft(quiet=false){
  const payload=mergeSkinSiteConfig(skinBuilderConfig),serialized=stableSkinJson(payload);
  if(skinDraftSavePromise){
   await skinDraftSavePromise;collectSkinConfigFields();
-  if(stable current draft compare)return persistSkinSiteDraft(quiet);
+  if(stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig))!==skinDraftLastSavedPayload)return persistSkinSiteDraft(quiet);
   return skinBuilderConfig;
  }
  if(quiet&&serialized===skinDraftLastSavedPayload){skinSetSavedLabel('Draft saved');return payload;}
@@ -3186,7 +3186,7 @@ async function persistSkinSiteDraft(quiet=false){
   skinDraftSavePromise=null;
   // A failed save must not recursively schedule retries. Only queue a follow-up
   // after success when newer edits were made while the request was in flight.
-  if(saveVerified&&stable current draft compare)queueSkinDraftAutosave();
+  if(saveVerified&&stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig))!==skinDraftLastSavedPayload)queueSkinDraftAutosave();
  }
 }
 async function saveSkinSiteDraft(button){
