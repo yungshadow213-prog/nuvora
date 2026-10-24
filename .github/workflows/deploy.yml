@@ -146,6 +146,20 @@ jobs:
               if attempt<89:
                   time.sleep(2)
           else:
+              # A newer main commit can deploy while this run is waiting for Cloudflare.
+              # Do not mark an obsolete commit as failed just because production has moved on.
+              try:
+                  req=urllib.request.Request(
+                      "https://api.github.com/repos/yungshadow213-prog/nuvora/commits/main",
+                      headers={"Accept":"application/vnd.github+json","User-Agent":"nuvora-release-smoke-test"},
+                  )
+                  with urllib.request.urlopen(req,timeout=10) as response:
+                      current_main=json.load(response).get("sha","")
+              except Exception as e:
+                  raise SystemExit("Could not verify whether this deployment run was superseded: "+str(e)+". "+last_error)
+              if current_main and current_main != os.environ.get("GITHUB_SHA",""):
+                  print("This run was superseded by a newer main commit ("+current_main+"). Its older release is no longer the deployment target; the newer run owns production verification.")
+                  raise SystemExit(0)
               raise SystemExit("Production deployment verification failed: "+last_error+". No claim of live fix should be made until Cloudflare's Active Deployment matches the current main release.")
 
           for path in ["/api/config","/api/products","/api/settings","/","/beauty"]:
