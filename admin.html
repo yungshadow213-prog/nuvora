@@ -1846,7 +1846,7 @@ async function saveProductDraft(){
     if(String(savedProduct.name||'').trim()!==name)throw new Error('The saved product did not match the title you entered. The editor is still open; retry after checking the connection.');
     if(!wasEditing&&savedProduct.published)throw new Error('The new product was unexpectedly published. Please review its status before continuing.');
     closeProductModal();window.skinCareImportMode=false;window.editingProductId=null;
-    if(document.body.classList.contains('skin-studio-fullpage')){renderSkinStudioAll();refreshSkinStudioPreview();}
+    if(document.body.classList.contains('skin-studio-fullpage')){renderSkinStudioAll();reloadSkinStudioPreview();}
     productSaveMessage(wasEditing?'Product changes saved and verified.':(skinCategory?'Skincare product saved as a draft and verified.':'Product saved as a draft and verified.'),'success');
   }catch(e){productSaveMessage('Product save failed: '+(e.message||'unknown error')+' The editor remains open so you can retry.','error')}finally{releaseSave();}
 }
@@ -1910,8 +1910,8 @@ async function togglePublish(id){
    renderSkinLibrary();
    renderSkinSelectedInspector();
    renderSkinBuilderSections();
-   refreshSkinStudioPreview();
-   skinBuilderMessage(publishing?label+' is published. Publish the page changes too if you placed it in a section.':label+' is now a draft and hidden from shoppers.','success');
+   reloadSkinStudioPreview();
+   skinBuilderMessage(publishing?label+' is published. The preview is refreshing its product catalog; publish the page changes too if you placed it in a section.':label+' is now a draft and hidden from shoppers. The preview is refreshing its product catalog.','success');
   }else{
    setAdminStatus(publishing?label+' published successfully — now visible in the storefront.':label+' moved back to draft.');
   }
