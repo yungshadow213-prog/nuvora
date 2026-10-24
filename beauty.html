@@ -271,11 +271,18 @@ function renderPage(){
 function selectCategory(id){activeCategory=String(id||'');renderPage();const grid=document.querySelector('.product-grid-section');grid?.scrollIntoView({behavior:'smooth',block:'start'});}
 function trackClick(id){try{fetch('/api/analytics/events',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({event_name:'affiliate_outbound_click',product_id:id,metadata:{source:'nuvora-skin'}})}).catch(()=>{});}catch{}}
 function formatGuideBody(value,isList=false){
- const lines=String(value||'').replace(/\r\n?/g,'\n').split('\n').map(line=>line.trim());
+ const lines=String(value||'').replace(/\r\n?/g,'\n').replace(/<br\s*\/?\s*>/gi,'\n').split('\n').map(line=>line.trim());
  const bullet=/^(?:[•●▪◦*-]|\d+[.)])\s+/;
  const heading=/^(?:key ingredients?|ingredients?|how to use|directions?|benefits?|warnings?|precautions?|suitable for|skin types?|skin concerns?|what it does|overview|application|frequency)\s*:?$/i;
+ const headingWithValue=/^((?:key ingredients?|ingredients?|how to use|directions?|benefits?|warnings?|precautions?|suitable for|skin types?|skin concerns?|what it does|overview|application|frequency))\s*:\s*(.+)$/i;
  if(isList){
-  const items=lines.map(line=>line.replace(bullet,'').trim()).filter(Boolean);
+  const items=lines.flatMap(line=>{
+   if(!line)return [];
+   const clean=line.replace(bullet,'').trim().replace(/^((?:key ingredients?|ingredients?|how to use|directions?|benefits?|warnings?|precautions?|suitable for|skin types?|skin concerns?|what it does|overview|application|frequency))\s*:\s*/i,'').trim();
+   if(!clean)return [];
+   const parts=clean.split(/[;,]\s*/).map(part=>part.trim()).filter(Boolean);
+   return parts.length>=3&&parts.every(part=>part.length<100&&!/[.!?]$/.test(part))?parts:[clean];
+  });
   return items.length?'<ul class="guide-list">'+items.map(line=>'<li>'+esc(line)+'</li>').join('')+'</ul>':'';
  }
  const output=[];let paragraph=[],list=[];
@@ -283,6 +290,8 @@ function formatGuideBody(value,isList=false){
  const flushList=()=>{if(list.length){output.push('<ul class="guide-list">'+list.map(line=>'<li>'+esc(line.replace(bullet,'').trim())+'</li>').join('')+'</ul>');list=[];}};
  for(const line of lines){
   if(!line){flushParagraph();flushList();continue;}
+  const titled=line.match(headingWithValue);
+  if(titled){flushParagraph();flushList();output.push('<h4 class="guide-subheading">'+esc(titled[1])+'</h4>');if(bullet.test(titled[2]))list.push(titled[2]);else paragraph.push(titled[2]);continue;}
   if(bullet.test(line)){flushParagraph();list.push(line);continue;}
   flushList();
   if(heading.test(line)){flushParagraph();output.push('<h4 class="guide-subheading">'+esc(line.replace(/:$/,''))+'</h4>');continue;}
