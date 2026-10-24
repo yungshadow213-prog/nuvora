@@ -2487,11 +2487,18 @@ function skinMarkDirty(message='Draft updated. Publish when you are ready.'){
  if(label){label.textContent='Unsaved changes';label.dataset.status='dirty';}
  skinBuilderMessage(message,'info');queueSkinDraftAutosave();syncSkinPreviewActionbar();
 }
-function saveSkinStudioChangeImmediately(successMessage){
+async function saveSkinStudioChangeImmediately(successMessage){
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
- if(!skinSiteConfigLoaded||!skinBuilderConfig){skinBuilderMessage('This change is not saved because the page draft has not loaded. Reload Skin Studio before retrying.','error');return Promise.resolve(false);}
+ if(!skinSiteConfigLoaded||!skinBuilderConfig){skinBuilderMessage('This change is not saved because the page draft has not loaded. Reload Skin Studio before retrying.','error');return false;}
  skinBuilderMessage('Saving this change to your page draft…','info');
- return persistSkinSiteDraft(false).then(()=>{if(successMessage)skinBuilderMessage(successMessage,'success');return true;}).catch(()=>false);
+ try{
+  // A concurrent edit may land while the request is in flight. Do not show success until the latest editor state matches the server read-back.
+  for(let attempt=0;attempt<3;attempt++){
+   await persistSkinSiteDraft(false);
+   if(stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig))===skinDraftLastSavedPayload){if(successMessage)skinBuilderMessage(successMessage,'success');return true;}
+  }
+  throw new Error('The page changed while saving. Pause edits briefly, then retry Save draft.');
+ }catch(e){skinBuilderMessage('Draft save could not be verified: '+(e?.message||'unknown error')+'. Your published storefront is unchanged.','error');return false;}
 }
 function skinSetSavedLabel(message='Saved version loaded'){
  const label=document.getElementById('skinStudioSaveLabel');
