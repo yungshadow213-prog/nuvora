@@ -928,16 +928,16 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
 <div id="aiStudioModal" class="modal-backdrop" onclick="if(event.target===this)closeAIStudio()">
   <div class="modal">
     <div class="modal-head">
-      <div><div class="eyebrow">Nuvora AI Studio</div><h2>Make this product publish-ready</h2><div class="muted">Generate a polished advertising image and refined listing copy with Nuvora AI. Nuvora AI runs through Cloudflare Workers AI and runs on Cloudflare Workers AI; no OpenAI service is used.</div></div>
+      <div><div class="eyebrow">Gemini AI Studio</div><h2>Make this product publish-ready</h2><div class="muted">Generate a polished advertising image and refined listing copy with Google Gemini. Your API key stays on the server; review all generated content before saving.</div></div>
       <button class="btn" onclick="closeAIStudio()">Close</button>
     </div>
     <div class="modal-body">
       <div class="ai-studio">
-        <div class="ai-studio-head"><div><h3>AI advertising image</h3><div class="muted">Use the product image as a reference for the strongest result. Nuvora AI runs through Cloudflare Workers AI.</div></div></div>
+        <div class="ai-studio-head"><div><h3>AI advertising image</h3><div class="muted">Use the product image as a reference for the strongest result. Gemini generates a promotional concept; review the product details carefully before applying it.</div></div></div>
         <div class="ai-grid">
           <div class="field"><label>Creative style</label><select id="aiStyle"><option value="premium ecommerce">Premium ecommerce</option><option value="clean studio">Clean studio</option><option value="luxury editorial">Luxury editorial</option><option value="modern lifestyle">Modern lifestyle</option><option value="social media ad">Social media ad</option><option value="minimal catalog">Minimal catalog</option></select></div>
           <div class="field"><label>Format</label><select id="aiSize"><option value="1024x1024">Square · 1:1</option><option value="1536x1024">Landscape · 3:2</option><option value="1024x1536">Portrait · 2:3</option></select></div>
-          <div class="field full"><label>Reference image <span class="muted">(optional)</span></label><input id="aiReference" type="file" accept="image/*"><div class="muted">If you leave this empty, Nuvora AI automatically uses the first image already attached to the product. Upload one only when you want a different reference. Max 6 MB.</div></div>
+          <div class="field full"><label>Reference image <span class="muted">(optional)</span></label><input id="aiReference" type="file" accept="image/*"><div class="muted">If you leave this empty, Gemini automatically uses the first image already attached to the product. Upload one only when you want a different reference. Max 6 MB.</div></div>
           <div class="field full"><label>Creative direction</label><textarea id="aiPrompt" placeholder="Optional: soft neutral background, subtle shadows, premium lighting…"></textarea></div>
         </div>
         <div class="ai-actions"><button class="btn primary" id="aiGenerateBtn" onclick="generateAIProductImage()">Generate advertising image</button></div>
@@ -981,7 +981,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
       <button class="btn" onclick="closeProductModal()">Close</button>
     </div>
     <div class="modal-body">
-      <div class="workspace-note" id="importStatus">You can enter a product manually or use the quick Amazon link workflow below. Nothing becomes public until you publish it.</div><div id="productSaveFeedback" class="notice" role="status" aria-live="polite" hidden style="margin:10px 0 14px"></div><div style="display:flex;justify-content:flex-end;margin:-4px 0 14px"><button type="button" class="btn primary" onclick="openAIStudio()">✦ Run Nuvora AI</button></div>
+      <div class="workspace-note" id="importStatus">You can enter a product manually or use the quick Amazon link workflow below. Nothing becomes public until you publish it.</div><div id="productSaveFeedback" class="notice" role="status" aria-live="polite" hidden style="margin:10px 0 14px"></div><div style="display:flex;justify-content:flex-end;margin:-4px 0 14px"><button type="button" class="btn primary" onclick="openAIStudio()">✦ Run Gemini Studio</button></div>
       <div class="importbar">
         <input id="amazonUrlInput" placeholder="Paste your Amazon affiliate/product link">
         <button class="btn primary" onclick="useAmazonLink()">Use Amazon link</button>
@@ -1009,6 +1009,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
         <div class="field full"><label>Tax notice</label><input id="pfTax" placeholder="Sales taxes may apply at checkout"></div>
         <div class="field"><label>Category</label><select id="pfCategory"><option value="">No category</option></select></div>
         <div class="field"><label>Collection</label><select id="pfCollection"><option value="">No collection</option></select></div>
+        <div class="field full skin-only-field"><label>Gemini product assistant</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="skinGeminiFillBtn" type="button" class="btn" onclick="generateSkinProductWithGemini()">Fill product guide with Gemini</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input id="skinGeminiReplaceExisting" type="checkbox"> Replace existing text fields</label></div><div id="skinGeminiStatus" class="muted" role="status" aria-live="polite" style="margin-top:8px">Paste the exact Amazon link into Destination / affiliate URL. Gemini will fill supported fields for review; it will not save or publish the product.</div></div>
         <div class="field full"><label>Description</label><textarea id="pfDescription" placeholder="Product description"></textarea></div>
         <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div>
         <div class="field full skin-only-field"><label>Product benefits <span class="muted">(source-backed)</span></label><textarea id="pfBenefits" placeholder="What the product is intended to do, based on product information"></textarea></div>
@@ -1508,7 +1509,7 @@ async function openAIStudio(){
   page.classList.add('open');
   document.getElementById('aiPrompt').value='';
   document.getElementById('aiImageStatus').textContent='Starting Cloudflare Workers AI…';
-  document.getElementById('aiCopyStatus').textContent='Waiting for Nuvora AI…';
+  document.getElementById('aiCopyStatus').textContent='Waiting for Gemini…';
   document.getElementById('aiPreview').style.display='none';
   document.getElementById('aiReference').value='';
   page.scrollIntoView({behavior:'smooth',block:'start'});
@@ -1554,7 +1555,7 @@ async function generateAIProductImage(){
     fd.append('prompt',`Create a professional ecommerce advertising image for the exact product shown in the reference image. Preserve the product's identity, shape, materials, colors, branding and important physical details. Do not invent extra product features or change the product. Style: ${style}. Product name: ${p.name}. Brand: ${p.brand||'unknown'}. Place it in a polished, uncluttered commercial composition suitable for Nuvora product publishing. No fake logos, no misleading claims, no random text, no watermark. ${custom}`);
     const j=await api('/api/admin/ai/image',{method:'POST',body:fd});
     window.lastAIImage=j.image;document.getElementById('aiPreviewImg').src=j.image;document.getElementById('aiPreview').style.display='flex';status.textContent='Image ready. Review it before applying.';
-  }catch(e){status.textContent='Generation failed: '+(e.message||'Unknown error.');setAdminStatus(e.message||'AI image generation failed.','error')}
+  }catch(e){status.textContent='Generation failed: '+(e.message||'Unknown error.');setAdminStatus(e.message||'Gemini image generation failed.','error')}
   finally{btn.disabled=false;btn.textContent='Generate advertising image';}
 }
 function dataUrlBlob(dataUrl){const [head,data]=dataUrl.split(',');const mime=(head.match(/data:([^;]+)/)||[])[1]||'image/png';const bin=atob(data);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime});}
@@ -1568,6 +1569,47 @@ async function useAIImage(){
     const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);document.getElementById('pfImages').value=[url,...urls].filter((x,i,a)=>a.indexOf(x)===i).join('\n');renderProductImages();status.textContent='AI image added to the product images.';closeAIStudio();
   }catch(e){status.textContent='Could not save the image: '+(e.message||'Unknown error.');setAdminStatus(e.message||'Could not save the image.','error')}
 }
+async function generateSkinProductWithGemini(){
+ const url=String(document.getElementById('pfDestination')?.value||document.getElementById('amazonUrlInput')?.value||'').trim();
+ const status=document.getElementById('skinGeminiStatus'),button=document.getElementById('skinGeminiFillBtn');
+ if(!url){if(status)status.textContent='Paste the exact Amazon product link into Destination / affiliate URL first.';skinBuilderMessage('Paste the Amazon product link before asking Gemini to fill the guide.','error');return;}
+ const original=button?.textContent;if(button){button.disabled=true;button.textContent='Reading listing + structuring fields…';}
+ if(status)status.textContent='Reading the Amazon listing, then asking Gemini to organize verified details. This may take a little while.';
+ try{
+  const response=await api('/api/admin/ai/skin-product',{method:'POST',body:{url}});
+  const p=response?.product;if(!response?.ok||!p)throw new Error('Gemini did not return product fields.');
+  const replace=!!document.getElementById('skinGeminiReplaceExisting')?.checked;
+  const fill=(id,value)=>{
+   const el=document.getElementById(id);if(!el||value==null)return false;
+   const next=Array.isArray(value)?value.join('\n'):String(value);
+   if(!next.trim()||(!replace&&String(el.value||'').trim()))return false;
+   el.value=next;el.dispatchEvent(new Event('input',{bubbles:true}));return true;
+  };
+  let count=0;
+  const entries=[
+   ['pfName',p.name],['pfBrand',p.brand],['pfDescription',p.overview],
+   ['pfFeatures',p.benefits],['pfBenefits',p.benefits],['pfSkinTypes',p.skin_types],
+   ['pfSkinConcerns',p.skin_concerns],['pfIngredients',p.ingredients],
+   ['pfUsage',p.usage_instructions],['pfSkinAvoid',p.product_warnings],
+   ['pfWarnings',p.product_warnings],['pfProductSize',p.size],['pfRating',p.rating],
+   ['pfAsin',p.asin]
+  ];
+  for(const [id,value] of entries)if(fill(id,value))count++;
+  const source=document.getElementById('pfSource');if(source)source.value='amazon';
+  const retailer=document.getElementById('pfRetailer');if(retailer)retailer.value='Amazon';
+  const destination=document.getElementById('pfDestination');if(destination&&!destination.value.trim())destination.value=url;
+  updateRetailerRatingPreview();
+  if(p.confidence_notes?.length){
+   const notes=p.confidence_notes.join(' · ');
+   if(status)status.textContent='Gemini filled '+count+' fields. Review before saving. Notes: '+notes;
+  }else if(status)status.textContent='Gemini filled '+count+' fields. Review every field; existing values were '+(replace?'replaced where new data was available.':'preserved. Nothing has been saved or published.');
+  productSaveMessage('Gemini prepared the skincare guide. Review the fields and click Save Draft when ready.','success');
+ }catch(e){
+  const message=e.message||'Gemini could not prepare this product.';
+  if(status)status.textContent=message;
+  productSaveMessage(message,'error');
+ }finally{if(button){button.disabled=false;button.textContent=original||'Fill product guide with Gemini';}}
+}
 async function generateAIProductCopy(){
   const btn=document.getElementById('aiCopyBtn'),status=document.getElementById('aiCopyStatus');const p=aiProductData();if(!p.name){setAdminStatus('Add the product title first.','error');return;}
   btn.disabled=true;btn.textContent='Polishing…';status.textContent='Writing publish-ready copy…';
@@ -1575,7 +1617,7 @@ async function generateAIProductCopy(){
     const j=await api('/api/admin/ai/copy',{method:'POST',body:{product:p}});
     if(j.title)document.getElementById('pfName').value=j.title;if(j.description)document.getElementById('pfDescription').value=j.description;if(j.features)document.getElementById('pfFeatures').value=Array.isArray(j.features)?j.features.join('\n'):j.features;
     status.textContent='Listing copy updated in the form. Review it before saving.';
-  }catch(e){status.textContent='Copy generation failed: '+(e.message||'Unknown error.');setAdminStatus(e.message||'AI copy generation failed.','error')}finally{btn.disabled=false;btn.textContent='Polish product listing';}
+  }catch(e){status.textContent='Copy generation failed: '+(e.message||'Unknown error.');setAdminStatus(e.message||'Gemini copy generation failed.','error')}finally{btn.disabled=false;btn.textContent='Polish product listing';}
 }
 
 function showImportPage(source='amazon'){
@@ -2042,8 +2084,8 @@ async function healthCheck(){
   if(box)box.innerHTML='<div class="health-loading"><i></i>Checking live Nuvora connections…</div>';
   try{
     const j=await api('/api/admin/diagnostics');
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Core product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
-    const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','analytics']);
+    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Core product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Legacy Cloudflare AI binding',gemini:'Gemini API key',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
+    const optional=new Set(['workersAI','gemini','shopifyStorefront','shopifyEnvironment','shopifyAuth','analytics']);
     const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
     window.__nuvoraSchemaState={
       missingProductColumns:Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[],
@@ -2070,7 +2112,7 @@ async function runDiagnostics(){
   box.innerHTML='<div class="muted">Running diagnostics…</div>';
   try{
     const j=await api('/api/admin/diagnostics');
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Nuvora AI engine',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
+    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Legacy Cloudflare AI binding',gemini:'Gemini API key',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
     const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','shopifyProducts','analytics']);
     const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
     const missing=Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[];
