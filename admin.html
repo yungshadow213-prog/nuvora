@@ -931,6 +931,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
       <div><div class="eyebrow">Gemini AI Studio</div><h2>Make this product publish-ready</h2><div class="muted">Generate a polished advertising image and refined listing copy with Google Gemini. Your API key stays on the server; review all generated content before saving.</div></div>
       <button class="btn" onclick="closeAIStudio()">Close</button>
     </div>
+    <div id="aiGeminiConfigStatus" role="status" aria-live="polite" style="margin:0 24px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;font-size:12px;line-height:1.5;color:var(--muted)">Checking Gemini configuration…</div>
     <div class="modal-body">
       <div class="ai-studio">
         <div class="ai-studio-head"><div><h3>AI advertising image</h3><div class="muted">Use the product image as a reference for the strongest result. Gemini generates a promotional concept; review the product details carefully before applying it.</div></div></div>
@@ -1510,11 +1511,12 @@ async function openAIStudio(){
   const page=document.getElementById('aiStudioModal');
   page.classList.add('open');
   document.getElementById('aiPrompt').value='';
-  document.getElementById('aiImageStatus').textContent='Starting Cloudflare Workers AI…';
+  document.getElementById('aiImageStatus').textContent='Checking Gemini image generation…';
   document.getElementById('aiCopyStatus').textContent='Waiting for Gemini…';
   document.getElementById('aiPreview').style.display='none';
   document.getElementById('aiReference').value='';
   page.scrollIntoView({behavior:'smooth',block:'start'});
+  refreshGeminiConfigStatus();
   // AI generation is manual so merely opening the workspace never consumes an AI request.
 }
 function closeAIStudio(){document.getElementById('aiStudioModal').classList.remove('open');document.body.classList.remove('admin-workspace-open');}
@@ -1571,6 +1573,16 @@ async function useAIImage(){
     const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);document.getElementById('pfImages').value=[url,...urls].filter((x,i,a)=>a.indexOf(x)===i).join('\n');renderProductImages();status.textContent='AI image added to the product images.';closeAIStudio();
   }catch(e){status.textContent='Could not save the image: '+(e.message||'Unknown error.');setAdminStatus(e.message||'Could not save the image.','error')}
 }
+async function refreshGeminiConfigStatus(){
+ const nodes=[document.getElementById('skinGeminiStatus'),document.getElementById('aiGeminiConfigStatus')].filter(Boolean);
+ if(!nodes.length)return;
+ const set=(message,ready)=>nodes.forEach(node=>{node.textContent=message;node.dataset.status=ready?'ready':'missing';node.style.color=ready?'var(--success,#2f855a)':'var(--muted)';node.style.borderColor=ready?'rgba(47,133,90,.35)':'var(--line)';});
+ try{
+  const health=await api('/api/health?verify=gemini-ui');
+  if(health?.configured?.gemini===true)set('Gemini is connected. Paste the exact Amazon product link, review the generated fields, then save manually. Gemini will not publish anything automatically.',true);
+  else set('Gemini is not connected on the Worker yet. In Cloudflare Dashboard → Workers & Pages → nuvora → Settings → Variables and Secrets, add a secret named GEMINI_API_KEY, then reload this page. Do not paste the key into this form or chat.',false);
+ }catch{set('Could not verify Gemini configuration. Check the Worker health status before using product extraction or image generation.',false);}
+}
 async function generateSkinProductWithGemini(){
  const url=String(document.getElementById('pfDestination')?.value||document.getElementById('amazonUrlInput')?.value||'').trim();
  const status=document.getElementById('skinGeminiStatus'),button=document.getElementById('skinGeminiFillBtn');
@@ -1583,6 +1595,14 @@ async function generateSkinProductWithGemini(){
   const replace=!!document.getElementById('skinGeminiReplaceExisting')?.checked;
   const fill=(id,value)=>{
    const el=document.getElementById(id);if(!el||value==null)return false;
+   if(el instanceof HTMLSelectElement&&el.multiple){
+    const values=Array.isArray(value)?value.map(String).filter(Boolean):[];
+    if(!values.length||(!replace&&el.selectedOptions.length))return false;
+    const available=new Set(Array.from(el.options).map(option=>String(option.value))),selected=values.filter(item=>available.has(item));
+    if(!selected.length)return false;
+    Array.from(el.options).forEach(option=>option.selected=selected.includes(String(option.value)));
+    el.dispatchEvent(new Event('change',{bubbles:true}));return true;
+   }
    const next=Array.isArray(value)?value.join('\n'):String(value);
    if(!next.trim()||(!replace&&String(el.value||'').trim()))return false;
    el.value=next;el.dispatchEvent(new Event('input',{bubbles:true}));return true;
@@ -1594,7 +1614,7 @@ async function generateSkinProductWithGemini(){
    ['pfSkinConcerns',p.skin_concerns],['pfIngredients',p.ingredients],['pfAvailability',p.availability],
    ['pfUsage',p.usage_instructions],['pfSkinAvoid',p.product_warnings],
    ['pfWarnings',p.product_warnings],['pfProductSize',p.size],['pfRating',p.rating],
-   ['pfAsin',p.asin]
+   ['pfRecommendedProducts',p.recommended_product_ids],['pfRecommendationReason',p.recommendation_reason],['pfAsin',p.asin]
   ];
   for(const [id,value] of entries)if(fill(id,value))count++;
   const source=document.getElementById('pfSource');if(source)source.value='amazon';
@@ -1603,8 +1623,8 @@ async function generateSkinProductWithGemini(){
   updateRetailerRatingPreview();
   if(p.confidence_notes?.length){
    const notes=p.confidence_notes.join(' · ');
-   if(status)status.textContent='Gemini filled '+count+' fields. Review before saving. Notes: '+notes;
-  }else if(status)status.textContent='Gemini filled '+count+' fields. Review every field; existing values were '+(replace?'replaced where new data was available.':'preserved. Nothing has been saved or published.');
+   if(status)status.textContent='Gemini filled '+count+' fields, including '+(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids.length:0)+' suggested companion product(s). Review every suggestion before saving. Notes: '+notes;
+  }else if(status)status.textContent='Gemini filled '+count+' fields, including '+(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids.length:0)+' suggested companion product(s). Review every field; existing values were '+(replace?'replaced where new data was available.':'preserved. Nothing has been saved or published.');
   productSaveMessage('Gemini prepared the skincare guide. Review the fields and click Save Draft when ready.','success');
  }catch(e){
   const message=e.message||'Gemini could not prepare this product.';
@@ -3260,6 +3280,7 @@ function setSkinAdminFormMode(enabled){
  const retailer=document.getElementById('pfRetailer');if(retailer){retailer.readOnly=!!enabled;if(enabled)retailer.value='Amazon';}
  document.querySelectorAll('.skin-only-field').forEach(el=>el.style.display=enabled?'':'none');
  const publishButton=document.getElementById('skinProductPublishBtn');if(publishButton)publishButton.style.display=enabled?'inline-flex':'none';
+ if(enabled)refreshGeminiConfigStatus();
 }
 function populateSkinRecommendations(selectedIds=[]){
  const el=document.getElementById('pfRecommendedProducts');if(!el)return;
