@@ -194,7 +194,7 @@ function productGalleryImages(p){
 }
 function textLines(value){return String(value||'').split(/\r?\n|\s*;\s*/).map(x=>x.trim()).filter(Boolean);}
 function isAmazonProduct(p){return /amazon/i.test(String(p.retailer||p.source_type||''))||!!p.amazon_asin||/amazon/i.test(String(p.destination_url||''));}
-function productButtonLabel(p){return isAmazonProduct(p)?'View on Amazon':'View retailer listing';}
+function productButtonLabel(p){return isAmazonProduct(p)?'Check price on Amazon':'View retailer listing';}
 function retailerStarsMarkup(value){const rating=Math.max(0,Math.min(5,Number(value)||0));return Array.from({length:5},(_,i)=>{const fill=Math.max(0,Math.min(1,rating-i)),kind=fill>=1?'full':fill<=0?'empty':'partial';return '<span class="rating-star '+kind+'"'+(kind==='partial'?' style="background-image:linear-gradient(90deg,#bd923a '+(fill*100)+'%,#d8dbd1 '+(fill*100)+'%)"':'')+' aria-hidden="true">★</span>';}).join('');}
 function retailerRatingMarkup(p){const raw=p.amazon_rating??(String(p.source_type||p.retailer||'').toLowerCase().includes('temu')?p.temu_rating:p.rating);const value=Number(raw);if(!Number.isFinite(value)||value<=0)return '';const rating=Math.max(0,Math.min(5,value));const retailer=String(p.retailer||p.source_type||'Amazon');return '<div class="retailer-rating" aria-label="'+esc(retailer)+' rating '+rating.toFixed(1)+' out of 5"><span class="rating-stars">'+retailerStarsMarkup(rating)+'</span><strong>'+rating.toFixed(1)+'/5</strong><small>'+esc(retailer)+' rating</small></div>';}
 function productAvailabilityMarkup(p){
