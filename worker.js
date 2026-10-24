@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-skin-studio-add-text-r50',
+          release:'nuvora-2026-10-24-skin-studio-persistence-placement-r51',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
