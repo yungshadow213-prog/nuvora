@@ -981,7 +981,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
       <button class="btn" onclick="closeProductModal()">Close</button>
     </div>
     <div class="modal-body">
-      <div class="workspace-note" id="importStatus">You can enter a product manually or use the quick Amazon link workflow below. Nothing becomes public until you publish it.</div><div style="display:flex;justify-content:flex-end;margin:-4px 0 14px"><button type="button" class="btn primary" onclick="openAIStudio()">✦ Run Nuvora AI</button></div>
+      <div class="workspace-note" id="importStatus">You can enter a product manually or use the quick Amazon link workflow below. Nothing becomes public until you publish it.</div><div id="productSaveFeedback" class="notice" role="status" aria-live="polite" hidden style="margin:10px 0 14px"></div><div style="display:flex;justify-content:flex-end;margin:-4px 0 14px"><button type="button" class="btn primary" onclick="openAIStudio()">✦ Run Nuvora AI</button></div>
       <div class="importbar">
         <input id="amazonUrlInput" placeholder="Paste your Amazon affiliate/product link">
         <button class="btn primary" onclick="useAmazonLink()">Use Amazon link</button>
@@ -1378,6 +1378,7 @@ function openProductModal(importMode=false){
   document.getElementById('aiStudioModal')?.classList.remove('open');
   document.getElementById('shopifyModal')?.classList.remove('open');
   resetProductForm();
+  const feedback=document.getElementById('productSaveFeedback');if(feedback){feedback.hidden=true;feedback.textContent='';feedback.dataset.status='';}
   document.getElementById('productModalTitle').textContent=importMode?'Import Amazon product':'Add product';
   document.getElementById('productModalSub').textContent=importMode?'Paste your Amazon link, capture the listing, then save it as a draft.':'Create a product manually and save it as a draft.';
   document.getElementById('productModal').classList.add('open');
@@ -1756,36 +1757,41 @@ function parseProductVariations(raw){
     return name&&values.length?{name,values:[...new Set(values)].slice(0,40)}:null;
   }).filter(Boolean).slice(0,20);
 }
+function productSaveMessage(message,type='info'){
+ const box=document.getElementById('productSaveFeedback');if(box){box.hidden=false;box.textContent=String(message);box.dataset.status=type;}
+ setAdminStatus(message,type);if(document.body.classList.contains('skin-studio-fullpage'))skinBuilderMessage(message,type);
+}
+function normalizeProductText(value){return String(value??'').replace(/\r\n?/g,'\n').split('\n').map(line=>line.replace(/[\t ]+/g,' ').trim()).join('\n').replace(/\n{3,}/g,'\n\n').trim();}
 async function saveProductDraft(){
   if(window.productSaveInProgress)return;
   window.productSaveInProgress=true;
   const saveButton=document.getElementById('productSaveBtn');
   if(saveButton){saveButton.disabled=true;saveButton.dataset.originalLabel=saveButton.textContent;saveButton.textContent='Saving…';}
   const releaseSave=()=>{window.productSaveInProgress=false;if(saveButton){saveButton.disabled=false;saveButton.textContent=saveButton.dataset.originalLabel||'Save Draft';delete saveButton.dataset.originalLabel;}};
-  const name=document.getElementById('pfName').value.trim(); if(!name){setAdminStatus('Product title is required.','error');releaseSave();return;}
+  const name=document.getElementById('pfName').value.trim(); if(!name){productSaveMessage('Product title is required.','error');releaseSave();return;}
   let skinCategory=null;
   try{if(window.skinCareImportMode)skinCategory=await ensureSkinCategory(false);}
-  catch(e){setAdminStatus('Could not verify the Skin Care category. The product was not saved: '+(e.message||e),'error');releaseSave();return;}
+  catch(e){productSaveMessage('Could not verify the Skin Care category. The product was not saved: '+(e.message||e),'error');releaseSave();return;}
   const images=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   const ratingSource=document.getElementById('pfSource').value;
   const ratingRaw=document.getElementById('pfRating').value.trim(),retailerRating=ratingRaw===''?null:Number(ratingRaw);
   const reviewCountRaw=document.getElementById('pfReviews').value.trim(),retailerReviewCount=reviewCountRaw===''?null:Number(reviewCountRaw);
   const currentProduct=window.editingProductId?adminProducts.find(x=>String(x.id)===String(window.editingProductId)):null;
-  if(ratingRaw!==''&&(!Number.isFinite(retailerRating)||retailerRating<0||retailerRating>5||Math.abs(retailerRating*2-Math.round(retailerRating*2))>1e-8)){setAdminStatus('Retailer rating must be a number from 0 to 5, such as 3.5.','error');releaseSave();return;}
-  if(reviewCountRaw!==''&&(!Number.isInteger(retailerReviewCount)||retailerReviewCount<0)){setAdminStatus('Retailer review count must be a whole number of zero or more.','error');releaseSave();return;}
+  if(ratingRaw!==''&&(!Number.isFinite(retailerRating)||retailerRating<0||retailerRating>5||Math.round(retailerRating*10)!==retailerRating*10)){productSaveMessage('Retailer rating must be a number from 0 to 5, such as 3.5.','error');releaseSave();return;}
+  if(reviewCountRaw!==''&&(!Number.isInteger(retailerReviewCount)||retailerReviewCount<0)){productSaveMessage('Retailer review count must be a whole number of zero or more.','error');releaseSave();return;}
   const product={
-    name,kind:window.skinCareImportMode?'shop':document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
-    description:window.skinCareImportMode?(adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.description||document.getElementById('pfDescription').value.trim()||null):(document.getElementById('pfDescription').value.trim()||null),features:document.getElementById('pfFeatures').value.trim()||null,
-    benefits:window.skinCareImportMode?(document.getElementById('pfBenefits').value.trim()||null):null,
-    skin_types:window.skinCareImportMode?(document.getElementById('pfSkinTypes').value.trim()||null):null,
-    skin_concerns:window.skinCareImportMode?(document.getElementById('pfSkinConcerns').value.trim()||null):null,
-    skip_if:window.skinCareImportMode?(document.getElementById('pfSkinAvoid').value.trim()||null):null,
+    name,kind:window.skinCareImportMode?'find':document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
+    description:window.skinCareImportMode?(normalizeProductText(adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.description||document.getElementById('pfDescription').value)||null):(normalizeProductText(document.getElementById('pfDescription').value)||null),features:normalizeProductText(document.getElementById('pfFeatures').value)||null,
+    benefits:window.skinCareImportMode?(normalizeProductText(document.getElementById('pfBenefits').value)||null):null,
+    skin_types:window.skinCareImportMode?(normalizeProductText(document.getElementById('pfSkinTypes').value)||null):null,
+    skin_concerns:window.skinCareImportMode?(normalizeProductText(document.getElementById('pfSkinConcerns').value)||null):null,
+    skip_if:window.skinCareImportMode?(normalizeProductText(document.getElementById('pfSkinAvoid').value)||null):null,
     recommended_product_ids:window.skinCareImportMode?Array.from(document.getElementById('pfRecommendedProducts').selectedOptions).map(o=>o.value):[],
-    recommendation_reason:window.skinCareImportMode?(document.getElementById('pfRecommendationReason').value.trim()||null):null,
+    recommendation_reason:window.skinCareImportMode?(normalizeProductText(document.getElementById('pfRecommendationReason').value)||null):null,
     featured:window.skinCareImportMode?document.getElementById('pfSkinFeatured').checked:!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.featured,
     top_pick:window.skinCareImportMode?document.getElementById('pfSkinTopPick').checked:!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.top_pick,
     trending:window.skinCareImportMode?document.getElementById('pfSkinTrending').checked:!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.trending,
-    ingredients:document.getElementById('pfIngredients').value.trim()||null,usage_instructions:document.getElementById('pfUsage').value.trim()||null,product_warnings:document.getElementById('pfWarnings').value.trim()||null,product_size:document.getElementById('pfProductSize').value.trim()||null,
+    ingredients:normalizeProductText(document.getElementById('pfIngredients').value)||null,usage_instructions:normalizeProductText(document.getElementById('pfUsage').value)||null,product_warnings:normalizeProductText(document.getElementById('pfWarnings').value)||null,product_size:document.getElementById('pfProductSize').value.trim()||null,
     image_url:images[0]||null,image_urls:images,display_price:null,
     amazon_list_price:null,
     amazon_discount_percent:null,
@@ -1803,7 +1809,7 @@ async function saveProductDraft(){
     supplier_cost:document.getElementById('pfSupplierCost').value===''?null:Number(document.getElementById('pfSupplierCost').value),
     published:window.editingProductId?!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.published:false
   };
-  if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer='Amazon';product.store_description=document.getElementById('pfDescription').value.trim()||null;}
+  if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer='Amazon';product.store_description=normalizeProductText(document.getElementById('pfDescription').value)||null;}
   try{
     const existingId=window.editingProductId||null;
     const existing=existingId?adminProducts.find(x=>String(x.id)===String(existingId)):null;
@@ -1814,13 +1820,19 @@ async function saveProductDraft(){
       const slugBase=slugSource.toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-+/g,'-').slice(0,140);
       slug=(slugBase||'product')+'-'+Date.now().toString(36);
     }
-    if(existingId){
-      await api('/api/admin/products/'+encodeURIComponent(existingId),{method:'PATCH',body:{...product,slug}});
-    }else{
-      await api('/api/admin/products',{method:'POST',body:{...product,slug}});
-    }
-    const wasEditing=!!window.editingProductId; closeProductModal(); window.skinCareImportMode=false; await liveAdminProducts(); setAdminStatus(wasEditing?'Product updated.':(skinCategory?'Skincare product saved as a draft in Skin Care.':'Product saved as a draft.'));
-  }catch(e){setAdminStatus(e.message)}finally{releaseSave();}
+    let saveResult;
+    if(existingId)saveResult=await api('/api/admin/products/'+encodeURIComponent(existingId),{method:'PATCH',body:{...product,slug}});
+    else saveResult=await api('/api/admin/products',{method:'POST',body:{...product,slug}});
+    const wasEditing=!!existingId,savedId=String(saveResult?.id||existingId||''),savedSlug=String(saveResult?.slug||slug);
+    await liveAdminProducts();
+    const savedProduct=adminProducts.find(item=>(savedId&&String(item.id)===savedId)||String(item.slug||'')===savedSlug);
+    if(!savedProduct)throw new Error('The server accepted the request but the product could not be found after refreshing the catalog. The editor is still open; retry after checking the connection.');
+    if(String(savedProduct.name||'').trim()!==name)throw new Error('The saved product did not match the title you entered. The editor is still open; retry after checking the connection.');
+    if(!wasEditing&&savedProduct.published)throw new Error('The new product was unexpectedly published. Please review its status before continuing.');
+    closeProductModal();window.skinCareImportMode=false;window.editingProductId=null;
+    if(document.body.classList.contains('skin-studio-fullpage')){renderSkinStudioAll();refreshSkinStudioPreview();}
+    productSaveMessage(wasEditing?'Product changes saved and verified.':(skinCategory?'Skincare product saved as a draft and verified.':'Product saved as a draft and verified.'),'success');
+  }catch(e){productSaveMessage('Product save failed: '+(e.message||'unknown error')+' The editor remains open so you can retry.','error')}finally{releaseSave();}
 }
 async function editProduct(id){
   if(!id)return;
@@ -1860,6 +1872,8 @@ async function togglePublish(id){
   // PATCH is the supported product update route in the admin API.
   await api(path,{method:'PATCH',body});
   await liveAdminProducts();
+  const verifiedProduct=adminProducts.find(item=>String(item.id)===String(id));
+  if(!verifiedProduct||!!verifiedProduct.published!==publishing)throw new Error('The server did not confirm the requested product status after refreshing the catalog.');
   if(studio){
    renderSkinLibrary();
    renderSkinSelectedInspector();
@@ -2994,32 +3008,36 @@ async function uploadSkinStudioImage(input,type,id,explicitFile=null){
  finally{if(label&&original)label.textContent=original;if(input)input.value='';}
 }
 async function persistSkinSiteDraft(quiet=false){
+ collectSkinConfigFields();
+ const validation=skinConfigValidationMessage(false);
+ if(validation){skinBuilderMessage(validation,'error');throw new Error(validation);}
+ const payload=mergeSkinSiteConfig(skinBuilderConfig),serialized=JSON.stringify(payload);
  if(skinDraftSavePromise){
-  await skinDraftSavePromise;
+  await skinDraftSavePromise;collectSkinConfigFields();
   if(JSON.stringify(mergeSkinSiteConfig(skinBuilderConfig))!==skinDraftLastSavedPayload)return persistSkinSiteDraft(quiet);
   return skinBuilderConfig;
  }
- const validation=skinConfigValidationMessage(false);
- if(validation){skinBuilderMessage(validation,'error');throw new Error(validation);}
- collectSkinConfigFields();
- const payload=mergeSkinSiteConfig(skinBuilderConfig),serialized=JSON.stringify(payload);
  if(quiet&&serialized===skinDraftLastSavedPayload){skinSetSavedLabel('Draft saved');return payload;}
  const task=(async()=>{
   if(quiet)skinBuilderMessage('Saving draft…','info');
   const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_draft:payload}});
-  if(!response||!response.skin_site_draft||typeof response.skin_site_draft!=='object')throw new Error('The server did not confirm a saved draft. Reload the workspace and try again.');
+  if(!response||!response.skin_site_draft||typeof response.skin_site_draft!=='object')throw new Error('The server did not confirm a saved draft.');
   const confirmed=mergeSkinSiteConfig(response.skin_site_draft),confirmedJson=JSON.stringify(confirmed);
   const check=await api('/api/admin/settings');
   if(!check?.skin_site_draft||typeof check.skin_site_draft!=='object')throw new Error('The server accepted the request but the saved draft could not be read back. Your published site is unchanged.');
   const verified=mergeSkinSiteConfig(check.skin_site_draft);
   if(JSON.stringify(verified)!==confirmedJson)throw new Error('The saved draft did not match the latest edits. Your published site is unchanged; retry Save draft.');
-  skinBuilderConfig=verified;skinSiteDraftExists=true;skinDraftLastSavedPayload=JSON.stringify(verified);
-  fillSkinConfigFields();sendSkinStudioPreview();skinSetSavedLabel('Draft saved');
-  skinBuilderMessage(quiet?'Draft auto-saved. Your live storefront is unchanged.':'Draft saved and verified. Your live storefront is unchanged until you publish.','success');
+  skinSiteDraftExists=true;skinDraftLastSavedPayload=JSON.stringify(verified);
+  const latest=JSON.stringify(mergeSkinSiteConfig(skinBuilderConfig));
+  if(latest===serialized){skinBuilderConfig=verified;fillSkinConfigFields();sendSkinStudioPreview();skinSetSavedLabel('Draft saved');}
+  else{skinSetSavedLabel('Newer edits not saved yet');sendSkinStudioPreview();}
+  skinBuilderMessage(quiet?'Draft auto-saved and verified. Your live storefront is unchanged.':'Draft saved and verified. Your live storefront is unchanged until you publish.','success');
   return verified;
  })();
  skinDraftSavePromise=task;
- try{return await task;}catch(e){skinBuilderMessage('Draft save failed: '+(e.message||'unknown error')+'. Your published storefront is unchanged.','error');throw e;}finally{skinDraftSavePromise=null;}
+ try{return await task;}
+ catch(e){skinBuilderMessage('Draft save failed: '+(e.message||'unknown error')+'. Your published storefront is unchanged.','error');throw e;}
+ finally{skinDraftSavePromise=null;if(JSON.stringify(mergeSkinSiteConfig(skinBuilderConfig))!==skinDraftLastSavedPayload)queueSkinDraftAutosave();}
 }
 async function saveSkinSiteDraft(){
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
@@ -3037,9 +3055,9 @@ async function saveSkinSiteConfig(){
   // Wait for any in-flight autosave to finish before clearing the draft. Otherwise a
   // late draft PATCH could recreate a draft after the published config has changed.
   if(skinDraftSavePromise){try{await skinDraftSavePromise;}catch(e){/* The publish request below sends the current editor state directly. */}}
+  collectSkinConfigFields();
   const validation=skinConfigValidationMessage();
   if(validation){skinBuilderMessage(validation,'error');return;}
-  collectSkinConfigFields();
   const payload=mergeSkinSiteConfig(skinBuilderConfig);
   skinBuilderMessage('Publishing the current site draft…','info');
   const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_config:payload,skin_site_draft:null}});
