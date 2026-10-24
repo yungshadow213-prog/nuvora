@@ -2908,6 +2908,8 @@ function skinProductsForSection(sec){
  return list;
 }
 function addSkinProductToSection(productId,targetId,pageId){
+ // Any completed placement consumes the pending preview target so it cannot leak into a later action.
+ skinStudioPendingProductTarget=null;
  const product=adminProducts.find(p=>String(p.id)===String(productId));
  if(!product)return skinBuilderMessage('That product could not be found. Refresh the product library and try again.','error');
  let sections=skinSectionsFor(pageId),sec=sections.find(s=>String(s.id)===String(targetId));
