@@ -1851,9 +1851,10 @@ async function saveProductDraft(){
   if(window.productSaveInProgress)return;
   const publishAfterSave=!!window.skinProductPublishAfterSave;window.skinProductPublishAfterSave=false;
   window.productSaveInProgress=true;
-  const saveButton=document.getElementById('productSaveBtn');
+  const saveButton=document.getElementById('productSaveBtn'),publishButton=document.getElementById('skinProductPublishBtn');
   if(saveButton){saveButton.disabled=true;saveButton.dataset.originalLabel=saveButton.textContent;saveButton.textContent='Saving…';}
-  const releaseSave=()=>{window.productSaveInProgress=false;if(saveButton){saveButton.disabled=false;saveButton.textContent=saveButton.dataset.originalLabel||'Save Draft';delete saveButton.dataset.originalLabel;}};
+  if(publishAfterSave&&publishButton){publishButton.disabled=true;publishButton.dataset.originalLabel=publishButton.textContent;publishButton.textContent='Saving & publishing…';}
+  const releaseSave=()=>{window.productSaveInProgress=false;if(saveButton){saveButton.disabled=false;saveButton.textContent=saveButton.dataset.originalLabel||'Save Draft';delete saveButton.dataset.originalLabel;}if(publishButton){publishButton.disabled=false;publishButton.textContent=publishButton.dataset.originalLabel||'Save & publish';delete publishButton.dataset.originalLabel;}};
   const name=document.getElementById('pfName').value.trim(); if(!name){productSaveMessage('Product title is required.','error');releaseSave();return;}
   let skinCategory=null;
   try{if(window.skinCareImportMode)skinCategory=await ensureSkinCategory(false);}
@@ -1920,9 +1921,10 @@ async function saveProductDraft(){
     if(wasEditing)adminProducts=adminProducts.map(item=>String(item.id)===savedId?{...item,...confirmedProduct}:item);
     else adminProducts=[confirmedProduct,...adminProducts.filter(item=>String(item.id)!==savedId)];
     renderProducts();renderSkinProducts();fillSocialProducts();
-    closeProductModal();window.skinCareImportMode=false;window.editingProductId=null;
+    if(!publishAfterSave){closeProductModal();window.skinCareImportMode=false;window.editingProductId=null;}
+    else window.editingProductId=savedId;
     if(skinStudioPendingProductTarget){const target=skinStudioPendingProductTarget;skinStudioPendingProductTarget=null;addSkinProductToSection(savedId,target.sectionId,target.pageId);}
-    releaseSave();
+    if(!publishAfterSave)releaseSave();
     productSaveMessage(wasEditing?'Product changes were saved by the server. Refreshing the product library…':(skinCategory?'Skincare product was saved as a private draft. Refreshing the product library…':'Product was saved as a private draft. Refreshing the product library…'),'success');
     let refreshProblem='';
     try{
@@ -1943,8 +1945,16 @@ async function saveProductDraft(){
     if(publishAfterSave){
       const saved=adminProducts.find(item=>String(item.id)===savedId);
       if(!saved)throw new Error('The product was saved, but could not be found for publishing. Refresh the product library and publish it there.');
+      let publishStatus=true;
       if(saved.published)productSaveMessage('Product changes saved. This product is already published.','success');
-      else await togglePublish(savedId);
+      else publishStatus=await togglePublish(savedId);
+      if(publishStatus===true||publishStatus===null){
+        closeProductModal();window.skinCareImportMode=false;window.editingProductId=null;
+        if(publishStatus===null)productSaveMessage('The server accepted publication, but the refreshed catalog could not verify it. Reload the product catalog before trying again.','info');
+      }else{
+        window.editingProductId=savedId;
+        productSaveMessage('The product details are saved as a draft, but publication did not complete. Correct the publication error above and press Save & publish again; this draft will be updated rather than duplicated.','error');
+      }
     }
   }catch(e){productSaveMessage('Product save was not confirmed: '+(e.message||'unknown error')+'. The editor remains open so you can retry after checking the message.','error')}finally{releaseSave();}
 }
@@ -1967,7 +1977,7 @@ async function createProduct(product){openProductModal(false);setProductForm(pro
 async function amazonImport(){showImportPage('amazon')}
 async function togglePublish(id){
  const publishButtons=[...document.querySelectorAll('[data-product-publish]')].filter(button=>String(button.dataset.productPublish)===String(id));
- if(publishButtons.some(button=>button.disabled))return;
+ if(publishButtons.some(button=>button.disabled))return false;
  publishButtons.forEach(button=>{button.disabled=true;button.dataset.originalLabel=button.textContent;button.textContent='Working…';});
  const studio=document.body.classList.contains('skin-studio-fullpage');
  const p=adminProducts.find(x=>String(x.id)===String(id));
@@ -1975,7 +1985,7 @@ async function togglePublish(id){
   const message='Product not found in the current catalog. Refresh the product library and try again.';
   if(studio)skinBuilderMessage(message,'error');else setAdminStatus(message,'error');
   publishButtons.forEach(button=>{button.disabled=false;button.textContent=button.dataset.originalLabel||'Publish';});
-  return;
+  return false;
  }
  const publishing=!p.published,label=String(p.name||'Product');
  const body={published:publishing,updated_at:new Date().toISOString()};
@@ -1989,13 +1999,13 @@ async function togglePublish(id){
   const message='Add the exact retailer/Amazon product link before publishing this product.';
   if(studio)skinBuilderMessage(message,'error');else setAdminStatus(message,'error');
   publishButtons.forEach(button=>{button.disabled=false;button.textContent=button.dataset.originalLabel||'Publish';delete button.dataset.originalLabel;});
-  return;
+  return false;
  }
  if(publishing&&!skinImageOf(p)){
   const message='Add a main product image before publishing. You can upload one from your device in Edit product details.';
   if(studio)skinBuilderMessage(message,'error');else setAdminStatus(message,'error');
   publishButtons.forEach(button=>{button.disabled=false;button.textContent=button.dataset.originalLabel||'Publish';delete button.dataset.originalLabel;});
-  return;
+  return false;
  }
  if(studio)skinBuilderMessage((publishing?'Publishing ':'Moving back to draft: ')+label+'…','info');
  else setAdminStatus((publishing?'Publishing ':'Moving back to draft: ')+label+'…');
@@ -2016,6 +2026,7 @@ async function togglePublish(id){
    renderSkinLibrary();renderSkinSelectedInspector();renderSkinBuilderSections();reloadSkinStudioPreview();
    skinBuilderMessage(publishing?label+' is published. The product is live; publish page changes separately if you placed it in a draft section.':label+' is now a draft and hidden from shoppers. The preview is refreshing its product catalog.','success');
   }else setAdminStatus(publishing?label+' published successfully — now visible in the storefront.':label+' moved back to draft.');
+  return true;
  }catch(e){
   if(serverConfirmed){
    const recovered={...p,...(serverProduct&&typeof serverProduct==='object'?serverProduct:{}),id,published:publishing,...(publishing?{destination_url:body.destination_url,amazon_source_url:body.amazon_source_url}:{})};
@@ -2024,9 +2035,11 @@ async function togglePublish(id){
    if(studio){renderSkinLibrary();renderSkinSelectedInspector();renderSkinBuilderSections();reloadSkinStudioPreview();}
    const message=publishing?label+' was published by the server, but the catalog refresh could not be verified: '+(e.message||'connection error')+'. Do not publish again; reload the catalog to confirm.':label+' was moved to draft by the server, but the catalog refresh could not be verified. Reload the catalog to confirm.';
    if(studio)skinBuilderMessage(message,'info');else setAdminStatus(message,'info');
+   return null;
   }else{
    const message=(e.message||'Publish failed.')+' The server did not confirm a status change.';
    if(studio)skinBuilderMessage(message,'error');else setAdminStatus(message,'error');
+   return false;
   }
  }finally{
   publishButtons.forEach(button=>{button.disabled=false;button.textContent=button.dataset.originalLabel||button.textContent;delete button.dataset.originalLabel;});
@@ -2361,7 +2374,7 @@ function mergeSkinSiteConfig(raw){
  const base=defaultSkinSiteConfig(),src=raw&&typeof raw==='object'?raw:{},cfg={...base,...src};
  const cleanSections=(items,fallback=[])=>Array.isArray(items)&&items.length?items.slice(0,40).map((x,i)=>({
   id:String(x.id||('section-'+(i+1))).slice(0,80),
-  type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block'].includes(x.type)?x.type:'product-grid',
+  type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block'].includes(x.type)?x.type:'product-grid',
   visible:x.visible!==false,title:String(x.title||'New section').slice(0,180),
   eyebrow:String(x.eyebrow||'').slice(0,100),text:String(x.text||'').slice(0,3000),
   image:String(x.image||'').slice(0,1600),
@@ -2374,7 +2387,11 @@ function mergeSkinSiteConfig(raw){
   imageWidth:[20,30,40,50,60,70,80,90,100].includes(Number(x.imageWidth))?Number(x.imageWidth):70,
    imageFreePosition:x.imageFreePosition===true,
    imagePositionX:x.imagePositionX!==undefined&&Number.isFinite(Number(x.imagePositionX))?Math.max(0,Math.min(100,Number(x.imagePositionX))):50,
-   imagePositionY:x.imagePositionY!==undefined&&Number.isFinite(Number(x.imagePositionY))?Math.max(0,Math.min(100,Number(x.imagePositionY))):50
+   imagePositionY:x.imagePositionY!==undefined&&Number.isFinite(Number(x.imagePositionY))?Math.max(0,Math.min(100,Number(x.imagePositionY))):50,
+   textAlignment:['left','center','right'].includes(x.textAlignment)?x.textAlignment:'left',
+   titleFontSize:x.titleFontSize!==undefined&&x.titleFontSize!==null&&Number.isFinite(Number(x.titleFontSize))?Math.max(20,Math.min(88,Number(x.titleFontSize))):null,
+   bodyFontSize:x.bodyFontSize!==undefined&&x.bodyFontSize!==null&&Number.isFinite(Number(x.bodyFontSize))?Math.max(10,Math.min(26,Number(x.bodyFontSize))):null,
+   sectionPadding:x.sectionPadding!==undefined&&x.sectionPadding!==null&&Number.isFinite(Number(x.sectionPadding))?Math.max(16,Math.min(160,Number(x.sectionPadding))):null
  })):fallback;
  const cleanLinks=(items,fallback,max=20)=>Array.isArray(items)?items.slice(0,max).map((item,i)=>({
   id:String(item.id||('site-link-'+(i+1))).slice(0,80),

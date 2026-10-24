@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-structural-draft-verification-r59',
+          release:'nuvora-2026-10-24-skin-studio-storefront-parity-r60',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -1843,13 +1843,16 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const storefrontProducts=storefront==='beauty'
           ?products.filter(p=>{
             const category=categoryMap.get(String(p.category_id||''));
-            const label=String(category?.name||'');
-            const productText=[p.name,p.brand,p.description,p.features,p.store_description].filter(Boolean).join(' ');
-            // Nuvora Skin is a skincare editorial storefront, so include imported
-            // Amazon "find" products as well as shop products when their category
-            // or verified product text identifies them as skincare/beauty.
-            return /skin\s*care|skincare|beauty|cosmetic/i.test(label)
-              ||/skin\s*care|skincare|beauty|cosmetic|cleanser|cleansing|face wash|moisturi|serum|sunscreen|sunblock|spf|face cream|toner|retinol|exfoliat|lip balm|facial oil|eye cream|face mask/i.test(productText);
+            const label=String(category?.name||'')+' '+String(category?.slug||'');
+            // Prefer the explicit Skin Care category. For uncategorized imports,
+            // only admit high-confidence skincare titles or structured skincare
+            // fields; broad words like "beauty" in scraped retailer copy are not enough.
+            if(/skin\s*care|skincare/i.test(label))return true;
+            const title=[p.name,p.brand].filter(Boolean).join(' ');
+            const titleIsSkincare=/skin\s*care|skincare|cosmetic|cleanser|cleansing|face wash|moisturi[sz]er|serum|sunscreen|sunblock|\bspf\b|face cream|toner|retinol|exfoliat|lip balm|facial oil|eye cream|face mask|essence|niacinamide|hyaluronic|ceramide|salicylic acid|glycolic acid|benzoyl peroxide|peptide|squalane|azelaic acid|tranexamic acid|centella|snail mucin|cica|acne treatment|spot treatment|micellar|facial (?:cleanser|oil|serum|mask|cream|mist)/i.test(title);
+            const structured=[p.ingredients,p.benefits,p.skin_types,p.skin_concerns].filter(Boolean).join(' ');
+            const structuredIsSkincare=/skin\s*care|skincare|cleanser|face wash|moisturi[sz]er|serum|sunscreen|sunblock|\bspf\b|retinol|niacinamide|hyaluronic acid|ceramide|salicylic acid|glycolic acid|benzoyl peroxide|azelaic acid|tranexamic acid|centella|snail mucin|acne treatment|skin concerns|skin type/i.test(structured);
+            return titleIsSkincare||(!label.trim()&&structuredIsSkincare);
           })
           :products;
         return json(storefrontProducts.map(p=>{
