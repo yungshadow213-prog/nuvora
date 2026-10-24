@@ -252,7 +252,11 @@ function formatGuideBody(value,isList=false){
  const lines=String(value||'').replace(/\r\n?/g,'\n').split('\n').map(line=>line.trim()).filter(Boolean);
  if(!lines.length)return '';
  const bullet=/^(?:[•●▪◦*-]|\d+[.)])\s+/;
- if(isList||lines.some(line=>bullet.test(line))){
+ if(isList){
+  const items=textLines(value).map(line=>line.replace(bullet,'').trim()).filter(Boolean);
+  return items.length?'<ul class="guide-list">'+items.map(line=>'<li>'+esc(line)+'</li>').join('')+'</ul>':'';
+ }
+ if(lines.some(line=>bullet.test(line))){
   const items=lines.filter(line=>bullet.test(line)).map(line=>line.replace(bullet,'').trim()).filter(Boolean);
   const intro=lines.filter(line=>!bullet.test(line));
   return (intro.length?'<p class="guide-copy">'+intro.map(esc).join('<br>')+'</p>':'')+(items.length?'<ul class="guide-list">'+items.map(line=>'<li>'+esc(line)+'</li>').join('')+'</ul>':'');
@@ -280,18 +284,20 @@ function openProductDetails(id){
  const ratingMarkup=retailerRatingMarkup(p);
  const benefits=p.benefits||p.why_we_picked_it||p.features||'';
  const skinTypes=p.skin_types||p.best_for||'';
+ const overviewText=String(p.store_description||p.description||'').replace(/\r\n?/g,'\n').trim();
+ const shortOverview=overviewText.length>260?overviewText.slice(0,257).replace(/\s+\S*$/,'')+'…':overviewText;
  const concerns=p.skin_concerns||'';
  const selectedIds=Array.isArray(p.recommended_product_ids)?p.recommended_product_ids.map(String):[];
  const recommendations=selectedIds.map(rid=>products.find(x=>String(x.id)===rid)).filter(x=>x&&String(x.id)!==String(p.id)).slice(0,6);
  const gallery=imageUrls.length>1?'<div class="detail-thumbnails" aria-label="Product images">'+imageUrls.map((src,index)=>'<button type="button" class="detail-thumbnail '+(index===0?'active':'')+'" aria-label="Show product image '+(index+1)+'" onclick="selectProductImage('+JSON.stringify(src)+',this)"><img src="'+esc(src)+'" alt="" loading="lazy"></button>').join('')+'</div>':'';
  const recHtml=guide.recommendations&&recommendations.length?'<section class="detail-block"><h3>Consider alongside</h3>'+(p.recommendation_reason?'<p>'+esc(p.recommendation_reason)+'</p>':'')+'<div class="detail-recommendations">'+recommendations.map(r=>'<article class="recommendation-card">'+(productImage(r)?'<img src="'+esc(productImage(r))+'" alt="'+esc(r.name)+'" loading="lazy">':'')+'<b>'+esc(r.name)+'</b><button onclick="openProductDetails('+JSON.stringify(String(r.id))+')">View guide →</button></article>').join('')+'</div></section>':'';
  const priceButton=dest?'<a class="btn" href="'+esc(dest)+'" target="_blank" rel="sponsored noopener noreferrer" onclick="trackClick('+JSON.stringify(String(p.id))+')">'+productButtonLabel(p)+' ↗</a>':'<span class="muted">Retailer link has not been added yet.</span>';
- $('productDetailContent').innerHTML='<div class="detail-gallery"><div class="detail-image">'+(image?'<img id="productDetailHeroImage" src="'+esc(image)+'" alt="'+esc(p.name)+'">':'<div class="empty">Product image not added</div>')+'</div>'+gallery+'</div><div class="detail-copy"><div class="detail-brand">'+esc(p.brand||'Nuvora Skin selection')+'</div><h2 id="detailTitle">'+esc(p.name)+'</h2>'+ratingMarkup+'<p class="detail-description">'+esc(p.store_description||p.description||'A considered find for everyday skincare routines.')+'</p><div class="detail-meta">'+(p.product_size?'<span>'+esc(p.product_size)+'</span>':'')+(p.category?.name?'<span>'+esc(p.category.name)+'</span>':'')+'</div>'+
+ $('productDetailContent').innerHTML='<div class="detail-gallery"><div class="detail-image">'+(image?'<img id="productDetailHeroImage" src="'+esc(image)+'" alt="'+esc(p.name)+'">':'<div class="empty">Product image not added</div>')+'</div>'+gallery+'</div><div class="detail-copy"><div class="detail-brand">'+esc(p.brand||'Nuvora Skin selection')+'</div><h2 id="detailTitle">'+esc(p.name)+'</h2>'+ratingMarkup+(productAvailabilityMarkup(p)?'<div class="detail-availability">'+productAvailabilityMarkup(p)+'</div>':'')+'<p class="detail-description">'+esc(shortOverview||'A considered find for everyday skincare routines.')+'</p><div class="detail-meta">'+(p.product_size?'<span>'+esc(p.product_size)+'</span>':'')+(p.category?.name?'<span>'+esc(p.category.name)+'</span>':'')+'</div>'+
  (guide.benefits?detailBlock('Benefits & what it is for',benefits,true,'Benefits have not been added to this guide. Check the current product listing.'):'')+
  (guide.skinTypes?detailBlock('Skin types',skinTypes,false,'Skin-type suitability has not been confirmed in this guide. Check the manufacturer’s directions and product packaging.'):'')+
  (guide.concerns?detailBlock('Skin concerns / intended use',concerns,false):'')+
+ (guide.ingredients?detailBlock('Key ingredients',p.ingredients,false,'The full ingredient list is not available in this guide. Review the current ingredient list on Amazon before buying.'):'')+
  (guide.usage?detailBlock('How to use',p.usage_instructions,false,'Directions are not included in this guide. Follow the manufacturer’s current instructions.'):'')+
- (guide.ingredients?detailBlock('Ingredients',p.ingredients,false,'The full ingredient list is not available in this guide. Review the current ingredient list on Amazon before buying.'):'')+
  (guide.warnings?detailBlock('When to avoid / compatibility cautions',p.skip_if,false):'')+
  (guide.warnings?detailBlock('Warnings & cautions',p.product_warnings,false,'No specific product cautions have been added to this guide. Review the current packaging and retailer information.'):'')+
  recHtml+'<div class="actions">'+priceButton+'</div><div class="detail-note">Product details may change and are not medical advice. Confirm ingredients, directions, and cautions against the current product packaging and retailer listing. Introduce active ingredients carefully and seek qualified advice for persistent or severe skin concerns.</div></div>';
@@ -305,6 +311,11 @@ function closeProductDetails(){
  backdrop.classList.remove('open');backdrop.style.display='none';backdrop.setAttribute('aria-hidden','true');
  document.body.style.overflow='';if(location.hash.startsWith('#product-'))history.replaceState(null,'',location.pathname+location.search);lastFocusedElement?.focus?.();
 }
+document.addEventListener('keydown',event=>{
+ const trigger=event.target instanceof Element?event.target.closest('.product-overview-card[data-open-product]'):null;
+ if(!trigger||!['Enter',' '].includes(event.key))return;
+ event.preventDefault();openProductDetails(trigger.getAttribute('data-open-product'));
+});
 document.addEventListener('click',event=>{
  const trigger=event.target instanceof Element?event.target.closest('[data-open-product]'):null;
  if(!trigger)return;
