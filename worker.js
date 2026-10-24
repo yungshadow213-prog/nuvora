@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-product-guide-rating-separation-r38',
+          release:'nuvora-2026-10-24-retailer-rating-precision-r39',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
