@@ -3020,6 +3020,16 @@ function wireSkinStudioCanvas(){
    const data=event.data;
    if(data.type==='nuvora-skin-studio-ready'){if(window.__nuvoraSkinPreviewTimeout)clearTimeout(window.__nuvoraSkinPreviewTimeout);const notice=document.getElementById('skinStudioPreviewNotice');if(notice)notice.hidden=true;sendSkinStudioPreview();return;}
    if(!skinBuilderConfig)return;
+   if(data.type==='nuvora-skin-studio-add-text-block'){
+    skinStudioPageId=data.pageId||'home';
+    const sections=skinSectionsFor(skinStudioPageId),currentIndex=sections.findIndex(section=>String(section.id)===String(data.sectionId||''));
+    const id='text-'+Date.now().toString(36);
+    const section={id,type:'text-block',visible:true,title:'A new note',eyebrow:'',text:'Double-click to edit this text.',backgroundColor:'',textAlignment:'left',sectionPadding:48};
+    sections.splice(currentIndex>=0?currentIndex+1:sections.length,0,section);
+    skinStudioSelection={type:'section',id};
+    skinMarkDirty('Text block added after the selected section. Edit it directly in the preview or use the inspector.');
+    renderSkinStudioAll();queueSkinStudioPreview();return;
+   }
    if(data.type==='nuvora-skin-studio-request-add-product'){
     skinStudioPageId=data.pageId||'home';skinStudioPendingProductTarget={sectionId:String(data.sectionId||''),pageId:skinStudioPageId};skinStudioSelection={type:'section',id:String(data.sectionId||'')};
     switchSkinStudioTab('products');renderSkinLibrary();
