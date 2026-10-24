@@ -225,7 +225,8 @@ function configured(env){
     shopifyStorefront:!!shopDomain&&!!e.SHOPIFY_STOREFRONT_ACCESS_TOKEN,
     shopifyAdmin:!!shopDomain&&!!e.SHOPIFY_ADMIN_ACCESS_TOKEN,
     amazon:!!e.AMAZON_CLIENT_ID&&!!e.AMAZON_CLIENT_SECRET&&!!e.AMAZON_PARTNER_TAG,
-    workersAI:!!e.AI
+    workersAI:!!e.AI,
+    gemini:!!e.GEMINI_API_KEY
   };
 }
 function randHex(length=6){const bytes=new Uint8Array(Math.max(1,Math.ceil(length/2)));crypto.getRandomValues(bytes);return [...bytes].map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,length);}
