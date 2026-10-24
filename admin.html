@@ -3062,10 +3062,11 @@ async function saveSkinSiteConfig(){
 function setSkinAdminFormMode(enabled){
  document.body.classList.toggle('skin-admin-mode',!!enabled);
  const priceIds=['pfPrice','pfListPrice','pfDiscount','pfCurrency','pfDeal'];
- const hideIds=['pfKind','pfSource',...priceIds,'pfRating','pfReviews','pfBought','pfShipping','pfTax','pfVariations','pfCategory','pfCollection','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost'];
+ const hideIds=['pfKind','pfSource',...priceIds,'pfReviews','pfBought','pfShipping','pfTax','pfVariations','pfCategory','pfCollection','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost'];
  hideIds.forEach(id=>{const el=document.getElementById(id),field=el?.closest('.field');if(field)field.style.display=(enabled||priceIds.includes(id))?'none':'';});
  const discover=document.getElementById('amazonSearchUrlInput')?.closest('.importbar');if(discover)discover.style.display=enabled?'none':'';
  const discoveryStatus=document.getElementById('amazonDiscoveryStatus');if(discoveryStatus)discoveryStatus.style.display=enabled?'none':'';
+ const sourceField=document.getElementById('pfSource');if(sourceField&&enabled)sourceField.value='amazon';
  const retailer=document.getElementById('pfRetailer');if(retailer){retailer.readOnly=!!enabled;if(enabled)retailer.value='Amazon';}
  document.querySelectorAll('.skin-only-field').forEach(el=>el.style.display=enabled?'':'none');
 }
