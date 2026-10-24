@@ -3008,7 +3008,12 @@ function sendSkinStudioPreview(){
  if(!frame||!skinBuilderConfig||!frame.contentWindow)return;
  // Only make a draft product preview-visible when the current draft explicitly places it on a visible product grid.
  const sections=skinSectionsFor(skinStudioPageId),placedIds=new Set(sections.filter(sec=>sec.visible!==false&&['product-grid','featured-products'].includes(sec.type)&&Array.isArray(sec.product_ids)).flatMap(sec=>sec.product_ids.map(String)));
- const previewProducts=Array.isArray(adminProducts)?adminProducts.map(product=>placedIds.has(String(product.id))&&isSkinProduct(product)?{...product,published:true,__studioDraftPreview:true}:product):[];
+ const categoryById=new Map((Array.isArray(categories)?categories:[]).map(category=>[String(category.id),category]));
+ const previewProducts=Array.isArray(adminProducts)?adminProducts.map(product=>{
+  const category=categoryById.get(String(product.category_id||''));
+  const normalized={...product,category_name:category?.name||product.category_name||'',category:category?{id:category.id,name:category.name}:product.category};
+  return placedIds.has(String(product.id))&&isSkinProduct(product)?{...normalized,published:true,__studioDraftPreview:true}:normalized;
+ }):[];
  frame.contentWindow.postMessage({type:'nuvora-skin-studio-preview',config:skinBuilderConfig,products:previewProducts},SKIN_CLIENT_ORIGIN);
 }
 function reloadSkinStudioPreview(){
