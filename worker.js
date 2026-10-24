@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-structural-draft-verification-r59',
+          release:'nuvora-2026-10-24-skin-studio-storefront-parity-r60',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
