@@ -83,6 +83,7 @@ jobs:
             echo "## Deployment handoff"
             echo "Worker syntax, asset bundling, and UI script checks passed."
             echo "This workflow did not deploy because CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are not configured."
+            echo "The production smoke test was skipped; the live release remains unverified until Cloudflare Active Deployment is checked."
             echo "If Cloudflare Workers Builds is connected to the main branch, it should deploy independently. Verify the Active Deployment in Cloudflare before treating the live site as updated."
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -101,7 +102,7 @@ jobs:
           PY
 
       - name: Smoke test active production release
-        if: steps.cloudflare-creds.outcome == 'success'
+        if: steps.cloudflare-creds.outputs.configured == 'true'
         env:
           NUVORA_URL: https://nuvora.rayyung713.workers.dev
           EXPECTED_RELEASE: ${{ steps.expected-release.outputs.value }}
