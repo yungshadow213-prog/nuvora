@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-gemini-recommendations-r56',
+          release:'nuvora-2026-10-24-publish-validation-fix-r57',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -2314,8 +2314,10 @@ function looksFragmentedText(value){
   const fragmentPattern=/\b(?:mazon\.com|azon\.com|isit\s+the\s+tore|ack\s+cented|omatherapy\s+ndle|ndstone\s+elief|omedics\s+tore|hydra\s+ing|trea\s+men|ma\s+cha|an\s+ioxidan|mois\s+urizer|fea\s+uring|rou\s+ine|smoo\s+her|curren\s+re\s+ailer|lis\s+ing|produc\s+labels|la\s+es\s+de\s+ails|four-s\s+ep|discovery\s+se)\b/gi;
   const fragmentMarkers=s.match(fragmentPattern)||[];
   if(words.length<12)return fragmentMarkers.length>0;
-  const singleLetters=words.filter(w=>/^[A-Za-z]$/.test(w)).length;
-  const suspicious=(s.match(/\b[A-Za-z]{2,}\s+[A-Za-z]\b/g)||[]).length;
+  // Normal English prose contains many single-letter articles/pronouns ("a", "I") and phrases like "as a"; those must not block publication.
+  const singleLetters=words.filter(w=>/^[A-Za-z]$/.test(w)&&!/^a$/i.test(w)&&!/^i$/i.test(w)).length;
+  const suspiciousPairs=s.match(/\b[A-Za-z]{2,}\s+[A-Za-z]\b/g)||[];
+  const suspicious=suspiciousPairs.filter(pair=>!/[\s](?:a|i)$/i.test(pair)).length;
   const distinctFragments=new Set(fragmentMarkers.map(marker=>marker.toLowerCase()));
   return singleLetters>=Math.max(4,Math.ceil(words.length*0.08))||suspicious>=5||distinctFragments.size>=2;
 }
