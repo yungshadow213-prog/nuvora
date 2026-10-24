@@ -1031,6 +1031,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
       </div>
       <div class="modal-actions">
         <button class="btn" onclick="closeProductModal()">Cancel</button>
+        <button class="btn" id="skinProductPublishBtn" type="button" style="display:none" onclick="saveSkinProductAndPublish()">Save &amp; publish</button>
         <button class="btn primary" id="productSaveBtn" onclick="saveProductDraft()">Save Draft</button>
       </div>
     </div>
@@ -1142,7 +1143,7 @@ function renderSkinProducts(){
   if(notice)notice.textContent=cat?'Using category “'+cat.name+'”. Products assigned to this category are routed to Nuvora Skin.':'Create the Skin Care category first; the setup button will create it without changing existing products.';
   renderSkinBuilderSections();
   if(!rows.length){el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No skincare products yet. Use “Add skincare product” to import an Amazon listing; Nuvora assigns the Skin Care category automatically.</div>';return;}
-  el.innerHTML=rows.map(p=>{const dest=retailerDestination(p),label=retailerLabel(p);return '<div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+'</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" type="button" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+'<button class="btn" type="button" onclick="editSkinProduct('+esc(JSON.stringify(String(p.id)))+')">Edit</button><button class="btn" type="button" onclick="togglePublish('+esc(JSON.stringify(String(p.id)))+')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" type="button" onclick="removeProduct('+esc(JSON.stringify(String(p.id)))+')">Delete</button></div></div>';}).join('');
+  el.innerHTML=rows.map(p=>{const dest=retailerDestination(p),label=retailerLabel(p);return '<div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+'</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" type="button" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+'<button class="btn" type="button" onclick="editSkinProduct('+esc(JSON.stringify(String(p.id)))+')">Edit</button><button class="btn" type="button" data-product-publish="'+esc(String(p.id))+'" onclick="togglePublish('+esc(JSON.stringify(String(p.id)))+')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" type="button" onclick="removeProduct('+esc(JSON.stringify(String(p.id)))+')">Delete</button></div></div>';}).join('');
 }
 async function ensureSkinCategory(openForm=false){
   try{
@@ -1158,7 +1159,7 @@ async function ensureSkinCategory(openForm=false){
     renderSkinProducts();return cat;
   }catch(e){setAdminStatus('Could not set up Skin Care: '+(e.message||e));throw e;}
 }
-async function openSkinProduct(){await ensureSkinCategory(true);window.skinCareImportMode=true;setSkinAdminFormMode(true);document.getElementById('productModalTitle').textContent='Import Amazon skincare';document.getElementById('productModalSub').textContent='Paste an Amazon skincare link. Nuvora will assign the Skin Care category and capture available listing details automatically. Price is managed on Amazon.';document.getElementById('amazonUrlInput').placeholder='Paste an Amazon skincare product or affiliate link';const saveButton=document.getElementById('productSaveBtn');if(saveButton)saveButton.textContent='Save skincare draft';populateSkinRecommendations();}
+async function openSkinProduct(){prepareSkinProductPlacement();await ensureSkinCategory(true);window.skinCareImportMode=true;setSkinAdminFormMode(true);document.getElementById('productModalTitle').textContent='Import Amazon skincare';document.getElementById('productModalSub').textContent='Paste an Amazon skincare link. Nuvora will assign the Skin Care category and capture available listing details automatically. Price is managed on Amazon.';document.getElementById('amazonUrlInput').placeholder='Paste an Amazon skincare product or affiliate link';const saveButton=document.getElementById('productSaveBtn');if(saveButton)saveButton.textContent='Save skincare draft';populateSkinRecommendations();}
 function productReviewFlags(p){
  const flags=[];
  const name=String(p?.name||'').trim(),words=name.match(/[A-Za-z0-9]+(?:['’][A-Za-z]+)*/g)||[];
@@ -1828,6 +1829,7 @@ function normalizeProductText(value){
 }
 async function saveProductDraft(){
   if(window.productSaveInProgress)return;
+  const publishAfterSave=!!window.skinProductPublishAfterSave;window.skinProductPublishAfterSave=false;
   window.productSaveInProgress=true;
   const saveButton=document.getElementById('productSaveBtn');
   if(saveButton){saveButton.disabled=true;saveButton.dataset.originalLabel=saveButton.textContent;saveButton.textContent='Saving…';}
@@ -1918,7 +1920,18 @@ async function saveProductDraft(){
     }
     if(document.body.classList.contains('skin-studio-fullpage')){renderSkinStudioAll();reloadSkinStudioPreview();}
     if(refreshProblem)productSaveMessage(refreshProblem,'info');
+    if(publishAfterSave){
+      const saved=adminProducts.find(item=>String(item.id)===savedId);
+      if(!saved)throw new Error('The product was saved, but could not be found for publishing. Refresh the product library and publish it there.');
+      if(saved.published)productSaveMessage('Product changes saved. This product is already published.','success');
+      else await togglePublish(savedId);
+    }
   }catch(e){productSaveMessage('Product save was not confirmed: '+(e.message||'unknown error')+'. The editor remains open so you can retry after checking the message.','error')}finally{releaseSave();}
+}
+async function saveSkinProductAndPublish(){
+ if(window.productSaveInProgress)return;
+ window.skinProductPublishAfterSave=true;
+ await saveProductDraft();
 }
 async function editProduct(id){
   if(!id)return;
@@ -2586,7 +2599,7 @@ function renderSkinLibrary(){
     return '<article class="studio-library-item '+(selection?'is-selected':'')+'" onclick="selectSkinItem(\'product\','+esc(JSON.stringify(id))+')">'+
      (image?'<img src="'+esc(image)+'" alt="" loading="lazy">':'<div class="studio-product-placeholder">◯</div>')+
      '<div class="studio-library-item-copy"><b>'+esc(p.name||'Untitled product')+'</b><small>'+esc(published?'Published':'Draft — not visible yet')+' · '+esc(retailerLabel(p))+'</small></div>'+
-     '<div class="studio-library-item-actions"><button type="button" onclick="editSkinProduct('+esc(JSON.stringify(id))+');event.stopPropagation()">Edit details</button><button type="button" onclick="addSkinProductToSection('+esc(JSON.stringify(id))+',skinStudioSelection?.type===\'section\'?skinStudioSelection.id:null,skinStudioPageId);event.stopPropagation()">＋ Place on page</button></div></article>';
+     '<div class="studio-library-item-actions"><button type="button" onclick="editSkinProduct('+esc(JSON.stringify(id))+');event.stopPropagation()">Edit details</button><button type="button" data-product-publish="'+esc(id)+'" onclick="togglePublish('+esc(JSON.stringify(id))+');event.stopPropagation()">'+(published?'Unpublish':'Publish')+'</button><button type="button" onclick="addSkinProductToSection('+esc(JSON.stringify(id))+',skinStudioSelection?.type===\'section\'?skinStudioSelection.id:null,skinStudioPageId);event.stopPropagation()">＋ Place on page</button></div></article>';
    }).join('')+'</div>':'<div class="studio-library-empty">No skincare products found yet. Add a product by pasting its Amazon link or create one manually.</div>');
   return;
  }
@@ -2749,9 +2762,15 @@ function toggleSkinAddMenu(){
  const el=document.getElementById('skinStudioAddMenu');if(!el)return;
  el.hidden=!el.hidden;
 }
+function prepareSkinProductPlacement(){
+ if(!document.body.classList.contains('skin-studio-fullpage'))return;
+ const sections=skinSectionsFor(skinStudioPageId),selected=skinStudioSelection?.type==='section'?sections.find(section=>String(section.id)===String(skinStudioSelection.id)):null;
+ const target=selected&&['product-grid','featured-products'].includes(selected.type)?selected:sections.find(section=>section.visible!==false&&['product-grid','featured-products'].includes(section.type))||selected;
+ skinStudioPendingProductTarget={sectionId:String(target?.id||''),pageId:skinStudioPageId||'home'};
+}
 function openSkinAdd(type){
  const menu=document.getElementById('skinStudioAddMenu');if(menu)menu.hidden=true;
- if(type==='product'){openSkinManualProduct();return;}
+ if(type==='product'){prepareSkinProductPlacement();openSkinManualProduct();return;}
  skinQuickAddType=type;
  const panel=document.getElementById('skinQuickAddPanel');if(!panel)return;
  panel.hidden=false;
@@ -2850,7 +2869,7 @@ function selectSkinPreviewDevice(device,button){
 }
 function setSkinPreviewDevice(device,button){selectSkinPreviewDevice(device,button);}
 function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();syncSkinPreviewActionbar();}
-function updateSkinSection(index,key,value){
+function updateSkinSection(index,key,value,fromPreview=false){
  const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;
  sec[key]=value;
  if(key==='type'){sec.product_ids=[];sec.category_id='';sec.filter=value==='featured-products'?'featured':'all';}
@@ -2868,7 +2887,7 @@ function updateSkinSection(index,key,value){
  }
  skinMarkDirty('Section changes are in draft. Publish when you are ready.');
  if(['type','visible','category_id','filter','columns','product_ids','backgroundColor'].includes(key))renderSkinStudioAll();
- else {renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();}
+ else {renderSkinBuilderSections();renderSkinLibrary();if(fromPreview)renderSkinSelectedInspector();}
  queueSkinStudioPreview();
 }
 function selectFirstSkinSection(){const section=skinSectionsFor()[0];if(section)selectSkinItem('section',section.id);else openSkinAdd('section');}
@@ -2942,7 +2961,7 @@ function addSkinProductToSection(productId,targetId,pageId){
  const message=product.published
   ?'Product placed in “'+(sec.title||'Product grid')+'”. The preview is updating. Publish the page changes to make this placement public.'
   :'Product added to “'+(sec.title||'Product grid')+'” in your draft. Publish this product before it can appear in the public storefront; the page placement will stay in your draft.';
- skinMarkDirty(message);renderSkinStudioAll();refreshSkinStudioPreview();
+ skinMarkDirty(message);renderSkinStudioAll();sendSkinStudioPreview();queueSkinStudioPreview();
 }
 function moveSkinProductInSection(productId,targetProductId,sectionId,pageId){
  const sections=skinSectionsFor(pageId),sec=sections.find(s=>String(s.id)===String(sectionId));
@@ -2965,8 +2984,10 @@ function requestSkinSectionImageUpload(sectionId,pageId='home'){
 function sendSkinStudioPreview(){
  const frame=document.getElementById('skinStudioPreview');
  if(!frame||!skinBuilderConfig||!frame.contentWindow)return;
- // Include unpublished admin products so the preview can render drafts before release.
- frame.contentWindow.postMessage({type:'nuvora-skin-studio-preview',config:skinBuilderConfig,products:Array.isArray(adminProducts)?adminProducts:[]},SKIN_CLIENT_ORIGIN);
+ // Only make a draft product preview-visible when the current draft explicitly places it on a visible product grid.
+ const sections=skinSectionsFor(skinStudioPageId),placedIds=new Set(sections.filter(sec=>sec.visible!==false&&['product-grid','featured-products'].includes(sec.type)&&Array.isArray(sec.product_ids)).flatMap(sec=>sec.product_ids.map(String)));
+ const previewProducts=Array.isArray(adminProducts)?adminProducts.map(product=>placedIds.has(String(product.id))&&isSkinProduct(product)?{...product,published:true,__studioDraftPreview:true}:product):[];
+ frame.contentWindow.postMessage({type:'nuvora-skin-studio-preview',config:skinBuilderConfig,products:previewProducts},SKIN_CLIENT_ORIGIN);
 }
 function reloadSkinStudioPreview(){
  if(!document.body.classList.contains('skin-studio-fullpage')||!skinBuilderConfig)return;
@@ -3067,7 +3088,7 @@ function wireSkinStudioCanvas(){
     skinStudioPageId=data.pageId||'home';
     const sections=skinSectionsFor(skinStudioPageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId));
     if(index<0||!['title','eyebrow','text'].includes(data.key))return;
-    updateSkinSection(index,data.key,String(data.value??''));return;
+    updateSkinSection(index,data.key,String(data.value??''),true);return;
    }
    if(data.type==='nuvora-skin-studio-update-image-position'){
      const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId));
@@ -3238,6 +3259,7 @@ function setSkinAdminFormMode(enabled){
  const sourceField=document.getElementById('pfSource');if(sourceField&&enabled)sourceField.value='amazon';
  const retailer=document.getElementById('pfRetailer');if(retailer){retailer.readOnly=!!enabled;if(enabled)retailer.value='Amazon';}
  document.querySelectorAll('.skin-only-field').forEach(el=>el.style.display=enabled?'':'none');
+ const publishButton=document.getElementById('skinProductPublishBtn');if(publishButton)publishButton.style.display=enabled?'inline-flex':'none';
 }
 function populateSkinRecommendations(selectedIds=[]){
  const el=document.getElementById('pfRecommendedProducts');if(!el)return;
@@ -3246,6 +3268,7 @@ function populateSkinRecommendations(selectedIds=[]){
 }
 async function openSkinManualProduct(){
  try{
+  prepareSkinProductPlacement();
   const cat=await ensureSkinCategory(false);
   if(!categories.length)await loadCategories();
   openProductModal(false);
