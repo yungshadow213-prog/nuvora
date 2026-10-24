@@ -1894,6 +1894,7 @@ async function saveProductDraft(){
     else adminProducts=[confirmedProduct,...adminProducts.filter(item=>String(item.id)!==savedId)];
     renderProducts();renderSkinProducts();fillSocialProducts();
     closeProductModal();window.skinCareImportMode=false;window.editingProductId=null;
+    if(skinStudioPendingProductTarget){const target=skinStudioPendingProductTarget;skinStudioPendingProductTarget=null;addSkinProductToSection(savedId,target.sectionId,target.pageId);}
     releaseSave();
     productSaveMessage(wasEditing?'Product changes were saved by the server. Refreshing the product library…':(skinCategory?'Skincare product was saved as a private draft. Refreshing the product library…':'Product was saved as a private draft. Refreshing the product library…'),'success');
     let refreshProblem='';
@@ -2260,7 +2261,7 @@ async function adminBoot(){
 }
 
 const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
-let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinSiteDraftExists=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='';
+let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinSiteDraftExists=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='',skinStudioPendingProductTarget=null;
 const defaultSkinSiteConfig=()=>({
   version:5,template:'soft-editorial',accentColor:'#66745f',
   announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
@@ -2708,6 +2709,7 @@ function renderSkinSelectedInspector(){
 }
 function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();syncSkinPreviewActionbar();}
 function selectSkinItem(type,id){
+ if(type==='product'&&skinStudioPendingProductTarget){const target=skinStudioPendingProductTarget;skinStudioPendingProductTarget=null;addSkinProductToSection(id,target.sectionId,target.pageId);return;}
  if(type==='section'){skinStudioSelection={type:'section',id:String(id)};switchSkinStudioTab('outline');renderSkinBuilderSections();}
  else if(type==='product'){skinStudioSelection={type:'product',id:String(id)};switchSkinStudioTab('products');renderSkinLibrary();}
  else if(type==='page'){const page=skinCurrentPage(id);skinStudioSelection={type:'page',id:String(page?.slug||id)};switchSkinStudioTab('pages');renderSkinLibrary();}
@@ -3019,7 +3021,7 @@ function wireSkinStudioCanvas(){
    if(data.type==='nuvora-skin-studio-ready'){if(window.__nuvoraSkinPreviewTimeout)clearTimeout(window.__nuvoraSkinPreviewTimeout);const notice=document.getElementById('skinStudioPreviewNotice');if(notice)notice.hidden=true;sendSkinStudioPreview();return;}
    if(!skinBuilderConfig)return;
    if(data.type==='nuvora-skin-studio-request-add-product'){
-    skinStudioPageId=data.pageId||'home';skinStudioSelection={type:'section',id:String(data.sectionId||'')};
+    skinStudioPageId=data.pageId||'home';skinStudioPendingProductTarget={sectionId:String(data.sectionId||''),pageId:skinStudioPageId};skinStudioSelection={type:'section',id:String(data.sectionId||'')};
     switchSkinStudioTab('products');renderSkinLibrary();
     skinBuilderMessage('Choose “＋ Place on page” beside a product, or use the Add product button to create/import one.','info');return;
    }
