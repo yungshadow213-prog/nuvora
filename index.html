@@ -1073,7 +1073,7 @@ function renderProductPage(p){
   const specs=extractSpecs(p.desc||'');
   const ratingMarkup=rating>0
     ?'<span class="nv-stars">'+retailerStarsMarkup(rating)+'</span><strong>'+rating.toFixed(1)+'/5</strong><span class="nv-retailer-rating-label">'+htmlEsc(p.retailer||'Retailer')+' rating</span>'
-    :'<span style="color:var(--muted)">Retailer rating not added</span>';
+    :'';
   const imageMarkup=images.length?'<img id="productMainImage" src="'+htmlEsc(images[0])+'" alt="'+htmlEsc(p.name)+'">':'<span class="nv-image-empty">'+htmlEsc(p.icon||'✦')+'</span>';
   const optionGroups=Array.isArray(p.options)?p.options.filter(g=>g&&g.name&&Array.isArray(g.values)&&g.values.length):[];
   const optionMarkup=optionGroups.length
