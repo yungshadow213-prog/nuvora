@@ -2361,7 +2361,7 @@ function mergeSkinSiteConfig(raw){
  const base=defaultSkinSiteConfig(),src=raw&&typeof raw==='object'?raw:{},cfg={...base,...src};
  const cleanSections=(items,fallback=[])=>Array.isArray(items)&&items.length?items.slice(0,40).map((x,i)=>({
   id:String(x.id||('section-'+(i+1))).slice(0,80),
-  type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block'].includes(x.type)?x.type:'product-grid',
+  type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block'].includes(x.type)?x.type:'product-grid',
   visible:x.visible!==false,title:String(x.title||'New section').slice(0,180),
   eyebrow:String(x.eyebrow||'').slice(0,100),text:String(x.text||'').slice(0,3000),
   image:String(x.image||'').slice(0,1600),
@@ -2374,7 +2374,11 @@ function mergeSkinSiteConfig(raw){
   imageWidth:[20,30,40,50,60,70,80,90,100].includes(Number(x.imageWidth))?Number(x.imageWidth):70,
    imageFreePosition:x.imageFreePosition===true,
    imagePositionX:x.imagePositionX!==undefined&&Number.isFinite(Number(x.imagePositionX))?Math.max(0,Math.min(100,Number(x.imagePositionX))):50,
-   imagePositionY:x.imagePositionY!==undefined&&Number.isFinite(Number(x.imagePositionY))?Math.max(0,Math.min(100,Number(x.imagePositionY))):50
+   imagePositionY:x.imagePositionY!==undefined&&Number.isFinite(Number(x.imagePositionY))?Math.max(0,Math.min(100,Number(x.imagePositionY))):50,
+   textAlignment:['left','center','right'].includes(x.textAlignment)?x.textAlignment:'left',
+   titleFontSize:x.titleFontSize!==undefined&&x.titleFontSize!==null&&Number.isFinite(Number(x.titleFontSize))?Math.max(20,Math.min(88,Number(x.titleFontSize))):null,
+   bodyFontSize:x.bodyFontSize!==undefined&&x.bodyFontSize!==null&&Number.isFinite(Number(x.bodyFontSize))?Math.max(10,Math.min(26,Number(x.bodyFontSize))):null,
+   sectionPadding:x.sectionPadding!==undefined&&x.sectionPadding!==null&&Number.isFinite(Number(x.sectionPadding))?Math.max(16,Math.min(160,Number(x.sectionPadding))):null
  })):fallback;
  const cleanLinks=(items,fallback,max=20)=>Array.isArray(items)?items.slice(0,max).map((item,i)=>({
   id:String(item.id||('site-link-'+(i+1))).slice(0,80),
