@@ -294,7 +294,7 @@ function resolveProductDestination(current={},patch={}){
 }
 async function publishProductRecord(env,id,patch={}){
   // Read only the core fields first so optional legacy columns never block publish.
-  const coreFields=['id','name','slug','kind','image_url','image_urls','description','display_price','currency','destination_url','published','created_at','updated_at'];
+  const coreFields=['id','name','slug','kind','category_id','image_url','image_urls','description','display_price','currency','destination_url','published','created_at','updated_at'];
   const optionalFields=['retailer','provider','source_type','source_sku','amazon_asin','amazon_source_url','source_url','resolved_url','sourcinbox_product_url','temu_source_url','store_description'];
   const fields=[...coreFields,...optionalFields];
   let current=null,readError='';
@@ -321,6 +321,17 @@ async function publishProductRecord(env,id,patch={}){
   const merged={...current,...patch,published:true,destination_url:destination};
   if(!merged.slug||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(String(merged.slug)))merged.slug=makeProductSlug(merged.name||'product');
   if(!merged.destination_url)return {ok:false,status:400,error:'This product has no valid retailer URL. Import the retailer link or provide a destination URL before publishing.'};
+  // Skin Care uses Amazon affiliate links, so publish them as Finds rather than
+  // direct-checkout Shop products. Resolve the category from the database so the
+  // exception applies only to the dedicated skincare category.
+  let categoryName='';
+  if(merged.category_id){
+    const categoryResponse=await supabaseRest(env,'GET','categories',undefined,'?select=name&id=eq.'+encodeURIComponent(merged.category_id)+'&limit=1');
+    if(categoryResponse.ok)categoryName=String((await categoryResponse.json())?.[0]?.name||'');
+  }
+  const retailerIdentity=[merged.retailer,merged.source_type,merged.destination_url,merged.amazon_source_url].filter(Boolean).join(' ');
+  const skincareAffiliate=/skin\s*care|skincare/i.test(categoryName)&&/amazon/i.test(retailerIdentity);
+  if(skincareAffiliate)merged.kind='find';
   const validation=validateProduct(merged);
   if(validation)return {ok:false,status:400,error:validation};
   const amazonIdentity=asinFromUrl(merged.destination_url)||asinFromUrl(merged.amazon_source_url)||String(merged.amazon_asin||'').trim();
@@ -333,6 +344,7 @@ async function publishProductRecord(env,id,patch={}){
     if(duplicate)return {ok:false,status:409,error:'This Amazon product is already published as “'+cleanText(duplicate.name,180)+'”. Unpublish or edit the existing listing instead of publishing a duplicate.'};
   }
   const write={published:true,slug:merged.slug,destination_url:destination,updated_at:new Date().toISOString()};
+  if(skincareAffiliate)write.kind='find';
   if(patch.amazon_source_url||current.amazon_source_url)write.amazon_source_url=patch.amazon_source_url||current.amazon_source_url;
   const result=await supabaseProductWrite(env,'PATCH',write,'?id=eq.'+encodeURIComponent(id));
   if(!result.ok)return {ok:false,status:400,error:await result.text()};
