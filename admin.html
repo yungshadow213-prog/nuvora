@@ -2982,6 +2982,8 @@ function addSkinProductToSection(productId,targetId,pageId){
   ?'Product placed in “'+(sec.title||'Product grid')+'”. The preview is updating. Publish the page changes to make this placement public.'
   :'Product added to “'+(sec.title||'Product grid')+'” in your draft. Publish this product before it can appear in the public storefront; the page placement will stay in your draft.';
  skinMarkDirty(message);renderSkinStudioAll();sendSkinStudioPreview();queueSkinStudioPreview();
+ // A placement is a structural edit: persist the page draft immediately so it survives refresh even if the user leaves before the autosave debounce.
+ void saveSkinSiteDraft();
 }
 function moveSkinProductInSection(productId,targetProductId,sectionId,pageId){
  const sections=skinSectionsFor(pageId),sec=sections.find(s=>String(s.id)===String(sectionId));
