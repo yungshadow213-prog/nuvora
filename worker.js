@@ -62,7 +62,7 @@ export default {
         const checks={
           environment:!!cfg.supabase,auth:false,admin:false,products:false,productSchema:false,
           settings:false,settingsSchema:false,social:false,analytics:false,
-          workersAI:!!cfg.workersAI,shopifyStorefront:!!cfg.shopifyStorefront,
+          workersAI:!!cfg.workersAI,gemini:!!cfg.gemini,shopifyStorefront:!!cfg.shopifyStorefront,
           shopifyEnvironment:!!cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false
         };
         // Keep all diagnostic state in one declared object. The admin consumes
@@ -75,7 +75,7 @@ export default {
           shopifyMissing:[],
           aiMissing:[]
         };
-        if(!env.AI)diagnosticsState.aiMissing.push('Workers AI binding');
+        if(!env.GEMINI_API_KEY)diagnosticsState.aiMissing.push('GEMINI_API_KEY secret');
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))diagnosticsState.shopifyMissing.push('SHOPIFY_SHOP');
         if(!env.SHOPIFY_CLIENT_ID)diagnosticsState.shopifyMissing.push('SHOPIFY_CLIENT_ID');
         if(!env.SHOPIFY_CLIENT_SECRET)diagnosticsState.shopifyMissing.push('SHOPIFY_CLIENT_SECRET');
