@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-skin-studio-auto-place-r48',
+          release:'nuvora-2026-10-24-main-store-card-scan-r49',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });

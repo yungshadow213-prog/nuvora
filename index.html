@@ -995,7 +995,7 @@ function card(p){
   const source=p.retailer||'Nuvora';
   const savedNow=saved.includes(p.id);
   const summary=cleanProductText(p.whyPicked||p.benefits||p.features||p.desc||'').replace(/\s+/g,' ').trim();
-  const summaryText=summary.length>124?summary.slice(0,121).replace(/\s+\S*$/,'')+'…':summary;
+  const summaryText=summary.length>92?summary.slice(0,89).replace(/\s+\S*$/,'')+'…':summary;
   const cardAction=/amazon|temu/i.test(String(p.retailer||''))||!!p.destination?'View product guide':'View details';
   const retailerPriceLabel=/amazon|temu/i.test(String(p.retailer||''))?'':(p.type==='Shop'?p.price:'');
   const rating=Number(p.retailerRating)||0;
@@ -1003,7 +1003,7 @@ function card(p){
   return '<article class="product nv-card" data-product-id="'+htmlEsc(p.id)+'" tabindex="0" role="button" aria-label="View '+htmlEsc(p.name)+'">'+
     '<button class="card-save '+(savedNow?'saved':'')+'" aria-label="Save product" onclick="event.stopPropagation();toggleSave(this.closest(\'.product\').dataset.productId)">'+(savedNow?'♥':'♡')+'</button>'+
     '<div class="prod-open"><div class="thumb">'+(image?'<img src="'+htmlEsc(image)+'" alt="'+htmlEsc(p.name)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\';this.parentElement.classList.add(\'image-failed\')">':'<span class="nv-image-mark">✦</span>')+'</div>'+
-    '<div class="prodtext"><div class="card-source">'+htmlEsc(source)+'</div><h4>'+htmlEsc(p.name)+'</h4>'+ratingMarkup+(summaryText?'<p class="product-summary">'+htmlEsc(summaryText)+'</p>':'')+'<div class="card-bottom">'+(retailerPriceLabel?'<span class="prodprice">'+htmlEsc(retailerPriceLabel)+'</span>':'')+'<span class="card-action">'+cardAction+' <span>→</span></span></div></div></div></article>';
+    '<div class="prodtext"><div class="card-source">'+htmlEsc(p.brand||source)+'</div><h4>'+htmlEsc(p.name)+'</h4>'+ratingMarkup+(summaryText?'<p class="product-summary">'+htmlEsc(summaryText)+'</p>':'')+'<div class="card-bottom">'+(retailerPriceLabel?'<span class="prodprice">'+htmlEsc(retailerPriceLabel)+'</span>':'')+'<span class="card-action">'+cardAction+' <span>→</span></span></div></div></div></article>';
 }
 function renderList(id,type){const el=document.getElementById(id);if(!el)return;const rows=products.filter(p=>p.type===type);const empty=type==='Shop'?'<div class="empty" style="grid-column:1/-1"><strong>No direct-checkout products are available yet.</strong><br><span>Browse curated retailer finds while the direct-checkout collection is being built.</span><br><button type="button" class="button button-dark" onclick="showView(\'finds\')">Browse retailer finds</button></div>':'<div class="empty" style="grid-column:1/-1"><strong>No '+String(type).toLowerCase()+' products published yet.</strong><br><span>New published '+String(type).toLowerCase()+' listings will appear here.</span></div>';el.innerHTML=rows.map(card).join('')||empty;el.closest('.view')?.classList.toggle('catalog-empty',rows.length===0)}
 function renderLearn(){const el=document.getElementById('learnGrid');if(!el)return;const list=products.filter(p=>p.type==='Learn');el.innerHTML=list.length?list.map(card).join(''):'<div class="empty" style="grid-column:1/-1"><strong>No learning resources published yet.</strong><br><span>Publish a Learn product from Admin when you are ready.</span></div>'}
