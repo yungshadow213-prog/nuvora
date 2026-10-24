@@ -1009,6 +1009,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
         <div class="field full"><label>Tax notice</label><input id="pfTax" placeholder="Sales taxes may apply at checkout"></div>
         <div class="field"><label>Category</label><select id="pfCategory"><option value="">No category</option></select></div>
         <div class="field"><label>Collection</label><select id="pfCollection"><option value="">No collection</option></select></div>
+        <div class="field full skin-only-field"><label>Gemini product assistant</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="skinGeminiFillBtn" type="button" class="btn" onclick="generateSkinProductWithGemini()">Fill product guide with Gemini</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input id="skinGeminiReplaceExisting" type="checkbox"> Replace existing text fields</label></div><div id="skinGeminiStatus" class="muted" role="status" aria-live="polite" style="margin-top:8px">Paste the exact Amazon link into Destination / affiliate URL. Gemini will fill supported fields for review; it will not save or publish the product.</div></div>
         <div class="field full"><label>Description</label><textarea id="pfDescription" placeholder="Product description"></textarea></div>
         <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div>
         <div class="field full skin-only-field"><label>Product benefits <span class="muted">(source-backed)</span></label><textarea id="pfBenefits" placeholder="What the product is intended to do, based on product information"></textarea></div>
@@ -1567,6 +1568,47 @@ async function useAIImage(){
     const {data}=adminSB.storage.from('product-images').getPublicUrl(path);const url=data?.publicUrl;if(!url)throw new Error('Could not create image URL.');
     const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);document.getElementById('pfImages').value=[url,...urls].filter((x,i,a)=>a.indexOf(x)===i).join('\n');renderProductImages();status.textContent='AI image added to the product images.';closeAIStudio();
   }catch(e){status.textContent='Could not save the image: '+(e.message||'Unknown error.');setAdminStatus(e.message||'Could not save the image.','error')}
+}
+async function generateSkinProductWithGemini(){
+ const url=String(document.getElementById('pfDestination')?.value||document.getElementById('amazonUrlInput')?.value||'').trim();
+ const status=document.getElementById('skinGeminiStatus'),button=document.getElementById('skinGeminiFillBtn');
+ if(!url){if(status)status.textContent='Paste the exact Amazon product link into Destination / affiliate URL first.';skinBuilderMessage('Paste the Amazon product link before asking Gemini to fill the guide.','error');return;}
+ const original=button?.textContent;if(button){button.disabled=true;button.textContent='Reading listing + structuring fields…';}
+ if(status)status.textContent='Reading the Amazon listing, then asking Gemini to organize verified details. This may take a little while.';
+ try{
+  const response=await api('/api/admin/ai/skin-product',{method:'POST',body:{url}});
+  const p=response?.product;if(!response?.ok||!p)throw new Error('Gemini did not return product fields.');
+  const replace=!!document.getElementById('skinGeminiReplaceExisting')?.checked;
+  const fill=(id,value)=>{
+   const el=document.getElementById(id);if(!el||value==null)return false;
+   const next=Array.isArray(value)?value.join('\n'):String(value);
+   if(!next.trim()||(!replace&&String(el.value||'').trim()))return false;
+   el.value=next;el.dispatchEvent(new Event('input',{bubbles:true}));return true;
+  };
+  let count=0;
+  const entries=[
+   ['pfName',p.name],['pfBrand',p.brand],['pfDescription',p.overview],
+   ['pfFeatures',p.benefits],['pfBenefits',p.benefits],['pfSkinTypes',p.skin_types],
+   ['pfSkinConcerns',p.skin_concerns],['pfIngredients',p.ingredients],
+   ['pfUsage',p.usage_instructions],['pfSkinAvoid',p.product_warnings],
+   ['pfWarnings',p.product_warnings],['pfProductSize',p.size],['pfRating',p.rating],
+   ['pfAsin',p.asin]
+  ];
+  for(const [id,value] of entries)if(fill(id,value))count++;
+  const source=document.getElementById('pfSource');if(source)source.value='amazon';
+  const retailer=document.getElementById('pfRetailer');if(retailer)retailer.value='Amazon';
+  const destination=document.getElementById('pfDestination');if(destination&&!destination.value.trim())destination.value=url;
+  updateRetailerRatingPreview();
+  if(p.confidence_notes?.length){
+   const notes=p.confidence_notes.join(' · ');
+   if(status)status.textContent='Gemini filled '+count+' fields. Review before saving. Notes: '+notes;
+  }else if(status)status.textContent='Gemini filled '+count+' fields. Review every field; existing values were '+(replace?'replaced where new data was available.':'preserved. Nothing has been saved or published.');
+  productSaveMessage('Gemini prepared the skincare guide. Review the fields and click Save Draft when ready.','success');
+ }catch(e){
+  const message=e.message||'Gemini could not prepare this product.';
+  if(status)status.textContent=message;
+  productSaveMessage(message,'error');
+ }finally{if(button){button.disabled=false;button.textContent=original||'Fill product guide with Gemini';}}
 }
 async function generateAIProductCopy(){
   const btn=document.getElementById('aiCopyBtn'),status=document.getElementById('aiCopyStatus');const p=aiProductData();if(!p.name){setAdminStatus('Add the product title first.','error');return;}
