@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-published-product-edit-persistence-r52',
+          release:'nuvora-2026-10-24-skin-routine-category-browse-r53',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
