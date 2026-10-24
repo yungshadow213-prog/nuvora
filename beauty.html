@@ -166,11 +166,11 @@ function retailerRatingMarkup(p){const raw=p.amazon_rating??(String(p.source_typ
 function productAvailabilityMarkup(p){
  const candidates=[p?.availability,p?.stock_status,p?.stockStatus,p?.in_stock,p?.is_available,p?.available];
  for(const value of candidates){
-  if(typeof value==='boolean')return '<span class="availability '+(value?'available':'unavailable')+'"><i aria-hidden="true"></i>'+(value?'Available':'Unavailable')+'</span>';
-  if(typeof value==='number'&&(value===0||value===1))return '<span class="availability '+(value===1?'available':'unavailable')+'"><i aria-hidden="true"></i>'+(value===1?'Available':'Unavailable')+'</span>';
+  if(typeof value==='boolean')return '<span class="availability '+(value?'available':'unavailable')+'" title="'+(value?'Availability confirmed':'Unavailable')+'" aria-label="'+(value?'Available':'Unavailable')+'"><i aria-hidden="true"></i></span>';
+  if(typeof value==='number'&&(value===0||value===1))return '<span class="availability '+(value===1?'available':'unavailable')+'" title="'+(value===1?'Availability confirmed':'Unavailable')+'" aria-label="'+(value===1?'Available':'Unavailable')+'"><i aria-hidden="true"></i></span>';
   const text=String(value??'').trim().toLowerCase();if(!text)continue;
-  if(/^(?:in stock|instock|available|available now|yes|true|in-stock)$/i.test(text))return '<span class="availability available"><i aria-hidden="true"></i>Available</span>';
-  if(/^(?:out of stock|out-of-stock|unavailable|sold out|sold-out|no|false)$/i.test(text))return '<span class="availability unavailable"><i aria-hidden="true"></i>Unavailable</span>';
+  if(/^(?:in stock|instock|available|available now|yes|true|in-stock)$/i.test(text))return '<span class="availability available" title="Availability confirmed" aria-label="Available"><i aria-hidden="true"></i></span>';
+  if(/^(?:out of stock|out-of-stock|unavailable|sold out|sold-out|no|false)$/i.test(text))return '<span class="availability unavailable" title="Unavailable" aria-label="Unavailable"><i aria-hidden="true"></i></span>';
  }
  return '';
 }
