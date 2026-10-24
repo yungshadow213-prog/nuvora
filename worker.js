@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-product-save-publish-recovery-r46',
+          release:'nuvora-2026-10-24-skin-studio-text-block-r47',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -2344,7 +2344,7 @@ function validateSkinSiteConfig(value,options={}){
     if(!value.productGuideFields||typeof value.productGuideFields!=='object'||Array.isArray(value.productGuideFields))return 'Skin Studio product guide visibility settings must be an object.';
     if(keys.some(key=>value.productGuideFields[key]!==undefined&&typeof value.productGuideFields[key]!=='boolean'))return 'Skin Studio product guide visibility values must be true or false.';
   }
-  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block']);
+  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block']);
   const checkSections=(sections,label)=>{
     if(!Array.isArray(sections))return label+' sections must be an array.';
     if(sections.length>40)return label+' supports up to 40 sections.';
@@ -2361,6 +2361,10 @@ function validateSkinSiteConfig(value,options={}){
       if(section.eyebrow!==undefined&&String(section.eyebrow).length>100)return label+' section eyebrows are limited to 100 characters.';
       if(section.image){try{if(new URL(section.image).protocol!=='https:')return label+' section image must use HTTPS.';}catch{return label+' section image URL is invalid.';}}
       if(section.backgroundColor!==undefined&&section.backgroundColor!==''&&!/^#[0-9a-f]{6}$/i.test(String(section.backgroundColor)))return label+' section background color is invalid.';
+      if(section.textAlignment!==undefined&&!['left','center','right'].includes(String(section.textAlignment)))return label+' text alignment must be left, center, or right.';
+      if(section.titleFontSize!==undefined&&section.titleFontSize!==null&&section.titleFontSize!==''&&(!Number.isFinite(Number(section.titleFontSize))||Number(section.titleFontSize)<20||Number(section.titleFontSize)>88))return label+' heading size must be between 20 and 88 pixels.';
+      if(section.bodyFontSize!==undefined&&section.bodyFontSize!==null&&section.bodyFontSize!==''&&(!Number.isFinite(Number(section.bodyFontSize))||Number(section.bodyFontSize)<10||Number(section.bodyFontSize)>26))return label+' body text size must be between 10 and 26 pixels.';
+      if(section.sectionPadding!==undefined&&section.sectionPadding!==null&&section.sectionPadding!==''&&(!Number.isFinite(Number(section.sectionPadding))||Number(section.sectionPadding)<16||Number(section.sectionPadding)>160))return label+' section spacing must be between 16 and 160 pixels.';
       if(section.imageAlignment!==undefined&&!['left','center','right'].includes(String(section.imageAlignment)))return label+' image alignment must be left, center, or right.';
       if(section.imageWidth!==undefined&&![20,30,40,50,60,70,80,90,100].includes(Number(section.imageWidth)))return label+' image width must be between 20% and 100%.';
       if(section.imageFreePosition!==undefined&&typeof section.imageFreePosition!=='boolean')return label+' free image positioning must be a boolean.';
