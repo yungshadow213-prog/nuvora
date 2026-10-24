@@ -139,6 +139,7 @@ const defaultConfig={
 };
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function safeUrl(v,secureOnly=false){
+ if(!String(v||'').trim())return '';
  try{const u=new URL(String(v||''),location.origin);if(!['https:','http:'].includes(u.protocol)||(secureOnly&&u.protocol!=='https:'))return '';return u.href;}catch{return '';}
 }
 function mergeConfig(raw){
