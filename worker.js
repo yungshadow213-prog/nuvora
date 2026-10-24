@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-publish-validation-fix-r57',
+          release:'nuvora-2026-10-24-skin-placement-autosave-r58',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
