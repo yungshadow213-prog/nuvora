@@ -1771,11 +1771,11 @@ async function saveProductDraft(){
   const ratingRaw=document.getElementById('pfRating').value.trim(),retailerRating=ratingRaw===''?null:Number(ratingRaw);
   const reviewCountRaw=document.getElementById('pfReviews').value.trim(),retailerReviewCount=reviewCountRaw===''?null:Number(reviewCountRaw);
   const currentProduct=window.editingProductId?adminProducts.find(x=>String(x.id)===String(window.editingProductId)):null;
-  if(ratingRaw!==''&&(!Number.isFinite(retailerRating)||retailerRating<0||retailerRating>5||Math.abs(retailerRating*2-Math.round(retailerRating*2))>1e-8)){setAdminStatus('Retailer rating must be a number from 0 to 5, such as 3.5.','error');releaseSave();return;}
+  if(ratingRaw!==''&&(!Number.isFinite(retailerRating)||retailerRating<0||retailerRating>5)){setAdminStatus('Retailer rating must be a number from 0 to 5, such as 3.5.','error');releaseSave();return;}
   if(reviewCountRaw!==''&&(!Number.isInteger(retailerReviewCount)||retailerReviewCount<0)){setAdminStatus('Retailer review count must be a whole number of zero or more.','error');releaseSave();return;}
   const product={
-    name,kind:window.skinCareImportMode?'shop':document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
-    description:window.skinCareImportMode?(adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.description||document.getElementById('pfDescription').value.trim()||null):(document.getElementById('pfDescription').value.trim()||null),features:document.getElementById('pfFeatures').value.trim()||null,
+    name,kind:window.skinCareImportMode?'find':document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
+    description:document.getElementById('pfDescription').value.trim()||null,features:document.getElementById('pfFeatures').value.trim()||null,
     benefits:window.skinCareImportMode?(document.getElementById('pfBenefits').value.trim()||null):null,
     skin_types:window.skinCareImportMode?(document.getElementById('pfSkinTypes').value.trim()||null):null,
     skin_concerns:window.skinCareImportMode?(document.getElementById('pfSkinConcerns').value.trim()||null):null,
@@ -1803,7 +1803,7 @@ async function saveProductDraft(){
     supplier_cost:document.getElementById('pfSupplierCost').value===''?null:Number(document.getElementById('pfSupplierCost').value),
     published:window.editingProductId?!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.published:false
   };
-  if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer='Amazon';product.store_description=document.getElementById('pfDescription').value.trim()||null;}
+  if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer='Amazon';product.store_description=document.getElementById('pfDescription').value.trim()||null;product.kind='find';}
   try{
     const existingId=window.editingProductId||null;
     const existing=existingId?adminProducts.find(x=>String(x.id)===String(existingId)):null;
