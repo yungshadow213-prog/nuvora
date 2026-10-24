@@ -210,7 +210,7 @@ function productAvailabilityMarkup(p){
 }
 function renderProductCard(p){
  const image=productImage(p),rating=retailerRatingMarkup(p),availability=productAvailabilityMarkup(p);
- return '<article class="card product-overview-card" data-open-product="'+esc(p.id)+'" data-product-id="'+esc(p.id)+'" tabindex="0" role="button" aria-label="Open '+esc(p.name)+' product guide"><div class="photo">'+(image?'<img src="'+esc(image)+'" alt="'+esc(p.name)+'" loading="lazy">':'<div class="empty">Image coming soon</div>')+'</div><div class="card-copy"><div class="brandline">'+esc(p.brand||'Nuvora Skin selection')+'</div><h3 class="product-name">'+esc(p.name)+'</h3><div class="product-overview-meta">'+availability+rating+'</div></div></article>';
+ return '<article class="card product-overview-card" data-open-product="'+esc(p.id)+'" data-product-id="'+esc(p.id)+'" tabindex="0" role="button" aria-label="Open '+esc(p.name)+' product guide"><div class="photo">'+(image?'<img src="'+esc(image)+'" alt="'+esc(p.name)+'" loading="lazy">':'<div class="empty">Image coming soon</div>')+'</div><div class="card-copy"><h3 class="product-name">'+esc(p.name)+'</h3><div class="brandline">'+esc(p.brand||'Nuvora Skin selection')+'</div><div class="product-overview-meta">'+availability+rating+'</div></div></article>';
 }
 function filteredProducts(section){
  let list=[...products];
