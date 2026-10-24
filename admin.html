@@ -1509,11 +1509,12 @@ async function openAIStudio(){
   const page=document.getElementById('aiStudioModal');
   page.classList.add('open');
   document.getElementById('aiPrompt').value='';
-  document.getElementById('aiImageStatus').textContent='Starting Cloudflare Workers AI…';
-  document.getElementById('aiCopyStatus').textContent='Waiting for Gemini…';
+  document.getElementById('aiImageStatus').textContent='Checking Gemini connection…';
+  document.getElementById('aiCopyStatus').textContent='Checking Gemini connection…';
   document.getElementById('aiPreview').style.display='none';
   document.getElementById('aiReference').value='';
   page.scrollIntoView({behavior:'smooth',block:'start'});
+  refreshGeminiConnection('studio');
   // AI generation is manual so merely opening the workspace never consumes an AI request.
 }
 function closeAIStudio(){document.getElementById('aiStudioModal').classList.remove('open');document.body.classList.remove('admin-workspace-open');}
@@ -3208,6 +3209,28 @@ async function saveSkinSiteConfig(){
   if(btn){btn.disabled=false;btn.textContent='Publish changes';}
  }
 }
+async function refreshGeminiConnection(surface='skin'){
+ const buttonIds=surface==='studio'?['aiGenerateBtn','aiCopyBtn']:['skinGeminiFillBtn'];
+ const statusIds=surface==='studio'?['aiImageStatus','aiCopyStatus']:['skinGeminiStatus'];
+ const buttons=buttonIds.map(id=>document.getElementById(id)).filter(Boolean),statuses=statusIds.map(id=>document.getElementById(id)).filter(Boolean);
+ buttons.forEach(button=>{button.disabled=true;});
+ statuses.forEach(status=>{status.textContent='Checking Gemini connection…';});
+ try{
+  const response=await fetch('/api/health?check=gemini',{cache:'no-store'});
+  const health=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error('Gemini connection status could not be read.');
+  if(health?.configured?.gemini===true){
+   buttons.forEach(button=>{button.disabled=false;});
+   statuses.forEach(status=>{status.textContent=surface==='studio'?'Gemini is connected. Generated images and copy still require review before applying.':'Gemini is connected. Paste the exact Amazon product link and review all generated fields before saving.';});
+  }else{
+   const message='Gemini is not connected yet. Add GEMINI_API_KEY as a Cloudflare Worker secret for the Nuvora Worker, then reload this page. Never paste the key into product fields or chat.';
+   statuses.forEach(status=>{status.textContent=message;});
+  }
+ }catch(error){
+  buttons.forEach(button=>{button.disabled=false;});
+  statuses.forEach(status=>{status.textContent='Could not verify Gemini status. You can try the action; Nuvora will show the exact provider error if Gemini is unavailable.';});
+ }
+}
 function setSkinAdminFormMode(enabled){
  document.body.classList.toggle('skin-admin-mode',!!enabled);
  const priceIds=['pfPrice','pfListPrice','pfDiscount','pfCurrency','pfDeal'];
@@ -3218,6 +3241,7 @@ function setSkinAdminFormMode(enabled){
  const sourceField=document.getElementById('pfSource');if(sourceField&&enabled)sourceField.value='amazon';
  const retailer=document.getElementById('pfRetailer');if(retailer){retailer.readOnly=!!enabled;if(enabled)retailer.value='Amazon';}
  document.querySelectorAll('.skin-only-field').forEach(el=>el.style.display=enabled?'':'none');
+ if(enabled)refreshGeminiConnection('skin');
 }
 function populateSkinRecommendations(selectedIds=[]){
  const el=document.getElementById('pfRecommendedProducts');if(!el)return;
