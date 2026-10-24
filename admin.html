@@ -2924,17 +2924,25 @@ function skinProductsForSection(sec){
 function addSkinProductToSection(productId,targetId,pageId){
  const product=adminProducts.find(p=>String(p.id)===String(productId));
  if(!product)return skinBuilderMessage('That product could not be found. Refresh the product library and try again.','error');
- let sections=skinSectionsFor(pageId),sec=sections.find(s=>String(s.id)===String(targetId));
+ const pending=skinStudioPendingProductTarget;
+ const targetPageId=String(pageId||pending?.pageId||skinStudioPageId||'home');
+ const requestedSectionId=targetId||pending?.sectionId||(skinStudioSelection?.type==='section'?skinStudioSelection.id:null);
+ const sections=skinSectionsFor(targetPageId);
+ let sec=sections.find(s=>String(s.id)===String(requestedSectionId));
  if(!sec||!['product-grid','featured-products'].includes(sec.type))sec=sections.find(s=>s.visible!==false&&['product-grid','featured-products'].includes(s.type));
  if(!sec){sec={id:'section-'+Date.now().toString(36),type:'product-grid',visible:true,title:'New skincare picks',eyebrow:'The edit',text:'',filter:'all',columns:3,product_ids:[]};sections.push(sec);}
+ sec.visible=true;
  let ids=Array.isArray(sec.product_ids)?sec.product_ids.map(String):[];
  if(!ids.length)ids=skinProductsForSection(sec).map(p=>String(p.id));
  if(!ids.includes(String(productId)))ids.push(String(productId));
- sec.product_ids=ids.slice(0,60);skinStudioPageId=pageId||'home';skinStudioSelection={type:'section',id:String(sec.id)};
+ sec.product_ids=ids.slice(0,60);
+ skinStudioPageId=targetPageId;skinStudioSelection={type:'section',id:String(sec.id)};skinStudioPendingProductTarget=null;
  const message=product.published
   ?'Product placed in “'+(sec.title||'Product grid')+'”. The preview is updating. Publish the page changes to make this placement public.'
   :'Product added to “'+(sec.title||'Product grid')+'” in your draft. Publish this product before it can appear in the public storefront; the page placement will stay in your draft.';
- skinMarkDirty(message);renderSkinStudioAll();refreshSkinStudioPreview();
+ skinMarkDirty(message);renderSkinStudioAll();refreshSkinStudioPreview();sendSkinStudioPreview();
+ if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
+ persistSkinSiteDraft(true).catch(()=>{});
 }
 function moveSkinProductInSection(productId,targetProductId,sectionId,pageId){
  const sections=skinSectionsFor(pageId),sec=sections.find(s=>String(s.id)===String(sectionId));
