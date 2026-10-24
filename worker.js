@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-main-store-rating-fallback-r40',
+          release:'nuvora-2026-10-24-public-retailer-ratings-api-r41',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -1861,7 +1861,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             amazon_deal_text:safeText(normalized.deal),amazon_list_price:isAmazonSource?source.amazon_list_price??null:null,
             amazon_discount_percent:isAmazonSource?source.amazon_discount_percent??null:null,amazon_shipping_text:isAmazonSource?source.amazon_shipping_text??null:null,
             amazon_tax_text:isAmazonSource?source.amazon_tax_text??null:null,amazon_variations:isAmazonSource&&Array.isArray(source.amazon_variations)?source.amazon_variations:[],
-            amazon_rating:isAmazonSource?null:normalized.rating,amazon_review_count:isAmazonSource?null:normalized.review_count,
+            amazon_rating:isAmazonSource?(source.amazon_rating??normalized.rating??null):null,amazon_review_count:isAmazonSource?null:normalized.review_count,
             rating:isAmazonSource?null:source.rating,review_count:isAmazonSource?null:source.review_count,
             temu_deal_text:safeText(source.temu_deal_text),temu_list_price:source.temu_list_price??null,temu_discount_percent:source.temu_discount_percent??null,
             temu_rating:source.temu_rating??null,temu_review_count:source.temu_review_count??null,
