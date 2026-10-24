@@ -1884,15 +1884,35 @@ async function saveProductDraft(){
     if(existingId)saveResult=await api('/api/admin/products/'+encodeURIComponent(existingId),{method:'PATCH',body:{...product,slug}});
     else saveResult=await api('/api/admin/products',{method:'POST',body:{...product,slug}});
     const wasEditing=!!existingId,savedId=String(saveResult?.id||existingId||''),savedSlug=String(saveResult?.slug||slug);
-    await liveAdminProducts();
-    const savedProduct=adminProducts.find(item=>(savedId&&String(item.id)===savedId)||String(item.slug||'')===savedSlug);
-    if(!savedProduct)throw new Error('The server accepted the request but the product could not be found after refreshing the catalog. The editor is still open; retry after checking the connection.');
-    if(String(savedProduct.name||'').trim()!==name)throw new Error('The saved product did not match the title you entered. The editor is still open; retry after checking the connection.');
-    if(!wasEditing&&savedProduct.published)throw new Error('The new product was unexpectedly published. Please review its status before continuing.');
+    if(!savedId)throw new Error('The save request returned no product ID. The server did not confirm a saved product.');
+    const confirmedProduct={...product,...(saveResult&&typeof saveResult==='object'?saveResult:{}),id:savedId,slug:savedSlug};
+    if(!wasEditing&&confirmedProduct.published)throw new Error('The server unexpectedly marked this new product as published. Check its status before continuing.');
+    // Treat the server's successful POST/PATCH response as the save confirmation.
+    // Refreshing the entire catalog is a separate operation and must not make a
+    // successfully saved product look unsaved or encourage a duplicate retry.
+    if(wasEditing)adminProducts=adminProducts.map(item=>String(item.id)===savedId?{...item,...confirmedProduct}:item);
+    else adminProducts=[confirmedProduct,...adminProducts.filter(item=>String(item.id)!==savedId)];
+    renderProducts();renderSkinProducts();fillSocialProducts();
     closeProductModal();window.skinCareImportMode=false;window.editingProductId=null;
+    releaseSave();
+    productSaveMessage(wasEditing?'Product changes were saved by the server. Refreshing the product library…':(skinCategory?'Skincare product was saved as a private draft. Refreshing the product library…':'Product was saved as a private draft. Refreshing the product library…'),'success');
+    let refreshProblem='';
+    try{
+      await liveAdminProducts();
+      const savedProduct=adminProducts.find(item=>String(item.id)===savedId||String(item.slug||'')===savedSlug);
+      if(!savedProduct){
+        adminProducts=[confirmedProduct,...adminProducts.filter(item=>String(item.id)!==savedId)];
+        renderProducts();renderSkinProducts();fillSocialProducts();
+        refreshProblem='The save itself succeeded, but the refreshed catalog did not return the product yet.';
+      }else if(String(savedProduct.name||'').trim()!==name){
+        refreshProblem='The server saved the product, but the refreshed title did not match the editor. Please reopen the product and verify it before making further changes.';
+      }
+    }catch(refreshError){
+      refreshProblem='The save itself succeeded, but the catalog could not refresh: '+(refreshError?.message||'connection error')+'. Do not submit the product again; reload the catalog to confirm it.';
+    }
     if(document.body.classList.contains('skin-studio-fullpage')){renderSkinStudioAll();reloadSkinStudioPreview();}
-    productSaveMessage(wasEditing?'Product changes saved and verified.':(skinCategory?'Skincare product saved as a draft and verified.':'Product saved as a draft and verified.'),'success');
-  }catch(e){productSaveMessage('Product save failed: '+(e.message||'unknown error')+' The editor remains open so you can retry.','error')}finally{releaseSave();}
+    if(refreshProblem)productSaveMessage(refreshProblem,'info');
+  }catch(e){productSaveMessage('Product save was not confirmed: '+(e.message||'unknown error')+'. The editor remains open so you can retry after checking the message.','error')}finally{releaseSave();}
 }
 async function editProduct(id){
   if(!id)return;
