@@ -83,6 +83,22 @@ body.template-sage-botanical{--cream:#eef1e7;--paper:#fbfcf7;--ink:#2b382a;--mut
 @media(max-width:560px){.detail-backdrop{padding:0;align-items:flex-end}.detail-modal{max-height:94vh;border-radius:16px 16px 0 0}.detail-head{padding:12px 16px}.detail-content{padding:16px;gap:16px}.detail-image{max-height:300px}.grid[data-columns="3"],.grid[data-columns="4"]{grid-template-columns:repeat(2,minmax(0,1fr))}.detail-recommendations{grid-template-columns:repeat(2,minmax(0,1fr))}.category-links{gap:6px}.category-link{padding:8px 12px}}
 </style>
 
+<style id="nuvora-skin-studio-section-rendering">
+.site-sections [data-studio-style="true"]{text-align:var(--studio-text-align);padding-block:var(--studio-section-padding);background-color:var(--studio-bg)}
+.site-sections [data-studio-style="true"] h1,.site-sections [data-studio-style="true"] h2,.site-sections [data-studio-style="true"] h3{font-size:var(--studio-title-size)}
+.site-sections [data-studio-style="true"] p,.site-sections [data-studio-style="true"] .section-description,.site-sections [data-studio-style="true"] .skin-text-copy{font-size:var(--studio-body-size)}
+.skin-text-block,.skin-image-block,.skin-journal-block{width:min(100% - 36px,1180px);margin-inline:auto;border-radius:16px}
+.skin-text-block h2,.skin-image-block h2,.skin-journal-block h2{font-family:Georgia,"Times New Roman",serif;line-height:1.15;margin:8px 0 14px}
+.skin-text-copy{max-width:850px;line-height:1.8;overflow-wrap:anywhere}.skin-text-copy p{margin:0 0 12px}
+.skin-routine-finder{width:min(100% - 36px,1180px);margin-inline:auto;border-radius:18px;background:#f0f3ea;padding:clamp(24px,4vw,48px)}
+.routine-type-buttons{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 10px}
+.routine-type-button{border:1px solid var(--line);border-radius:999px;background:#fff;padding:9px 14px;color:var(--ink);font:inherit;font-size:12px;cursor:pointer}
+.routine-type-button.active{background:var(--skin-accent);border-color:var(--skin-accent);color:#fff}
+.routine-guidance{color:var(--muted);font-size:12px;line-height:1.65;margin:8px 0 18px}
+.routine-products-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.skin-image-block>img{border-radius:14px;max-height:600px}
+@media(max-width:700px){.skin-text-block,.skin-image-block,.skin-journal-block,.skin-routine-finder{width:calc(100% - 24px)}.routine-products-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.routine-type-button{padding:8px 11px}}
+</style>
 </head>
 <body>
 <div class="announcement" id="announcementBar">THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE</div>
@@ -115,6 +131,8 @@ const defaultConfig={
  productGuideFields:{benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true},
  sections:[
   {id:'hero',type:'hero',visible:true,title:'Care that feels like you.'},
+  {id:'routine-finder',type:'routine-finder',visible:true,title:'Find your routine, one step at a time.',eyebrow:'YOUR SKIN, YOUR PACE',text:'Choose a skin type to explore relevant finds. These labels are browsing aids, not a guarantee of suitability.'},
+  {id:'home-categories',type:'category-grid',visible:true,title:'Browse skincare by category',eyebrow:'FIND YOUR FOCUS',text:'Explore cleansers, treatments, hydration and sun protection.'},
   {id:'edit',type:'product-grid',visible:true,title:'What’s in the edit',eyebrow:'Curated, not crowded',text:'Product picks are added by the Nuvora team. Explore skincare finds and helpful guides.',filter:'all',columns:4,product_ids:[]},
   {id:'approach',type:'editorial',visible:true,title:'Good finds. Clear choices.',eyebrow:'A gentler way to discover',text:'Nuvora Skin is a focused corner of Nuvora for skincare and beauty discoveries.'}
  ]
@@ -126,11 +144,24 @@ function safeUrl(v,secureOnly=false){
 function mergeConfig(raw){
  const src=raw&&typeof raw==='object'?raw:{},cfg={...defaultConfig,...src};
  cfg.sections=Array.isArray(src.sections)&&src.sections.length?src.sections.filter(x=>x&&x.visible!==false).map((x,i)=>({
-  id:String(x.id||('section-'+i)),type:['hero','product-grid','editorial','featured-products','category-grid'].includes(x.type)?x.type:'product-grid',
+  id:String(x.id||('section-'+i)),
+  type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block'].includes(x.type)?x.type:'product-grid',
   visible:x.visible!==false,title:String(x.title||'Skincare finds').slice(0,180),eyebrow:String(x.eyebrow||'').slice(0,100),text:String(x.text||'').slice(0,3000),
+  image:safeUrl(x.image,true),backgroundColor:/^#[0-9a-f]{6}$/i.test(String(x.backgroundColor||''))?String(x.backgroundColor):'',
+  textAlignment:['left','center','right'].includes(x.textAlignment)?x.textAlignment:'left',
+  titleFontSize:x.titleFontSize!==undefined&&x.titleFontSize!==null&&x.titleFontSize!==''&&Number.isFinite(Number(x.titleFontSize))?Math.max(20,Math.min(88,Number(x.titleFontSize))):null,
+  bodyFontSize:x.bodyFontSize!==undefined&&x.bodyFontSize!==null&&x.bodyFontSize!==''&&Number.isFinite(Number(x.bodyFontSize))?Math.max(10,Math.min(26,Number(x.bodyFontSize))):null,
+  sectionPadding:x.sectionPadding!==undefined&&x.sectionPadding!==null&&x.sectionPadding!==''&&Number.isFinite(Number(x.sectionPadding))?Math.max(16,Math.min(160,Number(x.sectionPadding))):null,
+  imageAlignment:['left','center','right'].includes(x.imageAlignment)?x.imageAlignment:'center',
+  imageWidth:[20,30,40,50,60,70,80,90,100].includes(Number(x.imageWidth))?Number(x.imageWidth):70,
+  imageFreePosition:x.imageFreePosition===true,
+  imagePositionX:Number.isFinite(Number(x.imagePositionX))?Math.max(0,Math.min(100,Number(x.imagePositionX))):50,
+  imagePositionY:Number.isFinite(Number(x.imagePositionY))?Math.max(0,Math.min(100,Number(x.imagePositionY))):50,
   filter:['all','featured','top_pick','trending'].includes(x.filter)?x.filter:'all',columns:[2,3,4].includes(Number(x.columns))?Number(x.columns):4,
   product_ids:Array.isArray(x.product_ids)?x.product_ids.map(String).slice(0,60):[],category_id:String(x.category_id||'')
  })):defaultConfig.sections;
+ if(!cfg.sections.some(x=>x.type==='routine-finder')){const heroIndex=cfg.sections.findIndex(x=>x.type==='hero');cfg.sections.splice(heroIndex>=0?heroIndex+1:0,0,{id:'routine-finder',type:'routine-finder',visible:true,title:'Find your routine, one step at a time.',eyebrow:'YOUR SKIN, YOUR PACE',text:'Choose a skin type to explore relevant finds. These labels are browsing aids, not a guarantee of suitability.'});}
+ if(!cfg.sections.some(x=>x.type==='category-grid')){const routineIndex=cfg.sections.findIndex(x=>x.type==='routine-finder'),gridIndex=cfg.sections.findIndex(x=>['product-grid','featured-products'].includes(x.type)),insertAt=routineIndex>=0?routineIndex+1:(gridIndex>=0?gridIndex:0);cfg.sections.splice(insertAt,0,{id:'home-categories',type:'category-grid',visible:true,title:'Browse skincare by category',eyebrow:'FIND YOUR FOCUS',text:'Explore cleansers, treatments, hydration and sun protection.'});}
  cfg.template=['soft-editorial','clean-minimal','sage-botanical'].includes(cfg.template)?cfg.template:'soft-editorial';
  cfg.productGuideTemplate=['editorial','compact','minimal'].includes(cfg.productGuideTemplate)?cfg.productGuideTemplate:'editorial';
  const guideDefaults={benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true};
@@ -196,27 +227,59 @@ function filteredProducts(section){
  if(q)list=list.filter(p=>[p.name,p.brand,p.description,p.store_description,p.category?.name,p.skin_concerns,p.skin_types].filter(Boolean).join(' ').toLowerCase().includes(q));
  return list;
 }
+function skinSectionStyle(section){
+ const vars=[];
+ if(['left','center','right'].includes(section.textAlignment))vars.push('--studio-text-align:'+section.textAlignment);
+ if(Number.isFinite(Number(section.titleFontSize))&&Number(section.titleFontSize)>=20&&Number(section.titleFontSize)<=88)vars.push('--studio-title-size:'+Number(section.titleFontSize)+'px');
+ if(Number.isFinite(Number(section.bodyFontSize))&&Number(section.bodyFontSize)>=10&&Number(section.bodyFontSize)<=26)vars.push('--studio-body-size:'+Number(section.bodyFontSize)+'px');
+ if(Number.isFinite(Number(section.sectionPadding))&&Number(section.sectionPadding)>=16&&Number(section.sectionPadding)<=160)vars.push('--studio-section-padding:'+Number(section.sectionPadding)+'px');
+ if(/^#[0-9a-f]{6}$/i.test(String(section.backgroundColor||'')))vars.push('--studio-bg:'+section.backgroundColor);
+ return vars.length?' data-studio-style="true" style="'+esc(vars.join(';'))+'"':'';
+}
+function isSkinProductForRoutine(p){
+ const data=[p.category?.name,p.name,p.brand,p.description,p.store_description,p.features,p.skin_types,p.skin_concerns].filter(Boolean).join(' ').toLowerCase();
+ return /skin.?care|skincare|beauty|cleanser|face wash|moisturi|serum|sunscreen|spf|toner|retinol|exfoliat|facial|face cream|eye cream|mask/.test(data);
+}
+function skinRoutineProducts(type){
+ const list=products.filter(isSkinProductForRoutine);
+ return type==='All'?list:list.filter(p=>[p.skin_types,p.best_for,p.skin_concerns,p.description,p.store_description,p.benefits,p.features].filter(Boolean).join(' ').toLowerCase().includes(String(type).toLowerCase()));
+}
+function renderRoutineFinder(section){
+ const types=['All','Oily','Dry','Combination','Normal','Sensitive'],initial=skinRoutineProducts('All').slice(0,4);
+ return '<section class="section skin-routine-finder" id="'+esc(section.id)+'"'+skinSectionStyle(section)+'><div class="section-head"><div><div class="eyebrow">'+esc(section.eyebrow||'Your skin, your pace')+'</div><h2>'+esc(section.title||'Find your routine')+'</h2><p>'+esc(section.text||'Choose a skin type to browse relevant skincare finds. Check each product label for suitability.')+'</p></div></div><div class="routine-type-buttons" role="group" aria-label="Filter by skin type">'+types.map(type=>'<button type="button" class="routine-type-button '+(type==='All'?'active':'')+'" data-routine-type="'+esc(type)+'" data-routine-section="'+esc(section.id)+'" aria-pressed="'+(type==='All'?'true':'false')+'" onclick="selectRoutineSkin('+JSON.stringify(type)+','+JSON.stringify(String(section.id))+')">'+esc(type==='All'?'All skin types':type)+'</button>').join('')+'</div><p class="routine-guidance" id="routine-guidance-'+esc(section.id)+'">Browse published skincare finds. Check each product label for suitability.</p><div class="grid routine-products-grid" id="routine-results-'+esc(section.id)+'">'+(initial.length?initial.map(renderProductCard).join(''):'<div class="empty">Skincare picks will appear here when matching products are published.</div>')+'</div></section>';
+}
+function selectRoutineSkin(type,sectionId){
+ const root=document.getElementById('routine-results-'+sectionId);if(!root)return;
+ document.querySelectorAll('[data-routine-section]').forEach(button=>{if(button.dataset.routineSection!==String(sectionId))return;const active=button.dataset.routineType===type;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
+ const matches=skinRoutineProducts(type).slice(0,4);
+ root.innerHTML=matches.length?matches.map(renderProductCard).join(''):'<div class="empty">No published products are currently tagged for '+esc(type)+' skin. Browse all products or check back later.</div>';
+ const note=document.getElementById('routine-guidance-'+sectionId);if(note)note.textContent=type==='All'?'Browse published skincare finds. Check each product label for suitability.':'Browse products whose saved details mention '+type.toLowerCase()+' skin. Suitability can vary; check the product label before use.';
+}
 function renderCategoryBrowse(section){
  const categoryProducts=new Map();
  products.forEach(p=>{const id=String(p.category_id||'uncategorized'),name=p.category?.name||'Other finds';if(!categoryProducts.has(id))categoryProducts.set(id,{id,name,count:0});categoryProducts.get(id).count++;});
+ (Array.isArray(siteConfig.customCategories)?siteConfig.customCategories:[]).forEach(c=>{const id=String(c.id||c.slug||''),name=String(c.name||c.title||c.slug||'').trim();if(id&&name&&!categoryProducts.has(id))categoryProducts.set(id,{id,name,count:0});});
  let rows=[...categoryProducts.values()];if(section.category_id)rows=rows.filter(x=>x.id===String(section.category_id));
- return '<section class="section category-section" id="'+esc(section.id)+'"><div class="section-head"><div><div class="eyebrow">'+esc(section.eyebrow||'Explore the edit')+'</div><h2>'+esc(section.title||'Browse by category')+'</h2><p>'+esc(section.text||'Choose a focus to narrow the skincare edit.')+'</p></div></div><div class="category-links">'+rows.map(c=>'<button class="category-link" onclick="selectCategory('+JSON.stringify(c.id)+')">'+esc(c.name)+' <span>('+c.count+')</span></button>').join('')+(activeCategory?'<button class="category-link" onclick="selectCategory(\'\')">Clear category ×</button>':'')+'</div></section>';
+ return '<section class="section category-section" id="'+esc(section.id)+'"'+skinSectionStyle(section)+'><div class="section-head"><div><div class="eyebrow">'+esc(section.eyebrow||'Explore the edit')+'</div><h2>'+esc(section.title||'Browse by category')+'</h2><p>'+esc(section.text||'Choose a focus to narrow the skincare edit.')+'</p></div></div><div class="category-links">'+rows.map(c=>'<button class="category-link" onclick="selectCategory('+JSON.stringify(c.id)+')">'+esc(c.name)+' <span>('+c.count+')</span></button>').join('')+(activeCategory?'<button class="category-link" onclick="selectCategory(\'\')">Clear category ×</button>':'')+'</div></section>';
 }
 function renderSection(section,showSearch=false){
+ const sectionStyle=skinSectionStyle(section);
+ if(section.type==='routine-finder')return renderRoutineFinder(section);
+ if(section.type==='text-block')return '<section class="section skin-text-block" id="'+esc(section.id)+'"'+sectionStyle+'>'+(section.eyebrow?'<div class="eyebrow">'+esc(section.eyebrow)+'</div>':'')+(section.title?'<h2>'+esc(section.title)+'</h2>':'')+(section.text?'<div class="skin-text-copy">'+formatGuideBody(section.text)+'</div>':'')+'</section>';
+ if(section.type==='image-block'){const image=safeUrl(section.image,true);return '<section class="section skin-image-block" id="'+esc(section.id)+'"'+sectionStyle+'>'+(image?'<img src="'+esc(image)+'" alt="'+esc(section.title||'Skincare editorial image')+'" loading="lazy" style="width:'+Number(section.imageWidth||70)+'%;max-width:100%;height:auto;object-fit:cover;object-position:'+Number(section.imagePositionX??50)+'% '+Number(section.imagePositionY??50)+'%;display:block;margin:'+((section.imageAlignment||'center')==='left'?'0 auto 0 0':(section.imageAlignment||'center')==='right'?'0 0 0 auto':'0 auto')+'">':'')+(section.eyebrow?'<div class="eyebrow">'+esc(section.eyebrow)+'</div>':'')+(section.title?'<h2>'+esc(section.title)+'</h2>':'')+(section.text?'<div class="skin-text-copy">'+formatGuideBody(section.text)+'</div>':'')+'</section>';}
+ if(section.type==='journal-grid')return '<section class="section skin-journal-block" id="'+esc(section.id)+'"'+sectionStyle+'><div class="section-head"><div><div class="eyebrow">'+esc(section.eyebrow||'The journal')+'</div><h2>'+esc(section.title||'Little notes for everyday skin')+'</h2><p>'+esc(section.text||'Helpful notes for building a routine at your own pace.')+'</p></div></div><a class="btn secondary" href="/journal">Explore the skincare journal ↗</a></section>';
  if(section.type==='hero'){
-  const firstGrid=siteConfig.sections.find(x=>x.visible!==false&&['product-grid','featured-products'].includes(x.type));
-  const gridTarget=firstGrid?.id||'edit';
-  return '<section class="hero" id="'+esc(section.id)+'"><div class="hero-inner" data-hero-image><div class="hero-copy"><div class="eyebrow">'+esc(siteConfig.heroEyebrow||section.eyebrow||'The everyday skin edit')+'</div><h1>'+esc(siteConfig.heroTitle||section.title||'Care that feels like you.')+'</h1><p>'+esc(siteConfig.heroDescription||section.text||'Thoughtful skincare finds, curated for real routines.')+'</p><div class="actions"><a class="btn" href="#'+esc(gridTarget)+'">'+esc(siteConfig.heroButtonLabel||'Explore the edit')+' ↓</a><a class="btn secondary" href="https://www.pinterest.com/" target="_blank" rel="noopener noreferrer">Find us on Pinterest ↗</a></div></div></div></section>';
+  const firstGrid=siteConfig.sections.find(x=>x.visible!==false&&['product-grid','featured-products'].includes(x.type)),gridTarget=firstGrid?.id||'edit';
+  return '<section class="hero" id="'+esc(section.id)+'"'+sectionStyle+'><div class="hero-inner" data-hero-image><div class="hero-copy"><div class="eyebrow">'+esc(siteConfig.heroEyebrow||section.eyebrow||'The everyday skin edit')+'</div><h1>'+esc(siteConfig.heroTitle||section.title||'Care that feels like you.')+'</h1><p>'+esc(siteConfig.heroDescription||section.text||'Thoughtful skincare finds, curated for real routines.')+'</p><div class="actions"><a class="btn" href="#'+esc(gridTarget)+'">'+esc(siteConfig.heroButtonLabel||'Explore the edit')+' ↓</a><a class="btn secondary" href="https://www.pinterest.com/" target="_blank" rel="noopener noreferrer">Find us on Pinterest ↗</a></div></div></div></section>';
  }
  if(section.type==='editorial'){
   const copy=siteConfig.approachBody||section.text||'Always check the retailer’s ingredient list, product directions, and suitability for your own skin before buying.';
-  return '<section class="section" id="'+esc(section.id)+'"><div class="note"><div class="section-copy"><div class="eyebrow">'+esc(siteConfig.approachEyebrow||section.eyebrow||'A gentler way to discover')+'</div><h2>'+esc(siteConfig.approachTitle||section.title||'Good finds. Clear choices.')+'</h2></div><div><p>'+esc(copy)+'</p><a class="btn secondary" href="#edit">Browse the edit ↑</a></div></div></section>';
+  return '<section class="section" id="'+esc(section.id)+'"'+sectionStyle+'><div class="note"><div class="section-copy"><div class="eyebrow">'+esc(siteConfig.approachEyebrow||section.eyebrow||'A gentler way to discover')+'</div><h2>'+esc(siteConfig.approachTitle||section.title||'Good finds. Clear choices.')+'</h2></div><div><p>'+esc(copy)+'</p><a class="btn secondary" href="#edit">Browse the edit ↑</a></div></div></section>';
  }
  if(section.type==='category-grid')return renderCategoryBrowse(section);
- const list=filteredProducts(section);
- const anchor=section.type==='featured-products'?'featured-edit':'edit';
+ const list=filteredProducts(section),anchor=section.type==='featured-products'?'featured-edit':'edit';
  const searchMarkup=showSearch?'<input class="search skin-search-input" id="skinSearch" type="search" placeholder="Search skincare and beauty…" aria-label="Search skincare products" value="'+esc(searchQuery)+'">':'';
- return '<section class="section product-grid-section" id="'+esc(section.id||anchor)+'"><div class="section-head"><div><div class="eyebrow">'+esc(section.eyebrow||(section.type==='featured-products'?'Thoughtfully chosen':'Curated, not crowded'))+'</div><h2>'+esc(section.title||'What’s in the edit')+'</h2><p class="section-description">'+esc(section.text||'Explore skincare finds and useful routine essentials.')+'</p>'+(activeCategory?'<button class="category-link" onclick="selectCategory(\'\')">Clear active category ×</button>':'')+'</div>'+searchMarkup+'</div><div class="grid" data-columns="'+Number(section.columns||4)+'">'+(list.length?list.map(renderProductCard).join(''):'<div class="empty">No skincare picks match this section yet. Check the product placement and publication settings in Nuvora Admin.</div>')+'</div></section>';
+ return '<section class="section product-grid-section" id="'+esc(section.id||anchor)+'"'+sectionStyle+'><div class="section-head"><div><div class="eyebrow">'+esc(section.eyebrow||(section.type==='featured-products'?'Thoughtfully chosen':'Curated, not crowded'))+'</div><h2>'+esc(section.title||'What’s in the edit')+'</h2><p class="section-description">'+esc(section.text||'Explore skincare finds and useful routine essentials.')+'</p>'+(activeCategory?'<button class="category-link" onclick="selectCategory(\'\')">Clear active category ×</button>':'')+'</div>'+searchMarkup+'</div><div class="grid" data-columns="'+Number(section.columns||4)+'">'+(list.length?list.map(renderProductCard).join(''):'<div class="empty">No skincare picks match this section yet. Check the product placement and publication settings in Nuvora Admin.</div>')+'</div></section>';
 }
 function applyTemplate(){
  document.body.classList.remove('template-clean-minimal','template-sage-botanical','guide-compact','guide-minimal');
@@ -249,19 +312,15 @@ function renderPage(){
 function selectCategory(id){activeCategory=String(id||'');renderPage();const grid=document.querySelector('.product-grid-section');grid?.scrollIntoView({behavior:'smooth',block:'start'});}
 function trackClick(id){try{fetch('/api/analytics/events',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({event_name:'affiliate_outbound_click',product_id:id,metadata:{source:'nuvora-skin'}})}).catch(()=>{});}catch{}}
 function formatGuideBody(value,isList=false){
- const lines=String(value||'').replace(/\r\n?/g,'\n').split('\n').map(line=>line.trim()).filter(Boolean);
- if(!lines.length)return '';
- const bullet=/^(?:[•●▪◦*-]|\d+[.)])\s+/;
- if(isList){
-  const items=textLines(value).map(line=>line.replace(bullet,'').trim()).filter(Boolean);
-  return items.length?'<ul class="guide-list">'+items.map(line=>'<li>'+esc(line)+'</li>').join('')+'</ul>':'';
- }
- if(lines.some(line=>bullet.test(line))){
-  const items=lines.filter(line=>bullet.test(line)).map(line=>line.replace(bullet,'').trim()).filter(Boolean);
-  const intro=lines.filter(line=>!bullet.test(line));
-  return (intro.length?'<p class="guide-copy">'+intro.map(esc).join('<br>')+'</p>':'')+(items.length?'<ul class="guide-list">'+items.map(line=>'<li>'+esc(line)+'</li>').join('')+'</ul>':'');
- }
- return '<p class="guide-copy">'+lines.map(esc).join('<br>')+'</p>';
+ const raw=String(value||'').replace(/<br\s*\/?\s*>/gi,'\n').replace(/<\/(?:p|div|li|h[1-6])\s*>/gi,'\n').replace(/<li\b[^>]*>/gi,'• ').replace(/<[^>]+>/g,'').replace(/&nbsp;/gi,' ').replace(/&amp;/gi,'&').replace(/\r\n?/g,'\n').trim();
+ if(!raw)return '';
+ const bullet=/^(?:[•●▪◦‣⁃*-]|\d+[.)])\s+/;
+ const lines=raw.split('\n').map(line=>line.replace(/[\t\u00a0 ]+/g,' ').trim());
+ const blocks=[];let paragraphs=[],items=[];
+ const flushParagraph=()=>{if(paragraphs.length){blocks.push('<p class="guide-copy">'+paragraphs.map(esc).join(' ')+'</p>');paragraphs=[];}};
+ const flushItems=()=>{if(items.length){blocks.push('<ul class="guide-list">'+items.map(line=>'<li>'+esc(line.replace(bullet,'').trim())+'</li>').join('')+'</ul>');items=[];}};
+ for(const line of lines){if(!line){flushParagraph();flushItems();continue;}if(isList||bullet.test(line)){flushParagraph();items.push(line);continue;}flushItems();paragraphs.push(line);}
+ flushParagraph();flushItems();return blocks.join('');
 }
 function detailBlock(title,body,isList=false,empty=''){
  if(!body&&!empty)return '';
