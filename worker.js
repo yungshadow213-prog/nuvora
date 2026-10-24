@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-public-retailer-ratings-api-r41',
+          release:'nuvora-2026-10-24-skin-studio-publish-fix-r42',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -321,6 +321,11 @@ async function publishProductRecord(env,id,patch={}){
   const merged={...current,...patch,published:true,destination_url:destination};
   if(!merged.slug||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(String(merged.slug)))merged.slug=makeProductSlug(merged.name||'product');
   if(!merged.destination_url)return {ok:false,status:400,error:'This product has no valid retailer URL. Import the retailer link or provide a destination URL before publishing.'};
+  // Affiliate skincare listings belong in the Finds catalog, not direct-checkout Shop.
+  // Normalize legacy Skin Studio products at publish time instead of making the user
+  // discover an internal catalog-type rule.
+  const retailerIdentity=[merged.retailer,merged.source_type,merged.destination_url,merged.amazon_source_url,merged.source_url,merged.temu_source_url].filter(Boolean).join(' ').toLowerCase();
+  if(merged.kind==='shop'&&/\\b(?:amazon|temu)\\b/i.test(retailerIdentity))merged.kind='find';
   const validation=validateProduct(merged);
   if(validation)return {ok:false,status:400,error:validation};
   const amazonIdentity=asinFromUrl(merged.destination_url)||asinFromUrl(merged.amazon_source_url)||String(merged.amazon_asin||'').trim();
@@ -332,7 +337,7 @@ async function publishProductRecord(env,id,patch={}){
     const duplicate=(await duplicateResponse.json())?.[0];
     if(duplicate)return {ok:false,status:409,error:'This Amazon product is already published as “'+cleanText(duplicate.name,180)+'”. Unpublish or edit the existing listing instead of publishing a duplicate.'};
   }
-  const write={published:true,slug:merged.slug,destination_url:destination,updated_at:new Date().toISOString()};
+  const write={published:true,slug:merged.slug,kind:merged.kind,destination_url:destination,updated_at:new Date().toISOString()};
   if(patch.amazon_source_url||current.amazon_source_url)write.amazon_source_url=patch.amazon_source_url||current.amazon_source_url;
   const result=await supabaseProductWrite(env,'PATCH',write,'?id=eq.'+encodeURIComponent(id));
   if(!result.ok)return {ok:false,status:400,error:await result.text()};
