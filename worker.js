@@ -2020,71 +2020,49 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
 
       if(url.pathname==='/api/admin/ai/image'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        if(!env.GEMINI_API_KEY)return json({error:'Gemini image generation is not configured yet. Add GEMINI_API_KEY as a Cloudflare Worker secret.'},503);
         const form=await request.formData();
         const prompt=cleanText(form.get('prompt'),5000);
         const size=String(form.get('size')||'1024x1024');
         const source=form.get('image');
         const imageUrl=String(form.get('image_url')||'').trim();
         if(!prompt)return json({error:'An image prompt is required.'},400);
-        if(!env.AI)return json({error:'Nuvora AI is unavailable because the Cloudflare Workers AI binding is not active on this deployment. Deploy the current Nuvora Worker.'},503);
-        const dimensions={'1024x1024':[1024,1024],'1536x1024':[1536,1024],'1024x1536':[1024,1536]};
-        const [width,height]=dimensions[size]||dimensions['1024x1024'];
+        const aspectRatio=({'1024x1024':'1:1','1536x1024':'3:2','1024x1536':'2:3'})[size]||'1:1';
         try{
-          let referenceBytes=null;
-          if(source&&typeof source.arrayBuffer==='function'){
+          let referenceBytes=null,referenceMimeType='image/png';
+          if(source&&typeof source.arrayBuffer==='function'&&source.size>0){
+            referenceMimeType=String(source.type||'image/png');
+            if(!referenceMimeType.toLowerCase().startsWith('image/'))return json({error:'Upload a valid image file to use as the product reference.'},400);
             referenceBytes=new Uint8Array(await source.arrayBuffer());
           }else if(imageUrl){
             let referenceResponse;
             try{referenceResponse=await fetch(imageUrl,{redirect:'follow',headers:{accept:'image/avif,image/webp,image/apng,image/*,*/*;q=0.8'}})}
-            catch(fetchError){return json({error:'Nuvora could not fetch the product image from its source. Upload the image to Nuvora first, then generate again.'},422)}
-            if(!referenceResponse.ok)return json({error:'Nuvora could not fetch the product image from its source (HTTP '+referenceResponse.status+'). Upload the image to Nuvora first, then generate again.'},422);
-            const contentType=referenceResponse.headers.get('content-type')||'';
-            if(!contentType.toLowerCase().startsWith('image/'))return json({error:'The product image URL did not return an image. Upload the image to Nuvora first, then generate again.'},422);
+            catch(fetchError){return json({error:'Gemini could not fetch the product image. Upload the image to Nuvora first, then generate again.'},422)}
+            if(!referenceResponse.ok)return json({error:'Gemini could not fetch the product image (HTTP '+referenceResponse.status+'). Upload the image to Nuvora first, then generate again.'},422);
+            referenceMimeType=referenceResponse.headers.get('content-type')||'';
+            if(!referenceMimeType.toLowerCase().startsWith('image/'))return json({error:'The product image URL did not return an image. Upload the image to Nuvora first, then generate again.'},422);
             referenceBytes=new Uint8Array(await referenceResponse.arrayBuffer());
           }
-          if(referenceBytes&&referenceBytes.byteLength>6*1024*1024)return json({error:'Reference image must be 6 MB or smaller for Nuvora AI.'},400);
-
-          const negative='fake logos, watermarks, misleading text, extra products, distorted product, duplicate product, low quality';
-          let result;
-          if(referenceBytes){
-            // Cloudflare's newer FLUX.2 models accept reference images through
-            // multipart form data. SDXL is intentionally not used for reference
-            // images here because the deployed account is returning 3030 for
-            // SDXL's image tensor input.
-            const form=new FormData();
-            form.append('prompt',prompt);
-            form.append('input_image_0',new Blob([referenceBytes],{type:'image/png'}),'reference.png');
-            form.append('width',String(width));
-            form.append('height',String(height));
-            form.append('guidance','3.5');
-            const formResponse=new Response(form);
-            result=await env.AI.run('@cf/black-forest-labs/flux-2-klein-4b',{
-              multipart:{
-                body:formResponse.body,
-                contentType:formResponse.headers.get('content-type')||'multipart/form-data'
-              }
-            });
-          }else{
-            result=await env.AI.run('@cf/stabilityai/stable-diffusion-xl-base-1.0',{
-              prompt,negative_prompt:negative,width,height,num_steps:20,guidance:7.5
-            });
+          if(referenceBytes&&referenceBytes.byteLength>6*1024*1024)return json({error:'Reference image must be 6 MB or smaller.'},400);
+          const input=[{type:'text',text:prompt}];
+          if(referenceBytes)input.push({type:'image',data:bytesToBase64(referenceBytes),mime_type:referenceMimeType});
+          const model=String(env.GEMINI_IMAGE_MODEL||'gemini-3.1-flash-image').replace(/[^a-zA-Z0-9._-]/g,'');
+          const response=await fetch('https://generativelanguage.googleapis.com/v1beta/interactions',{
+            method:'POST',
+            headers:{'x-goog-api-key':String(env.GEMINI_API_KEY),'content-type':'application/json'},
+            body:JSON.stringify({model,input,response_format:{type:'image',mime_type:'image/png',aspect_ratio:aspectRatio,image_size:'1K'}})
+          });
+          const payload=await response.json().catch(()=>({}));
+          if(!response.ok){
+            const providerMessage=String(payload?.error?.message||payload?.message||'').slice(0,240);
+            return json({error:'Gemini image generation failed ('+response.status+'). '+(providerMessage||'Check the Gemini API key and image-model access.')},502);
           }
-          const bytes=await aiResultBytes(result);
-          return json({ok:true,provider:'cloudflare',image:'data:image/png;base64,'+bytesToBase64(bytes)});
+          const imageData=String(payload?.output_image?.data||payload?.output?.find?.(item=>item?.type==='image')?.data||'');
+          const mime=String(payload?.output_image?.mime_type||payload?.output?.find?.(item=>item?.type==='image')?.mime_type||'image/png');
+          if(!imageData)return json({error:'Gemini returned no image. Try a simpler prompt or a different reference image.'},502);
+          return json({ok:true,provider:'gemini',model,image:'data:'+(mime.startsWith('image/')?mime:'image/png')+';base64,'+imageData});
         }catch(e){
-          const code=String(e?.code||e?.error?.code||'');
-          const status=Number(e?.status||e?.error?.status||0);
-          const message=String(e?.message||e?.error?.message||'');
-          if(code==='3036'||status===429&&/daily|allocation|neurons/i.test(message)){
-            return json({error:'Nuvora AI has reached Cloudflare’s AI allocation. Please try again after the allowance resets.'},429);
-          }
-          if(code==='3040'||status===429){
-            return json({error:'Cloudflare Workers AI is temporarily at capacity. Please try the image again later.'},429);
-          }
-          if(code==='5018'||/not allowed to access.*runwayml\/stable-diffusion-v1-5-img2img/i.test(message)){
-            return json({error:'Nuvora AI reference-image generation is unavailable for the configured Cloudflare model on this deployment. The current image workflow uses FLUX.2 Klein.'},403);
-          }
-          return json({error:'Nuvora AI image generation failed: '+(message||'Cloudflare Workers AI returned an unknown error.')},502);
+          return json({error:'Gemini image generation failed: '+String(e?.message||e).slice(0,300)},502);
         }
       }
 
@@ -2180,41 +2158,53 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
 
       if(url.pathname==='/api/admin/ai/copy'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
-        const input=await body(request,64*1024);
-        const product=input.product||{};
-        if(!env.AI)return json({error:'Nuvora AI is unavailable because the Cloudflare Workers AI binding is not active on this deployment. Deploy the current Nuvora Worker.'},503);
-        const prompt=`Create polished ecommerce copy for Nuvora. Return ONLY valid JSON with keys: title, description, features, seo_title, seo_description, social_caption. Keep claims factual and do not invent specifications, certifications, guarantees, discounts, or performance claims. Product data: ${JSON.stringify(product)}`;
+        if(!env.GEMINI_API_KEY)return json({error:'Gemini copy generation is not configured yet. Add GEMINI_API_KEY as a Cloudflare Worker secret.'},503);
+        const input=await body(request,64*1024),product=input.product||{};
+        const schema={
+          type:'object',
+          properties:{
+            title:{type:'string'},
+            description:{type:'string'},
+            features:{type:'array',items:{type:'string'}},
+            seo_title:{type:'string'},
+            seo_description:{type:'string'},
+            social_caption:{type:'string'}
+          },
+          required:['title','description','features','seo_title','seo_description','social_caption']
+        };
+        const prompt='Write polished ecommerce copy from the supplied product facts. Do not invent specifications, certifications, guarantees, discounts, ingredient details, performance claims, or medical claims. If a detail is not supported, omit it. Keep the description readable and concise; features should be short bullet items. Return only the requested structured fields. Product data: '+JSON.stringify(product);
         try{
-          const response=await env.AI.run('@cf/google/gemma-4-26b-a4b-it',{
-            messages:[
-              {role:'system',content:'You write accurate ecommerce listings. Output only valid JSON with the requested keys. Never invent product facts.'},
-              {role:'user',content:prompt}
-            ],
-            chat_template_kwargs:{enable_thinking:false}
+          const model=String(env.GEMINI_MODEL||'gemini-3.8-flash').replace(/[^a-zA-Z0-9._-]/g,'');
+          const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',{
+            method:'POST',
+            headers:{'x-goog-api-key':String(env.GEMINI_API_KEY),'content-type':'application/json'},
+            body:JSON.stringify({
+              contents:[{role:'user',parts:[{text:prompt}]}],
+              generationConfig:{responseFormat:{text:{mimeType:'APPLICATION_JSON',schema}}}
+            })
           });
-          const raw=String(response?.response||response?.choices?.[0]?.message?.content||'').trim();
-          const clean=raw.replace(/^\`\`\`(?:json)?\s*/i,'').replace(/\s*\`\`\`$/,'').trim();
-          let result;
-          try{result=JSON.parse(clean)}catch{
-            const match=clean.match(/\{[\s\S]*\}/);
-            result=match?JSON.parse(match[0]):{title:clean};
+          const payload=await response.json().catch(()=>({}));
+          if(!response.ok){
+            const providerMessage=String(payload?.error?.message||'').slice(0,240);
+            return json({error:'Gemini copy generation failed ('+response.status+'). '+(providerMessage||'Check the Gemini API key and model configuration.')},502);
           }
-          return json({ok:true,provider:'cloudflare',...result});
-        }catch(e){
-          const code=String(e?.code||e?.error?.code||'');
-          const status=Number(e?.status||e?.error?.status||0);
-          const message=String(e?.message||e?.error?.message||'');
-          if(code==='3036'||status===429&&/daily|allocation|neurons/i.test(message)){
-            return json({error:'Nuvora AI has reached Cloudflare’s free daily AI allocation. The free allowance resets daily; no OpenAI credits are required for this feature.'},429);
-          }
-          if(code==='3040'||status===429){
-            return json({error:'Cloudflare Workers AI is temporarily at capacity. Please try the AI again later.'},429);
-          }
-          return json({error:'Nuvora AI listing polish failed: '+(message||'Cloudflare Workers AI returned an unknown error.')},502);
-        }
+          const raw=(payload?.candidates?.[0]?.content?.parts||[]).map(part=>String(part.text||'')).join('').trim();
+          if(!raw)return json({error:'Gemini returned no listing copy. Try again.'},502);
+          let result;try{result=JSON.parse(raw);}catch{return json({error:'Gemini returned an invalid structured response. Try again.'},502);}
+          return json({
+            ok:true,provider:'gemini',
+            title:cleanText(result.title,180),
+            description:cleanMultilineText(result.description,12000),
+            features:Array.isArray(result.features)?result.features.map(item=>cleanText(item,500)).filter(Boolean).slice(0,20):[],
+            seo_title:cleanText(result.seo_title,180),
+            seo_description:cleanText(result.seo_description,320),
+            social_caption:cleanMultilineText(result.social_caption,2000)
+          });
+        }catch(e){return json({error:'Gemini listing copy failed: '+String(e?.message||e).slice(0,300)},502);}
       }
 
       // Unknown API routes must stay JSON 404s; only browser routes use the SPA shell.
+// Unknown API routes must stay JSON 404s; only browser routes use the SPA shell.
       if(url.pathname.startsWith('/api/')) return json({error:'API route not found.'},404);
       // Let Cloudflare Assets serve the SPA shell for every non-API route.
       // This is required for client-side routes such as /shop, /finds, /cart, etc.
