@@ -2487,6 +2487,12 @@ function skinMarkDirty(message='Draft updated. Publish when you are ready.'){
  if(label){label.textContent='Unsaved changes';label.dataset.status='dirty';}
  skinBuilderMessage(message,'info');queueSkinDraftAutosave();syncSkinPreviewActionbar();
 }
+function saveSkinStudioChangeImmediately(successMessage){
+ if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
+ if(!skinSiteConfigLoaded||!skinBuilderConfig){skinBuilderMessage('This change is not saved because the page draft has not loaded. Reload Skin Studio before retrying.','error');return Promise.resolve(false);}
+ skinBuilderMessage('Saving this change to your page draft…','info');
+ return persistSkinSiteDraft(false).then(()=>{if(successMessage)skinBuilderMessage(successMessage,'success');return true;}).catch(()=>false);
+}
 function skinSetSavedLabel(message='Saved version loaded'){
  const label=document.getElementById('skinStudioSaveLabel');
  if(label){label.textContent=message;label.dataset.status='saved';}
@@ -2909,6 +2915,7 @@ function updateSkinSection(index,key,value,fromPreview=false){
  if(['type','visible','category_id','filter','columns','product_ids','backgroundColor'].includes(key))renderSkinStudioAll();
  else {renderSkinBuilderSections();renderSkinLibrary();if(fromPreview)renderSkinSelectedInspector();}
  queueSkinStudioPreview();
+ if(fromPreview)void saveSkinStudioChangeImmediately('Preview edit saved and verified in the page draft.');
 }
 function selectFirstSkinSection(){const section=skinSectionsFor()[0];if(section)selectSkinItem('section',section.id);else openSkinAdd('section');}
 function focusSkinInspector(){const panel=document.querySelector('.studio-right-panel');if(panel)panel.scrollTo({top:0,behavior:'smooth'});const root=document.getElementById('skinSelectedInspector');if(root)root.scrollIntoView({block:'nearest',behavior:'smooth'});if(!skinStudioSelection||skinStudioSelection.type==='none')selectFirstSkinSection();}
@@ -2982,8 +2989,8 @@ function addSkinProductToSection(productId,targetId,pageId){
   ?'Product placed in “'+(sec.title||'Product grid')+'”. The preview is updating. Publish the page changes to make this placement public.'
   :'Product added to “'+(sec.title||'Product grid')+'” in your draft. Publish this product before it can appear in the public storefront; the page placement will stay in your draft.';
  skinMarkDirty(message);renderSkinStudioAll();sendSkinStudioPreview();queueSkinStudioPreview();
- // A placement is a structural edit: persist the page draft immediately so it survives refresh even if the user leaves before the autosave debounce.
- void saveSkinSiteDraft();
+ // Structural changes are verified immediately so leaving the page cannot lose a placement.
+ void saveSkinStudioChangeImmediately(product.published?'Product placement saved to the page draft. Publish page changes to make it public.':'Product placement saved to the page draft. Publish the product and then publish page changes to make it public.');
 }
 function moveSkinProductInSection(productId,targetProductId,sectionId,pageId){
  const sections=skinSectionsFor(pageId),sec=sections.find(s=>String(s.id)===String(sectionId));
@@ -2994,6 +3001,7 @@ function moveSkinProductInSection(productId,targetProductId,sectionId,pageId){
  if(from<0||to<0||from===to)return;
  const [item]=ids.splice(from,1);ids.splice(ids.indexOf(String(targetProductId)),0,item);sec.product_ids=ids.slice(0,60);
  skinStudioPageId=pageId||'home';skinStudioSelection={type:'section',id:String(sectionId)};skinMarkDirty('Product order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
+ void saveSkinStudioChangeImmediately('Product order saved and verified in the page draft. Publish page changes to make it public.');
 }
 function requestSkinSectionImageUpload(sectionId,pageId='home'){
  skinStudioPageId=pageId||'home';
@@ -3098,7 +3106,7 @@ function wireSkinStudioCanvas(){
     sections.splice(currentIndex>=0?currentIndex+1:sections.length,0,section);
     skinStudioSelection={type:'section',id};
     skinMarkDirty('Text block added after the selected section. Edit it directly in the preview or use the inspector.');
-    renderSkinStudioAll();queueSkinStudioPreview();return;
+    renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('Text block added and saved to the page draft.');return;
    }
    if(data.type==='nuvora-skin-studio-request-add-product'){
     skinStudioPageId=data.pageId||'home';skinStudioPendingProductTarget={sectionId:String(data.sectionId||''),pageId:skinStudioPageId};skinStudioSelection={type:'section',id:String(data.sectionId||'')};
@@ -3126,7 +3134,7 @@ function wireSkinStudioCanvas(){
      const x=clamp(data.imagePositionX),y=clamp(data.imagePositionY);
      if(Math.abs(Number(sec.imagePositionX??50)-x)<1&&Math.abs(Number(sec.imagePositionY??50)-y)<1)return;
      sec.imagePositionX=x;sec.imagePositionY=y;skinStudioPageId=pageId;skinStudioSelection={type:'section',id:String(sec.id)};
-     skinMarkDirty('Image position updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();return;
+     skinMarkDirty('Image position updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('Image position saved and verified in the page draft.');return;
     }
     if(data.type==='nuvora-skin-studio-select-section'){
     skinStudioPageId=data.pageId||'home';
@@ -3147,7 +3155,7 @@ function wireSkinStudioCanvas(){
     if(from<0||to<0||from===to)return;
     const [section]=sections.splice(from,1);sections.splice(to,0,section);
     skinStudioPageId=data.pageId||'home';skinStudioSelection={type:'section',id:String(section.id)};
-    skinMarkDirty('Page section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();return;
+    skinMarkDirty('Page section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('Page section order saved and verified in the draft.');return;
    }
    if(data.type==='nuvora-skin-studio-add-product'){addSkinProductToSection(data.productId,data.targetId,data.pageId||'home');return;}
    if(data.type==='nuvora-skin-studio-move-product'){moveSkinProductInSection(data.productId,data.targetProductId,data.sectionId,data.pageId||'home');return;}
@@ -3194,7 +3202,7 @@ async function uploadSkinStudioImage(input,type,id,explicitFile=null){
    const heroField=document.getElementById('skinCfgHeroImage');if(heroField)heroField.value=data.publicUrl;
    skinMarkDirty('Hero image added to the draft.');renderSkinStudioAll();queueSkinStudioPreview();
   }
-  skinBuilderMessage('Image uploaded and added to this draft. Save draft to keep it; publish when ready.','success');
+  await saveSkinStudioChangeImmediately('Image uploaded and saved to the page draft. Publish when ready.');
  }catch(e){skinBuilderMessage('Image upload failed: '+(e.message||e),'error');}
  finally{if(label&&original)label.textContent=original;if(input)input.value='';}
 }
