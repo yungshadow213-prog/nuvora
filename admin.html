@@ -3286,6 +3286,10 @@ async function saveSkinSiteConfig(button){
   // Wait for any in-flight autosave to finish before clearing the draft. Otherwise a
   // late draft PATCH could recreate a draft after the published config has changed.
   if(skinDraftSavePromise){try{await skinDraftSavePromise;}catch(e){/* The publish request below sends the current editor state directly. */}}
+  // A completed autosave can enqueue a follow-up timer in its finally block.
+  // Cancel it after awaiting the promise so it cannot recreate a stale draft
+  // after this publish request clears skin_site_draft.
+  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
   collectSkinConfigFields();
   const validation=skinConfigValidationMessage();
   if(validation){skinBuilderMessage(validation,'error');return;}
