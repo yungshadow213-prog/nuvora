@@ -235,6 +235,32 @@ function filteredProducts(section){
  if(q)list=list.filter(p=>[p.name,p.brand,p.description,p.store_description,p.category?.name,p.skin_concerns,p.skin_types].filter(Boolean).join(' ').toLowerCase().includes(q));
  return list;
 }
+function skinSectionStyle(section){
+ const vars=[];
+ if(['left','center','right'].includes(section.textAlignment))vars.push('--studio-text-align:'+section.textAlignment);
+ if(Number.isFinite(Number(section.titleFontSize))&&Number(section.titleFontSize)>=20&&Number(section.titleFontSize)<=88)vars.push('--studio-title-size:'+Number(section.titleFontSize)+'px');
+ if(Number.isFinite(Number(section.bodyFontSize))&&Number(section.bodyFontSize)>=10&&Number(section.bodyFontSize)<=26)vars.push('--studio-body-size:'+Number(section.bodyFontSize)+'px');
+ if(Number.isFinite(Number(section.sectionPadding))&&Number(section.sectionPadding)>=16&&Number(section.sectionPadding)<=160)vars.push('--studio-section-padding:'+Number(section.sectionPadding)+'px');
+ if(/^#[0-9a-f]{6}$/i.test(String(section.backgroundColor||'')))vars.push('--studio-bg:'+section.backgroundColor);
+ return vars.length?' data-studio-style="true" style="'+esc(vars.join(';'))+'"':'';
+}
+function skinRoutineProducts(type='All'){
+ if(type==='All')return products;
+ const wanted=String(type).toLowerCase();
+ return products.filter(p=>[p.skin_types,p.best_for,p.skin_concerns,p.description,p.store_description,p.benefits,p.features].filter(Boolean).join(' ').toLowerCase().includes(wanted));
+}
+function renderRoutineFinder(section){
+ const types=['All','Oily','Dry','Combination','Normal','Sensitive'],initial=skinRoutineProducts('All').slice(0,4);
+ return '<section class="section skin-routine-finder" id="'+esc(section.id)+'"'+skinSectionStyle(section)+'><div class="section-head"><div><div class="eyebrow">'+esc(section.eyebrow||'Your skin, your pace')+'</div><h2>'+esc(section.title||'Find your routine')+'</h2><p>'+esc(section.text||'Choose a skin type to browse relevant skincare finds. Check each product label for suitability.')+'</p></div></div><div class="routine-type-buttons" role="group" aria-label="Filter by skin type">'+types.map(type=>'<button type="button" class="routine-type-button '+(type==='All'?'active':'')+'" data-routine-type="'+esc(type)+'" data-routine-section="'+esc(section.id)+'" aria-pressed="'+(type==='All'?'true':'false')+'" onclick="selectRoutineSkin('+JSON.stringify(type)+','+JSON.stringify(String(section.id))+')">'+esc(type==='All'?'All skin types':type)+'</button>').join('')+'</div><p class="routine-guidance" id="routine-guidance-'+esc(section.id)+'">Browse published skincare finds. Check each product label for suitability.</p><div class="grid routine-products-grid" id="routine-results-'+esc(section.id)+'">'+(initial.length?initial.map(renderProductCard).join(''):'<div class="empty">Skincare picks will appear here when matching products are published.</div>')+'</div></section>';
+}
+function selectRoutineSkin(type,sectionId){
+ const root=document.getElementById('routine-results-'+sectionId);if(!root)return;
+ document.querySelectorAll('[data-routine-section]').forEach(button=>{if(button.dataset.routineSection!==String(sectionId))return;const active=button.dataset.routineType===type;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});
+ const matches=skinRoutineProducts(type).slice(0,4);
+ root.innerHTML=matches.length?matches.map(renderProductCard).join(''):'<div class="empty">No published products are currently tagged for '+esc(type)+' skin. Check back as the guide library grows.</div>';
+ const note=document.getElementById('routine-guidance-'+sectionId);if(note)note.textContent=type==='All'?'Browse published skincare finds. Check each product label for suitability.':'Browse products whose saved details mention '+type.toLowerCase()+' skin. Suitability can vary; check the product label before use.';
+}
+function selectSkinRoutine(type){activeSkinRoutine=['All','Normal','Dry','Oily','Combination','Sensitive'].includes(type)?type:'All';renderPage();}
 function productBrowseCategory(p){
  const text=[p.name,p.brand,p.benefits,p.features,p.description,p.store_description,p.ingredients,p.skin_concerns].filter(Boolean).join(' ').toLowerCase();
  if(/sunscreen|sunblock|\\bspf\\b|sun protection/.test(text))return {key:'sun-protection',name:'Sun protection'};
