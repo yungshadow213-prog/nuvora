@@ -1313,7 +1313,7 @@ function openRetailerLink(url){
   try{const u=new URL(value);if(!/^https?:$/.test(u.protocol))throw new Error('Invalid retailer URL');const a=document.createElement('a');a.href=u.toString();a.target='_blank';a.rel='noopener noreferrer';a.style.display='none';document.body.appendChild(a);a.click();a.remove();}catch(e){setAdminStatus('The retailer URL is invalid.');}
 }
 function updateCounts(){document.getElementById('shopCount').textContent=adminProducts.filter(p=>p.kind==='shop'&&p.published).length;document.getElementById('findCount').textContent=adminProducts.filter(p=>p.kind==='find'&&p.published).length;document.getElementById('learnCount').textContent=adminProducts.filter(p=>p.kind==='learn'&&p.published).length;document.getElementById('draftCount').textContent=adminProducts.filter(p=>!p.published).length;}
-async function liveAdminProducts(){adminProducts=await api('/api/admin/products');renderProducts();renderSkinProducts();fillSocialProducts();}
+async function liveAdminProducts(){adminProducts=await api('/api/admin/products');renderProducts();renderSkinProducts();fillSocialProducts();if(document.body.classList.contains('skin-studio-fullpage'))sendSkinStudioPreview();}
 let shopifyProducts=[];
 function openShopifyImport(){
   document.body.classList.add('admin-workspace-open');
@@ -2909,7 +2909,8 @@ function requestSkinSectionImageUpload(sectionId,pageId='home'){
 function sendSkinStudioPreview(){
  const frame=document.getElementById('skinStudioPreview');
  if(!frame||!skinBuilderConfig||!frame.contentWindow)return;
- frame.contentWindow.postMessage({type:'nuvora-skin-studio-preview',config:skinBuilderConfig},SKIN_CLIENT_ORIGIN);
+ // Include unpublished admin products so the preview can render drafts before release.
+ frame.contentWindow.postMessage({type:'nuvora-skin-studio-preview',config:skinBuilderConfig,products:Array.isArray(adminProducts)?adminProducts:[]},SKIN_CLIENT_ORIGIN);
 }
 function reloadSkinStudioPreview(){
  if(!document.body.classList.contains('skin-studio-fullpage')||!skinBuilderConfig)return;
@@ -3125,7 +3126,8 @@ async function persistSkinSiteDraft(quiet=false){
 async function saveSkinSiteDraft(){
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
  const btn=document.querySelector('button[onclick="saveSkinSiteDraft()"]');if(btn){btn.disabled=true;btn.textContent='Saving…';}
- try{await persistSkinSiteDraft(false);}catch(e){}
+ try{await persistSkinSiteDraft(false);}
+ catch(e){skinBuilderMessage('Save draft failed: '+(e?.message||'The server did not confirm the save.')+'. Your published storefront has not been changed.','error');}
  finally{if(btn){btn.disabled=false;btn.textContent='Save draft';}}
 }
 async function saveSkinSiteConfig(){
