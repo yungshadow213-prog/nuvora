@@ -481,7 +481,8 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
 .catalog-health-card.healthy strong{color:#326744}
 @media(max-width:900px){.catalog-health-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.catalog-health-grid{gap:7px}.catalog-health-card{padding:12px 11px;border-radius:12px}.catalog-health-card strong{font-size:21px}.catalog-health-card span{font-size:10px}}
-</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
+</style><style id="nuvora-retailer-rating-admin-css">.retailer-rating-preview{font-size:11px;line-height:1.5;color:#778477;margin-top:6px;min-height:18px}.nv-admin-stars{display:inline-flex;gap:1px;margin-right:4px}.nv-admin-star{font-size:17px;line-height:1;color:#c89a3b}.nv-admin-star.empty{color:#d6ddd5}.nv-admin-star.half{background:linear-gradient(90deg,#c89a3b 50%,#d6ddd5 50%);-webkit-background-clip:text;background-clip:text;color:transparent}.retailer-rating-preview strong{color:#30463a}</style>
+</head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
 <button data-icon="↥" onclick="show('import',this)">Import</button>
 <button data-icon="▣" onclick="show('products',this)">Products</button>
@@ -1001,8 +1002,8 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
         <div class="field"><label>Discount %</label><input id="pfDiscount" type="number" step="1" placeholder="59"></div>
         <div class="field"><label>Currency</label><input id="pfCurrency" value="USD" placeholder="USD"></div>
         <div class="field"><label>Deal badge</label><input id="pfDeal" placeholder="Limited time deal"></div>
-        <div class="field"><label>Rating</label><input id="pfRating" type="number" step="0.1" min="0" max="5" placeholder="4.3"></div>
-        <div class="field"><label>Review count</label><input id="pfReviews" type="number" step="1" placeholder="1934"></div>
+        <div class="field"><label>Retailer rating (out of 5)</label><input id="pfRating" type="number" step="0.5" min="0" max="5" placeholder="3.5" oninput="updateRetailerRatingPreview()"><div id="pfRatingPreview" class="retailer-rating-preview">Enter the retailer’s original rating. This is separate from Nuvora customer reviews.</div></div>
+        <div class="field"><label>Retailer review count (optional)</label><input id="pfReviews" type="number" step="1" min="0" placeholder="1934"><div class="muted">Retailer review counts are not Nuvora customer reviews.</div></div>
         <div class="field"><label>Bought in past month</label><input id="pfBought" placeholder="9K+"></div>
         <div class="field full"><label>Shipping / import text</label><input id="pfShipping" placeholder="Shipping & Import Charges..."></div>
         <div class="field full"><label>Tax notice</label><input id="pfTax" placeholder="Sales taxes may apply at checkout"></div>
@@ -1386,6 +1387,13 @@ function openProductModal(importMode=false){
   document.getElementById('amazonUrlInput').focus();
 }
 function closeProductModal(){document.getElementById('productModal').classList.remove('open');document.body.classList.remove('admin-workspace-open');window.skinCareImportMode=false;setSkinAdminFormMode(false);}
+function updateRetailerRatingPreview(){
+ const box=document.getElementById('pfRatingPreview'),input=document.getElementById('pfRating');if(!box||!input)return;
+ const raw=input.value.trim();if(!raw){box.textContent='Enter the retailer’s original rating. This is separate from Nuvora customer reviews.';return;}
+ const value=Number(raw);if(!Number.isFinite(value)||value<0||value>5||Math.abs(value*2-Math.round(value*2))>1e-8){box.textContent='Use a rating from 0 to 5 in half-star steps, such as 3.5.';return;}
+ const rating=Math.round(value*2)/2,stars=Array.from({length:5},(_,i)=>{const part=rating-i,kind=part>=1?'full':part>=.5?'half':'empty';return '<span class="nv-admin-star '+kind+'" aria-hidden="true">★</span>';}).join('');
+ box.innerHTML='<span class="nv-admin-stars">'+stars+'</span> <strong>'+rating.toFixed(1)+'/5</strong> <span>retailer rating preview · not Nuvora reviews</span>';
+}
 function setProductForm(p){
   document.getElementById('pfName').value=p.name||'';
   document.getElementById('pfKind').value=p.kind||'find';
@@ -1396,8 +1404,10 @@ function setProductForm(p){
   document.getElementById('pfDiscount').value=p.amazon_discount_percent??'';
   document.getElementById('pfCurrency').value=p.currency||'USD';
   document.getElementById('pfDeal').value=p.amazon_deal_text||'';
-  document.getElementById('pfRating').value=p.amazon_rating??'';
-  document.getElementById('pfReviews').value=p.amazon_review_count??'';
+  const ratingSource=document.getElementById('pfSource').value;
+  document.getElementById('pfRating').value=ratingSource==='temu'?(p.temu_rating??''):(ratingSource==='amazon'?(p.amazon_rating??''):(p.rating??''));
+  document.getElementById('pfReviews').value=ratingSource==='temu'?(p.temu_review_count??''):(ratingSource==='amazon'?(p.amazon_review_count??''):(p.review_count??''));
+  updateRetailerRatingPreview();
   document.getElementById('pfBought').value=p.amazon_bought_past_month||'';
   document.getElementById('pfShipping').value=p.amazon_shipping_text||'';
   document.getElementById('pfTax').value=p.amazon_tax_text||'';
@@ -1419,6 +1429,7 @@ function setProductForm(p){
   const imgs=Array.isArray(p.image_urls)&&p.image_urls.length?p.image_urls:(p.image_url?[p.image_url]:[]);
   document.getElementById('pfImages').value=imgs.filter(Boolean).join('\n');
   renderProductImages();
+  updateRetailerRatingPreview();
 }
 async function uploadProductImages(){
   const input=document.getElementById('pfUpload');
@@ -1756,6 +1767,12 @@ async function saveProductDraft(){
   try{if(window.skinCareImportMode)skinCategory=await ensureSkinCategory(false);}
   catch(e){setAdminStatus('Could not verify the Skin Care category. The product was not saved: '+(e.message||e),'error');releaseSave();return;}
   const images=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const ratingSource=document.getElementById('pfSource').value;
+  const ratingRaw=document.getElementById('pfRating').value.trim(),retailerRating=ratingRaw===''?null:Number(ratingRaw);
+  const reviewCountRaw=document.getElementById('pfReviews').value.trim(),retailerReviewCount=reviewCountRaw===''?null:Number(reviewCountRaw);
+  const currentProduct=window.editingProductId?adminProducts.find(x=>String(x.id)===String(window.editingProductId)):null;
+  if(ratingRaw!==''&&(!Number.isFinite(retailerRating)||retailerRating<0||retailerRating>5||Math.abs(retailerRating*2-Math.round(retailerRating*2))>1e-8)){setAdminStatus('Retailer rating must be from 0 to 5 in half-star increments, such as 3.5.','error');releaseSave();return;}
+  if(reviewCountRaw!==''&&(!Number.isInteger(retailerReviewCount)||retailerReviewCount<0)){setAdminStatus('Retailer review count must be a whole number of zero or more.','error');releaseSave();return;}
   const product={
     name,kind:window.skinCareImportMode?'shop':document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
     description:window.skinCareImportMode?(adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.description||document.getElementById('pfDescription').value.trim()||null):(document.getElementById('pfDescription').value.trim()||null),features:document.getElementById('pfFeatures').value.trim()||null,
@@ -1772,8 +1789,9 @@ async function saveProductDraft(){
     image_url:images[0]||null,image_urls:images,display_price:null,
     amazon_list_price:null,
     amazon_discount_percent:null,
-    amazon_deal_text:document.getElementById('pfDeal').value.trim()||null,amazon_rating:document.getElementById('pfRating').value===''?null:Number(document.getElementById('pfRating').value),
-    amazon_review_count:document.getElementById('pfReviews').value===''?null:Number(document.getElementById('pfReviews').value),amazon_bought_past_month:document.getElementById('pfBought').value.trim()||null,
+    amazon_deal_text:document.getElementById('pfDeal').value.trim()||null,
+    amazon_rating:ratingSource==='amazon'?retailerRating:(currentProduct?.amazon_rating??null),temu_rating:ratingSource==='temu'?retailerRating:(currentProduct?.temu_rating??null),rating:!['amazon','temu'].includes(ratingSource)?retailerRating:(currentProduct?.rating??null),
+    amazon_review_count:ratingSource==='amazon'?retailerReviewCount:(currentProduct?.amazon_review_count??null),temu_review_count:ratingSource==='temu'?retailerReviewCount:(currentProduct?.temu_review_count??null),review_count:!['amazon','temu'].includes(ratingSource)?retailerReviewCount:(currentProduct?.review_count??null),amazon_bought_past_month:document.getElementById('pfBought').value.trim()||null,
     amazon_shipping_text:document.getElementById('pfShipping').value.trim()||null,amazon_tax_text:document.getElementById('pfTax').value.trim()||null,amazon_variations:parseProductVariations(document.getElementById('pfVariations').value),
     currency:document.getElementById('pfCurrency').value.trim()||'NGN',destination_url:document.getElementById('pfDestination').value.trim()||null,
     retailer:document.getElementById('pfRetailer').value.trim()||null,category_id:skinCategory?String(skinCategory.id):(document.getElementById('pfCategory').value.trim()||null),
