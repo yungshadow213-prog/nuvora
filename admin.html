@@ -1960,28 +1960,35 @@ async function togglePublish(id){
  }
  if(studio)skinBuilderMessage((publishing?'Publishing ':'Moving back to draft: ')+label+'…','info');
  else setAdminStatus((publishing?'Publishing ':'Moving back to draft: ')+label+'…');
+ let serverConfirmed=false,serverProduct=null;
  try{
   if(publishing){
    const publishResult=await api(path+'/publish',{method:'POST',body:{destination_url:body.destination_url,amazon_source_url:body.amazon_source_url}});
    if(!publishResult?.ok||publishResult.product?.published!==true)throw new Error('The publish endpoint did not confirm that the product is live.');
+   serverConfirmed=true;serverProduct=publishResult.product;
   }else{
-   await api(path,{method:'PATCH',body});
+   serverProduct=await api(path,{method:'PATCH',body});
+   serverConfirmed=true;
   }
   await liveAdminProducts();
   const verifiedProduct=adminProducts.find(item=>String(item.id)===String(id));
-  if(!verifiedProduct||!!verifiedProduct.published!==publishing)throw new Error('The server did not confirm the requested product status after refreshing the catalog.');
+  if(!verifiedProduct||!!verifiedProduct.published!==publishing)throw new Error('The product status was accepted by the server, but the refreshed catalog did not confirm it.');
   if(studio){
-   renderSkinLibrary();
-   renderSkinSelectedInspector();
-   renderSkinBuilderSections();
-   reloadSkinStudioPreview();
-   skinBuilderMessage(publishing?label+' is published. The preview is refreshing its product catalog; publish the page changes too if you placed it in a section.':label+' is now a draft and hidden from shoppers. The preview is refreshing its product catalog.','success');
-  }else{
-   setAdminStatus(publishing?label+' published successfully — now visible in the storefront.':label+' moved back to draft.');
-  }
+   renderSkinLibrary();renderSkinSelectedInspector();renderSkinBuilderSections();reloadSkinStudioPreview();
+   skinBuilderMessage(publishing?label+' is published. The product is live; publish page changes separately if you placed it in a draft section.':label+' is now a draft and hidden from shoppers. The preview is refreshing its product catalog.','success');
+  }else setAdminStatus(publishing?label+' published successfully — now visible in the storefront.':label+' moved back to draft.');
  }catch(e){
-  const message=(e.message||'Publish failed.')+' No publish change was confirmed.';
-  if(studio)skinBuilderMessage(message,'error');else setAdminStatus(message,'error');
+  if(serverConfirmed){
+   const recovered={...p,...(serverProduct&&typeof serverProduct==='object'?serverProduct:{}),id,published:publishing,...(publishing?{destination_url:body.destination_url,amazon_source_url:body.amazon_source_url}:{})};
+   adminProducts=[recovered,...adminProducts.filter(item=>String(item.id)!==String(id))];
+   renderProducts();renderSkinProducts();fillSocialProducts();
+   if(studio){renderSkinLibrary();renderSkinSelectedInspector();renderSkinBuilderSections();reloadSkinStudioPreview();}
+   const message=publishing?label+' was published by the server, but the catalog refresh could not be verified: '+(e.message||'connection error')+'. Do not publish again; reload the catalog to confirm.':label+' was moved to draft by the server, but the catalog refresh could not be verified. Reload the catalog to confirm.';
+   if(studio)skinBuilderMessage(message,'info');else setAdminStatus(message,'info');
+  }else{
+   const message=(e.message||'Publish failed.')+' The server did not confirm a status change.';
+   if(studio)skinBuilderMessage(message,'error');else setAdminStatus(message,'error');
+  }
  }finally{
   publishButtons.forEach(button=>{button.disabled=false;button.textContent=button.dataset.originalLabel||button.textContent;delete button.dataset.originalLabel;});
  }
