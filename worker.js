@@ -31,7 +31,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-product-guide-formatting-r55',
+          release:'nuvora-2026-10-24-gemini-recommendations-r56',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -344,7 +344,7 @@ async function publishProductRecord(env,id,patch={}){
     const duplicate=(await duplicateResponse.json())?.[0];
     if(duplicate)return {ok:false,status:409,error:'This Amazon product is already published as “'+cleanText(duplicate.name,180)+'”. Unpublish or edit the existing listing instead of publishing a duplicate.'};
   }
-  const write={...patch,published:true,slug:merged.slug,destination_url:destination,updated_at:new Date().toISOString()};
+  const write={...patch,published:true,kind:merged.kind,category_id:merged.category_id,slug:merged.slug,destination_url:destination,updated_at:new Date().toISOString()};
   // Product edits can arrive through this endpoint when the listing is already published.
   // Persist those edited fields as well as the publication status; previously this
   // path only wrote the publish metadata, silently discarding edited guide content.
@@ -2102,6 +2102,28 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           availability:cleanText(listing.availability,180),
           asin:cleanText(listing.asin||asinFromUrl(sourceUrl),30)
         };
+        let recommendationCandidates=[];
+        try{
+          const [categoryResponse,productResponse]=await Promise.all([
+            supabaseRest(env,'GET','categories',null,'?select=id,name,slug&limit=200'),
+            supabaseRest(env,'GET','products',null,'?select=id,name,brand,category_id,description,store_description,features,benefits,skin_types,skin_concerns,ingredients,kind,published,source_type,retailer,amazon_asin&published=eq.true&limit=100')
+          ]);
+          if(categoryResponse.ok&&productResponse.ok){
+            const categoryRows=await categoryResponse.json()||[],productRows=await productResponse.json()||[];
+            const categoryById=new Map(categoryRows.map(row=>[String(row.id),String(row.name||row.slug||'')]));
+            const skinCategoryIds=new Set(categoryRows.filter(row=>/skin\s*care|skincare|beauty|cosmetic/i.test(String(row.name||'')+' '+String(row.slug||''))).map(row=>String(row.id)));
+            recommendationCandidates=productRows.filter(row=>{
+              if(!row?.id||String(row.amazon_asin||'').toUpperCase()===String(sourceFacts.asin||'').toUpperCase())return false;
+              const label=categoryById.get(String(row.category_id))||'';
+              const text=[row.name,row.brand,row.description,row.store_description,row.features,row.ingredients].filter(Boolean).join(' ');
+              return skinCategoryIds.has(String(row.category_id))||/skin\s*care|skincare|cleanser|cleansing|face wash|moisturi|serum|sunscreen|sunblock|\bspf\b|toner|retinol|exfoliat|face cream|eye cream|face mask|facial oil/i.test(text);
+            }).slice(0,60).map(row=>({
+              id:String(row.id),name:cleanText(row.name,180),brand:cleanText(row.brand,100),category:cleanText(categoryById.get(String(row.category_id))||'Skincare',80),
+              benefits:cleanMultilineText(row.benefits||row.features||row.store_description||row.description,500),
+              skin_types:cleanMultilineText(row.skin_types,240),skin_concerns:cleanMultilineText(row.skin_concerns,240),ingredients:cleanMultilineText(row.ingredients,400)
+            }));
+          }
+        }catch{recommendationCandidates=[];}
         const schema={
           type:'object',
           properties:{
@@ -2115,11 +2137,13 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             usage_instructions:{type:'string'},
             product_warnings:{type:'string'},
             size:{type:'string'},
+            recommended_product_ids:{type:'array',items:{type:'string'}},
+            recommendation_reason:{type:'string'},
             confidence_notes:{type:'array',items:{type:'string'}}
           },
-          required:['name','brand','overview','benefits','skin_types','skin_concerns','ingredients','usage_instructions','product_warnings','size','confidence_notes']
+          required:['name','brand','overview','benefits','skin_types','skin_concerns','ingredients','usage_instructions','product_warnings','size','recommended_product_ids','recommendation_reason','confidence_notes']
         };
-        const prompt='Prepare structured fields for a skincare product editor. Treat the supplied retailer data as the only source of product-specific facts. Do not invent ingredients, percentages, certifications, claims, suitability, directions, warnings, or sizes. If a field is not supported by the supplied data, return an empty string or empty array and add a short note to confidence_notes. Do not give medical advice. Keep overview to 1-3 concise sentences. Benefits, skin types, skin concerns and ingredients should be short list items. Do not include price or retailer review-count text in the customer-facing copy. The exact Amazon URL is '+sourceUrl+'. Retailer source data: '+JSON.stringify(sourceFacts);
+        const prompt='Prepare structured fields for a skincare product editor. Treat the supplied retailer data as the only source of product-specific facts. Do not invent ingredients, percentages, certifications, claims, suitability, directions, warnings, or sizes. If a field is not supported by the supplied data, return an empty string or empty array and add a short note to confidence_notes. Do not give medical advice. Keep overview to 1-3 concise sentences. Benefits, skin types, skin concerns and ingredients should be short list items. Do not include price or retailer review-count text in the customer-facing copy. For complementary products, select up to 3 exact IDs from the published Nuvora skincare catalog candidates below. Only select a candidate when its supplied product facts support a sensible routine role; do not invent compatibility or claim ingredients are safe together without evidence. If no good match is supported, return an empty recommended_product_ids array and an empty recommendation_reason. The exact Amazon URL is '+sourceUrl+'. Retailer source data: '+JSON.stringify(sourceFacts)+'. Published Nuvora skincare catalog candidates: '+JSON.stringify(recommendationCandidates);
         try{
           const model=String(env.GEMINI_MODEL||'gemini-3.8-flash').replace(/[^a-zA-Z0-9._-]/g,'');
           const response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',{
@@ -2154,6 +2178,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
               usage_instructions:textField(result.usage_instructions,5000),
               product_warnings:textField(result.product_warnings,5000),
               size:textField(result.size,120)||sourceFacts.size,
+              recommended_product_ids:listField(result.recommended_product_ids).filter(id=>recommendationCandidates.some(candidate=>candidate.id===id)).slice(0,3),
+              recommendation_reason:listField([result.recommendation_reason])[0]&&recommendationCandidates.some(candidate=>listField(result.recommended_product_ids).includes(candidate.id))?textField(result.recommendation_reason,1200):'',
               rating:sourceFacts.rating,
               review_count:sourceFacts.review_count,
               asin:sourceFacts.asin,
