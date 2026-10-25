@@ -240,7 +240,10 @@ jobs:
                   failures.append("beauty.html: product guide is missing the expected section: " + guide_heading)
           if "productGalleryImages(p)" not in guide_block or "productButtonLabel(p)" not in guide_block:
               failures.append("beauty.html: product guide must provide the image gallery and retailer link")
-          if "retailer rating" not in beauty.lower() or "nuvora reviews" in beauty.lower():
+          rating_start = beauty.find("function retailerRatingMarkup")
+          rating_end = beauty.find("function productAvailabilityMarkup", rating_start)
+          rating_block = beauty[rating_start:rating_end] if rating_start >= 0 and rating_end > rating_start else ""
+          if "retailer rating" not in rating_block.lower() or "nuvora reviews" in rating_block.lower():
               failures.append("beauty.html: retailer rating must remain distinguishable from Nuvora customer reviews")
           if "async function togglePublish" not in admin:
               failures.append("admin.html missing publish toggle handler")
