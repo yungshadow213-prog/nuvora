@@ -182,7 +182,7 @@ async function save(action){
 function onPreviewMessage(event){
  if(!selectedStore||event.origin!==selectedStore.origin||!event.data)return;
  const d=event.data;
- if(d.type===selectedStore.eventPrefix+"-ready"){sendPreview();return;}
+ if(d.type===selectedStore.eventPrefix+"-ready"){if(!products.length&&!Number(config.catalogVersion)&&Array.isArray(d.products)&&d.products.length){products=d.products.map(p=>({...p,status:p.status||"published"}));renderProducts();draftDirty=true;setStatus("Starter catalogue loaded","warning");showNotice("Loaded the storefront starter catalogue into this editor as a starting point. Save Draft to keep your edits before publishing.");}sendPreview();return;}
  if(d.type===selectedStore.eventPrefix+"-select-section"){
   selectedSectionId=String(d.sectionId||"");switchTab("sections");showNotice("Selected section: "+selectedSectionId+". Use Page sections to change visibility or order.");return;
  }
