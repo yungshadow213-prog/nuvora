@@ -116,6 +116,13 @@ jobs:
           for persistence_token in ["function stableJson(value)","stableJson(readback.draft)!==stableJson(result.draft)","stableJson({config:readback.config,products:readback.products})","Save not confirmed"]:
               if persistence_token not in studio:
                   failures.append("storefront-studio.html: draft/publish read-back verification missing "+persistence_token)
+          for draft_token in ["const hasDraftProducts=products.some","const draft=hasDraftProducts?{config:publishedConfig,products}:null","[draftColumn]:draft","products:publishedProducts,draft"]:
+              if draft_token not in worker:
+                  failures.append("worker.js: publishing must preserve private draft products "+draft_token)
+          if "stableJson(readback.draft??null)!==stableJson(result.draft??null)" not in studio:
+              failures.append("storefront-studio.html: publish verification must confirm private draft retention")
+          if "products=result.draft?.products||result.products||products" not in studio:
+              failures.append("storefront-studio.html: editor must retain private draft products after publish")
           migration=Path("backend/migrations/20261025181320_nuvora_multi_storefront_studios.sql").read_text(encoding="utf-8")
           for column in ["home_site_config","home_site_draft","home_products","clothing_site_config","clothing_site_draft","clothing_products","games_site_config","games_site_draft","games_products"]:
               if column not in migration:
