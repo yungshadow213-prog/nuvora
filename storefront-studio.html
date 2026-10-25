@@ -272,15 +272,15 @@ async function save(action){
     throw new Error("The draft write returned, but the saved draft did not match the database read-back. Check the saved state before retrying.");
    }
   }else if(action==="publish"){
-   if(!result.config||!Array.isArray(result.products)||!readback.config||!Array.isArray(readback.products)||stableJson({config:readback.config,products:readback.products})!==stableJson({config:result.config,products:result.products})||readback.draft){
+   if(!result.config||!Array.isArray(result.products)||!readback.config||!Array.isArray(readback.products)||stableJson({config:readback.config,products:readback.products})!==stableJson({config:result.config,products:result.products})||stableJson(readback.draft??null)!==stableJson(result.draft??null)){
     throw new Error("Publishing returned, but the live configuration/products could not be verified against the database read-back. Check the storefront before retrying.");
    }
   }else throw new Error("Unsupported save action.");
   collectForm();
   const unchanged=JSON.stringify({config,products})===submitted;
-  if(action==="publish"&&unchanged){config=result.config||config;products=result.products||products;}
+  if(action==="publish"&&unchanged){config=result.config||config;products=result.draft?.products||result.products||products;}
   draftDirty=!unchanged;
-  if(action==="publish"&&unchanged){setStatus("Published","");showNotice("Published successfully. The storefront API now serves the published configuration and published products.");}
+  if(action==="publish"&&unchanged){setStatus(result.draft?"Published · private drafts retained":"Published","");showNotice(result.draft?"Published successfully. Published products are live; draft products remain private and available in this editor.":"Published successfully. The storefront API now serves the published configuration and published products.");}
   else if(action==="publish"){setStatus("Published · newer edits unsaved","warning");showNotice("The submitted version was published, but newer edits were made while saving. Publish again to include those latest changes.",true);}
   else if(unchanged){setStatus("Draft saved","");showNotice("Draft saved successfully.");}
   else{setStatus("Draft saved · newer edits unsaved","warning");showNotice("The submitted draft was saved, but newer edits were made while saving. Save Draft again to keep the latest changes.",true);}
