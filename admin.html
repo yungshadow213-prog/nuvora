@@ -2983,7 +2983,7 @@ function skinProductsForSection(sec){
  // manual selection means this section is empty, not "show every product".
  if(sec.product_selection==='manual'){
   const byId=new Map(all.map(p=>[String(p.id),p]));
-  return (Array.isArray(sec.product_ids)?sec.product_ids:[]).map(id=>byId.get(String(id))).filter(p=>p&&!!p.published);
+  return (Array.isArray(sec.product_ids)?sec.product_ids:[]).map(id=>byId.get(String(id))).filter(Boolean);
  }
  let list=all.filter(p=>!!p.published);
  if(sec.filter==='featured')list=list.filter(p=>!!p.featured);
@@ -2992,8 +2992,12 @@ function skinProductsForSection(sec){
  if(sec.category_id){
   const custom=String(sec.category_id);
   list=list.filter(p=>{
-   const assigned=skinSelectedCategoryValue(p.id)||String(p.category_id||'');
-   // Explicit category assignment wins. Infer only when a product has no assignment.
+   const mapped=skinSelectedCategoryValue(p.id);
+   const rawCategory=String(p.category_id||'');
+   const storeSlugs=new Set(skinStoreCategoryOptions().flatMap(cat=>[String(cat.slug||''),String(cat.id||'')]).filter(Boolean));
+   const assigned=mapped||(storeSlugs.has(rawCategory)?rawCategory:'');
+   // Explicit Skin Studio category assignment wins. Database taxonomy IDs that are not
+   // Skin Studio slugs do not block the skincare-specific inferred category.
    return assigned?assigned===custom:inferSkinProductCategory(p)===custom;
   });
  }
