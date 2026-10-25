@@ -2382,6 +2382,7 @@ function mergeSkinSiteConfig(raw){
   filter:['all','featured','top_pick','trending'].includes(x.filter)?x.filter:'all',
   columns:[2,3,4].includes(Number(x.columns))?Number(x.columns):4,
   product_ids:Array.isArray(x.product_ids)?x.product_ids.map(String).slice(0,60):[],
+  product_selection:x.product_selection==='manual'?'manual':'automatic',
   category_id:String(x.category_id||'').slice(0,100),
   imageAlignment:['left','center','right'].includes(x.imageAlignment)?x.imageAlignment:'center',
   imageWidth:[20,30,40,50,60,70,80,90,100].includes(Number(x.imageWidth))?Number(x.imageWidth):70,
@@ -2943,7 +2944,7 @@ function updateSkinSection(index,key,value,fromPreview=false){
 }
 function selectFirstSkinSection(){const section=skinSectionsFor()[0];if(section)selectSkinItem('section',section.id);else openSkinAdd('section');}
 function focusSkinInspector(){const panel=document.querySelector('.studio-right-panel');if(panel)panel.scrollTo({top:0,behavior:'smooth'});const root=document.getElementById('skinSelectedInspector');if(root)root.scrollIntoView({block:'nearest',behavior:'smooth'});if(!skinStudioSelection||skinStudioSelection.type==='none')selectFirstSkinSection();}
-function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;const ids=new Set((sec.product_ids||[]).map(String));if(checked)ids.add(String(productId));else ids.delete(String(productId));updateSkinSection(index,'product_ids',[...ids]);}
+function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;let ids=new Set((sec.product_ids||[]).map(String));if(sec.product_selection!=='manual')ids=new Set(skinProductsForSection({...sec,product_selection:'automatic',product_ids:[]}).map(p=>String(p.id)));if(checked)ids.add(String(productId));else ids.delete(String(productId));sec.product_selection='manual';sec.product_ids=[...ids];updateSkinSection(index,'product_ids',sec.product_ids);}
 function toggleSkinSectionVisibility(index){
  const sec=skinSectionsFor()[index];if(!sec)return;sec.visible=sec.visible===false;
  skinMarkDirty('Section visibility changed in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
@@ -2978,20 +2979,23 @@ function removeSkinSection(index,skipConfirm=false){
 }
 function skinProductsForSection(sec){
  const all=adminProducts.filter(p=>isSkinProduct(p));
- // Explicit placements are authoritative, matching the storefront renderer. This also
- // lets a draft product appear in the editor preview after Place on page, without
- // making it public; the preview bridge separately marks placed drafts preview-only.
- if(Array.isArray(sec.product_ids)&&sec.product_ids.length){
+ // Manual selection is distinct from automatic catalog filtering. An intentionally empty
+ // manual selection means this section is empty, not "show every product".
+ if(sec.product_selection==='manual'){
   const byId=new Map(all.map(p=>[String(p.id),p]));
-  return sec.product_ids.map(id=>byId.get(String(id))).filter(Boolean);
+  return (Array.isArray(sec.product_ids)?sec.product_ids:[]).map(id=>byId.get(String(id))).filter(p=>p&&!!p.published);
  }
  let list=all.filter(p=>!!p.published);
  if(sec.filter==='featured')list=list.filter(p=>!!p.featured);
- else if(sec.filter==='top_pick')list=list.filter(p=>!!p.top_pick);
- else if(sec.filter==='trending')list=list.filter(p=>!!p.trending);
+ if(sec.filter==='top_pick')list=list.filter(p=>!!p.top_pick);
+ if(sec.filter==='trending')list=list.filter(p=>!!p.trending);
  if(sec.category_id){
-  const custom=String(sec.category_id),builtIn=skinDefaultCategories().some(x=>x.slug===custom);
-  list=list.filter(p=>String(p.category_id||'')===custom||skinSelectedCategoryValue(p.id)===custom||(builtIn&&inferSkinProductCategory(p)===custom));
+  const custom=String(sec.category_id);
+  list=list.filter(p=>{
+   const assigned=skinSelectedCategoryValue(p.id)||String(p.category_id||'');
+   // Explicit category assignment wins. Infer only when a product has no assignment.
+   return assigned?assigned===custom:inferSkinProductCategory(p)===custom;
+  });
  }
  return list;
 }
@@ -3014,9 +3018,9 @@ function addSkinProductToSection(productId,targetId,pageId){
  }
  skinStudioPendingProductTarget=null;
  let ids=Array.isArray(sec.product_ids)?sec.product_ids.map(String):[];
- if(!ids.length)ids=skinProductsForSection(sec).map(p=>String(p.id));
+ if(sec.product_selection!=='manual')ids=skinProductsForSection({...sec,product_selection:'automatic',product_ids:[]}).map(p=>String(p.id));
  if(!ids.includes(String(productId)))ids.push(String(productId));
- sec.product_ids=ids.slice(0,60);skinStudioPageId=effectivePageId;skinStudioSelection={type:'section',id:String(sec.id)};
+ sec.product_selection='manual';sec.product_ids=ids.slice(0,60);skinStudioPageId=effectivePageId;skinStudioSelection={type:'section',id:String(sec.id)};
  const message=product.published
   ?'Product placed in “'+(sec.title||'Product grid')+'”. The preview is updating. Publish the page changes to make this placement public.'
   :'Product added to “'+(sec.title||'Product grid')+'” in your draft. Publish this product before it can appear in the public storefront; the page placement will stay in your draft.';
