@@ -292,7 +292,7 @@ function productBrowseCategory(p){
   if(custom)return {key:assigned,name:String(custom.name||'Other skincare')};
  }
  const text=[p.name,p.brand,p.benefits,p.features,p.description,p.store_description,p.ingredients,p.skin_concerns].filter(Boolean).join(' ').toLowerCase();
- if(/sunscreen|sunblock|\\bspf\\b|sun protection/.test(text))return {key:'sun-protection',name:'Sun protection'};
+ if(/sunscreen|sunblock|\bspf\b|sun protection/.test(text))return {key:'sun-protection',name:'Sun protection'};
  if(/cleanser|cleansing|face wash|micellar|makeup remover/.test(text))return {key:'cleansers',name:'Cleansers'};
  if(/serum|retinol|niacinamide|hyaluronic|vitamin c|salicylic|glycolic|azelaic|tranexamic|treatment|essence|toner|peel|exfoliat|centella|snail mucin|cica/.test(text))return {key:'serums-treatments',name:'Serums & treatments'};
  if(/moisturi[sz]er|face cream|hydrating cream|barrier cream|ceramide|facial lotion/.test(text))return {key:'moisturizers',name:'Moisturizers'};
