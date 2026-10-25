@@ -2445,29 +2445,30 @@ function mergeSkinSiteConfig(raw){
  cfg.footerCopyright=String(src.footerCopyright??base.footerCopyright).slice(0,80);
  const builtInPageText={shopEyebrow:120,shopHeadline:180,shopHeadlineEmphasis:180,shopDescription:1200,journalEyebrow:120,journalHeadline:180,journalHeadlineEmphasis:180,journalDescription:1200,savedEyebrow:120,savedHeadline:180,savedHeadlineEmphasis:180,savedDescription:1200};
  for(const [key,max] of Object.entries(builtInPageText))cfg[key]=String(src[key]??base[key]).slice(0,max);
- cfg.sections=cleanSections(src.sections,base.sections).filter(section=>!(section.type==='routine-finder'&&(['routine-finder','skin-routine-finder','home-routine-finder'].includes(String(section.id))||String(section.title||'').trim().toLowerCase()==='find your routine, one step at a time.')));
+ cfg.sections=cleanSections(src.sections,base.sections).filter(section=>section.type!=='routine-finder');
  // One-time home layout cleanup: remove the default routine finder and add a clear category browse section.
  // The version bump makes later user deletions authoritative; this migration will not run again.
- if(Number(src.version||0)<6){
-  cfg.sections=cfg.sections.filter(section=>!(section.type==='routine-finder'&&(['routine-finder','skin-routine-finder','home-routine-finder'].includes(String(section.id))||String(section.title||'').trim().toLowerCase()==='find your routine, one step at a time.')));
+  // Version 8 layout migration: ensure product-type browsing and brand discovery exist on older saved home pages.
+ // Once version 8 is saved, a deliberate deletion stays deleted.
+ if(Number(src.version||0)<8){
+  cfg.sections=cfg.sections.filter(section=>section.type!=='routine-finder');
   if(cfg.sections.length&&!cfg.sections.some(section=>section.type==='category-grid')){
    const heroIndex=cfg.sections.findIndex(section=>section.type==='hero');
-   cfg.sections.splice(heroIndex>=0?heroIndex+1:0,0,{id:'home-categories',type:'category-grid',visible:true,title:'Shop by category',eyebrow:'FIND YOUR NEXT STEP',text:'Browse skincare by product type, then check the product details that matter to you.'});
+   cfg.sections.splice(heroIndex>=0?heroIndex+1:0,0,{id:'home-categories',type:'category-grid',visible:true,title:'Shop by product type',eyebrow:'FIND YOUR KIND OF FIND',text:'Browse by what the product is, from everyday skincare to beauty tools, nail care and more.'});
+  }
+  if(cfg.sections.length&&!cfg.sections.some(section=>section.type==='brand-grid')){
+   const productIndex=cfg.sections.findIndex(section=>['product-grid','featured-products'].includes(section.type));
+   cfg.sections.splice(productIndex>=0?productIndex+1:cfg.sections.length,0,{id:'home-brands',type:'brand-grid',visible:true,title:'Explore by brand.',eyebrow:'THE LABELS BEHIND THE FINDS',text:'Open a brand to see every product from that label currently in our store.'});
   }
  }
- // One-time brand-discovery addition. A later deliberate deletion remains authoritative.
- if(Number(src.version||0)<7&&cfg.sections.length&&!cfg.sections.some(section=>section.type==='brand-grid')){
-  const productIndex=cfg.sections.findIndex(section=>['product-grid','featured-products'].includes(section.type));
-  cfg.sections.splice(productIndex>=0?productIndex+1:cfg.sections.length,0,{id:'home-brands',type:'brand-grid',visible:true,title:'Shop by brand.',eyebrow:'EXPLORE THE LABELS',text:'Browse the brands behind the products in our edit.'});
- }
- cfg.version=7;
+ cfg.version=8;
  cfg.pages=Array.isArray(src.pages)?src.pages.slice(0,30).map((p,i)=>({
   id:String(p.id||p.slug||('page-'+(i+1))).slice(0,80),
   title:String(p.title||'Untitled page').slice(0,120),
   slug:String(p.slug||'page-'+(i+1)).toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80),
   description:String(p.description||'').slice(0,1200),
   visible:p.visible!==false,
-  sections:cleanSections(p.sections,[]).filter(section=>!(section.type==='routine-finder'&&(['routine-finder','skin-routine-finder','home-routine-finder'].includes(String(section.id))||String(section.title||'').trim().toLowerCase()==='find your routine, one step at a time.')))
+  sections:cleanSections(p.sections,[]).filter(section=>section.type!=='routine-finder')
  })):Array.isArray(base.pages)?base.pages:[];
  if(!Array.isArray(src.navigationItems))cfg.pages.filter(page=>page.visible!==false).forEach(page=>{if(!cfg.navigationItems.some(link=>link.url==='/pages/'+page.slug))cfg.navigationItems.push({id:'page-'+page.slug,label:page.title,url:'/pages/'+page.slug,visible:true});});
  cfg.customCategories=Array.isArray(src.customCategories)?src.customCategories.slice(0,60).map((x,i)=>({
@@ -2650,6 +2651,11 @@ function skinDefaultCategories(){
   {id:'makeup-cosmetics',slug:'makeup-cosmetics',name:'Makeup & Cosmetics',description:'Makeup, complexion products and colour cosmetics.'},
   {id:'beauty-tools-devices',slug:'beauty-tools-devices',name:'Beauty Tools & Devices',description:'Beauty devices, electric tools, brushes, rollers, tweezers and useful accessories.'},
   {id:'nails-grooming',slug:'nails-grooming',name:'Nails & Grooming',description:'Nail clippers, electric nail tools, files, cuticle tools and grooming essentials.'},
+  {id:'bath-shower',slug:'bath-shower',name:'Bath & Shower',description:'Bath soaks, shower gels and body-care rituals.'},
+  {id:'shaving-hair-removal',slug:'shaving-hair-removal',name:'Shaving & Hair Removal',description:'Razors, shaving care, wax strips and hair-removal tools.'},
+  {id:'fragrance',slug:'fragrance',name:'Fragrance',description:'Perfume, cologne and body mists.'},
+  {id:'oral-care-smile',slug:'oral-care-smile',name:'Oral Care & Smile',description:'Toothbrushes, whitening products and oral-care tools.'},
+  {id:'beauty-accessories-storage',slug:'beauty-accessories-storage',name:'Beauty Accessories & Storage',description:'Travel cases, organizers and useful beauty accessories.'},
   {id:'sets-kits',slug:'sets-kits',name:'Sets & Kits',description:'Bundles, kits and coordinated product sets.'},
   {id:'other-skincare',slug:'other-skincare',name:'Other Beauty Finds',description:'Useful finds that do not fit another product type.'}
  ];
@@ -2661,6 +2667,11 @@ function inferSkinProductCategory(p){
  const retailerUrl=[p?.amazon_url,p?.amazonUrl,p?.affiliate_url,p?.affiliateUrl,p?.destination_url,p?.amazon_source_url,p?.source_url,p?.resolved_url].filter(Boolean).join(' ');
  const text=[p?.name,p?.brand,p?.description,p?.features,p?.store_description,p?.query,p?.product_type,p?.category_name,retailerUrl].filter(Boolean).join(' ').toLowerCase();
  if(/sunscreen|sun screen|spf|sunblock|sun protection/.test(text))return 'sunscreen-spf';
+ if(/perfume|fragrance|eau de parfum|eau de toilette|body mist|cologne/.test(text))return 'fragrance';
+ if(/toothbrush|tooth paste|toothpaste|whitening strips|oral irrigator|water flosser|tongue scraper|oral care/.test(text))return 'oral-care-smile';
+ if(/razor|shaving|shave gel|shave cream|hair removal|waxing kit|wax strips|electric shaver/.test(text))return 'shaving-hair-removal';
+ if(/bath bomb|bath salts|bubble bath|shower gel|shower steamer|bath soak|bath & shower/.test(text))return 'bath-shower';
+ if(/makeup bag|cosmetic bag|beauty organizer|beauty storage|travel bottle|travel case|vanity organizer|skincare fridge/.test(text))return 'beauty-accessories-storage';
  if(/nail clipper|electric nail|nail drill|nail file|cuticle|manicure|pedicure|nail grooming|nail care|nail buffer/.test(text))return 'nails-grooming';
  if(/hair dryer|blow.?dryer|curling iron|curling wand|hair straightener|flat iron|hair styler|hair brush|scalp massager|shampoo|conditioner|hair mask|hair serum|hair oil|hair care|hair styling/.test(text))return 'hair-care-styling';
  if(/makeup remover|make.?up remover|cleansing balm|micellar|face wash|facial cleanser|cleanser/.test(text))return 'cleansers-makeup-removers';
