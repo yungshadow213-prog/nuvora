@@ -2381,7 +2381,7 @@ const defaultSkinSiteConfig=()=>({
 });
 function mergeSkinSiteConfig(raw){
  const base=defaultSkinSiteConfig(),src=raw&&typeof raw==='object'?raw:{},cfg={...base,...src};
- const cleanSections=(items,fallback=[])=>Array.isArray(items)&&items.length?items.slice(0,40).map((x,i)=>({
+ const cleanSections=(items,fallback=[])=>Array.isArray(items)?items.slice(0,40).map((x,i)=>({
   id:String(x.id||('section-'+(i+1))).slice(0,80),
   type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block'].includes(x.type)?x.type:'product-grid',
   visible:x.visible!==false,title:String(x.title||'New section').slice(0,180),
@@ -2431,8 +2431,8 @@ function mergeSkinSiteConfig(raw){
  const builtInPageText={shopEyebrow:120,shopHeadline:180,shopHeadlineEmphasis:180,shopDescription:1200,journalEyebrow:120,journalHeadline:180,journalHeadlineEmphasis:180,journalDescription:1200,savedEyebrow:120,savedHeadline:180,savedHeadlineEmphasis:180,savedDescription:1200};
  for(const [key,max] of Object.entries(builtInPageText))cfg[key]=String(src[key]??base[key]).slice(0,max);
  cfg.sections=cleanSections(src.sections,base.sections);
- if(Number(src.version||0)<2&&!cfg.sections.some(x=>x.type==='journal-grid'))cfg.sections.push({id:'journal',type:'journal-grid',visible:true,title:'Little notes for everyday skin.',eyebrow:'The journal',text:'Practical notes for building a routine at your own pace.',columns:3,product_ids:[]});
-  cfg.version=5;;
+ // Section migrations must not recreate content after a user intentionally deletes it.
+  cfg.version=5;
  cfg.pages=Array.isArray(src.pages)?src.pages.slice(0,30).map((p,i)=>({
   id:String(p.id||p.slug||('page-'+(i+1))).slice(0,80),
   title:String(p.title||'Untitled page').slice(0,120),
@@ -2877,13 +2877,13 @@ function createSkinQuickItem(){
   skinBuilderConfig.customCategories.push({id:slug,slug,name:title,description:String(document.getElementById('skinQuickDescription')?.value||''),image});
   if(Array.isArray(skinBuilderConfig.navigationItems)&&!skinBuilderConfig.navigationItems.some(link=>String(link.id||'')==='category-'+slug))skinBuilderConfig.navigationItems.push({id:'category-'+slug,label:title,url:'/shop?category='+encodeURIComponent(title),visible:true});
   renderSkinSiteLinkEditor('navigationItems');
-  skinStudioSelection={type:'category',id:slug};closeSkinQuickAdd();skinMarkDirty('Category created in draft. Assign products to it in the product inspector.');switchSkinStudioTab('categories');renderSkinSelectedInspector();return;
+  skinStudioSelection={type:'category',id:slug};closeSkinQuickAdd();skinMarkDirty('Category created in draft. Assign products to it in the product inspector.');switchSkinStudioTab('categories');renderSkinSelectedInspector();void saveSkinStudioChangeImmediately('Category created and saved to the page draft.');return;
  }
  if(skinQuickAddType==='section'){
   const type=document.getElementById('skinQuickType')?.value||'product-grid';
   const id='section-'+Date.now().toString(36);
   const section={id,type,visible:true,title,eyebrow:String(document.getElementById('skinQuickEyebrow')?.value||''),text:String(document.getElementById('skinQuickDescription')?.value||''),image:'',imageAlignment:'center',imageWidth:70,backgroundColor:'',textAlignment:'left',filter:type==='featured-products'?'featured':'all',columns:3,product_ids:[],category_id:''};
-  skinSectionsFor().push(section);skinStudioSelection={type:'section',id};closeSkinQuickAdd();skinMarkDirty('Section added to the current page. Drag it in the outline or canvas to arrange it.');switchSkinStudioTab('outline');renderSkinStudioAll();queueSkinStudioPreview();
+  skinSectionsFor().push(section);skinStudioSelection={type:'section',id};closeSkinQuickAdd();skinMarkDirty('Section added to the current page. Drag it in the outline or canvas to arrange it.');switchSkinStudioTab('outline');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('New section added and saved to the page draft.');
  }
 }
 function addSkinBuilderSection(){openSkinAdd('section');}
@@ -2911,7 +2911,7 @@ function deleteSkinCategory(slug){
  skinBuilderConfig.navigationItems=(skinBuilderConfig.navigationItems||[]).filter(link=>String(link.id||'')!=='category-'+String(slug));
  Object.keys(skinBuilderConfig.productCategoryMap||{}).forEach(id=>{if(String(skinBuilderConfig.productCategoryMap[id])===String(slug))delete skinBuilderConfig.productCategoryMap[id];});
  skinSectionsFor().forEach(s=>{if(String(s.category_id||'')===String(slug))s.category_id='';});
- skinStudioSelection={type:'none',id:''};skinMarkDirty('Category removed from the draft.');renderSkinStudioAll();queueSkinStudioPreview();
+ skinStudioSelection={type:'none',id:''};skinMarkDirty('Category removed from the draft.');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('Category deleted and saved to the page draft.');
 }
 function updateSkinPage(slug,key,value){
  const page=(skinBuilderConfig.pages||[]).find(p=>String(p.slug)===String(slug));if(!page)return;
@@ -2993,6 +2993,7 @@ function removeSkinSection(index,skipConfirm=false){
  if(!skipConfirm&&!confirm('Remove the “'+(section.title||'section')+'” section from this page draft?'))return;
  sections.splice(index,1);skinStudioSelection={type:'section',id:String(sections[Math.max(0,index-1)]?.id||'')};
  skinMarkDirty('Section removed from the draft.');renderSkinStudioAll();queueSkinStudioPreview();
+ void saveSkinStudioChangeImmediately('Section removed and saved to the page draft.');
 }
 function skinProductsForSection(sec){
  const all=adminProducts.filter(p=>isSkinProduct(p));
