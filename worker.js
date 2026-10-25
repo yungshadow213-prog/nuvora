@@ -8,6 +8,17 @@ export default {
         if (limited) return json({error:'Too many requests. Please try again shortly.'},429,{'retry-after':String(limited)});
       }
       if (request.method === 'OPTIONS') return securityResponse(new Response(null,{status:204}));
+      const storefrontStudioRoute=url.pathname.match(/^\/admin\/(home|clothing|games)-studio\/?$/);
+      if(storefrontStudioRoute){
+        const target=new URL('/storefront-studio.html',request.url);
+        target.searchParams.set('store',storefrontStudioRoute[1]);
+        return serveAsset(env,new Request(target,{method:'GET',headers:request.headers}));
+      }
+      if(url.pathname==='/admin/storefronts'||url.pathname==='/admin/storefronts/'){
+        const target=new URL('/storefront-studio.html',request.url);
+        target.searchParams.set('store','all');
+        return serveAsset(env,new Request(target,{method:'GET',headers:request.headers}));
+      }
       if(url.pathname==='/admin/skin-studio'||url.pathname==='/admin/skin-studio/'){
         return serveAsset(env,new Request(new URL('/admin.html',request.url),{method:'GET',headers:request.headers}));
       }
@@ -1748,6 +1759,63 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         return json({counts,total:Array.isArray(rows)?rows.length:0});
       }
 
+      const publicStorefrontMatch=url.pathname.match(/^\/api\/(home|clothing|games)-storefront$/);
+      if(publicStorefrontMatch&&request.method==='GET'){
+        const key=publicStorefrontMatch[1];
+        const configColumn=key+'_site_config';
+        const productsColumn=key+'_products';
+        const origins={
+          home:'https://nuvora-home.rayyung713.workers.dev',
+          clothing:'https://nuvora-clothing.rayyung713.workers.dev',
+          games:'https://nuvora-games.rayyung713.workers.dev'
+        };
+        const result=await supabaseRest(env,'GET','store_settings',undefined,'?select='+configColumn+','+productsColumn+'&id=eq.true&limit=1');
+        if(!result.ok)return json({error:'Storefront content could not be loaded.'},502,{'access-control-allow-origin':origins[key],'vary':'Origin'});
+        const row=(await result.json())?.[0]||{};
+        const config=row[configColumn]&&typeof row[configColumn]==='object'?row[configColumn]:{};
+        const products=Array.isArray(row[productsColumn])?row[productsColumn]:[];
+        return json({config,products},200,{'access-control-allow-origin':origins[key],'vary':'Origin','cache-control':'no-store'});
+      }
+
+      const adminStorefrontMatch=url.pathname.match(/^\/api\/admin\/storefronts\/(home|clothing|games)\/?$/);
+      if(adminStorefrontMatch&&(request.method==='GET'||request.method==='PATCH')){
+        const admin=await adminUser(request,env);
+        if(!admin)return json({error:'Admin authentication required'},401);
+        const key=adminStorefrontMatch[1];
+        const configColumn=key+'_site_config';
+        const draftColumn=key+'_site_draft';
+        const productsColumn=key+'_products';
+        if(request.method==='GET'){
+          const result=await supabaseRest(env,'GET','store_settings',undefined,'?select='+configColumn+','+draftColumn+','+productsColumn+'&id=eq.true&limit=1');
+          if(!result.ok)return json({error:await result.text()},500);
+          const row=(await result.json())?.[0]||{};
+          return json({config:row[configColumn]&&typeof row[configColumn]==='object'?row[configColumn]:{},draft:row[draftColumn]&&typeof row[draftColumn]==='object'?row[draftColumn]:null,products:Array.isArray(row[productsColumn])?row[productsColumn]:[]});
+        }
+        const payload=await body(request,512*1024);
+        const action=String(payload.action||'save-draft');
+        const config=payload.config;
+        const products=payload.products;
+        const configError=validateMultiStorefrontConfig(config);
+        if(configError)return json({error:configError},400);
+        const productsError=validateMultiStorefrontProducts(products);
+        if(productsError)return json({error:productsError},400);
+        const now=new Date().toISOString();
+        if(action==='save-draft'){
+          const draft={config,products,updatedAt:now};
+          const result=await supabaseRest(env,'PATCH','store_settings',{[draftColumn]:draft,updated_at:now},'?id=eq.true');
+          if(!result.ok)return json({error:await result.text()},400);
+          return json({ok:true,action,draft});
+        }
+        if(action==='publish'){
+          const publishedConfig={...config,catalogVersion:1,version:Math.max(1,Number(config.version)||1),publishedAt:now};
+          const publishedProducts=products.filter(p=>String(p.status||'published').toLowerCase()==='published');
+          const result=await supabaseRest(env,'PATCH','store_settings',{[configColumn]:publishedConfig,[productsColumn]:publishedProducts,[draftColumn]:null,updated_at:now},'?id=eq.true');
+          if(!result.ok)return json({error:await result.text()},400);
+          return json({ok:true,action,config:publishedConfig,products:publishedProducts});
+        }
+        return json({error:'Action must be save-draft or publish.'},400);
+      }
+
       if(url.pathname==='/api/skin-settings'&&request.method==='GET'){
         // Only expose the explicit Skin storefront configuration; never return the whole admin settings row.
         const r=await supabaseRest(env,'GET','store_settings',undefined,'?select=skin_site_config&id=eq.true&limit=1');
@@ -2348,6 +2416,55 @@ function cleanMultilineText(value,max=12000){
 function makeProductSlug(value){
   const base=cleanText(value,180).toLowerCase().normalize('NFKD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').replace(/-+/g,'-').slice(0,140);
   return (base||'product')+'-'+Math.random().toString(36).slice(2,8);
+}
+
+function validateMultiStorefrontConfig(value){
+  if(!value||typeof value!=='object'||Array.isArray(value))return 'Storefront configuration must be an object.';
+  let encoded;try{encoded=JSON.stringify(value);}catch{return 'Storefront configuration is not valid JSON.';}
+  if(encoded.length>100000)return 'Storefront configuration exceeds 100 KB.';
+  if(value.accentColor!==undefined&&!/^#[0-9a-f]{6}$/i.test(String(value.accentColor)))return 'Accent colour must be a six-digit hex value.';
+  for(const [key,max] of Object.entries({announcement:240,heroTitle:240,heroDescription:2400,heroImage:2000,approachTitle:240,approachBody:4000,footerNote:3000})){
+    if(value[key]!==undefined&&(typeof value[key]!=='string'||value[key].length>max))return key+' must be text no longer than '+max+' characters.';
+  }
+  if(value.heroImage!==undefined&&value.heroImage!==''){
+    try{if(new URL(value.heroImage).protocol!=='https:')return 'Hero image must use HTTPS.';}catch{return 'Hero image URL is invalid.';}
+  }
+  if(value.sections!==undefined){
+    if(!Array.isArray(value.sections)||value.sections.length>50)return 'Sections must be a list of at most 50 items.';
+    const ids=new Set();
+    for(const section of value.sections){
+      if(!section||typeof section!=='object'||Array.isArray(section))return 'A section is invalid.';
+      const id=String(section.id||'');
+      if(!id||id.length>100||ids.has(id))return 'Section IDs must be unique and under 100 characters.';
+      ids.add(id);
+      if(section.type!==undefined&&!/^[a-z0-9-]{1,60}$/i.test(String(section.type)))return 'A section type is invalid.';
+      if(section.visible!==undefined&&typeof section.visible!=='boolean')return 'Section visibility must be true or false.';
+    }
+  }
+  return null;
+}
+function validateMultiStorefrontProducts(value){
+  if(!Array.isArray(value))return 'Products must be a list.';
+  if(value.length>500)return 'A storefront can contain at most 500 products.';
+  const ids=new Set();
+  for(const product of value){
+    if(!product||typeof product!=='object'||Array.isArray(product))return 'A product entry is invalid.';
+    const id=String(product.id||''),name=String(product.name||'').trim();
+    if(!id||id.length>120||ids.has(id))return 'Product IDs must be unique and under 120 characters.';
+    ids.add(id);
+    if(!name||name.length>200)return 'Every product needs a name under 200 characters.';
+    for(const key of ['description','shortDescription','brand','category','destinationUrl','image']){
+      if(product[key]!==undefined&&(typeof product[key]!=='string'||product[key].length>(key==='description'?12000:2000)))return 'Product '+key+' is invalid or too long.';
+    }
+    if(product.image){try{if(new URL(product.image).protocol!=='https:')return 'Product images must use HTTPS.';}catch{return 'A product image URL is invalid.';}}
+    if(product.destinationUrl){try{if(!['https:','http:'].includes(new URL(product.destinationUrl).protocol))return 'Product retailer links must use HTTP or HTTPS.';}catch{return 'A product retailer URL is invalid.';}}
+    if(product.images!==undefined){
+      if(!Array.isArray(product.images)||product.images.length>30)return 'Product images must be a list of at most 30 URLs.';
+      for(const image of product.images){try{if(new URL(String(image)).protocol!=='https:')return 'Gallery images must use HTTPS.';}catch{return 'A gallery image URL is invalid.';}}
+    }
+    if(product.status!==undefined&&!['draft','published'].includes(String(product.status).toLowerCase()))return 'Product status must be draft or published.';
+  }
+  return null;
 }
 
 function validateSkinSiteConfig(value,options={}){
