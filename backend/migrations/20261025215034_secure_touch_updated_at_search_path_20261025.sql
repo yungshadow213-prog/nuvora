@@ -3,7 +3,7 @@
 DO $$
 BEGIN
   IF to_regprocedure('public.touch_updated_at()') IS NOT NULL THEN
-    ALTER FUNCTION public.touch_updated_at() SET search_path = pg_catalog, public;
+    EXECUTE 'ALTER FUNCTION public.touch_updated_at() SET search_path = pg_catalog, public';
   END IF;
 END
 $$;
