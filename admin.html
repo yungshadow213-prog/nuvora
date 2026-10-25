@@ -2010,7 +2010,10 @@ async function saveProductDraft(){
   }catch(e){productSaveMessage('Product save was not confirmed: '+(e.message||'unknown error')+'. The editor remains open so you can retry after checking the message.','error')}finally{releaseSave();}
 }
 async function saveSkinProductAndPublish(){
- if(window.productSaveInProgress)return;
+ if(window.productSaveInProgress){
+  productSaveMessage('A product save is already in progress. Wait for it to finish, then choose Save & publish again.','error');
+  return;
+ }
  window.skinProductPublishAfterSave=true;
  await saveProductDraft();
 }
