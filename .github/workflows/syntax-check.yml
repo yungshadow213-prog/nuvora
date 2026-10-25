@@ -223,28 +223,45 @@ jobs:
               failures.append("admin.html must safely read missingProductColumns from diagnostics")
           if "window.__nuvoraSchemaState=window.__nuvoraSchemaState||{missingProductColumns:[],productSchemaError:''}" not in admin:
               failures.append("admin.html missing safe schema-state fallback")
-          # Keep the Skin Care overview intentionally minimal and the detailed guide
-          # responsible for the retailer link and expanded product information.
-          card_start = beauty.find("function renderProductCard(p)")
-          card_end = beauty.find("function filteredProducts(section)", card_start)
-          card_block = beauty[card_start:card_end] if card_start >= 0 and card_end > card_start else ""
-          if not card_block or "product-overview-meta" not in card_block or "retailerRatingMarkup(p)" not in card_block or "productAvailabilityMarkup(p)" not in card_block:
-              failures.append("beauty.html: product overview must show rating and known availability with the minimal card layout")
-          if "productButtonLabel" in card_block or "priceButton" in card_block:
-              failures.append("beauty.html: retailer purchase button must remain inside the product guide, not on overview cards")
-          guide_start = beauty.find("function openProductDetails(id)")
-          guide_end = beauty.find("function closeProductDetails()", guide_start)
-          guide_block = beauty[guide_start:guide_end] if guide_start >= 0 and guide_end > guide_start else ""
-          for guide_heading in ["Key benefits", "Suitable skin types", "Skin concerns", "Key ingredients", "How to use", "Compatibility cautions", "Warnings & precautions", "Consider alongside"]:
-              if guide_heading not in guide_block:
-                  failures.append("beauty.html: product guide is missing the expected section: " + guide_heading)
-          if "productGalleryImages(p)" not in guide_block or "productButtonLabel(p)" not in guide_block:
-              failures.append("beauty.html: product guide must provide the image gallery and retailer link")
-          rating_start = beauty.find("function retailerRatingMarkup")
-          rating_end = beauty.find("function productAvailabilityMarkup", rating_start)
-          rating_block = beauty[rating_start:rating_end] if rating_start >= 0 and rating_end > rating_start else ""
-          if "esc(retailer)+' rating</small>" not in rating_block or "nuvora reviews" in rating_block.lower():
-              failures.append("beauty.html: retailer rating must remain distinguishable from Nuvora customer reviews")
+          # The main admin repo now delegates the actual Skin Care storefront to the
+          # separate client repo. Do not pretend the wrapper contains the product UI;
+          # validate the bridge here and keep detailed UI contracts for legacy/full pages.
+          if 'id="nuvora-skin-store"' in beauty:
+              if "client-store-platform.rayyung713.workers.dev" not in beauty or "event.origin!==CLIENT_ORIGIN" not in beauty:
+                  failures.append("beauty.html: Skin Care storefront wrapper must use the client origin and validate message origin")
+              if "nuvora-skin-store-route" not in beauty or "nuvora-skin-store-navigate" not in beauty:
+                  failures.append("beauty.html: Skin Care wrapper must preserve storefront route synchronization")
+          else:
+              # Legacy standalone Skin Care markup, if restored in this repo, must
+              # preserve the intentionally minimal overview and detailed product guide.
+              card_start = beauty.find("function renderProductCard(p)")
+              card_end = beauty.find("function filteredProducts(section)", card_start)
+              card_block = beauty[card_start:card_end] if card_start >= 0 and card_end > card_start else ""
+              if not card_block or "product-overview-meta" not in card_block or "retailerRatingMarkup(p)" not in card_block or "productAvailabilityMarkup(p)" not in card_block:
+                  failures.append("beauty.html: product overview must show rating and known availability with the minimal card layout")
+              if "productButtonLabel" in card_block or "priceButton" in card_block:
+                  failures.append("beauty.html: retailer purchase button must remain inside the product guide, not on overview cards")
+              guide_start = beauty.find("function openProductDetails(id)")
+              guide_end = beauty.find("function closeProductDetails()", guide_start)
+              guide_block = beauty[guide_start:guide_end] if guide_start >= 0 and guide_end > guide_start else ""
+              for guide_heading in ["Key benefits", "Suitable skin types", "Skin concerns", "Key ingredients", "How to use", "Compatibility cautions", "Warnings & precautions", "Consider alongside"]:
+                  if guide_heading not in guide_block:
+                      failures.append("beauty.html: product guide is missing the expected section: " + guide_heading)
+              if "productGalleryImages(p)" not in guide_block or "productButtonLabel(p)" not in guide_block:
+                  failures.append("beauty.html: product guide must provide the image gallery and retailer link")
+              rating_start = beauty.find("function retailerRatingMarkup")
+              rating_end = beauty.find("function productAvailabilityMarkup", rating_start)
+              rating_block = beauty[rating_start:rating_end] if rating_start >= 0 and rating_end > rating_start else ""
+              if "esc(retailer)+' rating</small>" not in rating_block or "nuvora reviews" in rating_block.lower():
+                  failures.append("beauty.html: retailer rating must remain distinguishable from Nuvora customer reviews")
+          # Skin Studio writes product_type, so the canonical schema and an idempotent
+          # migration must both declare it before the new admin form is integrated.
+          schema=Path("backend/schema.sql").read_text(encoding="utf-8")
+          migration=Path("backend/migrations/2026-10-25-nuvora-product-type.sql")
+          if not re.search(r"product_type\\s+text", schema):
+              failures.append("backend/schema.sql must define the optional products.product_type column")
+          if not migration.exists() or "add column if not exists product_type text" not in migration.read_text(encoding="utf-8").lower():
+              failures.append("Skin Studio product_type migration is missing or not idempotent")
           if "async function togglePublish" not in admin:
               failures.append("admin.html missing publish toggle handler")
           # Skin Studio persistence and preview regression contracts. These guard
