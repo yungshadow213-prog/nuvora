@@ -1,0 +1,63 @@
+# Nuvora Overall + Skin Care Audit
+**Review date:** 25 October 2026  
+**Scope:** Main Nuvora storefront and Admin, Skin Studio / Skin Care product workflow, and Home / Clothing / Games studio integration.  
+**Explicit exclusions:** AI/Claude importer and image generation are paused. The client-store-platform repository was not edited. No deployment or PR merge was performed.
+
+## Executive assessment
+
+The current code changes are organized into reviewable pull requests rather than being applied directly to `main`. The main admin/editor and storefront syntax workflow passes on the current PR heads. Home, Clothing, and Games each have a consolidated studio-bridge + product-placement PR whose storefront CI passes. These checks are useful regression evidence, not authenticated end-to-end proof.
+
+## Overall Nuvora
+
+### Findings and current work
+- **Main storefront:** a dedicated redesign is ready for review in [PR #137](https://github.com/yungshadow213-prog/nuvora/pull/137).
+- **Central Admin / multi-store studios:** Home, Clothing, and Games studio integration, store-specific routing, and origin-bound preview messaging are in [PR #143](https://github.com/yungshadow213-prog/nuvora/pull/143).
+- **Store separation:** the router maps Home, Clothing, and Games to their own settings and product collections. Public storefront responses are intended to be read-only and to include published products only.
+- **Studio bridge:** the Home, Clothing, and Games apps now use the configured Nuvora Admin origin for their studio messages rather than wildcard origins.
+- **Manual product sections:** the consolidated storefront PRs ensure a section with manual selection and no selected product IDs remains empty; product IDs are compared as strings.
+- **Distinct storefront identities:** Home uses a warm, natural decor palette; Clothing uses a fashion-oriented rose/burgundy palette; Games uses a dark, high-contrast gaming palette. These are represented in their respective store settings and CSS.
+
+### Outstanding risks
+- The proposed code is not in `main` because the pull requests have not been merged.
+- The separate Cloudflare Workers Builds check has reported failures on the Nuvora PR heads. This audit does not treat those as resolved, and no deployment was attempted.
+- No authenticated browser session was used to verify actual Admin permissions, live save/reload, uploads, or publish behavior.
+- Starter-catalogue preview integration should be confirmed in the real Admin session after the relevant PRs are accepted.
+
+## Skin Care / Skin Studio
+
+### Findings and current work
+- **Full-page Skin Studio:** the current proposal separates the Skin Studio workflow from the general Nuvora product editor and uses a dedicated draft configuration.
+- **Draft persistence:** the editor writes the draft setting, checks the server response, reads the saved draft back, and compares the returned state with the submitted payload before reporting success.
+- **Publish safety:** the publish handler waits for in-flight draft writes, cancels a follow-up autosave, and submits the published configuration while clearing the draft. Error feedback states that the live storefront remains unchanged when save/publish cannot be confirmed.
+- **Product placement and preview:** the preview only exposes Skin Care products explicitly placed in a visible product-grid section. The Place on Page handler chooses a suitable target section and can create one if needed.
+- **Text normalization:** product descriptions and Skin Care guide fields pass through a normalizer that converts copied rich text into predictable plain text while preserving paragraphs, headings, and list items.
+- **Product overview / guide separation:** the main Nuvora proposal uses a lightweight wrapper to load the Skin Care storefront from the separately maintained client storefront. The client repository was intentionally left untouched in this pass.
+- **Regression coverage:** [PR #145](https://github.com/yungshadow213-prog/nuvora/pull/145) adds CI contracts for the Skin Studio save/publish/preview workflow, store isolation, and the expected separation between minimal Skin Care cards and the detailed product guide.
+
+### Outstanding risks
+- The wrapper depends on the separate Skin Care storefront being available at its configured origin. Because the client repository is off-limits for this pass, its live product-card and product-guide behavior was not changed or revalidated here.
+- Browser verification is still needed for Add Product, Edit Product, Place on Page, image upload, Save Draft → reload, preview synchronization, and Publish → storefront refresh.
+- A successful CI contract check does not prove that the deployed database schema, storage bucket, admin permissions, and live environment variables match the code.
+- The Amazon/Claude structured-enrichment and generated-image workflow is explicitly paused and is not part of this audit's implementation scope.
+
+## Active review pull requests
+
+| Area | Pull request | Current purpose |
+|---|---|---|
+| Main Nuvora storefront | [#137](https://github.com/yungshadow213-prog/nuvora/pull/137) | Main storefront redesign |
+| Skin Studio | [#138](https://github.com/yungshadow213-prog/nuvora/pull/138) | Section deletion, taxonomy, preview parity, and Skin Studio fixes |
+| Central Admin | [#143](https://github.com/yungshadow213-prog/nuvora/pull/143) | Home, Clothing, Games studio integration |
+| Regression contracts | [#145](https://github.com/yungshadow213-prog/nuvora/pull/145) | Skin Studio persistence/preview and store-isolation checks |
+| Home | [#7](https://github.com/yungshadow213-prog/NUVORA_HOME/pull/7) | Consolidated Home studio bridge + manual product placement |
+| Clothing | [#7](https://github.com/yungshadow213-prog/NUVORA_CL-OT-HES/pull/7) | Consolidated Clothing studio bridge + manual product placement |
+| Games | [#6](https://github.com/yungshadow213-prog/nuvora_GAMES/pull/6) | Consolidated Games studio bridge + manual product placement |
+
+The older overlapping Home/Clothing/Games PRs were closed as superseded by their consolidated PRs. No pull request was merged.
+
+## Recommended completion criteria
+
+1. Review and approve the listed PRs; merge only with explicit approval.
+2. In the authenticated Admin, verify draft save/reload, product CRUD and placement, image upload, preview synchronization, and publish behavior.
+3. Verify the Skin Care client storefront against the minimal-card and detailed-guide requirements when work on that repository is authorized.
+4. Revisit the separate Cloudflare Workers Builds failures if/when deployment or CI investigation is back in scope.
+5. Only after the current non-AI work is accepted, resume planning the AI importer; no Claude API or image-generation integration was started in this pass.
