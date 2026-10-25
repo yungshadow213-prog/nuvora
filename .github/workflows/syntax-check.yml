@@ -285,6 +285,11 @@ jobs:
           for needle, message in skin_contracts:
               if needle not in admin:
                   failures.append(message)
+          open_skin_start=admin.find("async function openSkinProduct(){")
+          open_skin_end=admin.find("function productReviewFlags",open_skin_start)
+          open_skin_block=admin[open_skin_start:open_skin_end]
+          if "openProductModal(true);" not in open_skin_block:
+              failures.append("Skin Studio Add Product must open the product modal instead of only changing its labels")
           # Draft preview exposes only products explicitly placed on a visible grid.
           preview_start = admin.find("function sendSkinStudioPreview")
           preview_end = admin.find("function reloadSkinStudioPreview", preview_start)
