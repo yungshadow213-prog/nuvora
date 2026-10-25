@@ -219,7 +219,7 @@ jobs:
               ("function sendSkinStudioPreview", "Skin Studio live-preview bridge missing"),
               ("skin_site_draft:payload", "Skin Studio draft writes must use the private draft setting"),
               ("Your published storefront is unchanged", "Skin Studio save failures must explicitly protect the published storefront"),
-              ("The saved draft could not be read back", "Skin Studio draft saves must verify saved state by reading it back"),
+              ("saved draft could not be read back", "Skin Studio draft saves must verify saved state by reading it back"),
               ("frame.contentWindow.postMessage({type:'nuvora-skin-studio-preview',config:skinBuilderConfig,products:previewProducts},SKIN_CLIENT_ORIGIN)", "Skin Studio preview must use the configured client origin"),
           ]
           for needle, message in skin_contracts:
