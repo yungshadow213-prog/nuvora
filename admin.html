@@ -3148,6 +3148,16 @@ function wireSkinStudioCanvas(){
    const data=event.data;
    if(data.type==='nuvora-skin-studio-ready'){if(window.__nuvoraSkinPreviewTimeout)clearTimeout(window.__nuvoraSkinPreviewTimeout);const notice=document.getElementById('skinStudioPreviewNotice');if(notice)notice.hidden=true;sendSkinStudioPreview();return;}
    if(!skinBuilderConfig)return;
+   if(data.type==='nuvora-skin-studio-remove-section-image'){
+    const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId||''));
+    if(index<0)return skinBuilderMessage('That image section could not be found. Refresh the preview and try again.','error');
+    const section=sections[index];
+    if(!section.image)return skinBuilderMessage('This section has no removable image.','info');
+    if(!confirm('Remove the image from “'+String(section.title||section.type||'this section')+'”? The image file will remain in storage.'))return;
+    skinStudioPageId=pageId;updateSkinSection(index,'image','',true);
+    void saveSkinStudioChangeImmediately('Image removed from the section and saved to the page draft.');
+    return;
+   }
    if(data.type==='nuvora-skin-studio-remove-product-from-section'){
     const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId||''));
     if(index<0)return skinBuilderMessage('That product section could not be found. Refresh the preview and try again.','error');
