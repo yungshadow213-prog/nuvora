@@ -2665,6 +2665,7 @@ function inferSkinProductCategory(p){
  if(/hair dryer|blow.?dryer|curling iron|curling wand|hair straightener|flat iron|hair styler|hair brush|scalp massager|shampoo|conditioner|hair mask|hair serum|hair oil|hair care|hair styling/.test(text))return 'hair-care-styling';
  if(/makeup remover|make.?up remover|cleansing balm|micellar|face wash|facial cleanser|cleanser/.test(text))return 'cleansers-makeup-removers';
  if(/lip balm|eye cream|eye gel|eye serum|under.?eye|lip care|lip mask/.test(text))return 'eye-lip-care';
+ if(/led face mask|led therapy mask|microcurrent|beauty device|facial device|face roller|gua sha|cleansing brush|electric facial|beauty tool|tweezers|dermaplan|epilator|facial steamer|pore vacuum|skin scrubber/.test(text))return 'beauty-tools-devices';
  if(/face mask|clay mask|sheet mask|sleeping mask|exfoliat|face scrub|chemical peel|nose strip|pore strip/.test(text))return 'exfoliants-masks';
  if(/foundation|concealer|blush|mascara|eyeliner|lipstick|lip gloss|eyeshadow|eye shadow|makeup palette|makeup brush|makeup sponge|makeup primer|setting spray|cosmetic/.test(text))return 'makeup-cosmetics';
  if(/toner|essence/.test(text))return 'toners-essences';
