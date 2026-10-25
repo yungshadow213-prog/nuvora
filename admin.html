@@ -1010,6 +1010,7 @@ body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
         <div class="field"><label>Type</label><select id="pfKind"><option value="shop">Shop</option><option value="find">Find</option><option value="learn">Learn</option></select></div>
         <div class="field"><label>Product source</label><select id="pfSource"><option value="manual">Manual</option><option value="amazon">Amazon</option><option value="sourcinbox">SourcinBox</option><option value="temu">Temu</option><option value="shopify">Shopify</option></select></div>
         <div class="field"><label>Brand</label><input id="pfBrand" placeholder="Brand"></div>
+        <div class="field skin-only-field"><label>Product type</label><input id="pfProductType" placeholder="e.g. cleanser, serum, sunscreen, beauty device"></div>
         <div class="field"><label>Current price</label><input id="pfPrice" type="number" step="0.01" placeholder="0.00"></div>
         <div class="field"><label>List / original price</label><input id="pfListPrice" type="number" step="0.01" placeholder="36.99"></div>
         <div class="field"><label>Discount %</label><input id="pfDiscount" type="number" step="1" placeholder="59"></div>
@@ -1432,6 +1433,7 @@ function setProductForm(p){
   document.getElementById('pfKind').value=p.kind||'find';
   document.getElementById('pfSource').value=p.source_type||((p.sourcinbox_product_url||p.sourcinbox_product_id)?'sourcinbox':(p.amazon_asin||p.amazon_source_url?'amazon':'manual'));
   document.getElementById('pfBrand').value=p.brand||'';
+  if(document.getElementById('pfProductType'))document.getElementById('pfProductType').value=p.product_type||p.productType||'';
   document.getElementById('pfPrice').value=p.display_price??'';
   document.getElementById('pfListPrice').value=p.amazon_list_price??'';
   document.getElementById('pfDiscount').value=p.amazon_discount_percent??'';
@@ -1891,6 +1893,7 @@ async function saveProductDraft(){
   if(reviewCountRaw!==''&&(!Number.isInteger(retailerReviewCount)||retailerReviewCount<0)){productSaveMessage('Retailer review count must be a whole number of zero or more.','error');releaseSave();return;}
   const product={
     name,kind:window.skinCareImportMode?'find':document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
+    product_type:window.skinCareImportMode?(document.getElementById('pfProductType')?.value.trim()||null):(currentProduct?.product_type??null),
     description:normalizeProductText(document.getElementById('pfDescription').value)||null,features:normalizeProductText(document.getElementById('pfFeatures').value)||null,
     benefits:window.skinCareImportMode?(normalizeProductText(document.getElementById('pfBenefits').value)||null):null,
     skin_types:window.skinCareImportMode?(normalizeProductText(document.getElementById('pfSkinTypes').value)||null):null,
@@ -3525,6 +3528,7 @@ async function openSkinManualProduct(){
   document.getElementById('productModalTitle').textContent='Add skincare product manually';
   document.getElementById('productModalSub').textContent='Enter the real product information and exact Amazon affiliate link. Nothing is published until you choose to publish it.';
   document.getElementById('pfKind').value='find';
+  if(document.getElementById('pfProductType'))document.getElementById('pfProductType').value='';
   document.getElementById('pfSource').value='amazon';
   document.getElementById('pfCategory').value=cat?.id||'';
   document.getElementById('pfRetailer').value='Amazon';
