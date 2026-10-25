@@ -111,6 +111,8 @@ jobs:
                   failures.append("storefront-studio.html: missing integration contract "+studio_token)
           if "Other Storefronts" not in Path("admin.html").read_text(encoding="utf-8"):
               failures.append("admin.html: multi-storefront studio navigation missing")
+          if 'product_selection:type==="product-grid"?"manual":undefined' not in studio:
+              failures.append("storefront-studio.html: newly created product grids must use explicit manual selection")
           migration=Path("backend/migrations/20261025181320_nuvora_multi_storefront_studios.sql").read_text(encoding="utf-8")
           for column in ["home_site_config","home_site_draft","home_products","clothing_site_config","clothing_site_draft","clothing_products","games_site_config","games_site_draft","games_products"]:
               if column not in migration:
