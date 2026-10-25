@@ -3056,15 +3056,18 @@ function duplicateSkinSection(index){
 }
 function removeSkinSection(index,skipConfirm=false){
  const pageId=skinStudioPageId||'home',sections=skinSectionsFor(pageId),section=sections[index];if(!section)return false;
- const sectionId=String(section.id||'');
- if(!skipConfirm&&!confirm('Remove the “'+(section.title||'section')+'” section from this page draft?'))return false;
- // Resolve by stable ID at mutation time instead of trusting a possibly stale index.
+ if(!skipConfirm&&!confirm('Remove the “'+(section.title||section.type||'section')+'” section from this page draft?'))return false;
+ // Legacy sections can arrive without IDs. Give the target a stable ID before
+ // resolving it again; comparing empty IDs used to select the wrong section or
+ // make deletion silently fail.
+ if(!section.id)section.id='section-'+Date.now().toString(36)+'-'+String(index);
+ const sectionId=String(section.id);
  const latestSections=skinSectionsFor(pageId),latestIndex=latestSections.findIndex(item=>String(item.id||'')===sectionId);
  if(latestIndex<0){skinBuilderMessage('This section was already removed. Refresh the outline if it is still visible.','info');return false;}
  latestSections.splice(latestIndex,1);
- skinBuilderConfig.version=Math.max(7,Number(skinBuilderConfig.version)||0);
+ skinBuilderConfig.version=Math.max(8,Number(skinBuilderConfig.version)||0);
  const next=latestSections[Math.min(latestIndex,latestSections.length-1)];
- skinStudioSelection=next?{type:'section',id:String(next.id)}:{type:'none',id:''};
+ skinStudioSelection=next?{type:'section',id:String(next.id||'')}:{type:'none',id:''};
  skinMarkDirty('Section removed from the draft.');renderSkinStudioAll();queueSkinStudioPreview();
  void saveSkinStudioChangeImmediately('Section removed and saved to the page draft.');
  return true;
@@ -3264,7 +3267,14 @@ function wireSkinStudioCanvas(){
     return;
    }
    if(data.type==='nuvora-skin-studio-remove-section'){
-    const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId||''));
+    const pageId=data.pageId||'home',sections=skinSectionsFor(pageId);
+    let index=sections.findIndex(section=>String(section.id||'')===String(data.sectionId||''));
+    // Preview sections without a saved ID use their visible preview index. Match
+    // that against visible source sections, then mutate the original section array.
+    if(index<0&&/^\\d+$/.test(String(data.sectionId||''))){
+     const previewIndex=Number(data.sectionId),visible=sections.map((section,sourceIndex)=>({section,sourceIndex})).filter(item=>item.section.visible!==false);
+     const match=visible[previewIndex];if(match&&!match.section.id)index=match.sourceIndex;
+    }
     if(index<0)return skinBuilderMessage('That section is no longer on this page. Refresh the preview and try again.','error');
     const title=String(sections[index].title||sections[index].type||'section');
     if(!confirm('Delete the “'+title+'” section from this page draft? This change will not publish until you publish the page.'))return;
