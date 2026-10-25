@@ -232,7 +232,7 @@ function saveSection(e){
  section.eyebrow=$("sectionEyebrow").value.trim();
  section.text=$("sectionText").value.trim();
  section.description=$("sectionDescription").value.trim();
- if(section.type==="product-grid")section.product_ids=Array.from($("sectionProducts").querySelectorAll("[data-section-product-id]:checked")).map(input=>String(input.dataset.sectionProductId));
+ if(section.type==="product-grid"){section.product_selection="manual";section.product_ids=Array.from($("sectionProducts").querySelectorAll("[data-section-product-id]:checked")).map(input=>String(input.dataset.sectionProductId));}
  $("sectionModal").classList.remove("open");renderSections();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");showNotice("Section updated in the preview. Save Draft to keep the changes or Publish to make them public.");
 }
 function moveSection(i,delta){const j=i+delta;if(j<0||j>=config.sections.length)return;[config.sections[i],config.sections[j]]=[config.sections[j],config.sections[i]];renderSections();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");}
@@ -298,7 +298,7 @@ function onPreviewMessage(event){
   const section=config.sections.find(x=>String(x.id)===String(d.sectionId));
   if(section&&section.type==="product-grid"){
    if(!Array.isArray(section.product_ids))section.product_ids=products.map(p=>String(p.id));
-   section.product_ids=section.product_ids.filter(id=>String(id)!==String(d.productId));
+   section.product_selection="manual";section.product_ids=section.product_ids.filter(id=>String(id)!==String(d.productId));
    renderSections();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");showNotice("Product removed from this section only. The catalogue item and its image remain available.");
   }return;
  }
@@ -306,7 +306,7 @@ function onPreviewMessage(event){
   const section=config.sections.find(x=>String(x.id)===String(d.sectionId));
   if(section&&section.type==="product-grid"){
    if(!Array.isArray(section.product_ids))section.product_ids=products.map(p=>String(p.id));
-   const source=section.product_ids.findIndex(id=>String(id)===String(d.productId)),target=section.product_ids.findIndex(id=>String(id)===String(d.targetProductId));
+   section.product_selection="manual";const source=section.product_ids.findIndex(id=>String(id)===String(d.productId)),target=section.product_ids.findIndex(id=>String(id)===String(d.targetProductId));
    if(source>=0&&target>=0&&source!==target){const [id]=section.product_ids.splice(source,1);section.product_ids.splice(target,0,id);renderSections();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");}
   }else{
    const source=products.findIndex(x=>String(x.id)===String(d.productId)),target=products.findIndex(x=>String(x.id)===String(d.targetProductId));
