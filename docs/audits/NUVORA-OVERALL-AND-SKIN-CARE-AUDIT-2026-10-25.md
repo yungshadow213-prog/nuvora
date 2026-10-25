@@ -62,6 +62,8 @@ The non-AI review identified and addressed two additional integration risks on t
 - **Wrapper-aware regression contract:** PR #145’s release checks now recognize that `beauty.html` is a wrapper for the separately maintained Skin Care client storefront, rather than incorrectly requiring the detailed product UI to live in the wrapper. The client repository remains untouched.
 - **Manual featured-section semantics:** Home PR #7, Clothing PR #7, and Games PR #6 now keep a manually curated Featured section empty when it has no selected products, rather than silently falling back to other catalogue items.
 
+- **Newly added custom product grids:** PR #143 now marks newly created product-grid sections as explicitly manual from the moment they are created, so the storefront preview does not temporarily populate an empty curated grid with fallback catalogue items. A matching CI contract guards this behavior.
+
 These changes are committed to the existing review branches. They have not been merged, deployed, or verified through an authenticated live Admin session.
 
 ## Recommended completion criteria
