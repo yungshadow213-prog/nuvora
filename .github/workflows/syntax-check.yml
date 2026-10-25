@@ -83,6 +83,14 @@ jobs:
               if re.search(r"https?://localhost(?::\d+)?", text, re.I):
                   failures.append(f"{name}: localhost URL reference found")
           worker=Path("worker.js").read_text(encoding="utf-8")
+          schema=Path("backend/schema.sql").read_text(encoding="utf-8")
+          migration=Path("backend/migrations/2026-10-25-nuvora-product-type.sql")
+          if not re.search(r"product_type\s+text", schema):
+              failures.append("backend/schema.sql must define products.product_type for Skin Studio")
+          if not migration.exists() or "add column if not exists product_type text" not in migration.read_text(encoding="utf-8").lower():
+              failures.append("Skin Studio product_type migration must exist and be idempotent")
+          if "'product_size','product_type','benefits'" not in worker:
+              failures.append("worker.js optional-column compatibility must include product_type")
           if re.search(r"async\s+async\s+function", worker):
               failures.append("worker.js: malformed duplicated async function declaration")
           required_helpers=["configured","randHex","buildProductOptions","getAmazonToken","amazonGetItem","shopifyGraphql","makeProductSlug","validateProduct","supabaseRest","adminUser"]
