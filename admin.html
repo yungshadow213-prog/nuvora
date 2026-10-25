@@ -3148,6 +3148,23 @@ function wireSkinStudioCanvas(){
    const data=event.data;
    if(data.type==='nuvora-skin-studio-ready'){if(window.__nuvoraSkinPreviewTimeout)clearTimeout(window.__nuvoraSkinPreviewTimeout);const notice=document.getElementById('skinStudioPreviewNotice');if(notice)notice.hidden=true;sendSkinStudioPreview();return;}
    if(!skinBuilderConfig)return;
+   if(data.type==='nuvora-skin-studio-remove-product-from-section'){
+    const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId||''));
+    if(index<0)return skinBuilderMessage('That product section could not be found. Refresh the preview and try again.','error');
+    const section=sections[index],product=adminProducts.find(item=>String(item.id)===String(data.productId||''));
+    if(!product)return skinBuilderMessage('That product could not be found in the catalog. Refresh the product library and try again.','error');
+    if(!confirm('Remove “'+String(product.name||'this product')+'” from this page section? The product itself will remain in your catalog.'))return;
+    const ids=new Set((Array.isArray(section.product_ids)?section.product_ids:[]).map(String).filter(id=>id!=='__nuvora_manual_empty__'));
+    if(section.product_selection!=='manual'){
+      for(const item of skinProductsForSection({...section,product_selection:'automatic',product_ids:[]}))ids.add(String(item.id));
+    }
+    ids.delete(String(data.productId));section.product_selection='manual';section.product_ids=ids.size?[...ids]:['__nuvora_manual_empty__'];
+    skinStudioPageId=pageId;skinStudioSelection={type:'section',id:String(section.id)};
+    skinMarkDirty('Product removed from this section draft; the catalog product remains unchanged.');
+    renderSkinStudioAll();queueSkinStudioPreview();
+    void saveSkinStudioChangeImmediately('Product removed from the section and saved to the page draft.');
+    return;
+   }
    if(data.type==='nuvora-skin-studio-remove-section'){
     const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId||''));
     if(index<0)return skinBuilderMessage('That section is no longer on this page. Refresh the preview and try again.','error');
