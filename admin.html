@@ -482,7 +482,19 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
 @media(max-width:900px){.catalog-health-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.catalog-health-grid{gap:7px}.catalog-health-card{padding:12px 11px;border-radius:12px}.catalog-health-card strong{font-size:21px}.catalog-health-card span{font-size:10px}}
 </style><style id="nuvora-retailer-rating-admin-css">.retailer-rating-preview{font-size:11px;line-height:1.5;color:#778477;margin-top:6px;min-height:18px}.nv-admin-stars{display:inline-flex;gap:1px;margin-right:4px}.nv-admin-star{font-size:17px;line-height:1;color:#c89a3b}.nv-admin-star.empty{color:#d6ddd5}.nv-admin-star.partial{-webkit-background-clip:text;background-clip:text;color:transparent}.retailer-rating-preview strong{color:#30463a}</style>
-</head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
+<style id="nuvora-skin-studio-preview-size-fix">
+@media(min-width:1181px){
+ body.skin-studio-fullpage .studio-layout{grid-template-columns:190px minmax(0,1fr) 230px!important}
+ body.skin-studio-fullpage .studio-canvas-viewport{padding:5px!important}
+}
+@media(min-width:761px) and (max-width:1180px){
+ body.skin-studio-fullpage .studio-layout{grid-template-columns:180px minmax(0,1fr)!important}
+ body.skin-studio-fullpage .studio-canvas-viewport{padding:5px!important}
+}
+body.skin-studio-fullpage .studio-canvas-inner{border-radius:7px!important}
+body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
+.studio-library-pagination button:focus-visible{outline:2px solid #6e8c65;outline-offset:2px}
+</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
 <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
 <button data-icon="↥" onclick="show('import',this)">Import</button>
 <button data-icon="▣" onclick="show('products',this)">Products</button>
