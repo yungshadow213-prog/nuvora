@@ -2944,7 +2944,7 @@ function updateSkinSection(index,key,value,fromPreview=false){
 }
 function selectFirstSkinSection(){const section=skinSectionsFor()[0];if(section)selectSkinItem('section',section.id);else openSkinAdd('section');}
 function focusSkinInspector(){const panel=document.querySelector('.studio-right-panel');if(panel)panel.scrollTo({top:0,behavior:'smooth'});const root=document.getElementById('skinSelectedInspector');if(root)root.scrollIntoView({block:'nearest',behavior:'smooth'});if(!skinStudioSelection||skinStudioSelection.type==='none')selectFirstSkinSection();}
-function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;let ids=new Set((sec.product_ids||[]).map(String));if(sec.product_selection!=='manual')ids=new Set(skinProductsForSection({...sec,product_selection:'automatic',product_ids:[]}).map(p=>String(p.id)));if(checked)ids.add(String(productId));else ids.delete(String(productId));sec.product_selection='manual';sec.product_ids=[...ids];updateSkinSection(index,'product_ids',sec.product_ids);}
+function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;let ids=new Set((sec.product_ids||[]).map(String).filter(id=>id!=='__nuvora_manual_empty__'));if(sec.product_selection!=='manual')ids=new Set(skinProductsForSection({...sec,product_selection:'automatic',product_ids:[]}).map(p=>String(p.id)));if(checked)ids.add(String(productId));else ids.delete(String(productId));sec.product_selection='manual';sec.product_ids=ids.size?[...ids]:['__nuvora_manual_empty__'];updateSkinSection(index,'product_ids',sec.product_ids);}
 function toggleSkinSectionVisibility(index){
  const sec=skinSectionsFor()[index];if(!sec)return;sec.visible=sec.visible===false;
  skinMarkDirty('Section visibility changed in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
@@ -2983,7 +2983,7 @@ function skinProductsForSection(sec){
  // manual selection means this section is empty, not "show every product".
  if(sec.product_selection==='manual'){
   const byId=new Map(all.map(p=>[String(p.id),p]));
-  return (Array.isArray(sec.product_ids)?sec.product_ids:[]).map(id=>byId.get(String(id))).filter(Boolean);
+  return (Array.isArray(sec.product_ids)?sec.product_ids:[]).filter(id=>String(id)!=='__nuvora_manual_empty__').map(id=>byId.get(String(id))).filter(Boolean);
  }
  let list=all.filter(p=>!!p.published);
  if(sec.filter==='featured')list=list.filter(p=>!!p.featured);
@@ -3021,7 +3021,7 @@ function addSkinProductToSection(productId,targetId,pageId){
   sections.splice(insertAt,0,sec);
  }
  skinStudioPendingProductTarget=null;
- let ids=Array.isArray(sec.product_ids)?sec.product_ids.map(String):[];
+ let ids=Array.isArray(sec.product_ids)?sec.product_ids.map(String).filter(id=>id!=='__nuvora_manual_empty__'):[];
  if(sec.product_selection!=='manual')ids=skinProductsForSection({...sec,product_selection:'automatic',product_ids:[]}).map(p=>String(p.id));
  if(!ids.includes(String(productId)))ids.push(String(productId));
  sec.product_selection='manual';sec.product_ids=ids.slice(0,60);skinStudioPageId=effectivePageId;skinStudioSelection={type:'section',id:String(sec.id)};
