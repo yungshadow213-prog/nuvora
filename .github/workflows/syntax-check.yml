@@ -106,7 +106,7 @@ jobs:
           for route_token in ["storefrontStudioRoute","publicStorefrontMatch","adminStorefrontMatch","validateMultiStorefrontConfig","validateMultiStorefrontProducts"]:
               if route_token not in worker:
                   failures.append("worker.js: multi-storefront integration missing "+route_token)
-          for studio_token in ["/api/admin/storefronts/","save-draft","publish","uploadProductImages","product-images","nuvora-home-studio-preview","nuvora-clothing-studio-preview","nuvora-games-studio-preview"]:
+          for studio_token in ["/api/admin/storefronts/","save-draft","publish","uploadProductImages","product-images","eventPrefix:\"nuvora-home-studio\"","eventPrefix:\"nuvora-clothing-studio\"","eventPrefix:\"nuvora-games-studio\""]:
               if studio_token not in studio:
                   failures.append("storefront-studio.html: missing integration contract "+studio_token)
           if "Other Storefronts" not in Path("admin.html").read_text(encoding="utf-8"):
