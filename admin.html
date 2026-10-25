@@ -1173,7 +1173,23 @@ async function ensureSkinCategory(openForm=false){
     renderSkinProducts();return cat;
   }catch(e){setAdminStatus('Could not set up Skin Care: '+(e.message||e));throw e;}
 }
-async function openSkinProduct(){prepareSkinProductPlacement();await ensureSkinCategory(true);window.skinCareImportMode=true;setSkinAdminFormMode(true);if(document.getElementById('pfProductType'))document.getElementById('pfProductType').value='';document.getElementById('productModalTitle').textContent='Import Amazon skincare';document.getElementById('productModalSub').textContent='Paste an Amazon skincare link. Nuvora will assign the Skin Care category and capture available listing details automatically. Price is managed on Amazon.';document.getElementById('amazonUrlInput').placeholder='Paste an Amazon skincare product or affiliate link';const saveButton=document.getElementById('productSaveBtn');if(saveButton)saveButton.textContent='Save skincare draft';populateSkinRecommendations();}
+async function openSkinProduct(){
+ try{
+  prepareSkinProductPlacement();
+  await ensureSkinCategory(true);
+  window.skinCareImportMode=true;setSkinAdminFormMode(true);
+  if(document.getElementById('pfProductType'))document.getElementById('pfProductType').value='';
+  document.getElementById('productModalTitle').textContent='Import Amazon skincare';
+  document.getElementById('productModalSub').textContent='Paste an Amazon skincare link. Nuvora will assign the Skin Care category and capture available listing details automatically. Price is managed on Amazon.';
+  document.getElementById('amazonUrlInput').placeholder='Paste an Amazon skincare product or affiliate link';
+  const saveButton=document.getElementById('productSaveBtn');if(saveButton)saveButton.textContent='Save skincare draft';
+  populateSkinRecommendations();
+ }catch(e){
+  const message='Could not open the skincare product form: '+(e?.message||'The Skin Care category could not be verified.');
+  if(document.body.classList.contains('skin-studio-fullpage'))skinBuilderMessage(message,'error');
+  else setAdminStatus(message,'error');
+ }
+}
 function productReviewFlags(p){
  const flags=[];
  const name=String(p?.name||'').trim(),words=name.match(/[A-Za-z0-9]+(?:['’][A-Za-z]+)*/g)||[];
