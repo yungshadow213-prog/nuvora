@@ -2780,7 +2780,7 @@ function renderSkinLibrary(){
   const productIdentity=item=>String(item?.amazon_asin||item?.asin||retailerDestination(item)||item?.destination_url||item?.amazon_source_url||item?.source_url||item?.id||'').trim().toLowerCase();
   const allRows=adminProducts.filter(isSkinProduct).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))).filter((p,index,list)=>list.findIndex(other=>String(other.name||'').trim().toLowerCase()===String(p.name||'').trim().toLowerCase()&&productIdentity(other)===productIdentity(p))===index);
   const needle=String(window.skinStudioProductSearch||'').trim().toLowerCase();
-  const rows=allRows.filter(p=>!needle||[p.name,p.brand,p.product_type,p.category?.name,p.category_name,p.description,p.store_description,p.amazon_asin,p.source_type,p.retailer].filter(Boolean).join(' ').toLowerCase().includes(needle));
+  const rows=allRows.filter(p=>!needle||[p.name,p.brand,p.product_type,p.productType,p.product_type_name,p.type,p.category?.name,p.category_name,p.description,p.store_description,p.amazon_asin,p.asin,p.source_type,p.retailer].filter(Boolean).join(' ').toLowerCase().includes(needle));
   const pageSize=8,pageCount=Math.max(1,Math.ceil(rows.length/pageSize));
   const currentPage=Math.min(Math.max(1,Number(window.skinStudioProductPage)||1),pageCount);
   window.skinStudioProductPage=currentPage;
