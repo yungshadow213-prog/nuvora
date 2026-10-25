@@ -119,6 +119,9 @@ jobs:
           for draft_token in ["const hasDraftProducts=products.some","const draft=hasDraftProducts?{config:publishedConfig,products}:null","[draftColumn]:draft","products:publishedProducts,draft"]:
               if draft_token not in worker:
                   failures.append("worker.js: publishing must preserve private draft products "+draft_token)
+          public_block=worker[worker.index("const publicStorefrontMatch"):worker.index("const adminStorefrontMatch")]
+          if ".filter(product=>String(product?.status||'published').toLowerCase()==='published')" not in public_block:
+              failures.append("worker.js: public storefront endpoint must filter private draft products at read time")
           if "stableJson(readback.draft??null)!==stableJson(result.draft??null)" not in studio:
               failures.append("storefront-studio.html: publish verification must confirm private draft retention")
           if "products=result.draft?.products||result.products||products" not in studio:
