@@ -223,8 +223,16 @@ function productMatchesCategory(p,categoryId){
 }
 function filteredProducts(section){
  let list=[...products];
+ const manualSelection=section.product_selection==='manual';
  const explicit=Array.isArray(section.product_ids)&&section.product_ids.length;
- if(explicit){
+ if(manualSelection){
+  // Manual selection is authoritative even when the list is empty. Older saved
+  // drafts may lose the empty-list sentinel during normalization; never fall
+  // back to showing every product for a manually managed, intentionally empty section.
+  const byId=new Map(products.map(p=>[String(p.id),p]));
+  const ids=(Array.isArray(section.product_ids)?section.product_ids:[]).filter(id=>String(id)!=='__nuvora_manual_empty__');
+  list=ids.map(id=>byId.get(String(id))).filter(Boolean);
+ }else if(explicit){
   const byId=new Map(products.map(p=>[String(p.id),p]));
   list=section.product_ids.map(id=>byId.get(String(id))).filter(Boolean);
  }else{
