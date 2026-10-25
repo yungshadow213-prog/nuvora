@@ -19,6 +19,7 @@ The current code changes are organized into reviewable pull requests rather than
 
 ### Outstanding risks
 - The proposed code is not in `main` because the pull requests have not been merged.
+- **PR #138 mergeability:** GitHub currently reports this PR as `dirty` / not mergeable after the base branch advanced. I synchronized the current-main integration files and reconciled the workflow contracts on its branch, but the latest GitHub status still reports a mergeability blocker. Do not treat #138 as ready to merge until that state is resolved.
 - The separate Cloudflare Workers Builds check has reported failures on the Nuvora PR heads. This audit does not treat those as resolved, and no deployment was attempted.
 - No authenticated browser session was used to verify actual Admin permissions, live save/reload, uploads, or publish behavior.
 - Starter-catalogue preview integration should be confirmed in the real Admin session after the relevant PRs are accepted.
