@@ -125,6 +125,9 @@ jobs:
           for required in ["/api/health","/api/config","/api/settings"]:
               if required not in worker:
                   failures.append(f"worker.js: missing required endpoint {required}")
+          studio=Path("storefront-studio.html").read_text(encoding="utf-8")
+          if re.search(r'postMessage\([\s\S]{0,350}?,\s*["\']\*["\']\s*\)', studio):
+              failures.append("storefront-studio.html: preview messages must target the selected storefront origin, not wildcard")
           if failures:
               print("\n".join(failures))
               sys.exit(1)
