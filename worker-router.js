@@ -13,7 +13,9 @@ const json = (value, status = 200) => new Response(JSON.stringify(value), {
     "access-control-allow-methods": "GET, OPTIONS",
     "access-control-allow-headers": "content-type",
     "cache-control": "no-store, no-cache, must-revalidate, max-age=0",
-    "vary": "Origin"
+    "vary": "Origin",
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "strict-origin-when-cross-origin"
   }
 });
 async function publicStorefront(request, env, key) {
