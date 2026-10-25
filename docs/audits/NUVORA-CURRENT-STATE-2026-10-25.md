@@ -39,7 +39,7 @@ These results confirm source-level checks and build success; they do **not** rep
 1. **Authenticated admin verification:** Sign in with the authorized admin account and exercise Skin Studio and each multi-store studio: create/edit/delete a product, upload images, save a draft, reload, preview, publish, and confirm the correct storefront reflects the change.
 2. **Skin Care client storefront:** The separate client repository remains untouched by design. Its actual product-card layout, retailer link, guide content, rating separation, and recommendation behavior still require verification in the authorized client-storefront workflow.
 3. **Database security review:** Supabase advisors still report pre-existing security/performance findings, including RLS-enabled tables without applicable policies, function/search-path and execute-permission warnings, disabled leaked-password protection, and missing foreign-key indexes. These need deliberate review against intended access patterns; no unrelated policies or permissions were changed blindly.
-4. **Homepage visual polish:** PR #148 adds the responsive editorial hero and visual styling. It remains a separate review PR pending its final CI result.
+4. **Homepage visual polish:** PR #148 merged as `8595abe57fbc4c87425de77cea9a991f4000fc78`. All Nuvora syntax, release-contract, storefront-JavaScript, admin-editor-JavaScript, and Wrangler dry-run/bundle jobs passed on its PR head.
 5. **Deployment and live checks:** Explicitly out of scope. No deploy, production configuration change, or authenticated live write test was performed.
 
 ## Product decisions retained
