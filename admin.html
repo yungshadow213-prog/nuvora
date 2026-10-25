@@ -235,7 +235,7 @@ body.skin-studio-fullpage .studio-save-state[data-status="dirty"] .studio-save-d
 body.skin-studio-fullpage .studio-status{flex-shrink:0;margin:8px 12px 0!important;padding:7px 10px!important;min-height:30px;border-radius:10px!important;font-size:10px!important}
 body.skin-studio-fullpage .studio-status[data-status="error"]{background:#fff0ef;border-color:#f4cbc6;color:#a33d31}
 body.skin-studio-fullpage .studio-status[data-status="success"]{background:#edf6ed;border-color:#d8e9d6;color:#366641}
-body.skin-studio-fullpage .studio-layout{display:grid!important;grid-template-columns:258px minmax(360px,1fr) 318px;gap:0!important;align-items:stretch!important;flex:1;min-height:0;overflow:hidden;padding-top:9px}
+body.skin-studio-fullpage .studio-layout{display:grid!important;grid-template-columns:220px minmax(0,1fr) 270px;gap:0!important;align-items:stretch!important;flex:1;min-height:0;overflow:hidden;padding-top:9px}
 body.skin-studio-fullpage .studio-left-panel{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;border-right:1px solid #dde4db;background:#fff}
 body.skin-studio-fullpage .studio-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:15px 13px 12px}
 body.skin-studio-fullpage .studio-panel-head h3,body.skin-studio-fullpage .studio-inspector-heading h3{margin:5px 0 0;font-size:16px;letter-spacing:-.04em;color:#26392a}
@@ -2374,7 +2374,6 @@ const defaultSkinSiteConfig=()=>({
   pages:[],
   sections:[
     {id:'hero',type:'hero',visible:true,title:'Care that feels like you.'},
-     {id:'routine-finder',type:'routine-finder',visible:true,title:'Find your routine, one step at a time.',eyebrow:'YOUR SKIN, YOUR PACE',text:'Choose a skin type to explore relevant finds. These labels are browsing aids, not a guarantee of suitability.'},
     {id:'edit',type:'product-grid',visible:true,title:'What’s in the edit',eyebrow:'Curated, not crowded',text:'Product picks are added by the Nuvora team. Explore skincare finds and helpful guides.',filter:'all',columns:4,product_ids:[]},
     {id:'approach',type:'editorial',visible:true,title:'Good finds. Clear choices.',eyebrow:'A gentler way to discover',text:'Nuvora Skin is a focused corner of Nuvora for skincare and beauty discoveries. Check ingredient lists, product directions, and suitability before buying.'},
     {id:'journal',type:'journal-grid',visible:true,title:'Little notes for everyday skin.',eyebrow:'The journal',text:'Practical notes for building a routine at your own pace.',columns:3,product_ids:[]}
@@ -2610,11 +2609,14 @@ function skinImageOf(p){return String(p?.image_url||p?.image||p?.imageUrl||(Arra
 function skinCategoryOfProduct(id){return String((skinBuilderConfig?.productCategoryMap||{})[String(id)]||'');}
 function skinDefaultCategories(){
  return [
-  {id:'cleanse',slug:'cleanse',name:'Cleanse',description:'A fresh start for morning and evening routines.'},
-  {id:'treat',slug:'treat',name:'Treat',description:'Serums and focused additions to explore.'},
-  {id:'hydrate',slug:'hydrate',name:'Hydrate',description:'Moisture-minded everyday essentials.'},
-  {id:'protect',slug:'protect',name:'Protect',description:'Sun protection and daytime essentials.'},
-  {id:'body-lips',slug:'body-lips',name:'Body & lips',description:'Care for lips and body.'}
+  {id:'cleansers-makeup-removers',slug:'cleansers-makeup-removers',name:'Cleansers & Makeup Removers',description:'Face washes, cleansing balms and makeup-removing essentials.'},
+  {id:'toners-essences',slug:'toners-essences',name:'Toners & Essences',description:'Lightweight layers between cleansing and treatment.'},
+  {id:'serums-treatments',slug:'serums-treatments',name:'Serums & Treatments',description:'Targeted serums and treatment-led products.'},
+  {id:'moisturisers-barrier-care',slug:'moisturisers-barrier-care',name:'Moisturisers & Barrier Care',description:'Daily moisture and barrier-supporting products.'},
+  {id:'sunscreen-spf',slug:'sunscreen-spf',name:'Sunscreen & SPF',description:'Sun protection for daytime routines.'},
+  {id:'exfoliants-masks',slug:'exfoliants-masks',name:'Exfoliants & Masks',description:'Optional masks and exfoliating products.'},
+  {id:'eye-lip-care',slug:'eye-lip-care',name:'Eye & Lip Care',description:'Focused care for the eye area and lips.'},
+  {id:'body-care',slug:'body-care',name:'Body Care',description:'Lotions, washes and care for the body.'}
  ];
 }
 function skinStoreCategoryOptions(){
@@ -2622,11 +2624,14 @@ function skinStoreCategoryOptions(){
 }
 function inferSkinProductCategory(p){
  const text=[p?.name,p?.brand,p?.description,p?.features,p?.store_description].filter(Boolean).join(' ').toLowerCase();
- if(/cleanser|cleansing|face wash|micellar/.test(text))return 'cleanse';
- if(/sunscreen|sun screen|spf|sunblock/.test(text))return 'protect';
- if(/serum|retinol|toner|exfoliat|treatment|acne/.test(text))return 'treat';
- if(/lip balm|body lotion|body cream|body wash|hair mask|hair care/.test(text))return 'body-lips';
- if(/moisturi|hydration|cream|lotion|barrier/.test(text))return 'hydrate';
+ if(/sunscreen|sun screen|spf|sunblock|sun protection/.test(text))return 'sunscreen-spf';
+ if(/lip balm|eye cream|eye gel|eye serum|under.?eye|lip care/.test(text))return 'eye-lip-care';
+ if(/body lotion|body cream|body wash|body butter|body oil|body care|hair mask|hair care/.test(text))return 'body-care';
+ if(/face mask|clay mask|sheet mask|exfoliat|face scrub|chemical peel/.test(text))return 'exfoliants-masks';
+ if(/toner|essence/.test(text))return 'toners-essences';
+ if(/serum|retinol|treatment|acne|spot treatment|ampoule|niacinamide|vitamin c/.test(text))return 'serums-treatments';
+ if(/cleanser|cleansing|face wash|micellar|makeup remover|cleansing balm/.test(text))return 'cleansers-makeup-removers';
+ if(/moisturi|hydration|cream|lotion|barrier/.test(text))return 'moisturisers-barrier-care';
  return '';
 }
 function skinActiveSectionIndex(id){
