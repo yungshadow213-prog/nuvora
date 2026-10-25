@@ -2761,6 +2761,13 @@ function setSkinStudioProductPage(page){
  window.skinStudioProductPage=Math.max(1,Number(page)||1);
  renderSkinLibrary();
 }
+function setSkinStudioProductSearch(value){
+ window.skinStudioProductSearch=String(value||'');
+ window.skinStudioProductPage=1;
+ renderSkinLibrary();
+ const input=document.getElementById('skinStudioProductSearch');
+ if(input){input.focus();input.setSelectionRange(input.value.length,input.value.length);}
+}
 function renderSkinLibrary(){
  const root=document.getElementById('skinLibraryItems');if(!root)return;
  const outline=document.getElementById('skinBuilderSections');
@@ -2770,12 +2777,14 @@ function renderSkinLibrary(){
  if(!skinBuilderConfig){root.innerHTML='<div class="studio-library-empty">Loading your site content…</div>';return;}
  if(skinStudioTab==='products'){
   const productIdentity=item=>String(item?.amazon_asin||item?.asin||retailerDestination(item)||item?.destination_url||item?.amazon_source_url||item?.source_url||item?.id||'').trim().toLowerCase();
-  const rows=adminProducts.filter(isSkinProduct).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))).filter((p,index,list)=>list.findIndex(other=>String(other.name||'').trim().toLowerCase()===String(p.name||'').trim().toLowerCase()&&productIdentity(other)===productIdentity(p))===index);
+  const allRows=adminProducts.filter(isSkinProduct).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))).filter((p,index,list)=>list.findIndex(other=>String(other.name||'').trim().toLowerCase()===String(p.name||'').trim().toLowerCase()&&productIdentity(other)===productIdentity(p))===index);
+  const needle=String(window.skinStudioProductSearch||'').trim().toLowerCase();
+  const rows=allRows.filter(p=>!needle||[p.name,p.brand,p.product_type,p.category?.name,p.category_name,p.description,p.store_description,p.amazon_asin,p.source_type,p.retailer].filter(Boolean).join(' ').toLowerCase().includes(needle));
   const pageSize=8,pageCount=Math.max(1,Math.ceil(rows.length/pageSize));
   const currentPage=Math.min(Math.max(1,Number(window.skinStudioProductPage)||1),pageCount);
   window.skinStudioProductPage=currentPage;
   const visibleRows=rows.slice((currentPage-1)*pageSize,currentPage*pageSize);
-  root.innerHTML='<div class="studio-product-add-actions"><button type="button" class="studio-outline-add" onclick="openSkinManualProduct()">＋ Add manually</button><button type="button" class="studio-outline-add" onclick="openSkinProduct()">↗ Import Amazon link</button></div><p class="studio-inline-help">Products are shown side by side. Choose Edit details to change a product, or Place on page to add it to the selected product section.</p>'+
+  root.innerHTML='<div class="studio-product-add-actions"><button type="button" class="studio-outline-add" onclick="openSkinManualProduct()">＋ Add manually</button><button type="button" class="studio-outline-add" onclick="openSkinProduct()">↗ Import Amazon link</button></div><label class="studio-product-search" style="display:block;margin:12px 0"><span class="muted" style="display:block;margin-bottom:5px">Search product library</span><input id="skinStudioProductSearch" type="search" value="'+esc(window.skinStudioProductSearch||'')+'" oninput="setSkinStudioProductSearch(this.value)" placeholder="Search by name, brand, type, category or ASIN" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.04);color:inherit"></label><p class="studio-inline-help">'+rows.length+' of '+allRows.length+' products · Products are shown side by side. Choose Edit details to change a product, or Place on page to add it to the selected product section.</p>'+
    (rows.length?'<div class="studio-products-grid">'+visibleRows.map(p=>{
     const id=String(p.id),image=skinImageOf(p),published=!!p.published;
     const selection=skinStudioSelection?.type==='product'&&String(skinStudioSelection.id)===id;
@@ -2783,7 +2792,7 @@ function renderSkinLibrary(){
      (image?'<img src="'+esc(image)+'" alt="" loading="lazy">':'<div class="studio-product-placeholder">◯</div>')+
      '<div class="studio-library-item-copy"><b>'+esc(p.name||'Untitled product')+'</b><small>'+esc(published?'Published':'Draft — not visible yet')+' · '+esc(retailerLabel(p))+'</small></div>'+
      '<div class="studio-library-item-actions"><button type="button" onclick="editSkinProduct('+esc(JSON.stringify(id))+');event.stopPropagation()">Edit details</button><button type="button" data-product-publish="'+esc(id)+'" onclick="togglePublish('+esc(JSON.stringify(id))+');event.stopPropagation()">'+(published?'Unpublish':'Publish')+'</button><button type="button" onclick="addSkinProductToSection('+esc(JSON.stringify(id))+',skinStudioSelection?.type===\'section\'?skinStudioSelection.id:null,skinStudioPageId);event.stopPropagation()">＋ Place on page</button></div></article>';
-   }).join('')+'</div>':'<div class="studio-library-empty">No skincare products found yet. Add a product by pasting its Amazon link or create one manually.</div>')+
+   }).join('')+'</div>':'<div class="studio-library-empty">'+(needle?'No products match your search. Try a product name, brand, type, category or ASIN.':'No skincare products found yet. Add a product by pasting its Amazon link or create one manually.')+'</div>')+
    (rows.length>pageSize?'<nav aria-label="Product library pages" style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:6px;margin:18px 0;padding:12px 0;border-top:1px solid #e1e7df"><button type="button" style="padding:7px 10px;border:1px solid #d9e1d6;border-radius:7px;background:#fff" '+(currentPage===1?'disabled':'')+' onclick="setSkinStudioProductPage('+(currentPage-1)+')">Previous</button>'+Array.from({length:pageCount},(_,i)=>i+1).filter(page=>page===1||page===pageCount||Math.abs(page-currentPage)<=1).map((page,index,pages)=>((index>0&&page-pages[index-1]>1?'<span>…</span>':'')+'<button type="button" style="padding:7px 10px;border:1px solid '+(page===currentPage?'#718a69':'#d9e1d6')+';border-radius:7px;background:'+(page===currentPage?'#edf3e9':'#fff')+';font-weight:'+(page===currentPage?'700':'500')+'" aria-current="'+(page===currentPage?'page':'false')+'" onclick="setSkinStudioProductPage('+page+')">'+page+'</button>')).join('')+'<button type="button" style="padding:7px 10px;border:1px solid #d9e1d6;border-radius:7px;background:#fff" '+(currentPage===pageCount?'disabled':'')+' onclick="setSkinStudioProductPage('+(currentPage+1)+')">Next</button></nav>':'');
   return;
  }
