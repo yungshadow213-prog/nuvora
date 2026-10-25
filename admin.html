@@ -2977,7 +2977,15 @@ function removeSkinSection(index,skipConfirm=false){
  skinMarkDirty('Section removed from the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function skinProductsForSection(sec){
- let list=adminProducts.filter(p=>isSkinProduct(p)&&!!p.published);
+ const all=adminProducts.filter(p=>isSkinProduct(p));
+ // Explicit placements are authoritative, matching the storefront renderer. This also
+ // lets a draft product appear in the editor preview after Place on page, without
+ // making it public; the preview bridge separately marks placed drafts preview-only.
+ if(Array.isArray(sec.product_ids)&&sec.product_ids.length){
+  const byId=new Map(all.map(p=>[String(p.id),p]));
+  return sec.product_ids.map(id=>byId.get(String(id))).filter(Boolean);
+ }
+ let list=all.filter(p=>!!p.published);
  if(sec.filter==='featured')list=list.filter(p=>!!p.featured);
  else if(sec.filter==='top_pick')list=list.filter(p=>!!p.top_pick);
  else if(sec.filter==='trending')list=list.filter(p=>!!p.trending);
