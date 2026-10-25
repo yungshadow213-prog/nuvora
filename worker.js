@@ -1809,9 +1809,13 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         if(action==='publish'){
           const publishedConfig={...config,catalogVersion:1,version:Math.max(1,Number(config.version)||1),publishedAt:now};
           const publishedProducts=products.filter(p=>String(p.status||'published').toLowerCase()==='published');
-          const result=await supabaseRest(env,'PATCH','store_settings',{[configColumn]:publishedConfig,[productsColumn]:publishedProducts,[draftColumn]:null,updated_at:now},'?id=eq.true');
+          // Keep private draft products available in the editor after publishing.
+          // The public endpoint reads only the published config/products columns.
+          const hasDraftProducts=products.some(p=>String(p.status||'published').toLowerCase()==='draft');
+          const draft=hasDraftProducts?{config:publishedConfig,products}:null;
+          const result=await supabaseRest(env,'PATCH','store_settings',{[configColumn]:publishedConfig,[productsColumn]:publishedProducts,[draftColumn]:draft,updated_at:now},'?id=eq.true');
           if(!result.ok)return json({error:await result.text()},400);
-          return json({ok:true,action,config:publishedConfig,products:publishedProducts});
+          return json({ok:true,action,config:publishedConfig,products:publishedProducts,draft});
         }
         return json({error:'Action must be save-draft or publish.'},400);
       }
