@@ -88,6 +88,22 @@ jobs:
           router=Path("worker-router.js").read_text(encoding="utf-8")
           if "(games|home|clothing)-storefront" not in router:
               failures.append("worker-router.js: one or more isolated storefront endpoints are missing")
+          # Keep each specialist storefront bound to its own settings and product
+          # catalogue, and never leak unpublished catalogue rows through public APIs.
+          store_contracts = {
+              "games": ("games_site_config", "games_products"),
+              "home": ("home_site_config", "home_products"),
+              "clothing": ("clothing_site_config", "clothing_products"),
+          }
+          for store_key, (config_key, products_key) in store_contracts.items():
+              if f'{store_key}: {{ config: "{config_key}", products: "{products_key}" }}' not in router:
+                  failures.append(f"worker-router.js: {store_key} storefront mapping is missing or crossed")
+          if "request.method !== \"GET\"" not in router:
+              failures.append("worker-router.js: public storefront endpoint must be read-only")
+          if 'p.status === "published"' not in router:
+              failures.append("worker-router.js: public storefront endpoint must exclude unpublished products")
+          if "store.config" not in router or "store.products" not in router:
+              failures.append("worker-router.js: public response must use the selected store's isolated config and catalogue")
           if re.search(r"async\s+async\s+function", worker):
               failures.append("worker.js: malformed duplicated async function declaration")
           required_helpers=["configured","randHex","buildProductOptions","getAmazonToken","amazonGetItem","shopifyGraphql","makeProductSlug","validateProduct","supabaseRest","adminUser"]
