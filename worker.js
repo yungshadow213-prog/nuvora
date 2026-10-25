@@ -2470,7 +2470,7 @@ function validateMultiStorefrontProducts(value){
     for(const key of ['description','shortDescription','brand','category','destinationUrl','image']){
       if(product[key]!==undefined&&(typeof product[key]!=='string'||product[key].length>(key==='description'?12000:2000)))return 'Product '+key+' is invalid or too long.';
     }
-    for(const key of ['productType','type','categorySlug']){
+    for(const key of ['productType','product_type','type','categorySlug','customCategoryId']){
       if(product[key]!==undefined&&(typeof product[key]!=='string'||product[key].length>120))return 'Product '+key+' is invalid or too long.';
     }
     if(product.image){try{if(new URL(product.image).protocol!=='https:')return 'Product images must use HTTPS.';}catch{return 'A product image URL is invalid.';}}
