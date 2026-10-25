@@ -58,7 +58,7 @@ The older overlapping Home/Clothing/Games PRs were closed as superseded by their
 
 The non-AI review identified and addressed two additional integration risks on the existing PR branches:
 
-- **Skin Studio product-type persistence:** the new form writes `products.product_type`, but the canonical SQL schema did not declare that column. PR #138 now includes the nullable column in `backend/schema.sql`, an idempotent migration at `backend/migrations/2026-10-25-nuvora-product-type.sql`, and adds `product_type` to the Worker’s optional-column compatibility handling. The migration is code in a PR; it has not been applied to the hosted database.
+- **Skin Studio product-type persistence:** the new form writes `products.product_type`, but the canonical SQL schema did not declare that column. PR #138 now includes the nullable column in `backend/schema.sql`, an idempotent migration at `backend/migrations/2026-10-25-nuvora-product-type.sql`, and adds `product_type` to the Worker’s optional-column compatibility handling. The PR's release-contract check now guards the schema, migration, and Worker compatibility list. The migration is code in a PR; it has not been applied to the hosted database.
 - **Wrapper-aware regression contract:** PR #145’s release checks now recognize that `beauty.html` is a wrapper for the separately maintained Skin Care client storefront, rather than incorrectly requiring the detailed product UI to live in the wrapper. The client repository remains untouched.
 - **Manual featured-section semantics:** Home PR #7, Clothing PR #7, and Games PR #6 now keep a manually curated Featured section empty when it has no selected products, rather than silently falling back to other catalogue items.
 
