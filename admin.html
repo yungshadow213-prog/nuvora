@@ -1830,6 +1830,7 @@ async function useAmazonLink(){
     const a=j.listing||{};
     if(a.title)document.getElementById('pfName').value=a.title;
     if(a.brand)document.getElementById('pfBrand').value=a.brand;
+    if(skinMode&&document.getElementById('pfProductType')&&!document.getElementById('pfProductType').value.trim())document.getElementById('pfProductType').value=a.product_type||inferSkinProductType({name:a.title||document.getElementById('pfName').value,brand:a.brand,description:a.description,features:a.features});
     if(a.description)document.getElementById('pfDescription').value=a.description;
     if(a.current_price!=null)document.getElementById('pfPrice').value=a.current_price;
     if(a.list_price!=null)document.getElementById('pfListPrice').value=a.list_price;
