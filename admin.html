@@ -3042,7 +3042,7 @@ function removeSkinSection(index,skipConfirm=false){
  const latestSections=skinSectionsFor(pageId),latestIndex=latestSections.findIndex(item=>String(item.id||'')===sectionId);
  if(latestIndex<0){skinBuilderMessage('This section was already removed. Refresh the outline if it is still visible.','info');return false;}
  latestSections.splice(latestIndex,1);
- skinBuilderConfig.version=Math.max(6,Number(skinBuilderConfig.version)||0);
+ skinBuilderConfig.version=Math.max(7,Number(skinBuilderConfig.version)||0);
  const next=latestSections[Math.min(latestIndex,latestSections.length-1)];
  skinStudioSelection=next?{type:'section',id:String(next.id)}:{type:'none',id:''};
  skinMarkDirty('Section removed from the draft.');renderSkinStudioAll();queueSkinStudioPreview();
