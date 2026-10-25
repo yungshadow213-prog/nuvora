@@ -2339,7 +2339,7 @@ function securityResponse(response){
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
     "connect-src 'self' https://*.supabase.co https://*.supabase.in https://*.supabase.com",
-    "frame-src 'self' https://accounts.google.com https://client-store-platform.rayyung713.workers.dev",
+    "frame-src 'self' https://accounts.google.com https://client-store-platform.rayyung713.workers.dev https://nuvora-home.rayyung713.workers.dev https://nuvora-clothing.rayyung713.workers.dev https://nuvora-games.rayyung713.workers.dev",
     "form-action 'self'",
     "base-uri 'self'",
     "object-src 'none'",
