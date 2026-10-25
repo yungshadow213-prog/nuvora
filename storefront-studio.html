@@ -245,7 +245,7 @@ function onPreviewMessage(event){
   if(["heroTitle","heroDescription","announcement","approachTitle","approachBody"].includes(field))config[field]=value;
   else {const section=config.sections.find(x=>String(x.id)===String(d.sectionId));if(section&&["title","text","eyebrow","description"].includes(field))section[field]=value;}
   for(const id of ["announcement","heroTitle","heroDescription","approachTitle","approachBody"])$(id).value=config[id]||"";
-  collectForm();draftDirty=true;setStatus("Unsaved changes","warning");return;
+  collectForm();renderSections();draftDirty=true;setStatus("Unsaved changes","warning");return;
  }
  if(d.type===selectedStore.eventPrefix+"-move-product"){
   const source=products.findIndex(x=>String(x.id)===String(d.productId)),target=products.findIndex(x=>String(x.id)===String(d.targetProductId));
