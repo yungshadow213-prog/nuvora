@@ -271,6 +271,8 @@ jobs:
               ("async function saveSkinSiteDraft", "Skin Studio Save Draft handler missing"),
               ("async function saveSkinSiteConfig", "Skin Studio Publish handler missing"),
               ("function addSkinProductToSection", "Skin Studio Place on Page handler missing"),
+              ("async function saveSkinProductAndPublish(){\n if(window.productSaveInProgress){", "Save & Publish must not leave a stale publish flag during an active save"),
+              ("Wait for it to finish, then choose Save & publish again.", "Concurrent product saves must show a clear retry instruction"),
               ("async function uploadSkinStudioImage", "Skin Studio image upload handler missing"),
               ("function sendSkinStudioPreview", "Skin Studio live-preview bridge missing"),
               ("skin_site_draft:payload", "Skin Studio draft writes must use the private draft setting"),
