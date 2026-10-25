@@ -48,7 +48,7 @@
 <div class="field wide"><label for="pDescription">Product description</label><textarea id="pDescription" maxlength="12000"></textarea></div>
 <div class="field wide"><label for="pShort">Short description</label><textarea id="pShort" maxlength="2000"></textarea></div>
 <div class="field wide"><label for="pImage">Main image URL (HTTPS)</label><input id="pImage" type="url"></div>
-<div class="field wide"><label for="pFiles">Upload image(s) from your device</label><input id="pFiles" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple><button type="button" class="btn" id="uploadImages">Upload selected images</button><small class="muted">Uploads use Nuvora’s existing product-images storage bucket. JPG, PNG, WebP or GIF; maximum 6 MB per file.</small></div>
+<div class="field wide"><label for="pFiles">Upload image(s) from your device</label><input id="pFiles" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple><button type="button" class="btn" id="uploadImages">Upload selected images</button><small class="muted">Uploads use Nuvora’s existing product-images storage bucket. JPG, PNG, WebP or GIF; maximum 6 MB per file.</small></div>
 <div class="field wide"><label for="pGallery">Additional gallery image URLs (one per line)</label><textarea id="pGallery" placeholder="https://…"></textarea></div>
 <div class="field wide"><label for="pDestination">Retailer / product link</label><input id="pDestination" type="url"></div>
 <div class="field"><label for="pPrice">Display price (optional)</label><input id="pPrice" type="text" maxlength="80"></div>
@@ -156,14 +156,14 @@ async function uploadProductImages(){
  if(!files.length){showNotice("Choose one or more image files first.",true);return;}
  if(!sb||!session){showNotice("Your admin session is not ready. Sign in again.",true);return;}
  for(const file of files){
-  if(!["image/jpeg","image/png","image/webp","image/gif"].includes(file.type)){showNotice(file.name+" is not a supported image format.",true);return;}
+  if(!["image/jpeg","image/png","image/webp","image/avif"].includes(file.type)){showNotice(file.name+" is not a supported image format.",true);return;}
   if(file.size>6*1024*1024){showNotice(file.name+" is larger than 6 MB.",true);return;}
  }
  button.disabled=true;button.textContent="Uploading…";
  try{
   const uploaded=[];
   for(const file of files){
-   const ext=({"image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/gif":"gif"})[file.type];
+   const ext=({"image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/avif":"avif"})[file.type];
    const path="storefronts/"+selectedStore.key+"/"+crypto.randomUUID()+"."+ext;
    const {error}=await sb.storage.from("product-images").upload(path,file,{cacheControl:"31536000",contentType:file.type,upsert:false});
    if(error)throw error;
@@ -195,6 +195,7 @@ function saveCategory(e){
  const image=$("catImage").value.trim();if(image){try{if(new URL(image).protocol!=="https:")throw new Error();}catch{showNotice("Category image URLs must use HTTPS.",true);return;}}
  const items=Array.isArray(config.customCategories)?[...config.customCategories]:[],editing=editingCategoryId!==null;
  if(items.some(item=>String(item.slug||categorySlug(item.name))===slug&&String(item.id||item.slug||items.indexOf(item))!==String(editingCategoryId))){showNotice("A custom category with that URL slug already exists.",true);return;}
+ if(items.some(item=>String(item.name||"").trim().toLowerCase()===name.toLowerCase()&&String(item.id||item.slug||items.indexOf(item))!==String(editingCategoryId))){showNotice("A custom category with that name already exists.",true);return;}
  const existing=editing?items.find((x,index)=>String(x.id||x.slug||index)===String(editingCategoryId)):null;
  const item={...(existing||{}),id:existing?.id||("category-"+slug),name,slug,description:$("catDescription").value.trim(),image};
  if(existing){
