@@ -39,6 +39,13 @@ async function publicStorefront(request, env, key) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    const studioRoute = url.pathname.match(/^\\/admin\\/(gaming|home|clothing)-studio\\/?$/);
+    if (url.pathname === "/admin/studios" || url.pathname === "/admin/studios/") {
+      return env.ASSETS.fetch(new Request(new URL("/multi-store-studio.html", request.url), { method: "GET", headers: request.headers }));
+    }
+    if (studioRoute) {
+      return env.ASSETS.fetch(new Request(new URL("/multi-store-studio.html?store=" + studioRoute[1], request.url), { method: "GET", headers: request.headers }));
+    }
     const match = url.pathname.match(/^\/api\/(games|home|clothing)-storefront\/?$/);
     if (request.method === "OPTIONS" && match) return json({}, 204);
     if (match) {
