@@ -47,7 +47,7 @@ export default {
       return env.ASSETS.fetch(new Request(new URL("/multi-store-studio.html?store=" + studioRoute[1], request.url), { method: "GET", headers: request.headers }));
     }
     const match = url.pathname.match(/^\/api\/(games|home|clothing)-storefront\/?$/);
-    if (request.method === "OPTIONS" && match) return json({}, 204);
+    if (request.method === "OPTIONS" && match) return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, OPTIONS", "access-control-allow-headers": "content-type", "access-control-max-age": "86400" } });
     if (match) {
       try { return await publicStorefront(request, env, match[1]); }
       catch (error) { return json({ error: "Could not load the requested storefront.", detail: String(error?.message || error).slice(0, 240) }, 502); }
