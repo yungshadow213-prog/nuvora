@@ -2762,11 +2762,12 @@ function setSkinStudioProductPage(page){
  renderSkinLibrary();
 }
 function setSkinStudioProductSearch(value){
+ const current=document.getElementById('skinStudioProductSearch'),caret=current?.selectionStart??String(value||'').length;
  window.skinStudioProductSearch=String(value||'');
  window.skinStudioProductPage=1;
  renderSkinLibrary();
  const input=document.getElementById('skinStudioProductSearch');
- if(input){input.focus();input.setSelectionRange(input.value.length,input.value.length);}
+ if(input){input.focus();const position=Math.min(caret,input.value.length);input.setSelectionRange(position,position);}
 }
 function renderSkinLibrary(){
  const root=document.getElementById('skinLibraryItems');if(!root)return;
