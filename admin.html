@@ -1431,23 +1431,23 @@ function updateRetailerRatingPreview(){
 function inferSkinProductType(product){
  const text=[product?.name,product?.category?.name,product?.category_name,product?.description,product?.features].filter(Boolean).join(' ').toLowerCase();
  const rules=[
-  [/\\b(?:cleanser|cleansing balm|face wash|micellar water)\\b/,'Cleanser'],
-  [/\\b(?:toner|essence)\\b/,'Toner / essence'],
-  [/\\b(?:serum|ampoule|concentrate)\\b/,'Serum / treatment'],
-  [/\\b(?:sunscreen|sunblock|spf\\s*\\d*)\\b/,'Sunscreen'],
-  [/\\b(?:moisturizer|moisturiser|moisturizing cream|moisturising cream|face cream|gel cream)\\b/,'Moisturizer'],
-  [/\\b(?:eye cream|eye serum|under-eye)\\b/,'Eye care'],
-  [/\\b(?:lip balm|lip mask|lip oil)\\b/,'Lip care'],
-  [/\\b(?:sheet mask|face mask|sleeping mask|clay mask)\\b/,'Face mask'],
-  [/\\b(?:exfoliant|exfoliating|face scrub|chemical peel)\\b/,'Exfoliant'],
-  [/\\b(?:nail clipper|manicure|pedicure|nail file|cuticle|nail drill)\\b/,'Nail grooming tool'],
-  [/\\b(?:led mask|facial device|beauty device|microcurrent|face roller|gua sha|cleansing brush|skin scrubber)\\b/,'Beauty device / tool'],
-  [/\\b(?:foundation|concealer|mascara|eyeliner|lipstick|blush|makeup palette)\\b/,'Makeup / cosmetics'],
-  [/\\b(?:shampoo|conditioner|hair mask|hair serum|hair oil|hair dryer|hair straightener|curling iron)\\b/,'Hair care / styling'],
-  [/\\b(?:perfume|fragrance|eau de parfum|body mist|cologne)\\b/,'Fragrance'],
-  [/\\b(?:toothbrush|toothpaste|water flosser|oral care)\\b/,'Oral care'],
-  [/\\b(?:body lotion|body wash|body cream|body scrub)\\b/,'Body care'],
-  [/\\b(?:gift set|travel set|skincare set|beauty kit|bundle|5-step)\\b/,'Beauty set / kit']
+  [/\b(?:cleanser|cleansing balm|face wash|micellar water)\b/,'Cleanser'],
+  [/\b(?:toner|essence)\b/,'Toner / essence'],
+  [/\b(?:serum|ampoule|concentrate)\b/,'Serum / treatment'],
+  [/\b(?:sunscreen|sunblock|spf\s*\\d*)\b/,'Sunscreen'],
+  [/\b(?:moisturizer|moisturiser|moisturizing cream|moisturising cream|face cream|gel cream)\b/,'Moisturizer'],
+  [/\b(?:eye cream|eye serum|under-eye)\b/,'Eye care'],
+  [/\b(?:lip balm|lip mask|lip oil)\b/,'Lip care'],
+  [/\b(?:sheet mask|face mask|sleeping mask|clay mask)\b/,'Face mask'],
+  [/\b(?:exfoliant|exfoliating|face scrub|chemical peel)\b/,'Exfoliant'],
+  [/\b(?:nail clipper|manicure|pedicure|nail file|cuticle|nail drill)\b/,'Nail grooming tool'],
+  [/\b(?:led mask|facial device|beauty device|microcurrent|face roller|gua sha|cleansing brush|skin scrubber)\b/,'Beauty device / tool'],
+  [/\b(?:foundation|concealer|mascara|eyeliner|lipstick|blush|makeup palette)\b/,'Makeup / cosmetics'],
+  [/\b(?:shampoo|conditioner|hair mask|hair serum|hair oil|hair dryer|hair straightener|curling iron)\b/,'Hair care / styling'],
+  [/\b(?:perfume|fragrance|eau de parfum|body mist|cologne)\b/,'Fragrance'],
+  [/\b(?:toothbrush|toothpaste|water flosser|oral care)\b/,'Oral care'],
+  [/\b(?:body lotion|body wash|body cream|body scrub)\b/,'Body care'],
+  [/\b(?:gift set|travel set|skincare set|beauty kit|bundle|5-step)\b/,'Beauty set / kit']
  ];
  for(const [pattern,label] of rules)if(pattern.test(text))return label;
  return '';
