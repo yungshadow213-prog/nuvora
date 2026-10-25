@@ -2454,7 +2454,12 @@ function mergeSkinSiteConfig(raw){
    cfg.sections.splice(heroIndex>=0?heroIndex+1:0,0,{id:'home-categories',type:'category-grid',visible:true,title:'Shop by category',eyebrow:'FIND YOUR NEXT STEP',text:'Browse skincare by product type, then check the product details that matter to you.'});
   }
  }
- cfg.version=6;
+ // One-time brand-discovery addition. A later deliberate deletion remains authoritative.
+ if(Number(src.version||0)<7&&cfg.sections.length&&!cfg.sections.some(section=>section.type==='brand-grid')){
+  const productIndex=cfg.sections.findIndex(section=>['product-grid','featured-products'].includes(section.type));
+  cfg.sections.splice(productIndex>=0?productIndex+1:cfg.sections.length,0,{id:'home-brands',type:'brand-grid',visible:true,title:'Shop by brand.',eyebrow:'EXPLORE THE LABELS',text:'Browse the brands behind the products in our edit.'});
+ }
+ cfg.version=7;
  cfg.pages=Array.isArray(src.pages)?src.pages.slice(0,30).map((p,i)=>({
   id:String(p.id||p.slug||('page-'+(i+1))).slice(0,80),
   title:String(p.title||'Untitled page').slice(0,120),
