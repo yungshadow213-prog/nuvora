@@ -41,10 +41,10 @@ export default {
     const url = new URL(request.url);
     const studioRoute = url.pathname.match(/^\/admin\/(gaming|home|clothing)-studio\/?$/);
     if (url.pathname === "/admin/studios" || url.pathname === "/admin/studios/") {
-      return env.ASSETS.fetch(new Request(new URL("/multi-store-studio.html", request.url), { method: "GET", headers: request.headers }));
+      return worker.fetch(new Request(new URL("/multi-store-studio.html", request.url), { method: "GET", headers: request.headers }), env, ctx);
     }
     if (studioRoute) {
-      return env.ASSETS.fetch(new Request(new URL("/multi-store-studio.html?store=" + studioRoute[1], request.url), { method: "GET", headers: request.headers }));
+      return worker.fetch(new Request(new URL("/multi-store-studio.html?store=" + studioRoute[1], request.url), { method: "GET", headers: request.headers }), env, ctx);
     }
     const match = url.pathname.match(/^\/api\/(games|home|clothing)-storefront\/?$/);
     if (request.method === "OPTIONS" && match) return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, OPTIONS", "access-control-allow-headers": "content-type", "access-control-max-age": "86400" } });
