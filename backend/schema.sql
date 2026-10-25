@@ -26,6 +26,7 @@ create table if not exists public.products (
   featured boolean not null default false, trending boolean not null default false, top_pick boolean not null default false, shopify_variants jsonb not null default '[]'::jsonb,
   published boolean not null default false, shopify_product_id text, shopify_variant_id text,
   amazon_asin text, amazon_source_url text,
+  product_type text,
   source_type text not null default 'manual',
   sourcinbox_product_url text,
   sourcinbox_product_id text,
@@ -33,6 +34,7 @@ create table if not exists public.products (
   created_at timestamptz not null default now(), updated_at timestamptz not null default now(), amazon_last_synced timestamptz
 );
 
+alter table public.products add column if not exists product_type text;
 alter table public.products add column if not exists features text;
 alter table public.products add column if not exists ingredients text;
 alter table public.products add column if not exists usage_instructions text;

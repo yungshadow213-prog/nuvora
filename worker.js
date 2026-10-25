@@ -14,7 +14,7 @@ export default {
       if (url.pathname === '/admin' || url.pathname === '/admin/') {
         return serveAsset(env,new Request(new URL('/admin.html',request.url), {method:'GET',headers:request.headers}));
       }
-      if(url.pathname==='/beauty'||url.pathname==='/beauty/'){
+      if(/^\/beauty(?:\/.*)?$/.test(url.pathname)){
         return serveAsset(env,new Request(new URL('/beauty.html',request.url),{method:'GET',headers:request.headers}));
       }
       const editPageMatch=url.pathname.match(/^\/admin\/products\/([^/]+)\/edit\/?$/);
@@ -181,7 +181,7 @@ async function inspectProductSchema(env){
     'source_url','resolved_url','store_description','temu_source_url','temu_product_id',
     'temu_deal_text','temu_list_price','temu_discount_percent','temu_rating','temu_review_count',
     'deal_text','list_price','discount_percent','rating','review_count',
-    'ingredients','usage_instructions','product_warnings','product_size','benefits','skin_types','skin_concerns','recommended_product_ids','recommendation_reason'
+    'ingredients','usage_instructions','product_warnings','product_size','product_type','benefits','skin_types','skin_concerns','recommended_product_ids','recommendation_reason'
   ];
   const query=fields=>'?select='+fields.map(encodeURIComponent).join(',')+'&limit=1';
   const coreRes=await supabaseRest(env,'GET','products',undefined,query(core));
@@ -295,8 +295,8 @@ function resolveProductDestination(current={},patch={}){
 }
 async function publishProductRecord(env,id,patch={}){
   // Read only the core fields first so optional legacy columns never block publish.
-  const coreFields=['id','name','slug','kind','category_id','image_url','image_urls','description','display_price','currency','destination_url','published','created_at','updated_at'];
-  const optionalFields=['retailer','provider','source_type','source_sku','amazon_asin','amazon_source_url','source_url','resolved_url','sourcinbox_product_url','temu_source_url','store_description'];
+  const coreFields=['id','name','slug','kind','category_id','image_url','description','display_price','currency','destination_url','published','created_at','updated_at'];
+  const optionalFields=['image_urls','retailer','provider','source_type','source_sku','amazon_asin','amazon_source_url','source_url','resolved_url','sourcinbox_product_url','temu_source_url','store_description'];
   const fields=[...coreFields,...optionalFields];
   let current=null,readError='';
   for(let attempt=0;attempt<=optionalFields.length;attempt++){
@@ -528,7 +528,7 @@ function normalizeAmazonListing(listing={}){
   const sourceDescription=cleanMultilineText(x.description,12000)||'';
   const badDescription=/^(?:visit the|shop the|brand:\s|about this item|product description|click to|see more|read more|customer questions|make sure this fits)/i.test(sourceDescription);
   const parts=[];
-  if(sourceDescription&&sourceDescription.length>=80&&!badDescription&&!looksFragmentedText(sourceDescription))parts.push(sourceDescription);
+  if(sourceDescription&&sourceDescription.length>=24&&!badDescription&&!looksFragmentedText(sourceDescription))parts.push(sourceDescription);
   if(featureLines.length)parts.push('Key features: '+featureLines.slice(0,12).join(' • '));
   if(specLines.length)parts.push('Product details: '+specLines.slice(0,20).join(' • '));
   x.features=[...featureLines,...specLines].slice(0,60);
@@ -2385,7 +2385,7 @@ function validateSkinSiteConfig(value,options={}){
     if(!value.productGuideFields||typeof value.productGuideFields!=='object'||Array.isArray(value.productGuideFields))return 'Skin Studio product guide visibility settings must be an object.';
     if(keys.some(key=>value.productGuideFields[key]!==undefined&&typeof value.productGuideFields[key]!=='boolean'))return 'Skin Studio product guide visibility values must be true or false.';
   }
-  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block']);
+  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block','brand-grid']);
   const checkSections=(sections,label)=>{
     if(!Array.isArray(sections))return label+' sections must be an array.';
     if(sections.length>40)return label+' supports up to 40 sections.';
