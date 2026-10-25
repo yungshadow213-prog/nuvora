@@ -2714,7 +2714,7 @@ function renderSkinBuilderSections(){
   const visible=sec.visible!==false;
   return '<article class="studio-section-outline '+(selected?'is-selected':'')+'" data-section-index="'+index+'" onclick="selectSkinItem(\'section\','+esc(JSON.stringify(String(sec.id)))+')">'+
    '<span class="studio-outline-grip studio-outline-number" aria-hidden="true">'+(index+1)+'</span><div class="studio-section-outline-copy"><b>'+esc(sec.title||typeLabels[sec.type]||sec.type||'Section')+'</b><small>'+esc(typeLabels[sec.type]||'Section')+' · '+(visible?'Visible':'Hidden')+'</small></div>'+
-   '<div class="studio-section-outline-actions"><button type="button" title="Move up" '+(index===0?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',-1)">↑</button><button type="button" title="Move down" '+(index===sections.length-1?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',1)">↓</button><button type="button" title="'+(visible?'Hide':'Show')+'" onclick="event.stopPropagation();toggleSkinSectionVisibility('+index+')">'+(visible?'◉':'○')+'</button></div></article>';
+   '<div class="studio-section-outline-actions"><button type="button" title="Move up" '+(index===0?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',-1)">↑</button><button type="button" title="Move down" '+(index===sections.length-1?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',1)">↓</button><button type="button" title="'+(visible?'Hide':'Show')+'" onclick="event.stopPropagation();toggleSkinSectionVisibility('+index+')">'+(visible?'◉':'○')+'</button><button type="button" title="Delete section" aria-label="Delete '+esc(sec.title||typeLabels[sec.type]||'section')+'" style="color:#a33d31!important;border:1px solid #f0d7d2;border-radius:6px;background:#fff7f5" onclick="event.stopPropagation();deleteSkinSectionImmediately('+index+')">×</button></div></article>';
  }).join('')||'<div class="studio-library-empty">This page has no sections yet. Use + Add → Section to start building it.</div>';
  renderSkinLibrary();
 }
@@ -3014,6 +3014,11 @@ function removeSkinSection(index,skipConfirm=false){
  sections.splice(index,1);skinStudioSelection={type:'section',id:String(sections[Math.max(0,index-1)]?.id||'')};
  skinMarkDirty('Section removed from the draft.');renderSkinStudioAll();queueSkinStudioPreview();
  void saveSkinStudioChangeImmediately('Section removed and saved to the page draft.');
+}
+function deleteSkinSectionImmediately(index){
+ const section=skinSectionsFor()[index];if(!section)return;
+ if(!confirm('Delete the “'+String(section.title||section.type||'section')+'” section from this page draft?'))return;
+ removeSkinSection(index,true);
 }
 function skinProductsForSection(sec){
  const all=adminProducts.filter(p=>isSkinProduct(p));
