@@ -224,7 +224,7 @@ function filteredProducts(section){
   else if(section.filter==='top_pick')list=list.filter(p=>p.top_pick);
   else if(section.filter==='trending')list=list.filter(p=>p.trending);
  }
- if(section.type==='category-grid'&&section.category_id)list=list.filter(p=>String(p.category_id||'')===String(section.category_id));
+ if(section.category_id)list=list.filter(p=>productBrowseCategory(p).key===String(section.category_id)||String(p.category_id||'')===String(section.category_id));
  if(activeCategory)list=list.filter(p=>String(p.category_id||'')===String(activeCategory));
  if(activeSkinRoutine!=='All'){
   const wanted=activeSkinRoutine.toLowerCase();
@@ -262,6 +262,18 @@ function selectRoutineSkin(type,sectionId){
 }
 function selectSkinRoutine(type){activeSkinRoutine=['All','Normal','Dry','Oily','Combination','Sensitive'].includes(type)?type:'All';renderPage();}
 function productBrowseCategory(p){
+ const assigned=String((siteConfig?.productCategoryMap||{})[String(p?.id)]||'');
+ if(assigned){
+  const builtIn={
+   cleanse:{key:'cleansers',name:'Cleansers'},treat:{key:'serums-treatments',name:'Serums & treatments'},
+   hydrate:{key:'moisturizers',name:'Moisturizers'},protect:{key:'sun-protection',name:'Sun protection'},
+   'body-lips':{key:'other-skincare',name:'Body & lips'}
+  };
+  const mapped=builtIn[assigned];
+  if(mapped)return mapped;
+  const custom=(siteConfig?.customCategories||[]).find(c=>String(c.slug)===assigned);
+  if(custom)return {key:assigned,name:String(custom.name||'Other skincare')};
+ }
  const text=[p.name,p.brand,p.benefits,p.features,p.description,p.store_description,p.ingredients,p.skin_concerns].filter(Boolean).join(' ').toLowerCase();
  if(/sunscreen|sunblock|\\bspf\\b|sun protection/.test(text))return {key:'sun-protection',name:'Sun protection'};
  if(/cleanser|cleansing|face wash|micellar|makeup remover/.test(text))return {key:'cleansers',name:'Cleansers'};
@@ -296,7 +308,8 @@ function renderCategoryBrowse(section){
   {key:'cleansers',name:'Cleansers'},{key:'serums-treatments',name:'Serums & treatments'},
   {key:'moisturizers',name:'Moisturizers'},{key:'sun-protection',name:'Sun protection'},
   {key:'masks-exfoliants',name:'Masks & exfoliants'},{key:'sets-kits',name:'Sets & kits'},
-  {key:'other-skincare',name:'Other skincare'}
+  {key:'other-skincare',name:'Other skincare'},
+  ...(siteConfig?.customCategories||[]).filter(c=>c&&c.slug).map(c=>({key:String(c.slug),name:String(c.name||'Other skincare')}))
  ];
  const counts=new Map(definitions.map(c=>[c.key,0]));
  products.forEach(p=>{const c=productBrowseCategory(p);counts.set(c.key,(counts.get(c.key)||0)+1);});
