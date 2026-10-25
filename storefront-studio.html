@@ -144,7 +144,7 @@ function saveProduct(e){
  const name=$("pName").value.trim();if(!name)return;
  const existing=products.find(x=>String(x.id)===String(editingProductId));
  const item={...(existing||{}),id:existing?.id||makeId(selectedStore.key),name,category:$("pCategory").value.trim(),productType:$("pType").value.trim(),brand:$("pBrand").value.trim(),description:$("pDescription").value.trim(),shortDescription:$("pShort").value.trim(),image:$("pImage").value.trim(),images:[...new Set([$("pImage").value.trim(),...$("pGallery").value.split(/\r?\n/).map(url=>url.trim())].filter(Boolean))],destinationUrl:$("pDestination").value.trim(),price:$("pPrice").value.trim(),status:$("pStatus").value};
- if(existing)products=products.map(x=>String(x.id)===String(existing.id)?item:x);else products.unshift(item);
+ if(existing)products=products.map(x=>String(x.id)===String(existing.id)?item:x);else{products.unshift(item);productPage=1;productSearch="";$("productSearch").value="";}
  $("productModal").classList.remove("open");renderProducts();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");switchTab("products");
 }
 async function uploadProductImages(){
