@@ -68,6 +68,7 @@ let sb=null,session=null,config={},products=[],selectedSectionId="",editingProdu
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const makeId=prefix=>prefix+"-"+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,8));
+function stableJson(value){if(Array.isArray(value))return "["+value.map(stableJson).join(",")+"]";if(value&&typeof value==="object")return "{"+Object.keys(value).sort().map(key=>JSON.stringify(key)+":"+stableJson(value[key])).join(",")+"}";return JSON.stringify(value);}
 function showNotice(message,error=false){const n=$("notice");n.textContent=message;n.classList.remove("hidden","error");if(error)n.classList.add("error");}
 function setStatus(message,type=""){const n=$("status");n.textContent=message;n.className="status"+(type?" "+type:"");}
 function setAuthError(message){$("authError").textContent=message;$("authError").classList.remove("hidden");}
@@ -265,6 +266,16 @@ async function save(action){
   const submitted=JSON.stringify({config,products});
   setStatus(action==="publish"?"Publishing…":"Saving draft…");
   const result=await request("/api/admin/storefronts/"+selectedStore.key,{method:"PATCH",body:JSON.stringify({action,config,products})});
+  const readback=await request("/api/admin/storefronts/"+selectedStore.key);
+  if(action==="save-draft"){
+   if(!result.draft||!readback.draft||!Array.isArray(readback.draft.products)||stableJson(readback.draft)!==stableJson(result.draft)){
+    throw new Error("The draft write returned, but the saved draft did not match the database read-back. Check the saved state before retrying.");
+   }
+  }else if(action==="publish"){
+   if(!result.config||!Array.isArray(result.products)||!readback.config||!Array.isArray(readback.products)||stableJson({config:readback.config,products:readback.products})!==stableJson({config:result.config,products:result.products})||readback.draft){
+    throw new Error("Publishing returned, but the live configuration/products could not be verified against the database read-back. Check the storefront before retrying.");
+   }
+  }else throw new Error("Unsupported save action.");
   collectForm();
   const unchanged=JSON.stringify({config,products})===submitted;
   if(action==="publish"&&unchanged){config=result.config||config;products=result.products||products;}
@@ -274,7 +285,7 @@ async function save(action){
   else if(unchanged){setStatus("Draft saved","");showNotice("Draft saved successfully.");}
   else{setStatus("Draft saved · newer edits unsaved","warning");showNotice("The submitted draft was saved, but newer edits were made while saving. Save Draft again to keep the latest changes.",true);}
   renderProducts();renderSections();renderCategoryOptions();sendPreview();
- }catch(e){setStatus("Save failed","error");showNotice(e.message||"Could not save storefront changes.",true);}
+ }catch(e){setStatus("Save not confirmed","error");showNotice(e.message||"The saved state could not be confirmed. Check before retrying.",true);}
  finally{saveInFlight=false;buttons.forEach(button=>{if(button)button.disabled=false;});}
 }
 function onPreviewMessage(event){
