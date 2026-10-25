@@ -45,6 +45,8 @@
 <div class="field wide"><label for="pDescription">Product description</label><textarea id="pDescription" maxlength="12000"></textarea></div>
 <div class="field wide"><label for="pShort">Short description</label><textarea id="pShort" maxlength="2000"></textarea></div>
 <div class="field wide"><label for="pImage">Main image URL (HTTPS)</label><input id="pImage" type="url"></div>
+<div class="field wide"><label for="pFiles">Upload image(s) from your device</label><input id="pFiles" type="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple><button type="button" class="btn" id="uploadImages">Upload selected images</button><small class="muted">Uploads use Nuvora’s existing product-images storage bucket. JPG, PNG, WebP or GIF; maximum 8 MB per file.</small></div>
+<div class="field wide"><label for="pGallery">Additional gallery image URLs (one per line)</label><textarea id="pGallery" placeholder="https://…"></textarea></div>
 <div class="field wide"><label for="pDestination">Retailer / product link</label><input id="pDestination" type="url"></div>
 <div class="field"><label for="pPrice">Display price (optional)</label><input id="pPrice" type="text" maxlength="80"></div>
 <div class="field"><label for="pStatus">Publication status</label><select id="pStatus"><option value="draft">Draft</option><option value="published">Published</option></select></div>
@@ -105,7 +107,7 @@ function wireEditor(){
  ["announcement","heroTitle","heroDescription","heroImage","approachTitle","approachBody","footerNote","accentColor"].forEach(id=>$(id).addEventListener("input",()=>{collectForm();draftDirty=true;setStatus("Unsaved changes","warning");sendPreview();}));
  $("saveDraft").onclick=()=>save("save-draft");$("publish").onclick=()=>save("publish");$("refreshPreview").onclick=sendPreview;
  $("addProduct").onclick=()=>openProduct();$("closeProduct").onclick=$("cancelProduct").onclick=()=>{$("productModal").classList.remove("open");};
- $("productForm").onsubmit=saveProduct;$("addSection").onclick=addSection;
+ $("productForm").onsubmit=saveProduct;$("uploadImages").onclick=uploadProductImages;$("addSection").onclick=addSection;
  window.addEventListener("message",onPreviewMessage);
 }
 function switchTab(tab){activeTab=tab;document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));["design","products","sections"].forEach(id=>$(id+"Panel").classList.toggle("hidden",id!==tab));}
@@ -118,16 +120,43 @@ function renderProducts(){
 function openProduct(id=""){
  editingProductId=id||null;const p=products.find(x=>String(x.id)===String(id))||{};
  $("productModalTitle").textContent=id?"Edit product":"Add product";
- $("pName").value=p.name||"";$("pCategory").value=p.category||"";$("pBrand").value=p.brand||"";$("pDescription").value=p.description||"";$("pShort").value=p.shortDescription||"";$("pImage").value=p.image||"";$("pDestination").value=p.destinationUrl||"";$("pPrice").value=p.price||"";$("pStatus").value=p.status||"draft";
+ $("pName").value=p.name||"";$("pCategory").value=p.category||"";$("pBrand").value=p.brand||"";$("pDescription").value=p.description||"";$("pShort").value=p.shortDescription||"";$("pImage").value=p.image||"";$("pGallery").value=(Array.isArray(p.images)?p.images.filter(url=>url&&url!==p.image):[]).join("\n");$("pFiles").value="";$("pDestination").value=p.destinationUrl||"";$("pPrice").value=p.price||"";$("pStatus").value=p.status||"draft";
  $("productModal").classList.add("open");
 }
 function saveProduct(e){
  e.preventDefault();
  const name=$("pName").value.trim();if(!name)return;
  const existing=products.find(x=>String(x.id)===String(editingProductId));
- const item={...(existing||{}),id:existing?.id||makeId(selectedStore.key),name,category:$("pCategory").value.trim(),brand:$("pBrand").value.trim(),description:$("pDescription").value.trim(),shortDescription:$("pShort").value.trim(),image:$("pImage").value.trim(),images:existing?.images||[$("pImage").value.trim()].filter(Boolean),destinationUrl:$("pDestination").value.trim(),price:$("pPrice").value.trim(),status:$("pStatus").value};
+ const item={...(existing||{}),id:existing?.id||makeId(selectedStore.key),name,category:$("pCategory").value.trim(),brand:$("pBrand").value.trim(),description:$("pDescription").value.trim(),shortDescription:$("pShort").value.trim(),image:$("pImage").value.trim(),images:[...new Set([$("pImage").value.trim(),...$("pGallery").value.split(/\r?\n/).map(url=>url.trim())].filter(Boolean))],destinationUrl:$("pDestination").value.trim(),price:$("pPrice").value.trim(),status:$("pStatus").value};
  if(existing)products=products.map(x=>String(x.id)===String(existing.id)?item:x);else products.unshift(item);
  $("productModal").classList.remove("open");renderProducts();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");switchTab("products");
+}
+async function uploadProductImages(){
+ const input=$("pFiles"),button=$("uploadImages"),files=Array.from(input.files||[]);
+ if(!files.length){showNotice("Choose one or more image files first.",true);return;}
+ if(!sb||!session){showNotice("Your admin session is not ready. Sign in again.",true);return;}
+ for(const file of files){
+  if(!["image/jpeg","image/png","image/webp","image/gif"].includes(file.type)){showNotice(file.name+" is not a supported image format.",true);return;}
+  if(file.size>8*1024*1024){showNotice(file.name+" is larger than 8 MB.",true);return;}
+ }
+ button.disabled=true;button.textContent="Uploading…";
+ try{
+  const uploaded=[];
+  for(const file of files){
+   const ext=({"image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/gif":"gif"})[file.type];
+   const path="storefronts/"+selectedStore.key+"/"+crypto.randomUUID()+"."+ext;
+   const {error}=await sb.storage.from("product-images").upload(path,file,{cacheControl:"31536000",contentType:file.type,upsert:false});
+   if(error)throw error;
+   const {data}=sb.storage.from("product-images").getPublicUrl(path);
+   if(!data?.publicUrl)throw new Error("Could not create a public image URL.");
+   uploaded.push(data.publicUrl);
+  }
+  if(!$("pImage").value.trim()&&uploaded.length)$("pImage").value=uploaded[0];
+  const current=$("pGallery").value.split(/\r?\n/).map(url=>url.trim()).filter(Boolean);
+  $("pGallery").value=[...new Set([...current,...uploaded])].join("\n");
+  input.value="";showNotice(uploaded.length+" image(s) uploaded and added to this product. Save the product, then save the draft."); 
+ }catch(e){showNotice("Image upload failed: "+(e.message||"Check the product-images bucket permissions."),true);}
+ finally{button.disabled=false;button.textContent="Upload selected images";}
 }
 function renderSections(){
  const list=$("sectionList");list.innerHTML=config.sections.map((s,i)=>'<div class="section-row"><input type="checkbox" data-visible="'+esc(s.id)+'" '+(s.visible===false?"":"checked")+' aria-label="Toggle section visibility"><div><b>'+esc(s.title||s.type||"Section")+'</b><small>'+esc(s.type||"custom section")+' · '+(s.visible===false?"Hidden":"Visible")+'</small></div><div class="section-actions"><button data-up="'+i+'" '+(i===0?"disabled":"")+'>↑</button><button data-down="'+i+'" '+(i===config.sections.length-1?"disabled":"")+'>↓</button><button data-del="'+esc(s.id)+'">×</button></div></div>').join("");
