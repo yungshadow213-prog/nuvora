@@ -1773,7 +1773,10 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         if(!result.ok)return json({error:'Storefront content could not be loaded.'},502,{'access-control-allow-origin':origins[key],'vary':'Origin'});
         const row=(await result.json())?.[0]||{};
         const config=row[configColumn]&&typeof row[configColumn]==='object'?row[configColumn]:{};
-        const products=Array.isArray(row[productsColumn])?row[productsColumn]:[];
+        // Defense in depth: never expose private drafts through the public API,
+        // including legacy rows that predate the publish-time catalogue filter.
+        const products=(Array.isArray(row[productsColumn])?row[productsColumn]:[])
+          .filter(product=>String(product?.status||'published').toLowerCase()==='published');
         return json({config,products},200,{'access-control-allow-origin':origins[key],'vary':'Origin','cache-control':'no-store'});
       }
 
