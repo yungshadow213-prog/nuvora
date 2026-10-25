@@ -177,7 +177,7 @@ async function uploadProductImages(){
  finally{button.disabled=false;button.textContent="Upload selected images";}
 }
 function categorySlug(value){return String(value||"").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,100);}
-function resetCategoryForm(){editingCategoryId=null;$("categoryForm").reset();$("saveCategory").textContent="Add category";$("cancelCategory").classList.add("hidden");}
+function resetCategoryForm(){editingCategoryId=null;$("categoryForm").reset();$("catSlug").dataset.touched="";$("saveCategory").textContent="Add category";$("cancelCategory").classList.add("hidden");}
 function renderCategories(){
  const list=$("customCategoryList"),items=Array.isArray(config.customCategories)?config.customCategories:[];
  $("customCategoryList").innerHTML=items.length?items.map((item,index)=>'<article class="custom-category-row"><div><h3>'+esc(item.name||"Unnamed category")+'</h3><p>'+esc(item.slug||categorySlug(item.name))+' · '+esc(item.description||"No description")+'</p></div><div class="custom-category-actions"><button class="mini" type="button" data-category-edit="'+esc(item.id||item.slug||index)+'">Edit</button><button class="mini" type="button" data-category-delete="'+esc(item.id||item.slug||index)+'">Remove</button></div></article>').join(""):'<div class="empty">No custom categories yet. Built-in store categories remain available.</div>';
@@ -192,7 +192,12 @@ function saveCategory(e){
  if(items.some(item=>String(item.slug||categorySlug(item.name))===slug&&String(item.id||item.slug||items.indexOf(item))!==String(editingCategoryId))){showNotice("A custom category with that URL slug already exists.",true);return;}
  const existing=editing?items.find((x,index)=>String(x.id||x.slug||index)===String(editingCategoryId)):null;
  const item={...(existing||{}),id:existing?.id||("category-"+slug),name,slug,description:$("catDescription").value.trim(),image};
- if(existing){config.customCategories=items.map(x=>x===existing?item:x);}else config.customCategories=[...items,item];
+ if(existing){
+  const oldName=String(existing.name||"").toLowerCase(),oldSlug=String(existing.slug||categorySlug(existing.name));
+  config.customCategories=items.map(x=>x===existing?item:x);
+  products=products.map(p=>String(p.category||"").toLowerCase()===oldName||String(p.categorySlug||"")===oldSlug?{...p,category:name,categorySlug:slug}:p);
+  renderProducts();
+ }else config.customCategories=[...items,item];
  resetCategoryForm();renderCategories();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");showNotice("Category saved in this storefront draft. Save Draft to keep it or Publish to make it public.");
 }
 function renderSections(){
