@@ -87,7 +87,7 @@ async function boot(){
   $("previewFrame").addEventListener("load",sendPreview);
   await loadStore();
   wireEditor();
- }catch(e){$("auth").classList.remove("hidden");setAuthError(e.message||"Nuvora Admin could not start.");}
+ }catch(e){$("app").classList.add("hidden");$("auth").classList.remove("hidden");const message=/Admin authentication required/i.test(e.message||"")?"You are signed in as "+(session?.user?.email||"this Google account")+", but this account does not have Nuvora administrator permission. Use “Sign out / switch account” and choose the admin account.":(e.message||"Nuvora Admin could not start.");setAuthError(message);}
 }
 async function loadStore(){
  setStatus("Loading…");
