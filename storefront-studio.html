@@ -64,7 +64,7 @@ const stores={
 };
 const key=new URLSearchParams(location.search).get("store")||"all";
 const selectedStore=stores[key]||null;
-let sb=null,session=null,config={},products=[],selectedSectionId="",editingProductId=null,editingCategoryId=null,activeTab="design",draftDirty=false,storeLoaded=false,pendingSeedProducts=null,previewTimer=null,productPage=1,productPageSize=12,productSearch="";
+let sb=null,session=null,config={},products=[],selectedSectionId="",editingProductId=null,editingCategoryId=null,activeTab="design",draftDirty=false,storeLoaded=false,pendingSeedProducts=null,previewTimer=null,productPage=1,productPageSize=12,productSearch="",saveInFlight=false;
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const makeId=prefix=>prefix+"-"+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,8));
@@ -257,13 +257,25 @@ function sendPreview(){
  try{$("previewFrame").contentWindow.postMessage({type:selectedStore.eventPrefix+"-preview",config:payload,products},"*");$("previewFrame").contentWindow.postMessage({type:selectedStore.eventPrefix+"-set-products",products},"*");}catch{}
 }
 async function save(action){
+ if(saveInFlight)return;
+ saveInFlight=true;
+ const buttons=[$("saveDraft"),$("publish")];buttons.forEach(button=>{if(button)button.disabled=true;});
  try{
-  collectForm();setStatus(action==="publish"?"Publishing…":"Saving draft…");
+  collectForm();
+  const submitted=JSON.stringify({config,products});
+  setStatus(action==="publish"?"Publishing…":"Saving draft…");
   const result=await request("/api/admin/storefronts/"+selectedStore.key,{method:"PATCH",body:JSON.stringify({action,config,products})});
-  draftDirty=false;
-  if(action==="publish"){config=result.config||config;products=result.products||products;setStatus("Published","");showNotice("Published successfully. The storefront API now serves the published configuration and published products.");}
-  else setStatus("Draft saved","");renderProducts();renderSections();sendPreview();
+  collectForm();
+  const unchanged=JSON.stringify({config,products})===submitted;
+  if(action==="publish"&&unchanged){config=result.config||config;products=result.products||products;}
+  draftDirty=!unchanged;
+  if(action==="publish"&&unchanged){setStatus("Published","");showNotice("Published successfully. The storefront API now serves the published configuration and published products.");}
+  else if(action==="publish"){setStatus("Published · newer edits unsaved","warning");showNotice("The submitted version was published, but newer edits were made while saving. Publish again to include those latest changes.",true);}
+  else if(unchanged){setStatus("Draft saved","");showNotice("Draft saved successfully.");}
+  else{setStatus("Draft saved · newer edits unsaved","warning");showNotice("The submitted draft was saved, but newer edits were made while saving. Save Draft again to keep the latest changes.",true);}
+  renderProducts();renderSections();renderCategoryOptions();sendPreview();
  }catch(e){setStatus("Save failed","error");showNotice(e.message||"Could not save storefront changes.",true);}
+ finally{saveInFlight=false;buttons.forEach(button=>{if(button)button.disabled=false;});}
 }
 function onPreviewMessage(event){
  if(!selectedStore||event.origin!==selectedStore.origin||!event.data)return;
