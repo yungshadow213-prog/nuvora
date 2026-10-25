@@ -2434,9 +2434,9 @@ function validateMultiStorefrontConfig(value){
     const categoryIds=new Set(),categorySlugs=new Set();
     for(const category of value.customCategories){
       if(!category||typeof category!=='object'||Array.isArray(category))return 'A custom category is invalid.';
-      const id=String(category.id||''),name=String(category.name||'').trim(),slug=String(category.slug||'').trim().toLowerCase();
-      if(!id||id.length>120||categoryIds.has(id))return 'Custom category IDs must be unique and under 120 characters.';
+      const name=String(category.name||'').trim(),slug=String(category.slug||name.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')).trim().toLowerCase(),id=String(category.id||slug||name);
       if(!name||name.length>100)return 'Every custom category needs a name under 100 characters.';
+      if(!id||id.length>120||categoryIds.has(id))return 'Custom category IDs must be unique and under 120 characters.';
       if(!slug||slug.length>100||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)||categorySlugs.has(slug))return 'Custom category slugs must be unique URL-safe text.';
       categoryIds.add(id);categorySlugs.add(slug);
       for(const key of ['description','image'])if(category[key]!==undefined&&(typeof category[key]!=='string'||category[key].length>(key==='description'?1000:2000)))return 'Custom category '+key+' is invalid or too long.';
