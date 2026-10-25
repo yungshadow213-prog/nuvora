@@ -63,6 +63,7 @@ The non-AI review identified and addressed two additional integration risks on t
 - **Manual featured-section semantics:** Home PR #7, Clothing PR #7, and Games PR #6 now keep a manually curated Featured section empty when it has no selected products, rather than silently falling back to other catalogue items.
 
 - **Newly added custom product grids:** PR #143 now marks newly created product-grid sections as explicitly manual from the moment they are created, so the storefront preview does not temporarily populate an empty curated grid with fallback catalogue items. A matching CI contract guards this behavior.
+- **Central Storefront Studio persistence:** PR #143 now reads the saved record back after both Save Draft and Publish and compares a stable, key-order-independent representation with the API result. It reports that the save could not be confirmed if the database read-back differs, instead of displaying a success message based only on the write response. A regression contract guards the read-back verification.
 
 These changes are committed to the existing review branches. They have not been merged, deployed, or verified through an authenticated live Admin session.
 
