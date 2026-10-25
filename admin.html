@@ -2430,7 +2430,7 @@ function mergeSkinSiteConfig(raw){
  cfg.footerCopyright=String(src.footerCopyright??base.footerCopyright).slice(0,80);
  const builtInPageText={shopEyebrow:120,shopHeadline:180,shopHeadlineEmphasis:180,shopDescription:1200,journalEyebrow:120,journalHeadline:180,journalHeadlineEmphasis:180,journalDescription:1200,savedEyebrow:120,savedHeadline:180,savedHeadlineEmphasis:180,savedDescription:1200};
  for(const [key,max] of Object.entries(builtInPageText))cfg[key]=String(src[key]??base[key]).slice(0,max);
- cfg.sections=cleanSections(src.sections,base.sections);
+ cfg.sections=cleanSections(src.sections,base.sections).filter(section=>!(section.id==='routine-finder'&&section.type==='routine-finder'&&section.title==='Find your routine, one step at a time.'));
  // One-time home layout cleanup: remove the default routine finder and add a clear category browse section.
  // The version bump makes later user deletions authoritative; this migration will not run again.
  if(Number(src.version||0)<6){
