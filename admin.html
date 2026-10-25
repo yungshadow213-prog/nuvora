@@ -2344,10 +2344,7 @@ const defaultSkinSiteConfig=()=>({
   showSearch:true,showSaved:true,showHeaderCta:true,
   navigationItems:[
    {id:'shop-all',label:'Shop all',url:'/shop',visible:true},
-   {id:'cleanse',label:'Cleanse',url:'/shop?category=Cleanse',visible:true},
-   {id:'treat',label:'Treat',url:'/shop?category=Treat',visible:true},
-   {id:'hydrate',label:'Hydrate',url:'/shop?category=Hydrate',visible:true},
-   {id:'protect',label:'Protect',url:'/shop?category=Protect',visible:true},
+   {id:'categories',label:'Categories',url:'/shop',visible:true},
    {id:'brands',label:'Brands',url:'/brands',visible:true},
    {id:'journal',label:'Journal',url:'/journal',visible:true}
   ],
@@ -2431,6 +2428,14 @@ function mergeSkinSiteConfig(raw){
  cfg.headerCtaLabel=String(src.headerCtaLabel??base.headerCtaLabel).slice(0,80);
  ['showSearch','showSaved','showHeaderCta'].forEach(key=>cfg[key]=src[key]!==false);
  cfg.navigationItems=cleanLinks(src.navigationItems,base.navigationItems,20);
+ // Migrate the old skincare-only navigation to the broader beauty taxonomy without
+ // overwriting a user's custom links or labels.
+ const legacyCategoryUrls=new Set(['/shop?category=Cleanse','/shop?category=Treat','/shop?category=Hydrate','/shop?category=Protect']);
+ const hadLegacyCategoryNav=cfg.navigationItems.some(link=>legacyCategoryUrls.has(String(link.url||'')));
+ if(hadLegacyCategoryNav){
+  cfg.navigationItems=cfg.navigationItems.filter(link=>!legacyCategoryUrls.has(String(link.url||'')));
+  if(!cfg.navigationItems.some(link=>String(link.url||'').split('?')[0]==='/shop'))cfg.navigationItems.splice(1,0,{id:'categories',label:'Categories',url:'/shop',visible:true});
+ }
  if(!cfg.navigationItems.some(link=>String(link.url||'')==='/brands'))cfg.navigationItems.splice(Math.min(2,cfg.navigationItems.length),0,{id:'brands',label:'Brands',url:'/brands',visible:true});
 
  cfg.footerIntro=String(src.footerIntro??base.footerIntro).slice(0,1200);
@@ -2445,13 +2450,10 @@ function mergeSkinSiteConfig(raw){
  cfg.footerCopyright=String(src.footerCopyright??base.footerCopyright).slice(0,80);
  const builtInPageText={shopEyebrow:120,shopHeadline:180,shopHeadlineEmphasis:180,shopDescription:1200,journalEyebrow:120,journalHeadline:180,journalHeadlineEmphasis:180,journalDescription:1200,savedEyebrow:120,savedHeadline:180,savedHeadlineEmphasis:180,savedDescription:1200};
  for(const [key,max] of Object.entries(builtInPageText))cfg[key]=String(src[key]??base[key]).slice(0,max);
- cfg.sections=cleanSections(src.sections,base.sections).filter(section=>section.type!=='routine-finder');
- // One-time home layout cleanup: remove the default routine finder and add a clear category browse section.
- // The version bump makes later user deletions authoritative; this migration will not run again.
-  // Version 8 layout migration: ensure product-type browsing and brand discovery exist on older saved home pages.
- // Once version 8 is saved, a deliberate deletion stays deleted.
+ cfg.sections=cleanSections(src.sections,base.sections);
+ // Version 8 layout migration: ensure product-type browsing and brand discovery exist on older saved home pages.
+ // Preserve existing sections in the editor so every section, including the routine finder, can be explicitly deleted by its owner.
  if(Number(src.version||0)<8){
-  cfg.sections=cfg.sections.filter(section=>section.type!=='routine-finder');
   if(cfg.sections.length&&!cfg.sections.some(section=>section.type==='category-grid')){
    const heroIndex=cfg.sections.findIndex(section=>section.type==='hero');
    cfg.sections.splice(heroIndex>=0?heroIndex+1:0,0,{id:'home-categories',type:'category-grid',visible:true,title:'Shop by product type',eyebrow:'FIND YOUR KIND OF FIND',text:'Browse by what the product is, from everyday skincare to beauty tools, nail care and more.'});
@@ -2468,7 +2470,7 @@ function mergeSkinSiteConfig(raw){
   slug:String(p.slug||'page-'+(i+1)).toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80),
   description:String(p.description||'').slice(0,1200),
   visible:p.visible!==false,
-  sections:cleanSections(p.sections,[]).filter(section=>section.type!=='routine-finder')
+  sections:cleanSections(p.sections,[])
  })):Array.isArray(base.pages)?base.pages:[];
  if(!Array.isArray(src.navigationItems))cfg.pages.filter(page=>page.visible!==false).forEach(page=>{if(!cfg.navigationItems.some(link=>link.url==='/pages/'+page.slug))cfg.navigationItems.push({id:'page-'+page.slug,label:page.title,url:'/pages/'+page.slug,visible:true});});
  cfg.customCategories=Array.isArray(src.customCategories)?src.customCategories.slice(0,60).map((x,i)=>({
