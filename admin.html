@@ -2337,7 +2337,7 @@ async function adminBoot(){
 const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
 let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinSiteDraftExists=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='',skinStudioPendingProductTarget=null;
 const defaultSkinSiteConfig=()=>({
-  version:5,template:'soft-editorial',accentColor:'#66745f',
+  version:5,homeLayoutVersion:0,template:'soft-editorial',accentColor:'#66745f',
   announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
   brandName:'nuvora',brandSuffix:'skin',headerTagline:'YOUR EVERYDAY SKIN EDIT',
   announcementAside:'A LITTLE MORE CONSIDERED',headerCtaLabel:'Explore the edit',
@@ -2383,11 +2383,14 @@ const defaultSkinSiteConfig=()=>({
   customCategories:[],
   productCategoryMap:{},
   pages:[],
+  homeLayoutVersion:0,
   sections:[
     {id:'hero',type:'hero',visible:true,title:'Care that feels like you.'},
-    {id:'edit',type:'product-grid',visible:true,title:'What’s in the edit',eyebrow:'Curated, not crowded',text:'Product picks are added by the Nuvora team. Explore skincare finds and helpful guides.',filter:'all',columns:4,product_ids:[]},
-    {id:'approach',type:'editorial',visible:true,title:'Good finds. Clear choices.',eyebrow:'A gentler way to discover',text:'Nuvora Skin is a focused corner of Nuvora for skincare and beauty discoveries. Check ingredient lists, product directions, and suitability before buying.'},
-    {id:'journal',type:'journal-grid',visible:true,title:'Little notes for everyday skin.',eyebrow:'The journal',text:'Practical notes for building a routine at your own pace.',columns:3,product_ids:[]}
+    {id:'home-categories',type:'category-grid',visible:true,title:'Shop by product type',eyebrow:'FIND YOUR KIND OF CARE',text:'Browse by what you are shopping for, from skincare and masks to beauty tools, nail care and everyday essentials.'},
+    {id:'edit',type:'product-grid',visible:true,title:'Shop the edit',eyebrow:'CURATED, NOT CROWDED',text:'Explore the products we have selected. Open any item for the full product guide, image gallery and retailer link.',filter:'all',columns:4,productsPerPage:8,product_ids:[]},
+    {id:'home-brands',type:'brand-grid',visible:true,title:'Shop by brand',eyebrow:'THE BRANDS BEHIND THE FINDS',text:'Explore the brands in our catalog, then browse every product we carry from each one.'},
+    {id:'approach',type:'editorial',visible:true,title:'Good finds. Clear choices.',eyebrow:'A GENTLER WAY TO DISCOVER',text:'Nuvora Skin brings together useful product details so you can compare the information that matters before checking the current price on the retailer listing.'},
+    {id:'journal',type:'journal-grid',visible:true,title:'Useful notes for everyday care.',eyebrow:'THE JOURNAL',text:'Practical notes to help you understand products and build a routine at your own pace.',columns:3,product_ids:[]}
   ]
 });
 function mergeSkinSiteConfig(raw){
@@ -2611,6 +2614,19 @@ function collectSkinConfigFields(){
  const editorial=skinBuilderConfig.sections.find(x=>x.type==='editorial');
  if(editorial){editorial.title=skinBuilderConfig.approachTitle;editorial.eyebrow=skinBuilderConfig.approachEyebrow;editorial.text=skinBuilderConfig.approachBody;}
 }
+function migrateSkinHomeLayout(config){
+ if(!config||Number(config.homeLayoutVersion)>=1)return {changed:false,removedRoutine:false};
+ const original=Array.isArray(config.sections)?config.sections:[];
+ const removedRoutine=original.some(section=>String(section?.type||'')==='routine-finder');
+ let sections=original.filter(section=>String(section?.type||'')!=='routine-finder');
+ if(!sections.some(section=>section.type==='category-grid'))sections.push({id:'home-categories',type:'category-grid',visible:true,title:'Shop by product type',eyebrow:'FIND YOUR KIND OF CARE',text:'Browse by what you are shopping for, from skincare and masks to beauty tools, nail care and everyday essentials.'});
+ if(!sections.some(section=>section.type==='product-grid'||section.type==='featured-products'))sections.push({id:'home-products',type:'product-grid',visible:true,title:'Shop the edit',eyebrow:'CURATED, NOT CROWDED',text:'Open any product for the full guide, image gallery and retailer link.',filter:'all',columns:4,productsPerPage:8,product_ids:[]});
+ if(!sections.some(section=>section.type==='brand-grid'))sections.push({id:'home-brands',type:'brand-grid',visible:true,title:'Shop by brand',eyebrow:'THE BRANDS BEHIND THE FINDS',text:'Explore the brands in our catalog, then browse every product we carry from each one.'});
+ const rank=type=>({'hero':0,'category-grid':10,'featured-products':20,'product-grid':21,'brand-grid':30,'text-block':35,'image-block':36,'editorial':40,'journal-grid':50}[type]??38);
+ sections=sections.map((section,index)=>({section,index})).sort((a,b)=>rank(a.section.type)-rank(b.section.type)||a.index-b.index).map(item=>item.section);
+ config.sections=sections;config.homeLayoutVersion=1;
+ return {changed:true,removedRoutine};
+}
 async function loadSkinSiteConfig(){
  skinSiteConfigLoaded=false;
  try{
@@ -2618,14 +2634,21 @@ async function loadSkinSiteConfig(){
   if(!settings||typeof settings!=='object')throw new Error('The settings endpoint returned an invalid response.');
   skinSiteDraftExists=!!(settings.skin_site_draft&&typeof settings.skin_site_draft==='object'&&!Array.isArray(settings.skin_site_draft));
   skinBuilderConfig=mergeSkinSiteConfig(skinSiteDraftExists?settings.skin_site_draft:settings.skin_site_config);
+  const homeLayoutMigration=migrateSkinHomeLayout(skinBuilderConfig);
   skinStudioPageId='home';
   skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||'hero'};
   fillSkinConfigFields();
   skinSiteConfigLoaded=true;
   skinDraftLastSavedPayload=stableSkinJson(skinBuilderConfig);
   skinSetSavedLabel(skinSiteDraftExists?'Saved draft loaded':'Published version loaded');
-  skinBuilderMessage(skinSiteDraftExists?'Your saved draft is loaded. It is private and will not affect the live storefront until you publish.':'The published site settings are loaded. Save a draft to keep your work private, or publish when you are ready.','success');
-  if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
+  if(homeLayoutMigration.changed){
+   skinBuilderMessage(homeLayoutMigration.removedRoutine?'Removed the unnecessary routine finder and organized the home page into a clearer shop layout. Saving this as a private draft; the live store will not change until you publish.':'Organized the home page into a clearer shop layout with product categories and brand browsing. Saving this as a private draft; the live store will not change until you publish.','success');
+   if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
+   void saveSkinStudioChangeImmediately(homeLayoutMigration.removedRoutine?'Routine finder removed and home layout saved as a draft.':'Home layout reorganized and saved as a draft.');
+  }else{
+   skinBuilderMessage(skinSiteDraftExists?'Your saved draft is loaded. It is private and will not affect the live storefront until you publish.':'The published site settings are loaded. Save a draft to keep your work private, or publish when you are ready.','success');
+   if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
+  }
  }catch(e){
   skinSiteDraftExists=false;
   skinBuilderConfig=mergeSkinConfigForRecovery();
