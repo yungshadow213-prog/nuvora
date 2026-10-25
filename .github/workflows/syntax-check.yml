@@ -86,7 +86,7 @@ jobs:
                   failures.append(f"{name}: localhost URL reference found")
           worker=Path("worker.js").read_text(encoding="utf-8")
           router=Path("worker-router.js").read_text(encoding="utf-8")
-          if "games-storefront" not in router or "home-storefront" not in router or "clothing-storefront" not in router:
+          if "(games|home|clothing)-storefront" not in router:
               failures.append("worker-router.js: one or more isolated storefront endpoints are missing")
           if re.search(r"async\s+async\s+function", worker):
               failures.append("worker.js: malformed duplicated async function declaration")
