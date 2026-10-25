@@ -39,7 +39,7 @@ async function publicStorefront(request, env, key) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const studioRoute = url.pathname.match(/^\\/admin\\/(gaming|home|clothing)-studio\\/?$/);
+    const studioRoute = url.pathname.match(/^\/admin\/(gaming|home|clothing)-studio\/?$/);
     if (url.pathname === "/admin/studios" || url.pathname === "/admin/studios/") {
       return env.ASSETS.fetch(new Request(new URL("/multi-store-studio.html", request.url), { method: "GET", headers: request.headers }));
     }
