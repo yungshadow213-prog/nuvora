@@ -112,7 +112,6 @@ function wireEditor(){
  $("saveDraft").onclick=()=>save("save-draft");$("publish").onclick=()=>save("publish");$("refreshPreview").onclick=sendPreview;
  $("addProduct").onclick=()=>openProduct();$("closeProduct").onclick=$("cancelProduct").onclick=()=>{$("productModal").classList.remove("open");};
  $("productForm").onsubmit=saveProduct;$("uploadImages").onclick=uploadProductImages;$("addSection").onclick=addSection;
- window.addEventListener("message",onPreviewMessage);
 }
 function switchTab(tab){activeTab=tab;document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));["design","products","sections"].forEach(id=>$(id+"Panel").classList.toggle("hidden",id!==tab));}
 function renderProducts(){
