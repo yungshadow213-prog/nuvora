@@ -28,6 +28,7 @@ These results confirm source-level checks and build success; they do **not** rep
 - The existing `product-images` bucket and Skin Studio draft settings are present in the connected schema inventory.
 - Applied `secure_touch_updated_at_search_path_20261025`; the `public.touch_updated_at()` mutable-search-path warning is no longer reported.
 - Applied `restore_user_cart_saved_policies_20261025`; authenticated users can now read/write only their own `saved_products` and `cart_items` rows. The advisor no longer reports those two tables as RLS-enabled without policies.
+- Applied `restrict_handle_new_user_rpc_execute_20261025`; direct execution of the signup trigger helper is revoked from client roles while the existing auth.users trigger remains in place.
 
 ## Validation evidence
 
@@ -40,7 +41,7 @@ These results confirm source-level checks and build success; they do **not** rep
 
 1. **Authenticated admin verification:** Sign in with the authorized admin account and exercise Skin Studio and each multi-store studio: create/edit/delete a product, upload images, save a draft, reload, preview, publish, and confirm the correct storefront reflects the change.
 2. **Skin Care client storefront:** The separate client repository remains untouched by design. Its actual product-card layout, retailer link, guide content, rating separation, and recommendation behavior still require verification in the authorized client-storefront workflow.
-3. **Database security review:** the RLS/no-policy findings for `cart_items` and `saved_products` are fixed with owner-scoped policies. The remaining no-policy finding is `social_posts`, which is accessed through the Worker service-role path. Remaining advisor warnings include public execute access on the SECURITY DEFINER functions `handle_new_user()` and `is_admin()`, disabled leaked-password protection, and performance recommendations for foreign-key indexes. The `is_admin()` execution grant may be used by access-control policies, so it was not revoked blindly; leaked-password protection requires an Auth configuration change outside this code pass.
+3. **Database security review:** the RLS/no-policy findings for `cart_items` and `saved_products` are fixed with owner-scoped policies. The remaining no-policy finding is `social_posts`, which is accessed through the Worker service-role path. Remaining advisor warnings include public execute access on the SECURITY DEFINER function `is_admin()`, disabled leaked-password protection, and performance recommendations for foreign-key indexes. The `is_admin()` execution grant may be used by access-control policies, so it was not revoked blindly; leaked-password protection requires an Auth configuration change outside this code pass.
 4. **Homepage visual polish:** PR #148 merged as `8595abe57fbc4c87425de77cea9a991f4000fc78`. All Nuvora syntax, release-contract, storefront-JavaScript, admin-editor-JavaScript, and Wrangler dry-run/bundle jobs passed on its PR head.
 5. **Deployment and live checks:** Explicitly out of scope. No deploy, production configuration change, or authenticated live write test was performed.
 
