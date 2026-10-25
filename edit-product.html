@@ -136,7 +136,7 @@ async function publish(){
       const destination=$('destinationUrl').value.trim();
       if(!destination)throw new Error('Add the exact retailer or affiliate URL before publishing.');
       if(!images.length)throw new Error('Add at least one product image before publishing.');
-      product=await api('/api/admin/products/'+encodeURIComponent(product.id)+'/publish',{method:'POST',body:{destination_url:destination,amazon_source_url:product.amazon_source_url||null}});
+      const result=await api('/api/admin/products/'+encodeURIComponent(product.id)+'/publish',{method:'POST',body:{destination_url:destination,amazon_source_url:product.amazon_source_url||null}});\n      // The publish endpoint wraps the updated row in { ok, product } unlike PATCH.\n      product=result.product||result;
     }else{
       product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body:{published:false,updated_at:new Date().toISOString()}});
     }
