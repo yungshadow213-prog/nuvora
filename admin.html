@@ -2618,6 +2618,7 @@ function migrateSkinHomeLayout(config){
  const original=Array.isArray(config.sections)?config.sections:[];
  const removedRoutine=original.some(section=>String(section?.type||'')==='routine-finder');
  let sections=original.filter(section=>String(section?.type||'')!=='routine-finder');
+ if(!sections.some(section=>section.type==='hero'))sections.unshift({id:'home-hero',type:'hero',visible:true,title:'Care that feels like you.'});
  if(!sections.some(section=>section.type==='category-grid'))sections.push({id:'home-categories',type:'category-grid',visible:true,title:'Shop by product type',eyebrow:'FIND YOUR KIND OF CARE',text:'Browse by what you are shopping for, from skincare and masks to beauty tools, nail care and everyday essentials.'});
  if(!sections.some(section=>section.type==='product-grid'||section.type==='featured-products'))sections.push({id:'home-products',type:'product-grid',visible:true,title:'Shop the edit',eyebrow:'CURATED, NOT CROWDED',text:'Open any product for the full guide, image gallery and retailer link.',filter:'all',columns:4,productsPerPage:8,product_ids:[]});
  if(!sections.some(section=>section.type==='brand-grid'))sections.push({id:'home-brands',type:'brand-grid',visible:true,title:'Shop by brand',eyebrow:'THE BRANDS BEHIND THE FINDS',text:'Explore the brands in our catalog, then browse every product we carry from each one.'});
