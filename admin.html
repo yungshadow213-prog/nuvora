@@ -1010,7 +1010,7 @@ body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
         <div class="field"><label>Type</label><select id="pfKind"><option value="shop">Shop</option><option value="find">Find</option><option value="learn">Learn</option></select></div>
         <div class="field"><label>Product source</label><select id="pfSource"><option value="manual">Manual</option><option value="amazon">Amazon</option><option value="sourcinbox">SourcinBox</option><option value="temu">Temu</option><option value="shopify">Shopify</option></select></div>
         <div class="field"><label>Brand</label><input id="pfBrand" placeholder="Brand"></div>
-        <div class="field skin-only-field"><label>Product type</label><input id="pfProductType" placeholder="e.g. cleanser, serum, sunscreen, beauty device"></div>
+        <div class="field skin-only-field"><label>Product type <span class="muted">(suggested from listing — review)</span></label><input id="pfProductType" placeholder="Review or enter the product type"></div>
         <div class="field"><label>Current price</label><input id="pfPrice" type="number" step="0.01" placeholder="0.00"></div>
         <div class="field"><label>List / original price</label><input id="pfListPrice" type="number" step="0.01" placeholder="36.99"></div>
         <div class="field"><label>Discount %</label><input id="pfDiscount" type="number" step="1" placeholder="59"></div>
@@ -1428,12 +1428,36 @@ function updateRetailerRatingPreview(){
  const rating=value,stars=Array.from({length:5},(_,i)=>{const fill=Math.max(0,Math.min(1,rating-i)),kind=fill>=1?'full':fill<=0?'empty':'partial';return '<span class="nv-admin-star '+kind+'"'+(kind==='partial'?' style="background-image:linear-gradient(90deg,#c89a3b '+(fill*100)+'%,#d6ddd5 '+(fill*100)+'%)"':'')+' aria-hidden="true">★</span>';}).join('');
  box.innerHTML='<span class="nv-admin-stars">'+stars+'</span> <strong>'+rating.toFixed(1)+'/5</strong> <span>retailer rating preview · not Nuvora reviews</span>';
 }
+function inferSkinProductType(product){
+ const text=[product?.name,product?.category?.name,product?.category_name,product?.description,product?.features].filter(Boolean).join(' ').toLowerCase();
+ const rules=[
+  [/\\b(?:cleanser|cleansing balm|face wash|micellar water)\\b/,'Cleanser'],
+  [/\\b(?:toner|essence)\\b/,'Toner / essence'],
+  [/\\b(?:serum|ampoule|concentrate)\\b/,'Serum / treatment'],
+  [/\\b(?:sunscreen|sunblock|spf\\s*\\d*)\\b/,'Sunscreen'],
+  [/\\b(?:moisturizer|moisturiser|moisturizing cream|moisturising cream|face cream|gel cream)\\b/,'Moisturizer'],
+  [/\\b(?:eye cream|eye serum|under-eye)\\b/,'Eye care'],
+  [/\\b(?:lip balm|lip mask|lip oil)\\b/,'Lip care'],
+  [/\\b(?:sheet mask|face mask|sleeping mask|clay mask)\\b/,'Face mask'],
+  [/\\b(?:exfoliant|exfoliating|face scrub|chemical peel)\\b/,'Exfoliant'],
+  [/\\b(?:nail clipper|manicure|pedicure|nail file|cuticle|nail drill)\\b/,'Nail grooming tool'],
+  [/\\b(?:led mask|facial device|beauty device|microcurrent|face roller|gua sha|cleansing brush|skin scrubber)\\b/,'Beauty device / tool'],
+  [/\\b(?:foundation|concealer|mascara|eyeliner|lipstick|blush|makeup palette)\\b/,'Makeup / cosmetics'],
+  [/\\b(?:shampoo|conditioner|hair mask|hair serum|hair oil|hair dryer|hair straightener|curling iron)\\b/,'Hair care / styling'],
+  [/\\b(?:perfume|fragrance|eau de parfum|body mist|cologne)\\b/,'Fragrance'],
+  [/\\b(?:toothbrush|toothpaste|water flosser|oral care)\\b/,'Oral care'],
+  [/\\b(?:body lotion|body wash|body cream|body scrub)\\b/,'Body care'],
+  [/\\b(?:gift set|travel set|skincare set|beauty kit|bundle|5-step)\\b/,'Beauty set / kit']
+ ];
+ for(const [pattern,label] of rules)if(pattern.test(text))return label;
+ return '';
+}
 function setProductForm(p){
   document.getElementById('pfName').value=p.name||'';
   document.getElementById('pfKind').value=p.kind||'find';
   document.getElementById('pfSource').value=p.source_type||((p.sourcinbox_product_url||p.sourcinbox_product_id)?'sourcinbox':(p.amazon_asin||p.amazon_source_url?'amazon':'manual'));
   document.getElementById('pfBrand').value=p.brand||'';
-  if(document.getElementById('pfProductType'))document.getElementById('pfProductType').value=p.product_type||p.productType||'';
+  if(document.getElementById('pfProductType'))document.getElementById('pfProductType').value=p.product_type||p.productType||inferSkinProductType(p);
   document.getElementById('pfPrice').value=p.display_price??'';
   document.getElementById('pfListPrice').value=p.amazon_list_price??'';
   document.getElementById('pfDiscount').value=p.amazon_discount_percent??'';
