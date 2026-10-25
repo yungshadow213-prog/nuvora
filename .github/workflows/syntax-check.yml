@@ -258,7 +258,7 @@ jobs:
           # migration must both declare it before the new admin form is integrated.
           schema=Path("backend/schema.sql").read_text(encoding="utf-8")
           migration=Path("backend/migrations/2026-10-25-nuvora-product-type.sql")
-          if not re.search(r"product_type\\s+text", schema):
+          if not re.search(r"product_type\s+text", schema):
               failures.append("backend/schema.sql must define the optional products.product_type column")
           if not migration.exists() or "add column if not exists product_type text" not in migration.read_text(encoding="utf-8").lower():
               failures.append("Skin Studio product_type migration is missing or not idempotent")
