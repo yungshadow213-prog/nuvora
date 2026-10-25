@@ -137,7 +137,8 @@ async function publish(){
       if(!destination)throw new Error('Add the exact retailer or affiliate URL before publishing.');
       if(!images.length)throw new Error('Add at least one product image before publishing.');
       const result=await api('/api/admin/products/'+encodeURIComponent(product.id)+'/publish',{method:'POST',body:{destination_url:destination,amazon_source_url:product.amazon_source_url||null}});
-      // The publish endpoint wraps the updated row in { ok, product } unlike PATCH.\n      product=result.product||result;
+      // The publish endpoint wraps the updated row in { ok, product } unlike PATCH.
+      product=result.product||result;
     }else{
       product=await api('/api/admin/products/'+encodeURIComponent(product.id),{method:'PATCH',body:{published:false,updated_at:new Date().toISOString()}});
     }
