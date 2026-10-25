@@ -3092,7 +3092,12 @@ function updateSkinSection(index,key,value,fromPreview=false){
  }
  skinMarkDirty('Section changes are in draft. Publish when you are ready.');
  if(['type','visible','category_id','filter','columns','product_ids','backgroundColor'].includes(key))renderSkinStudioAll();
- else {renderSkinBuilderSections();renderSkinLibrary();if(fromPreview)renderSkinSelectedInspector();}
+ else {
+  // Text inputs fire on every keystroke (and paste). Avoid rebuilding the unrelated
+  // content library on each event; only the outline label depends on the section title.
+  if(key==='title')renderSkinBuilderSections();
+  if(fromPreview)renderSkinSelectedInspector();
+ }
  queueSkinStudioPreview();
  if(fromPreview)void saveSkinStudioChangeImmediately('Preview edit saved and verified in the page draft.');
 }
