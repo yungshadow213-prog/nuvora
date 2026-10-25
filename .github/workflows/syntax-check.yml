@@ -243,7 +243,7 @@ jobs:
           rating_start = beauty.find("function retailerRatingMarkup")
           rating_end = beauty.find("function productAvailabilityMarkup", rating_start)
           rating_block = beauty[rating_start:rating_end] if rating_start >= 0 and rating_end > rating_start else ""
-          if "retailer rating" not in rating_block.lower() or "nuvora reviews" in rating_block.lower():
+          if "esc(retailer)+' rating</small>" not in rating_block or "nuvora reviews" in rating_block.lower():
               failures.append("beauty.html: retailer rating must remain distinguishable from Nuvora customer reviews")
           if "async function togglePublish" not in admin:
               failures.append("admin.html missing publish toggle handler")
