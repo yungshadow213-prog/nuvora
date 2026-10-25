@@ -528,7 +528,7 @@ function normalizeAmazonListing(listing={}){
   const sourceDescription=cleanMultilineText(x.description,12000)||'';
   const badDescription=/^(?:visit the|shop the|brand:\s|about this item|product description|click to|see more|read more|customer questions|make sure this fits)/i.test(sourceDescription);
   const parts=[];
-  if(sourceDescription&&sourceDescription.length>=80&&!badDescription&&!looksFragmentedText(sourceDescription))parts.push(sourceDescription);
+  if(sourceDescription&&sourceDescription.length>=24&&!badDescription&&!looksFragmentedText(sourceDescription))parts.push(sourceDescription);
   if(featureLines.length)parts.push('Key features: '+featureLines.slice(0,12).join(' • '));
   if(specLines.length)parts.push('Product details: '+specLines.slice(0,20).join(' • '));
   x.features=[...featureLines,...specLines].slice(0,60);
