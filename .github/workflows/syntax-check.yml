@@ -192,6 +192,7 @@ jobs:
           worker=Path("worker.js").read_text(encoding="utf-8")
           admin=Path("admin.html").read_text(encoding="utf-8")
           editor=Path("edit-product.html").read_text(encoding="utf-8")
+          beauty=Path("beauty.html").read_text(encoding="utf-8")
           failures=[]
           forbidden=[
               r"async\s+async\s+function",
@@ -222,6 +223,25 @@ jobs:
               failures.append("admin.html must safely read missingProductColumns from diagnostics")
           if "window.__nuvoraSchemaState=window.__nuvoraSchemaState||{missingProductColumns:[],productSchemaError:''}" not in admin:
               failures.append("admin.html missing safe schema-state fallback")
+          # Keep the Skin Care overview intentionally minimal and the detailed guide
+          # responsible for the retailer link and expanded product information.
+          card_start = beauty.find("function renderProductCard(p)")
+          card_end = beauty.find("function filteredProducts(section)", card_start)
+          card_block = beauty[card_start:card_end] if card_start >= 0 and card_end > card_start else ""
+          if not card_block or "product-overview-meta" not in card_block or "retailerRatingMarkup(p)" not in card_block or "productAvailabilityMarkup(p)" not in card_block:
+              failures.append("beauty.html: product overview must show rating and known availability with the minimal card layout")
+          if "productButtonLabel" in card_block or "priceButton" in card_block:
+              failures.append("beauty.html: retailer purchase button must remain inside the product guide, not on overview cards")
+          guide_start = beauty.find("function openProductDetails(id)")
+          guide_end = beauty.find("function closeProductDetails()", guide_start)
+          guide_block = beauty[guide_start:guide_end] if guide_start >= 0 and guide_end > guide_start else ""
+          for guide_heading in ["Key benefits", "Suitable skin types", "Skin concerns", "Key ingredients", "How to use", "Compatibility cautions", "Warnings & precautions", "Consider alongside"]:
+              if guide_heading not in guide_block:
+                  failures.append("beauty.html: product guide is missing the expected section: " + guide_heading)
+          if "productGalleryImages(p)" not in guide_block or "productButtonLabel(p)" not in guide_block:
+              failures.append("beauty.html: product guide must provide the image gallery and retailer link")
+          if "retailer rating" not in beauty.lower() or "nuvora reviews" in beauty.lower():
+              failures.append("beauty.html: retailer rating must remain distinguishable from Nuvora customer reviews")
           if "async function togglePublish" not in admin:
               failures.append("admin.html missing publish toggle handler")
           # Skin Studio persistence and preview regression contracts. These guard
