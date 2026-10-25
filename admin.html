@@ -2392,6 +2392,7 @@ function mergeSkinSiteConfig(raw){
   columns:[2,3,4].includes(Number(x.columns))?Number(x.columns):4,
   product_ids:Array.isArray(x.product_ids)?x.product_ids.map(String).slice(0,60):[],
   product_selection:x.product_selection==='manual'?'manual':'automatic',
+  productsPerPage:[4,6,8,9,12].includes(Number(x.productsPerPage))?Number(x.productsPerPage):8,
   category_id:String(x.category_id||'').slice(0,100),
   imageAlignment:['left','center','right'].includes(x.imageAlignment)?x.imageAlignment:'center',
   imageWidth:[20,30,40,50,60,70,80,90,100].includes(Number(x.imageWidth))?Number(x.imageWidth):70,
@@ -2431,7 +2432,6 @@ function mergeSkinSiteConfig(raw){
  for(const [key,max] of Object.entries(builtInPageText))cfg[key]=String(src[key]??base[key]).slice(0,max);
  cfg.sections=cleanSections(src.sections,base.sections);
  if(Number(src.version||0)<2&&!cfg.sections.some(x=>x.type==='journal-grid'))cfg.sections.push({id:'journal',type:'journal-grid',visible:true,title:'Little notes for everyday skin.',eyebrow:'The journal',text:'Practical notes for building a routine at your own pace.',columns:3,product_ids:[]});
-  if(Number(src.version||0)<4&&!cfg.sections.some(x=>x.type==='routine-finder')){const heroIndex=cfg.sections.findIndex(x=>x.type==='hero');cfg.sections.splice(heroIndex>=0?heroIndex+1:0,0,{id:'routine-finder',type:'routine-finder',visible:true,title:'Find your routine, one step at a time.',eyebrow:'YOUR SKIN, YOUR PACE',text:'Choose a skin type to explore relevant finds. These labels are browsing aids, not a guarantee of suitability.'});}
   cfg.version=5;;
  cfg.pages=Array.isArray(src.pages)?src.pages.slice(0,30).map((p,i)=>({
   id:String(p.id||p.slug||('page-'+(i+1))).slice(0,80),
@@ -2450,8 +2450,9 @@ function mergeSkinSiteConfig(raw){
   image:String(x.image||'').slice(0,1600)
  })):Array.isArray(base.customCategories)?base.customCategories:[];
  const mapping=src.productCategoryMap&&typeof src.productCategoryMap==='object'&&!Array.isArray(src.productCategoryMap)?src.productCategoryMap:{};
+ const categoryAliases={cleanse:'cleansers-makeup-removers',treat:'serums-treatments',hydrate:'moisturisers-barrier-care',protect:'sunscreen-spf','body-lips':'body-care'};
  cfg.productCategoryMap={};
- Object.entries(mapping).slice(0,500).forEach(([id,category])=>{if(id.length<=100&&String(category||'').length<=100)cfg.productCategoryMap[id]=String(category||'');});
+ Object.entries(mapping).slice(0,500).forEach(([id,category])=>{if(id.length<=100&&String(category||'').length<=100){const value=String(category||'');cfg.productCategoryMap[id]=categoryAliases[value]||value;}});
  cfg.version=3;
  cfg.template=['soft-editorial','clean-minimal','sage-botanical'].includes(cfg.template)?cfg.template:'soft-editorial';
  cfg.accentColor=/^#[0-9a-f]{6}$/i.test(String(cfg.accentColor||''))?cfg.accentColor:'#66745f';
