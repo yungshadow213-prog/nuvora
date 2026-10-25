@@ -2385,7 +2385,7 @@ function validateSkinSiteConfig(value,options={}){
     if(!value.productGuideFields||typeof value.productGuideFields!=='object'||Array.isArray(value.productGuideFields))return 'Skin Studio product guide visibility settings must be an object.';
     if(keys.some(key=>value.productGuideFields[key]!==undefined&&typeof value.productGuideFields[key]!=='boolean'))return 'Skin Studio product guide visibility values must be true or false.';
   }
-  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid','journal-grid','image-block','text-block','brand-grid']);
+  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block','brand-grid']);
   const checkSections=(sections,label)=>{
     if(!Array.isArray(sections))return label+' sections must be an array.';
     if(sections.length>40)return label+' supports up to 40 sections.';
