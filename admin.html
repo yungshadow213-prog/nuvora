@@ -2467,7 +2467,7 @@ function mergeSkinSiteConfig(raw){
   slug:String(p.slug||'page-'+(i+1)).toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80),
   description:String(p.description||'').slice(0,1200),
   visible:p.visible!==false,
-  sections:cleanSections(p.sections,[])
+  sections:cleanSections(p.sections,[]).filter(section=>!(section.type==='routine-finder'&&(['routine-finder','skin-routine-finder','home-routine-finder'].includes(String(section.id))||((Number(src.version||0)<6)&&String(section.title||'').trim().toLowerCase()==='find your routine, one step at a time.'))))
  })):Array.isArray(base.pages)?base.pages:[];
  if(!Array.isArray(src.navigationItems))cfg.pages.filter(page=>page.visible!==false).forEach(page=>{if(!cfg.navigationItems.some(link=>link.url==='/pages/'+page.slug))cfg.navigationItems.push({id:'page-'+page.slug,label:page.title,url:'/pages/'+page.slug,visible:true});});
  cfg.customCategories=Array.isArray(src.customCategories)?src.customCategories.slice(0,60).map((x,i)=>({
