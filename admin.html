@@ -2740,7 +2740,8 @@ function renderSkinLibrary(){
  if(skinStudioTab==='outline'){root.innerHTML='';return;}
  if(!skinBuilderConfig){root.innerHTML='<div class="studio-library-empty">Loading your site content…</div>';return;}
  if(skinStudioTab==='products'){
-  const rows=adminProducts.filter(isSkinProduct).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))).filter((p,index,list)=>list.findIndex(other=>String(other.name||'').trim().toLowerCase()===String(p.name||'').trim().toLowerCase()&&String(other.amazonUrl||other.amazon_url||other.affiliateUrl||other.affiliate_url||'').trim()===String(p.amazonUrl||p.amazon_url||p.affiliateUrl||p.affiliate_url||'').trim())===index);
+  const productIdentity=item=>String(item?.amazon_asin||item?.asin||retailerDestination(item)||item?.destination_url||item?.amazon_source_url||item?.source_url||item?.id||'').trim().toLowerCase();
+  const rows=adminProducts.filter(isSkinProduct).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))).filter((p,index,list)=>list.findIndex(other=>String(other.name||'').trim().toLowerCase()===String(p.name||'').trim().toLowerCase()&&productIdentity(other)===productIdentity(p))===index);
   const pageSize=8,pageCount=Math.max(1,Math.ceil(rows.length/pageSize));
   const currentPage=Math.min(Math.max(1,Number(window.skinStudioProductPage)||1),pageCount);
   window.skinStudioProductPage=currentPage;
