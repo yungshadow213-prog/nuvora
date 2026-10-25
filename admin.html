@@ -1177,6 +1177,9 @@ async function openSkinProduct(){
  try{
   prepareSkinProductPlacement();
   await ensureSkinCategory(true);
+  // Reset and open the shared product modal first; merely changing its labels
+  // leaves Add skincare product looking clickable but never opens the form.
+  openProductModal(true);
   window.skinCareImportMode=true;setSkinAdminFormMode(true);
   if(document.getElementById('pfProductType'))document.getElementById('pfProductType').value='';
   document.getElementById('productModalTitle').textContent='Import Amazon skincare';
