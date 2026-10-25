@@ -2569,7 +2569,15 @@ function stableSkinJson(value){
 function queueSkinDraftAutosave(){
  if(!skinSiteConfigLoaded||!skinBuilderConfig||!document.body.classList.contains('skin-studio-fullpage'))return;
  if(skinDraftAutosaveTimer)clearTimeout(skinDraftAutosaveTimer);
- skinDraftAutosaveTimer=setTimeout(()=>{persistSkinSiteDraft(true).catch(()=>{});},1200);
+ skinDraftAutosaveTimer=setTimeout(()=>{
+  persistSkinSiteDraft(true).catch(error=>{
+   // Never leave a failed autosave looking like a successful or quiet save.
+   const label=document.getElementById('skinStudioSaveLabel');
+   if(label){label.textContent='Autosave failed — changes are still unsaved';label.dataset.status='error';}
+   skinBuilderMessage('Automatic draft save failed: '+(error?.message||'the server did not confirm the save')+'. Keep this tab open and press Save draft to retry. Your published storefront has not been changed.','error');
+   syncSkinPreviewActionbar();
+  });
+ },1200);
 }
 function skinMarkDirty(message='Draft updated. Publish when you are ready.'){
  const label=document.getElementById('skinStudioSaveLabel');
