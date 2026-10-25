@@ -19,7 +19,7 @@ The current code changes are organized into reviewable pull requests rather than
 
 ### Outstanding risks
 - The proposed code is not in `main` because the pull requests have not been merged.
-- **PR #138 mergeability:** The base branch had advanced and GitHub reported the PR as `dirty`. I synchronized the current-main integration files and workflow contracts, then added a merge commit bringing current `main` into the Skin Studio branch without merging the PR itself. GitHub had changed the status to `unknown` / recalculating at the last check; confirm the final mergeability state before considering it review-ready.
+- **PR #138 mergeability:** The base branch had advanced and GitHub reported the PR as `dirty`. I synchronized the current-main integration files and workflow contracts, then added a merge commit bringing current `main` into the Skin Studio branch without merging the PR itself. GitHub now reports #138 as mergeable (status `unstable` while review/required checks settle), and the latest syntax, storefront-JavaScript, admin-editor-JavaScript, release-contract, Wrangler bundle, and Wrangler dry-run checks all passed on its current head. The PR remains open and unmerged.
 - The separate Cloudflare Workers Builds check has reported failures on the Nuvora PR heads. This audit does not treat those as resolved, and no deployment was attempted.
 - No authenticated browser session was used to verify actual Admin permissions, live save/reload, uploads, or publish behavior.
 - Starter-catalogue preview integration should be confirmed in the real Admin session after the relevant PRs are accepted.
