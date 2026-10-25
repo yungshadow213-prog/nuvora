@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nuvora Storefront Studios</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#253127;background:#f2f4f0;font-synthesis:none;text-rendering:optimizeLegibility}*{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}button{cursor:pointer}.topbar{height:64px;background:#fff;border-bottom:1px solid #dfe5dc;display:flex;align-items:center;justify-content:space-between;padding:0 22px;gap:14px}.brand{font-weight:850;letter-spacing:.11em;font-size:17px}.brand span{color:#6b8a61}.top-actions{display:flex;align-items:center;gap:10px}.subtle{font-size:11px;color:#7b887c}.btn{border:1px solid #d6dfd2;border-radius:9px;background:#fff;color:#344a36;padding:10px 13px;font-size:12px;font-weight:700}.btn.primary{background:#355b3c;border-color:#355b3c;color:#fff}.btn.danger{color:#9a3c34;border-color:#e6c7c2;background:#fffafa}.layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,44%);min-height:calc(100vh - 64px)}.editor{padding:24px;min-width:0;max-width:900px;width:100%;margin:0 auto}.heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:20px}.eyebrow{font-size:9px;letter-spacing:.16em;color:#678064;font-weight:850;text-transform:uppercase}.heading h1{font-size:28px;letter-spacing:-.04em;margin:6px 0}.heading p{font-size:12px;line-height:1.6;color:#718072;margin:0;max-width:580px}.status{font-size:11px;padding:8px 10px;border-radius:8px;background:#e7efe4;color:#406345;white-space:nowrap}.status.error{background:#fbe9e6;color:#9c3b30}.status.warning{background:#fff4d8;color:#866324}.tabs{display:flex;gap:5px;padding:5px;border-radius:12px;background:#e7ebe4;margin-bottom:16px}.tabs button{flex:1;border:0;border-radius:8px;background:transparent;padding:10px 12px;color:#657366;font-size:11px;font-weight:750}.tabs button.active{background:#fff;color:#2d4730;box-shadow:0 2px 6px #2038200d}.panel{background:#fff;border:1px solid #dfe6dc;border-radius:15px;margin-bottom:14px;overflow:hidden}.panel-head{padding:15px 16px;border-bottom:1px solid #edf0eb;display:flex;justify-content:space-between;align-items:center;gap:10px}.panel-head h2{font-size:14px;margin:0}.panel-head p{font-size:10px;color:#7e8b7e;margin:4px 0 0}.panel-body{padding:16px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:13px}.field{display:flex;flex-direction:column;gap:6px;min-width:0}.field.wide{grid-column:1/-1}.field label{font-size:10px;font-weight:800;color:#5e6c5f}.field input,.field textarea,.field select{width:100%;border:1px solid #dce4d9;border-radius:8px;background:#fbfcfa;padding:10px 11px;color:#2c392d;font-size:12px;outline:none}.field input:focus,.field textarea:focus,.field select:focus{border-color:#73956b;box-shadow:0 0 0 3px #eaf2e6}.field textarea{min-height:76px;resize:vertical;line-height:1.5}.store-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:22px}.store-card{background:#fff;border:1px solid #dfe6dc;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}.store-card .swatch{height:8px;background:var(--accent)}.store-card .card-content{padding:17px;display:flex;flex-direction:column;gap:12px;flex:1}.store-card h2{font-size:16px;margin:0}.store-card p{font-size:11px;color:#788578;line-height:1.6;margin:0;flex:1}.store-card .btn{width:100%}.store-mark{width:42px;height:42px;border-radius:12px;background:var(--soft);color:var(--accent);display:grid;place-items:center;font-weight:900;font-size:18px}.product-list{display:flex;flex-direction:column;gap:8px}.product-row{display:grid;grid-template-columns:54px minmax(0,1fr) auto;align-items:center;gap:11px;padding:9px;border:1px solid #e5ebe2;border-radius:11px}.product-row img{width:54px;height:58px;object-fit:cover;border-radius:7px;background:#f1f3ef}.product-row h3{font-size:12px;margin:0 0 4px;overflow-wrap:anywhere}.product-row p{font-size:10px;color:#7b887c;margin:0;line-height:1.5}.product-row .row-actions{display:flex;gap:5px}.mini{border:1px solid #dce4d9;border-radius:7px;background:#fff;padding:7px 8px;font-size:10px;color:#465a46}.badge{display:inline-block;border-radius:5px;background:#edf3e9;color:#4b7048;padding:4px 6px;font-size:9px;font-weight:800}.badge.draft{background:#fff2d7;color:#896421}.section-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;border:1px solid #e5ebe2;border-radius:10px;padding:10px;margin-bottom:7px}.section-row input{accent-color:#557d4c}.section-row b{font-size:11px}.section-row small{display:block;color:#859084;font-size:9px;margin-top:3px}.section-actions{display:flex;gap:4px}.section-actions button{border:1px solid #dce4d9;background:#fff;border-radius:6px;padding:5px 7px;font-size:10px}.preview{position:sticky;top:0;height:calc(100vh - 64px);min-width:0;border-left:1px solid #dfe5dc;background:#e9ede7;display:flex;flex-direction:column}.preview-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:#fff;border-bottom:1px solid #dfe5dc;gap:8px}.preview-head strong{font-size:11px}.preview-head span{font-size:9px;color:#8a9589}.preview iframe{border:0;background:#fff;flex:1;width:100%;min-height:0}.preview-note{padding:8px 12px;background:#fff;border-top:1px solid #dfe5dc;font-size:9px;color:#788578;line-height:1.5}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}.actions .btn{flex:1}.empty{border:1px dashed #cfd9ca;border-radius:12px;padding:22px;text-align:center;color:#798678;font-size:11px;line-height:1.7}.auth{min-height:100vh;display:grid;place-items:center;padding:20px}.auth-card{background:#fff;border:1px solid #dfe5dc;border-radius:18px;padding:30px;width:min(420px,100%);box-shadow:0 18px 60px #273f2b0c}.auth-card h1{font-size:26px;margin:14px 0 8px}.auth-card p{font-size:12px;color:#758274;line-height:1.7}.auth-card .btn{width:100%;margin-top:12px}.modal{position:fixed;inset:0;background:#19261db0;display:none;place-items:center;padding:18px;z-index:10}.modal.open{display:grid}.modal-card{background:#fff;border-radius:15px;padding:20px;width:min(620px,100%);max-height:92vh;overflow:auto}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}.modal-head h2{font-size:17px;margin:0}.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.hidden{display:none!important}.muted{color:#849083;font-size:10px;line-height:1.6}.notice{padding:10px 12px;border-radius:9px;background:#edf4e9;color:#466a43;font-size:11px;line-height:1.6;margin:12px 0}.notice.error{background:#fceae7;color:#9c3b30}
+@media(max-width:1050px){.layout{grid-template-columns:minmax(0,1fr) 40%}.store-cards{grid-template-columns:1fr}.editor{padding:18px}.fields{grid-template-columns:1fr 1fr}}@media(max-width:760px){.topbar{padding:0 14px;height:58px}.layout{display:flex;flex-direction:column}.editor{padding:16px;width:100%}.preview{position:relative;top:auto;height:70vh;border-left:0;border-top:1px solid #dfe5dc;order:2}.heading h1{font-size:24px}.heading{flex-direction:column}.store-cards{grid-template-columns:1fr}.fields{grid-template-columns:1fr}.field.wide{grid-column:auto}.product-row{grid-template-columns:44px minmax(0,1fr)}.product-row img{width:44px;height:48px}.row-actions{grid-column:2}.actions .btn{flex:auto}.preview-head{padding:10px 12px}}
+</style>
+</head>
+<body>
+<div id="auth" class="auth"><div class="auth-card"><div class="brand">NUVORA <span>ADMIN</span></div><h1>Storefront Studios</h1><p>Sign in with the Google account that has Nuvora administrator permissions. These studios save drafts privately and publish only when you choose Publish.</p><button id="signIn" class="btn primary">Continue with Google</button><button id="switchAccount" class="btn">Sign out / switch account</button><p id="authError" class="notice error hidden"></p></div></div>
+<div id="app" class="hidden">
+<header class="topbar"><div class="brand">NUVORA <span>STUDIO</span></div><div class="top-actions"><span id="userEmail" class="subtle"></span><button class="btn" id="backAdmin">← Nuvora Admin</button><button class="btn" id="signOut">Sign out</button></div></header>
+<div id="hub" class="editor hidden"><div class="heading"><div><div class="eyebrow">ONE ADMIN · THREE STOREFRONTS</div><h1>Other Storefront Studios</h1><p>Each storefront has its own catalogue, design settings, draft, and publish action. The Skin Care Studio remains separate.</p></div></div><div class="store-cards">
+<article class="store-card" style="--accent:#637b56;--soft:#e8eee2"><div class="swatch"></div><div class="card-content"><div class="store-mark">H</div><h2>Nuvora Home</h2><p>Home décor, furniture, appliances, lighting, storage, bedding and everyday home essentials.</p><a class="btn primary" href="/admin/home-studio">Open Home Studio ↗</a></div></article>
+<article class="store-card" style="--accent:#7e3345;--soft:#f2e5e8"><div class="swatch"></div><div class="card-content"><div class="store-mark">C</div><h2>Nuvora Clothing</h2><p>Dresses, apparel, shoes, bags, accessories and style guides with a distinct fashion presentation.</p><a class="btn primary" href="/admin/clothing-studio">Open Clothing Studio ↗</a></div></article>
+<article class="store-card" style="--accent:#a8f45c;--soft:#1b222d"><div class="swatch"></div><div class="card-content"><div class="store-mark">G</div><h2>Nuvora Games</h2><p>Gaming PCs, consoles, peripherals, streaming gear and setup upgrades.</p><a class="btn primary" href="/admin/games-studio">Open Games Studio ↗</a></div></article>
+</div><div class="notice">These studios share the Nuvora Admin login but store each vertical's published content and draft separately. Storefronts still require deployment and a verified end-to-end preview test before they should be treated as launch-ready.</div></div>
+<div id="studio" class="layout hidden">
+<section class="editor">
+<div class="heading"><div><div id="storeEyebrow" class="eyebrow">STOREFRONT STUDIO</div><h1 id="storeTitle">Storefront Studio</h1><p id="storeDescription"></p></div><span id="status" class="status">Loading…</span></div>
+<div class="tabs"><button class="active" data-tab="design">Design</button><button data-tab="products">Products</button><button data-tab="sections">Page sections</button></div>
+<div id="designPanel" class="panel"><div class="panel-head"><div><h2>Storefront identity</h2><p>Changes update the draft and live preview; publish when ready.</p></div></div><div class="panel-body"><div class="fields">
+<div class="field"><label for="accentColor">Accent colour</label><input id="accentColor" type="color" value="#637b56"></div>
+<div class="field"><label for="announcement">Announcement strip</label><input id="announcement" maxlength="240"></div>
+<div class="field wide"><label for="heroTitle">Hero heading</label><input id="heroTitle" maxlength="240"></div>
+<div class="field wide"><label for="heroDescription">Hero description</label><textarea id="heroDescription" maxlength="2400"></textarea></div>
+<div class="field wide"><label for="heroImage">Hero image URL (HTTPS)</label><input id="heroImage" type="url" placeholder="https://…"></div>
+<div class="field"><label for="approachTitle">Editorial section heading</label><input id="approachTitle" maxlength="240"></div>
+<div class="field wide"><label for="approachBody">Editorial section text</label><textarea id="approachBody" maxlength="4000"></textarea></div>
+<div class="field wide"><label for="footerNote">Footer / disclosure note</label><textarea id="footerNote" maxlength="3000"></textarea></div>
+</div><div class="actions"><button class="btn" id="saveDraft">Save draft</button><button class="btn primary" id="publish">Publish storefront</button></div><p class="muted">Publishing updates this storefront's public config and published product catalogue only. It does not deploy code or connect checkout.</p></div></div>
+<div id="productsPanel" class="panel hidden"><div class="panel-head"><div><h2>Product catalogue</h2><p>Each storefront has its own isolated product list.</p></div><button class="btn primary" id="addProduct">+ Add product</button></div><div class="panel-body"><div id="productList" class="product-list"></div></div></div>
+<div id="sectionsPanel" class="panel hidden"><div class="panel-head"><div><h2>Homepage sections</h2><p>Toggle visibility or change section order. Draft changes stay private until published.</p></div><button class="btn" id="addSection">+ Add section</button></div><div class="panel-body"><div id="sectionList"></div></div></div>
+<div id="notice" class="notice hidden"></div>
+</section>
+<aside class="preview"><div class="preview-head"><div><strong>Live storefront preview</strong><br><span id="previewLabel">Draft preview · desktop</span></div><button id="refreshPreview" class="btn">Refresh preview</button></div><iframe id="previewFrame" title="Storefront live preview" loading="lazy"></iframe><div class="preview-note">The preview uses the storefront's preview bridge. If it does not load, verify the corresponding Cloudflare deployment. Direct text edits and product selections are synced into this editor draft.</div></aside>
+</div>
+</div>
+<div id="productModal" class="modal"><form id="productForm" class="modal-card"><div class="modal-head"><h2 id="productModalTitle">Add product</h2><button type="button" class="btn" id="closeProduct">Close</button></div><div class="fields">
+<div class="field wide"><label for="pName">Product name *</label><input id="pName" required maxlength="200"></div>
+<div class="field"><label for="pCategory">Category</label><input id="pCategory" maxlength="120"></div>
+<div class="field"><label for="pBrand">Brand / label</label><input id="pBrand" maxlength="120"></div>
+<div class="field wide"><label for="pDescription">Product description</label><textarea id="pDescription" maxlength="12000"></textarea></div>
+<div class="field wide"><label for="pShort">Short description</label><textarea id="pShort" maxlength="2000"></textarea></div>
+<div class="field wide"><label for="pImage">Main image URL (HTTPS)</label><input id="pImage" type="url"></div>
+<div class="field wide"><label for="pDestination">Retailer / product link</label><input id="pDestination" type="url"></div>
+<div class="field"><label for="pPrice">Display price (optional)</label><input id="pPrice" type="text" maxlength="80"></div>
+<div class="field"><label for="pStatus">Publication status</label><select id="pStatus"><option value="draft">Draft</option><option value="published">Published</option></select></div>
+</div><div class="modal-footer"><button type="button" class="btn" id="cancelProduct">Cancel</button><button class="btn primary" type="submit">Save product</button></div></form></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const stores={
+ home:{title:"Nuvora Home",key:"home",origin:"https://nuvora-home.rayyung713.workers.dev",description:"Home décor, furniture, appliances, lighting and everyday home essentials.",eventPrefix:"nuvora-home-studio"},
+ clothing:{title:"Nuvora Clothing",key:"clothing",origin:"https://nuvora-clothing.rayyung713.workers.dev",description:"Dresses, apparel, footwear, accessories and practical style guides.",eventPrefix:"nuvora-clothing-studio"},
+ games:{title:"Nuvora Games",key:"games",origin:"https://nuvora-games.rayyung713.workers.dev",description:"Gaming PCs, consoles, peripherals, streaming gear and setup upgrades.",eventPrefix:"nuvora-games-studio"}
+};
+const key=new URLSearchParams(location.search).get("store")||"all";
+const selectedStore=stores[key]||null;
+let sb=null,session=null,config={},products=[],selectedSectionId="",editingProductId=null,activeTab="design",draftDirty=false;
+const $=id=>document.getElementById(id);
+const esc=v=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const makeId=prefix=>prefix+"-"+(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,8));
+function showNotice(message,error=false){const n=$("notice");n.textContent=message;n.classList.remove("hidden","error");if(error)n.classList.add("error");}
+function setStatus(message,type=""){const n=$("status");n.textContent=message;n.className="status"+(type?" "+type:"");}
+function setAuthError(message){$("authError").textContent=message;$("authError").classList.remove("hidden");}
+async function request(path,options={}){const headers={accept:"application/json",...(options.headers||{})};if(session?.access_token)headers.Authorization="Bearer "+session.access_token;if(options.body)headers["Content-Type"]="application/json";const r=await fetch(path,{...options,headers,cache:"no-store"});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||"Request failed ("+r.status+")");return data;}
+async function signIn(){try{const {error}=await sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.href,queryParams:{prompt:"select_account"}}});if(error)throw error;}catch(e){setAuthError(e.message||"Google sign-in could not be started.");}}
+async function boot(){
+ try{
+  const cfg=await fetch("/api/config",{cache:"no-store"}).then(r=>r.json());
+  if(!cfg.supabaseUrl||!cfg.supabaseAnonKey)throw new Error("Nuvora Supabase configuration is missing.");
+  sb=window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);
+  $("signIn").onclick=signIn;$("switchAccount").onclick=async()=>{await sb.auth.signOut();await signIn();};
+  $("signOut").onclick=async()=>{await sb.auth.signOut();location.reload();};
+  $("backAdmin").onclick=()=>location.href="/admin";
+  const {data,error}=await sb.auth.getSession();if(error)throw error;session=data.session;
+  sb.auth.onAuthStateChange((_event,next)=>{session=next;if(!next){$("auth").classList.remove("hidden");$("app").classList.add("hidden");}});
+  if(!session){$("auth").classList.remove("hidden");return;}
+  $("auth").classList.add("hidden");$("app").classList.remove("hidden");$("userEmail").textContent=session.user?.email||"Signed in";
+  if(!selectedStore){$("hub").classList.remove("hidden");return;}
+  $("studio").classList.remove("hidden");$("storeTitle").textContent=selectedStore.title;$("storeDescription").textContent=selectedStore.description;$("storeEyebrow").textContent=selectedStore.key.toUpperCase()+" STOREFRONT STUDIO";
+  $("previewFrame").src=selectedStore.origin+"/?preview=admin&studioPreview=1&device=desktop";
+  $("previewFrame").addEventListener("load",sendPreview);
+  await loadStore();
+  wireEditor();
+ }catch(e){$("auth").classList.remove("hidden");setAuthError(e.message||"Nuvora Admin could not start.");}
+}
+async function loadStore(){
+ setStatus("Loading…");
+ const data=await request("/api/admin/storefronts/"+selectedStore.key);
+ config=structuredClone(data.config||{});
+ products=Array.isArray(data.products)?data.products:[];
+ if(data.draft&&data.draft.config&&Array.isArray(data.draft.products)){config=structuredClone(data.draft.config);products=structuredClone(data.draft.products);setStatus("Draft loaded","warning");}
+ else setStatus("Published version loaded");
+ if(!Array.isArray(config.sections)||!config.sections.length)config.sections=[{id:"hero",type:"hero",visible:true,title:config.heroTitle||"Hero"},{id:"categories",type:"category-grid",visible:true,title:"Categories"},{id:"featured",type:"product-grid",visible:true,title:"Featured products"},{id:"approach",type:"editorial",visible:true,title:config.approachTitle||"Our approach"},{id:"guides",type:"journal-grid",visible:true,title:"Guides & notes"}];
+ $("accentColor").value=/^#[0-9a-f]{6}$/i.test(config.accentColor||"")?config.accentColor:"#637b56";
+ for(const id of ["announcement","heroTitle","heroDescription","heroImage","approachTitle","approachBody","footerNote"])$(id).value=config[id]||"";
+ renderProducts();renderSections();sendPreview();
+}
+function collectForm(){for(const id of ["announcement","heroTitle","heroDescription","heroImage","approachTitle","approachBody","footerNote"])config[id]=$(id).value.trim();config.accentColor=$("accentColor").value;config.sections=Array.isArray(config.sections)?config.sections:[];config.version=Math.max(1,Number(config.version)||1);config.catalogVersion=1;return config;}
+function wireEditor(){
+ document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+ ["announcement","heroTitle","heroDescription","heroImage","approachTitle","approachBody","footerNote","accentColor"].forEach(id=>$(id).addEventListener("input",()=>{collectForm();draftDirty=true;setStatus("Unsaved changes","warning");sendPreview();}));
+ $("saveDraft").onclick=()=>save("save-draft");$("publish").onclick=()=>save("publish");$("refreshPreview").onclick=sendPreview;
+ $("addProduct").onclick=()=>openProduct();$("closeProduct").onclick=$("cancelProduct").onclick=()=>{$("productModal").classList.remove("open");};
+ $("productForm").onsubmit=saveProduct;$("addSection").onclick=addSection;
+ window.addEventListener("message",onPreviewMessage);
+}
+function switchTab(tab){activeTab=tab;document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));["design","products","sections"].forEach(id=>$(id+"Panel").classList.toggle("hidden",id!==tab));}
+function renderProducts(){
+ const list=$("productList");
+ if(!products.length){list.innerHTML='<div class="empty">Your product library is empty.<br>Add your first product to begin building this storefront.</div>';return;}
+ list.innerHTML=products.map(p=>'<article class="product-row"><img src="'+esc(p.image||"")+'" alt="" onerror="this.style.visibility=\'hidden\'"><div><h3>'+esc(p.name)+'</h3><p>'+esc(p.category||"Uncategorised")+' · '+esc(p.brand||"No brand")+'<br><span class="badge '+(p.status==="draft"?"draft":"")+'">'+esc(p.status||"published")+'</span></p></div><div class="row-actions"><button class="mini" data-edit="'+esc(p.id)+'">Edit</button><button class="mini" data-remove="'+esc(p.id)+'">Remove</button></div></article>').join("");
+ list.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>openProduct(b.dataset.edit));list.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>{if(confirm("Remove this product from this storefront catalogue?")){products=products.filter(p=>String(p.id)!==b.dataset.remove);renderProducts();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");}});
+}
+function openProduct(id=""){
+ editingProductId=id||null;const p=products.find(x=>String(x.id)===String(id))||{};
+ $("productModalTitle").textContent=id?"Edit product":"Add product";
+ $("pName").value=p.name||"";$("pCategory").value=p.category||"";$("pBrand").value=p.brand||"";$("pDescription").value=p.description||"";$("pShort").value=p.shortDescription||"";$("pImage").value=p.image||"";$("pDestination").value=p.destinationUrl||"";$("pPrice").value=p.price||"";$("pStatus").value=p.status||"draft";
+ $("productModal").classList.add("open");
+}
+function saveProduct(e){
+ e.preventDefault();
+ const name=$("pName").value.trim();if(!name)return;
+ const existing=products.find(x=>String(x.id)===String(editingProductId));
+ const item={...(existing||{}),id:existing?.id||makeId(selectedStore.key),name,category:$("pCategory").value.trim(),brand:$("pBrand").value.trim(),description:$("pDescription").value.trim(),shortDescription:$("pShort").value.trim(),image:$("pImage").value.trim(),images:existing?.images||[$("pImage").value.trim()].filter(Boolean),destinationUrl:$("pDestination").value.trim(),price:$("pPrice").value.trim(),status:$("pStatus").value};
+ if(existing)products=products.map(x=>String(x.id)===String(existing.id)?item:x);else products.unshift(item);
+ $("productModal").classList.remove("open");renderProducts();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");switchTab("products");
+}
+function renderSections(){
+ const list=$("sectionList");list.innerHTML=config.sections.map((s,i)=>'<div class="section-row"><input type="checkbox" data-visible="'+esc(s.id)+'" '+(s.visible===false?"":"checked")+' aria-label="Toggle section visibility"><div><b>'+esc(s.title||s.type||"Section")+'</b><small>'+esc(s.type||"custom section")+' · '+(s.visible===false?"Hidden":"Visible")+'</small></div><div class="section-actions"><button data-up="'+i+'" '+(i===0?"disabled":"")+'>↑</button><button data-down="'+i+'" '+(i===config.sections.length-1?"disabled":"")+'>↓</button><button data-del="'+esc(s.id)+'">×</button></div></div>').join("");
+ list.querySelectorAll("[data-visible]").forEach(b=>b.onchange=()=>{const s=config.sections.find(x=>String(x.id)===b.dataset.visible);if(s)s.visible=b.checked;renderSections();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");});
+ list.querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>moveSection(Number(b.dataset.up),-1));list.querySelectorAll("[data-down]").forEach(b=>b.onclick=()=>moveSection(Number(b.dataset.down),1));list.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{config.sections=config.sections.filter(s=>String(s.id)!==b.dataset.del);renderSections();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");});
+}
+function moveSection(i,delta){const j=i+delta;if(j<0||j>=config.sections.length)return;[config.sections[i],config.sections[j]]=[config.sections[j],config.sections[i]];renderSections();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");}
+function addSection(){const type=prompt("Section type: editorial, product-grid, category-grid, journal-grid, or custom");if(!type)return;const allowed=["editorial","product-grid","category-grid","journal-grid","custom"];if(!allowed.includes(type)){showNotice("Choose one of: "+allowed.join(", "),true);return;}const title=prompt("Section heading",type==="product-grid"?"Featured products":type==="category-grid"?"Browse categories":"New section");if(title===null)return;config.sections.push({id:makeId("section"),type,visible:true,title:title.trim()||"New section",text:"Add a short introduction here.",columns:4,product_ids:[]});renderSections();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");}
+function sendPreview(){
+ if(!selectedStore||!$("previewFrame").contentWindow)return;
+ const cfg=collectForm();const payload={...cfg,siteSettings:{...cfg}};
+ try{$("previewFrame").contentWindow.postMessage({type:selectedStore.eventPrefix+"-preview",config:payload,products},"*");$("previewFrame").contentWindow.postMessage({type:selectedStore.eventPrefix+"-set-products",products},"*");}catch{}
+}
+async function save(action){
+ try{
+  collectForm();setStatus(action==="publish"?"Publishing…":"Saving draft…");
+  const result=await request("/api/admin/storefronts/"+selectedStore.key,{method:"PATCH",body:JSON.stringify({action,config,products})});
+  draftDirty=false;
+  if(action==="publish"){config=result.config||config;products=result.products||products;setStatus("Published","");showNotice("Published successfully. The storefront API now serves the published configuration and published products.");}
+  else setStatus("Draft saved","");renderProducts();renderSections();sendPreview();
+ }catch(e){setStatus("Save failed","error");showNotice(e.message||"Could not save storefront changes.",true);}
+}
+function onPreviewMessage(event){
+ if(!selectedStore||event.origin!==selectedStore.origin||!event.data)return;
+ const d=event.data;
+ if(d.type===selectedStore.eventPrefix+"-ready"){sendPreview();return;}
+ if(d.type===selectedStore.eventPrefix+"-select-section"){
+  selectedSectionId=String(d.sectionId||"");switchTab("sections");showNotice("Selected section: "+selectedSectionId+". Use Page sections to change visibility or order.");return;
+ }
+ if(d.type===selectedStore.eventPrefix+"-select-product"){
+  const p=products.find(x=>String(x.id)===String(d.productId));if(p){switchTab("products");openProduct(p.id);}return;
+ }
+ if(d.type===selectedStore.eventPrefix+"-edit-text"){
+  const value=String(d.value||"");const field=String(d.field||"");
+  if(["heroTitle","heroDescription","announcement","approachTitle","approachBody"].includes(field))config[field]=value;
+  else {const section=config.sections.find(x=>String(x.id)===String(d.sectionId));if(section&&["title","text","eyebrow","description"].includes(field))section[field]=value;}
+  for(const id of ["announcement","heroTitle","heroDescription","approachTitle","approachBody"])$(id).value=config[id]||"";
+  collectForm();draftDirty=true;setStatus("Unsaved changes","warning");return;
+ }
+ if(d.type===selectedStore.eventPrefix+"-move-product"){
+  const source=products.findIndex(x=>String(x.id)===String(d.productId)),target=products.findIndex(x=>String(x.id)===String(d.targetProductId));
+  if(source>=0&&target>=0&&source!==target){const [p]=products.splice(source,1);products.splice(target,0,p);renderProducts();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");}
+ }
+}
+window.addEventListener("beforeunload",e=>{if(draftDirty){e.preventDefault();e.returnValue="";}});
+boot();
+</script>
+</body></html>
