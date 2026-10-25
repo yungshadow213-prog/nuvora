@@ -2859,6 +2859,7 @@ function selectSkinItem(type,id){
  else if(type==='default-category'){skinStudioSelection={type:'default-category',id:String(id)};switchSkinStudioTab('categories');renderSkinLibrary();}
  renderSkinSelectedInspector();syncSkinPreviewActionbar();
 }
+function skinStudioPreviewUrl(){const device=document.getElementById('skinPreviewFrameOuter')?.dataset.device||'desktop';return SKIN_CLIENT_ORIGIN+'/?preview=admin&studioPreview='+Date.now()+'&device='+encodeURIComponent(device)+(skinStudioPageId!=='home'?'&page='+encodeURIComponent(skinStudioPageId):'');}
 function setSkinStudioPage(pageId){
  skinStudioPageId=pageId==='home'?'home':String(pageId);
  if(skinStudioPageId!=='home'&&!skinCurrentPage(skinStudioPageId)){skinStudioPageId='home';}
@@ -2869,8 +2870,7 @@ function setSkinStudioPage(pageId){
  renderSkinStudioAll();
  const frame=document.getElementById('skinStudioPreview');
  if(frame){
-  const query='?preview=admin&studioPreview='+Date.now()+(skinStudioPageId!=='home'?'&page='+encodeURIComponent(skinStudioPageId):'');
-  frame.src=SKIN_CLIENT_ORIGIN+'/'+query;
+  frame.src=skinStudioPreviewUrl();
  }
  skinBuilderMessage('Editing '+skinPageLabel()+'. Changes remain in your draft until published.','info');
 }
@@ -2986,6 +2986,7 @@ function selectSkinPreviewDevice(device,button){
  const root=document.getElementById('skinPreviewFrameOuter');if(root)root.dataset.device=device;
  document.querySelectorAll('.studio-device-controls button').forEach(b=>b.classList.remove('active'));
  if(button)button.classList.add('active');
+ reloadSkinStudioPreview();
 }
 function setSkinPreviewDevice(device,button){selectSkinPreviewDevice(device,button);}
 function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();syncSkinPreviewActionbar();}
@@ -3154,14 +3155,14 @@ function reloadSkinStudioPreview(){
  const frame=document.getElementById('skinStudioPreview');if(!frame)return;
  const notice=document.getElementById('skinStudioPreviewNotice');
  if(notice){notice.hidden=false;notice.innerHTML='<b>Reloading storefront preview…</b><span>Waiting for Nuvora Skin to respond.</span>';}
- frame.src=SKIN_CLIENT_ORIGIN+'/?preview=admin&studioPreview='+Date.now()+(skinStudioPageId!=='home'?'&page='+encodeURIComponent(skinStudioPageId):'');
+ frame.src=skinStudioPreviewUrl();
 }
 function refreshSkinStudioPreview(){
  if(!document.body.classList.contains('skin-studio-fullpage')||!skinBuilderConfig)return;
  collectSkinConfigFields();
  const frame=document.getElementById('skinStudioPreview');if(!frame)return;
  if(!String(frame.src||'').startsWith(SKIN_CLIENT_ORIGIN+'/')){
-  frame.src=SKIN_CLIENT_ORIGIN+'/?preview=admin&studioPreview='+Date.now()+(skinStudioPageId!=='home'?'&page='+encodeURIComponent(skinStudioPageId):'');
+  frame.src=skinStudioPreviewUrl();
   return;
  }
  sendSkinStudioPreview();
