@@ -14,7 +14,7 @@ export default {
       if (url.pathname === '/admin' || url.pathname === '/admin/') {
         return serveAsset(env,new Request(new URL('/admin.html',request.url), {method:'GET',headers:request.headers}));
       }
-      if(url.pathname==='/beauty'||url.pathname==='/beauty/'){
+      if(/^\/beauty(?:\/.*)?$/.test(url.pathname)){
         return serveAsset(env,new Request(new URL('/beauty.html',request.url),{method:'GET',headers:request.headers}));
       }
       const editPageMatch=url.pathname.match(/^\/admin\/products\/([^/]+)\/edit\/?$/);
