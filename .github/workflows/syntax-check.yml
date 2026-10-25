@@ -290,6 +290,26 @@ jobs:
           open_skin_block=admin[open_skin_start:open_skin_end]
           if "openProductModal(true);" not in open_skin_block:
               failures.append("Skin Studio Add Product must open the product modal instead of only changing its labels")
+          manual_skin_start=admin.find("async function openSkinManualProduct(){")
+          manual_skin_end=admin.find("async function editSkinProduct(id)",manual_skin_start)
+          manual_skin_block=admin[manual_skin_start:manual_skin_end]
+          if "openProductModal(false);" not in manual_skin_block or "productModal').classList.add('open')" not in manual_skin_block:
+              failures.append("Skin Studio manual Add Product must reset and visibly open the product form")
+          edit_skin_start=admin.find("async function editSkinProduct(id)")
+          edit_skin_end=admin.find("function productReviewFlags",edit_skin_start)
+          edit_skin_block=admin[edit_skin_start:edit_skin_end]
+          if "openProductModal(false);" not in edit_skin_block or "setProductForm(p);" not in edit_skin_block:
+              failures.append("Skin Studio Edit Product must open the editor and populate the selected product")
+          placement_start=admin.find("function addSkinProductToSection")
+          placement_end=admin.find("function moveSkinProductInSection",placement_start)
+          placement_block=admin[placement_start:placement_end]
+          for needle, message in [
+              ("sec.product_selection='manual';sec.product_ids=ids.slice(0,60)", "Place on Page must explicitly persist a manual product selection"),
+              ("sendSkinStudioPreview();queueSkinStudioPreview();", "Place on Page must refresh the live preview"),
+              ("saveSkinStudioChangeImmediately(", "Place on Page must immediately save and verify the page draft"),
+          ]:
+              if needle not in placement_block:
+                  failures.append(message)
           # Draft preview exposes only products explicitly placed on a visible grid.
           preview_start = admin.find("function sendSkinStudioPreview")
           preview_end = admin.find("function reloadSkinStudioPreview", preview_start)
