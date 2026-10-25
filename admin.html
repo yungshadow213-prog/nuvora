@@ -3226,7 +3226,6 @@ function wireSkinStudioCanvas(){
     const title=String(sections[index].title||sections[index].type||'section');
     if(!confirm('Delete the “'+title+'” section from this page draft? This change will not publish until you publish the page.'))return;
     skinStudioPageId=pageId;removeSkinSection(index,true);
-    void saveSkinStudioChangeImmediately('Section deleted and saved to the page draft.');
     return;
    }
    if(data.type==='nuvora-skin-studio-add-text-block'){
