@@ -52,6 +52,18 @@ export default {
       try { return await publicStorefront(request, env, match[1]); }
       catch (error) { return json({ error: "Could not load the requested storefront.", detail: String(error?.message || error).slice(0, 240) }, 502); }
     }
-    return worker.fetch(request, env, ctx);
+    const response = await worker.fetch(request, env, ctx);
+    if (request.method === "GET" && ["/admin", "/admin/", "/admin.html", "/admin/skin-studio", "/admin/skin-studio/"].includes(url.pathname) && (response.headers.get("content-type") || "").includes("text/html")) {
+      const html = await response.text();
+      if (!html.includes("nuvora-multi-studio-launcher")) {
+        const launcher = '<style>.nuvora-multi-studio-launcher{position:fixed;right:18px;bottom:18px;z-index:99999;display:flex;align-items:center;gap:8px;padding:11px 14px;border:1px solid #b9cdb8;border-radius:12px;background:#203a2b;color:#fff;text-decoration:none;font:700 11px/1.2 system-ui;box-shadow:0 8px 26px #13271930}.nuvora-multi-studio-launcher:hover{background:#31543c}.skin-studio-fullpage .nuvora-multi-studio-launcher{top:78px;bottom:auto}@media(max-width:600px){.nuvora-multi-studio-launcher{right:10px;bottom:10px;padding:10px;font-size:10px}}</style><a class="nuvora-multi-studio-launcher" href="/admin/studios" aria-label="Open Gaming, Home and Clothing Studios">▦ &nbsp; Gaming · Home · Clothing Studios ↗</a>';
+        const updated = html.replace("</body>", launcher + "</body>");
+        const headers = new Headers(response.headers);
+        headers.delete("content-length");
+        return new Response(updated, { status: response.status, statusText: response.statusText, headers });
+      }
+      return new Response(html, { status: response.status, statusText: response.statusText, headers: response.headers });
+    }
+    return response;
   }
 };
