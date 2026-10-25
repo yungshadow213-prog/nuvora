@@ -2618,10 +2618,11 @@ function migrateSkinHomeLayout(config){
  const original=Array.isArray(config.sections)?config.sections:[];
  const removedRoutine=original.some(section=>String(section?.type||'')==='routine-finder');
  let sections=original.filter(section=>String(section?.type||'')!=='routine-finder');
- if(!sections.some(section=>section.type==='hero'))sections.unshift({id:'home-hero',type:'hero',visible:true,title:'Care that feels like you.'});
- if(!sections.some(section=>section.type==='category-grid'))sections.push({id:'home-categories',type:'category-grid',visible:true,title:'Shop by product type',eyebrow:'FIND YOUR KIND OF CARE',text:'Browse by what you are shopping for, from skincare and masks to beauty tools, nail care and everyday essentials.'});
- if(!sections.some(section=>section.type==='product-grid'||section.type==='featured-products'))sections.push({id:'home-products',type:'product-grid',visible:true,title:'Shop the edit',eyebrow:'CURATED, NOT CROWDED',text:'Open any product for the full guide, image gallery and retailer link.',filter:'all',columns:4,productsPerPage:8,product_ids:[]});
- if(!sections.some(section=>section.type==='brand-grid'))sections.push({id:'home-brands',type:'brand-grid',visible:true,title:'Shop by brand',eyebrow:'THE BRANDS BEHIND THE FINDS',text:'Explore the brands in our catalog, then browse every product we carry from each one.'});
+ const uniqueSectionId=base=>{let id=base,suffix=2;while(sections.some(section=>String(section.id||'')===id)){id=base+'-'+suffix++;}return id;};
+ if(!sections.some(section=>section.type==='hero'))sections.unshift({id:uniqueSectionId('home-hero'),type:'hero',visible:true,title:'Care that feels like you.'});
+ if(!sections.some(section=>section.type==='category-grid'))sections.push({id:uniqueSectionId('home-categories'),type:'category-grid',visible:true,title:'Shop by product type',eyebrow:'FIND YOUR KIND OF CARE',text:'Browse by what you are shopping for, from skincare and masks to beauty tools, nail care and everyday essentials.'});
+ if(!sections.some(section=>section.type==='product-grid'||section.type==='featured-products'))sections.push({id:uniqueSectionId('home-products'),type:'product-grid',visible:true,title:'Shop the edit',eyebrow:'CURATED, NOT CROWDED',text:'Open any product for the full guide, image gallery and retailer link.',filter:'all',columns:4,productsPerPage:8,product_ids:[]});
+ if(!sections.some(section=>section.type==='brand-grid'))sections.push({id:uniqueSectionId('home-brands'),type:'brand-grid',visible:true,title:'Shop by brand',eyebrow:'THE BRANDS BEHIND THE FINDS',text:'Explore the brands in our catalog, then browse every product we carry from each one.'});
  const rank=type=>({'hero':0,'category-grid':10,'featured-products':20,'product-grid':21,'brand-grid':30,'text-block':35,'image-block':36,'editorial':40,'journal-grid':50}[type]??38);
  sections=sections.map((section,index)=>({section,index})).sort((a,b)=>rank(a.section.type)-rank(b.section.type)||a.index-b.index).map(item=>item.section);
  config.sections=sections;config.homeLayoutVersion=1;
