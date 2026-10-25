@@ -47,7 +47,7 @@ async function loadSettings(){
  if(!products.length&&config.catalogVersion!==1)products=starterProducts();
  if(!Array.isArray(config.sections))config.sections=defaultConfig().sections;const baseSections=defaultConfig().sections;config.sections=config.sections.map(s=>{const base=baseSections.find(x=>x.id===s.id)||{};return{...base,...s,title:s.title||(s.id==="hero"?config.heroTitle:s.id==="approach"?config.approachTitle:base.title||s.type),text:s.text||(s.id==="hero"?config.heroDescription:s.id==="approach"?config.approachBody:"")}});
  selectedProduct=products[0]?.id||null;$("auth").classList.add("hidden");$("studio").classList.remove("hidden");render();loadPreview();sendPreview();
- }catch(e){status(e.message,"error");if(/column .* does not exist|schema cache|PGRST204|PGRST205/i.test(e.message)){$("auth").classList.add("hidden");$("studio").classList.remove("hidden");$("inspector").innerHTML='<div class="empty">Run the migration <b>2026-10-25-nuvora-multi-storefront-studios.sql</b> in the connected Supabase project, then reload this studio.</div>';return}showAuth(e.message)}
+ }catch(e){status(e.message,"error");if(/column .* does not exist|schema cache|PGRST204|PGRST205/i.test(e.message)){$("auth").classList.add("hidden");$("studio").classList.remove("hidden");$("inspector").innerHTML='<div class="empty">Run the migration <b>20261025181320_nuvora_multi_storefront_studios.sql</b> in the connected Supabase project, then reload this studio.</div>';return}showAuth(e.message)}
 }
 function markDirty(message="Unsaved changes"){dirty=true;status(message)}
 function currentProduct(){return products.find(p=>String(p.id)===String(selectedProduct))||null}
