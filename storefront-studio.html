@@ -254,7 +254,7 @@ function watchPreview(){
 function sendPreview(){
  if(!selectedStore||!$("previewFrame").contentWindow)return;
  const cfg=collectForm();const payload={...cfg,siteSettings:{...cfg}};
- try{$("previewFrame").contentWindow.postMessage({type:selectedStore.eventPrefix+"-preview",config:payload,products},"*");$("previewFrame").contentWindow.postMessage({type:selectedStore.eventPrefix+"-set-products",products},"*");}catch{}
+ try{$("previewFrame").contentWindow.postMessage({type:selectedStore.eventPrefix+"-preview",config:payload,products},selectedStore.origin);$("previewFrame").contentWindow.postMessage({type:selectedStore.eventPrefix+"-set-products",products},selectedStore.origin);}catch{}
 }
 async function save(action){
  if(saveInFlight)return;
