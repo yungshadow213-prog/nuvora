@@ -2445,7 +2445,7 @@ function mergeSkinSiteConfig(raw){
  cfg.footerCopyright=String(src.footerCopyright??base.footerCopyright).slice(0,80);
  const builtInPageText={shopEyebrow:120,shopHeadline:180,shopHeadlineEmphasis:180,shopDescription:1200,journalEyebrow:120,journalHeadline:180,journalHeadlineEmphasis:180,journalDescription:1200,savedEyebrow:120,savedHeadline:180,savedHeadlineEmphasis:180,savedDescription:1200};
  for(const [key,max] of Object.entries(builtInPageText))cfg[key]=String(src[key]??base[key]).slice(0,max);
- cfg.sections=cleanSections(src.sections,base.sections).filter(section=>!(section.type==='routine-finder'&&(['routine-finder','skin-routine-finder','home-routine-finder'].includes(String(section.id))||((Number(src.version||0)<6)&&String(section.title||'').trim().toLowerCase()==='find your routine, one step at a time.'))));
+ cfg.sections=cleanSections(src.sections,base.sections).filter(section=>!(section.type==='routine-finder'&&(['routine-finder','skin-routine-finder','home-routine-finder'].includes(String(section.id))||String(section.title||'').trim().toLowerCase()==='find your routine, one step at a time.')));
  // One-time home layout cleanup: remove the default routine finder and add a clear category browse section.
  // The version bump makes later user deletions authoritative; this migration will not run again.
  if(Number(src.version||0)<6){
@@ -2467,7 +2467,7 @@ function mergeSkinSiteConfig(raw){
   slug:String(p.slug||'page-'+(i+1)).toLowerCase().replace(/[^a-z0-9-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80),
   description:String(p.description||'').slice(0,1200),
   visible:p.visible!==false,
-  sections:cleanSections(p.sections,[]).filter(section=>!(section.type==='routine-finder'&&(['routine-finder','skin-routine-finder','home-routine-finder'].includes(String(section.id))||((Number(src.version||0)<6)&&String(section.title||'').trim().toLowerCase()==='find your routine, one step at a time.'))))
+  sections:cleanSections(p.sections,[]).filter(section=>!(section.type==='routine-finder'&&(['routine-finder','skin-routine-finder','home-routine-finder'].includes(String(section.id))||String(section.title||'').trim().toLowerCase()==='find your routine, one step at a time.')))
  })):Array.isArray(base.pages)?base.pages:[];
  if(!Array.isArray(src.navigationItems))cfg.pages.filter(page=>page.visible!==false).forEach(page=>{if(!cfg.navigationItems.some(link=>link.url==='/pages/'+page.slug))cfg.navigationItems.push({id:'page-'+page.slug,label:page.title,url:'/pages/'+page.slug,visible:true});});
  cfg.customCategories=Array.isArray(src.customCategories)?src.customCategories.slice(0,60).map((x,i)=>({
@@ -2481,7 +2481,7 @@ function mergeSkinSiteConfig(raw){
  const categoryAliases={cleanse:'cleansers-makeup-removers',treat:'serums-treatments',hydrate:'moisturisers-barrier-care',protect:'sunscreen-spf','body-lips':'body-care'};
  cfg.productCategoryMap={};
  Object.entries(mapping).slice(0,500).forEach(([id,category])=>{if(id.length<=100&&String(category||'').length<=100){const value=String(category||'');cfg.productCategoryMap[id]=categoryAliases[value]||value;}});
- cfg.version=6;
+ cfg.version=7;
  cfg.template=['soft-editorial','clean-minimal','sage-botanical'].includes(cfg.template)?cfg.template:'soft-editorial';
  cfg.accentColor=/^#[0-9a-f]{6}$/i.test(String(cfg.accentColor||''))?cfg.accentColor:'#66745f';
  cfg.productGuideTemplate=['editorial','compact','minimal'].includes(cfg.productGuideTemplate)?cfg.productGuideTemplate:'editorial';
