@@ -20,6 +20,8 @@ jobs:
 
       - name: Check Worker syntax
         run: node --check worker.js
+      - name: Check multi-storefront router syntax
+        run: node --check worker-router.js
       - name: Check Node API server syntax
         run: node --check api/server.js
       - name: Check Cloudflare Wrangler bundle
@@ -43,7 +45,7 @@ jobs:
           from pathlib import Path
           import re
           total=0
-          for name in ["index.html","beauty.html"]:
+          for name in ["index.html","beauty.html","multi-store-studio.html"]:
               html=Path(name).read_text(encoding="utf-8")
               scripts=re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>", html, flags=re.I)
               inline=[s for s in scripts if s.strip()]
@@ -55,7 +57,7 @@ jobs:
               print(f"{name}: extracted {len(inline)} inline script block(s).")
           print(f"Extracted {total} storefront script block(s).")
           PY
-          for file in /tmp/nuvora-index-*.js /tmp/nuvora-beauty-*.js; do
+          for file in /tmp/nuvora-index-*.js /tmp/nuvora-beauty-*.js /tmp/nuvora-multi-store-studio-*.js; do
             node --check "$file"
           done
 
@@ -76,13 +78,16 @@ jobs:
           from pathlib import Path
           import re, sys
           failures=[]
-          for name in ["index.html","beauty.html","admin.html","edit-product.html"]:
+          for name in ["index.html","beauty.html","admin.html","edit-product.html","multi-store-studio.html"]:
               text=Path(name).read_text(encoding="utf-8")
               if len(re.findall(r"<script\b", text, re.I)) != len(re.findall(r"</script>", text, re.I)):
                   failures.append(f"{name}: script tag count mismatch")
               if re.search(r"https?://localhost(?::\d+)?", text, re.I):
                   failures.append(f"{name}: localhost URL reference found")
           worker=Path("worker.js").read_text(encoding="utf-8")
+          router=Path("worker-router.js").read_text(encoding="utf-8")
+          if "(games|home|clothing)-storefront" not in router:
+              failures.append("worker-router.js: one or more isolated storefront endpoints are missing")
           if re.search(r"async\s+async\s+function", worker):
               failures.append("worker.js: malformed duplicated async function declaration")
           required_helpers=["configured","randHex","buildProductOptions","getAmazonToken","amazonGetItem","shopifyGraphql","makeProductSlug","validateProduct","supabaseRest","adminUser"]
