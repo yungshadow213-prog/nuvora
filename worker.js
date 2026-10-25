@@ -295,8 +295,8 @@ function resolveProductDestination(current={},patch={}){
 }
 async function publishProductRecord(env,id,patch={}){
   // Read only the core fields first so optional legacy columns never block publish.
-  const coreFields=['id','name','slug','kind','category_id','image_url','image_urls','description','display_price','currency','destination_url','published','created_at','updated_at'];
-  const optionalFields=['retailer','provider','source_type','source_sku','amazon_asin','amazon_source_url','source_url','resolved_url','sourcinbox_product_url','temu_source_url','store_description'];
+  const coreFields=['id','name','slug','kind','category_id','image_url','description','display_price','currency','destination_url','published','created_at','updated_at'];
+  const optionalFields=['image_urls','retailer','provider','source_type','source_sku','amazon_asin','amazon_source_url','source_url','resolved_url','sourcinbox_product_url','temu_source_url','store_description'];
   const fields=[...coreFields,...optionalFields];
   let current=null,readError='';
   for(let attempt=0;attempt<=optionalFields.length;attempt++){
