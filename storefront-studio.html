@@ -175,7 +175,9 @@ function adoptSeedProducts(seed){
  showNotice("Loaded the storefront starter catalogue into this editor as a starting point. Save Draft to keep your edits before publishing.");
 }
 function watchPreview(){
- const frame=$("previewFrame");frame.dataset.ready="false";$("previewLabel").textContent="Waiting for storefront…";
+ const frame=$("previewFrame");
+ if(frame.dataset.ready==="true"){$("previewLabel").textContent="Connected · draft preview";return;}
+ $("previewLabel").textContent="Waiting for storefront…";
  if(previewTimer)clearTimeout(previewTimer);
  previewTimer=setTimeout(()=>{if(frame.dataset.ready!=="true"){$("previewLabel").textContent="Preview did not respond";showNotice("The storefront preview did not respond. Check that this storefront is deployed to Cloudflare and that its URL is reachable.",true);}},12000);
 }
@@ -196,7 +198,7 @@ async function save(action){
 function onPreviewMessage(event){
  if(!selectedStore||event.origin!==selectedStore.origin||!event.data)return;
  const d=event.data;
- if(d.type===selectedStore.eventPrefix+"-ready"){if(!storeLoaded){pendingSeedProducts=Array.isArray(d.products)?d.products:null;return;}$("previewFrame").dataset.ready="true";$("previewLabel").textContent="Connected · draft preview";if(previewTimer)clearTimeout(previewTimer);adoptSeedProducts(d.products);sendPreview();return;}
+ if(d.type===selectedStore.eventPrefix+"-ready"){$("previewFrame").dataset.ready="true";$("previewLabel").textContent="Connected · draft preview";if(previewTimer)clearTimeout(previewTimer);if(!storeLoaded){pendingSeedProducts=Array.isArray(d.products)?d.products:null;return;}adoptSeedProducts(d.products);sendPreview();return;}
  if(d.type===selectedStore.eventPrefix+"-select-section"){
   selectedSectionId=String(d.sectionId||"");switchTab("sections");showNotice("Selected section: "+selectedSectionId+". Use Page sections to change visibility or order.");return;
  }
