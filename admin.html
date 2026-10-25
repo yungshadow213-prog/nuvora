@@ -3230,7 +3230,7 @@ async function uploadSkinStudioImage(input,type,id,explicitFile=null){
  }catch(e){skinBuilderMessage('Image upload failed: '+(e.message||e),'error');}
  finally{if(label&&original)label.textContent=original;if(input)input.value='';}
 }
-async async function persistSkinSiteDraft(quiet=false){
+async function persistSkinSiteDraft(quiet=false){
  let saveVerified=false;
  collectSkinConfigFields();
  const validation=skinConfigValidationMessage(false);
