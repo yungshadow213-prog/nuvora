@@ -2625,7 +2625,9 @@ function skinDefaultCategories(){
   {id:'sunscreen-spf',slug:'sunscreen-spf',name:'Sunscreen & SPF',description:'Sun protection for daytime routines.'},
   {id:'exfoliants-masks',slug:'exfoliants-masks',name:'Exfoliants & Masks',description:'Optional masks and exfoliating products.'},
   {id:'eye-lip-care',slug:'eye-lip-care',name:'Eye & Lip Care',description:'Focused care for the eye area and lips.'},
-  {id:'body-care',slug:'body-care',name:'Body Care',description:'Lotions, washes and care for the body.'}
+  {id:'body-care',slug:'body-care',name:'Body Care',description:'Lotions, washes and care for the body.'},
+  {id:'sets-kits',slug:'sets-kits',name:'Sets & Kits',description:'Curated bundles and multi-step sets.'},
+  {id:'other-skincare',slug:'other-skincare',name:'Other Skincare',description:'Useful finds that do not fit another product type.'}
  ];
 }
 function skinStoreCategoryOptions(){
@@ -2641,7 +2643,8 @@ function inferSkinProductCategory(p){
  if(/serum|retinol|treatment|acne|spot treatment|ampoule|niacinamide|vitamin c/.test(text))return 'serums-treatments';
  if(/cleanser|cleansing|face wash|micellar|makeup remover|cleansing balm/.test(text))return 'cleansers-makeup-removers';
  if(/moisturi|hydration|cream|lotion|barrier/.test(text))return 'moisturisers-barrier-care';
- return '';
+ if(/set|kit|bundle|routine pack/.test(text))return 'sets-kits';
+ return 'other-skincare';
 }
 function skinActiveSectionIndex(id){
  return skinSectionsFor().findIndex(s=>String(s.id)===String(id));
