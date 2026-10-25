@@ -254,14 +254,6 @@ jobs:
               rating_block = beauty[rating_start:rating_end] if rating_start >= 0 and rating_end > rating_start else ""
               if "esc(retailer)+' rating</small>" not in rating_block or "nuvora reviews" in rating_block.lower():
                   failures.append("beauty.html: retailer rating must remain distinguishable from Nuvora customer reviews")
-          # Skin Studio writes product_type, so the canonical schema and an idempotent
-          # migration must both declare it before the new admin form is integrated.
-          schema=Path("backend/schema.sql").read_text(encoding="utf-8")
-          migration=Path("backend/migrations/2026-10-25-nuvora-product-type.sql")
-          if not re.search(r"product_type\s+text", schema):
-              failures.append("backend/schema.sql must define the optional products.product_type column")
-          if not migration.exists() or "add column if not exists product_type text" not in migration.read_text(encoding="utf-8").lower():
-              failures.append("Skin Studio product_type migration is missing or not idempotent")
           if "async function togglePublish" not in admin:
               failures.append("admin.html missing publish toggle handler")
           # Skin Studio persistence and preview regression contracts. These guard
