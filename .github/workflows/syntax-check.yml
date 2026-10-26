@@ -328,6 +328,8 @@ jobs:
           reload_preview_block=admin[reload_preview_start:reload_preview_end]
           if "window.__nuvoraSkinPreviewReady=false" not in reload_preview_block:
               failures.append("Skin Studio preview reload must reset the prior iframe handshake")
+          if "clearTimeout(window.__nuvoraSkinPreviewTimeout)" not in reload_preview_block:
+              failures.append("Skin Studio preview reload must cancel the previous iframe timeout before navigating")
           open_skin_start=admin.find("async function openSkinProduct(){")
           open_skin_end=admin.find("function productReviewFlags",open_skin_start)
           open_skin_block=admin[open_skin_start:open_skin_end]
