@@ -3269,6 +3269,7 @@ function reloadSkinStudioPreview(){
  collectSkinConfigFields();
  const frame=document.getElementById('skinStudioPreview');if(!frame)return;
  window.__nuvoraSkinPreviewReady=false;
+ if(window.__nuvoraSkinPreviewTimeout){clearTimeout(window.__nuvoraSkinPreviewTimeout);window.__nuvoraSkinPreviewTimeout=null;}
  const notice=document.getElementById('skinStudioPreviewNotice');
  if(notice){notice.hidden=false;notice.innerHTML='<b>Reloading storefront preview…</b><span>Waiting for Nuvora Skin to respond.</span>';}
  frame.src=skinStudioPreviewUrl();
