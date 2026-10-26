@@ -37,6 +37,10 @@ These results confirm source-level checks and build success; they do **not** rep
 - The main homepage store-directory change passed the Nuvora syntax and release-contract checks.
 - These checks do not validate the authenticated admin UI end-to-end or prove that a live deployment is serving the merged commits.
 
+## Current review-branch follow-up
+
+- **Skin Studio preview handshake race:** A fast storefront can emit `nuvora-skin-studio-ready` before the iframe `load` event. The prior load handler could then re-show the waiting notice and later falsely report that the preview did not respond. The current review branch records the ready handshake, preserves it through the load event, resets it on manual preview reload, cancels any stale timeout before navigation, and adds source-level regression contracts. This fix is not merged or deployed, and it still needs authenticated browser verification.
+
 ## Remaining work and limits
 
 1. **Authenticated admin verification:** Sign in with the authorized admin account and exercise Skin Studio and each multi-store studio: create/edit/delete a product, upload images, save a draft, reload, preview, publish, and confirm the correct storefront reflects the change.

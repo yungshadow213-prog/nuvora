@@ -316,6 +316,20 @@ jobs:
           for needle, message in skin_contracts:
               if needle not in admin:
                   failures.append(message)
+          preview_wire_start=admin.find("function wireSkinStudioCanvas()")
+          preview_wire_end=admin.find("function reloadSkinStudioPreview",preview_wire_start)
+          preview_wire_block=admin[preview_wire_start:preview_wire_end]
+          if "if(window.__nuvoraSkinPreviewReady){" not in preview_wire_block:
+              failures.append("Skin Studio preview load must handle a ready signal received before iframe load")
+          if "window.__nuvoraSkinPreviewReady=true" not in preview_wire_block:
+              failures.append("Skin Studio preview ready messages must record the completed handshake")
+          reload_preview_start=admin.find("function reloadSkinStudioPreview")
+          reload_preview_end=admin.find("function refreshSkinStudioPreview",reload_preview_start)
+          reload_preview_block=admin[reload_preview_start:reload_preview_end]
+          if "window.__nuvoraSkinPreviewReady=false" not in reload_preview_block:
+              failures.append("Skin Studio preview reload must reset the prior iframe handshake")
+          if "clearTimeout(window.__nuvoraSkinPreviewTimeout)" not in reload_preview_block:
+              failures.append("Skin Studio preview reload must cancel the previous iframe timeout before navigating")
           open_skin_start=admin.find("async function openSkinProduct(){")
           open_skin_end=admin.find("function productReviewFlags",open_skin_start)
           open_skin_block=admin[open_skin_start:open_skin_end]
