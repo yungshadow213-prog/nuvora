@@ -3268,6 +3268,7 @@ function reloadSkinStudioPreview(){
  if(!document.body.classList.contains('skin-studio-fullpage')||!skinBuilderConfig)return;
  collectSkinConfigFields();
  const frame=document.getElementById('skinStudioPreview');if(!frame)return;
+ window.__nuvoraSkinPreviewReady=false;
  const notice=document.getElementById('skinStudioPreviewNotice');
  if(notice){notice.hidden=false;notice.innerHTML='<b>Reloading storefront preview…</b><span>Waiting for Nuvora Skin to respond.</span>';}
  frame.src=skinStudioPreviewUrl();
@@ -3321,14 +3322,23 @@ function wireSkinStudioCanvas(){
  if(!frame.dataset.canvasWired){
   frame.dataset.canvasWired='1';
   frame.addEventListener('load',()=>{
-   sendSkinStudioPreview();
+   // A fast storefront can post its ready message before the iframe's load event.
+   // Preserve that handshake instead of reopening the waiting/error notice afterwards.
+   if(window.__nuvoraSkinPreviewReady){
+    if(window.__nuvoraSkinPreviewTimeout)clearTimeout(window.__nuvoraSkinPreviewTimeout);
+    const readyNotice=document.getElementById('skinStudioPreviewNotice');if(readyNotice)readyNotice.hidden=true;
+    sendSkinStudioPreview();
+    return;
+   }
    const notice=document.getElementById('skinStudioPreviewNotice');
    if(notice){notice.hidden=false;notice.innerHTML='<b>Waiting for the storefront…</b><span>Checking for the live preview connection.</span>';}
    if(window.__nuvoraSkinPreviewTimeout)clearTimeout(window.__nuvoraSkinPreviewTimeout);
    window.__nuvoraSkinPreviewTimeout=setTimeout(()=>{
+    if(window.__nuvoraSkinPreviewReady)return;
     const box=document.getElementById('skinStudioPreviewNotice');
     if(box){box.hidden=false;box.innerHTML='<b>Preview did not respond</b><span>No editor-ready signal came back from the storefront. It may be blank, not deployed, running an older build, or its preview JavaScript may have failed. Your draft is safe. Open the storefront separately to check it, then reload this preview after the storefront is working.</span><a href="'+SKIN_CLIENT_ORIGIN+'/" target="_blank" rel="noopener noreferrer">Open storefront separately ↗</a><button type="button" onclick="reloadSkinStudioPreview()">Reload preview</button>';}
    },10000);
+   sendSkinStudioPreview();
   });
  }
  if(!window.__nuvoraSkinStudioBridgeWired){
@@ -3336,7 +3346,7 @@ function wireSkinStudioCanvas(){
   window.addEventListener('message',event=>{
    if(event.origin!==SKIN_CLIENT_ORIGIN||event.source!==document.getElementById('skinStudioPreview')?.contentWindow||!event.data)return;
    const data=event.data;
-   if(data.type==='nuvora-skin-studio-ready'){if(window.__nuvoraSkinPreviewTimeout)clearTimeout(window.__nuvoraSkinPreviewTimeout);const notice=document.getElementById('skinStudioPreviewNotice');if(notice)notice.hidden=true;sendSkinStudioPreview();return;}
+   if(data.type==='nuvora-skin-studio-ready'){window.__nuvoraSkinPreviewReady=true;if(window.__nuvoraSkinPreviewTimeout)clearTimeout(window.__nuvoraSkinPreviewTimeout);const notice=document.getElementById('skinStudioPreviewNotice');if(notice)notice.hidden=true;sendSkinStudioPreview();return;}
    if(!skinBuilderConfig)return;
    if(data.type==='nuvora-skin-studio-remove-section-image'){
     const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId||''));
