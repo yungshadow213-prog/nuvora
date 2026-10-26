@@ -1174,7 +1174,7 @@ async function ensureSkinCategory(openForm=false){
     renderSkinProducts();return cat;
   }catch(e){setAdminStatus('Could not set up Skin Care: '+(e.message||e));throw e;}
 }
-async async function openSkinProduct(){
+async function openSkinProduct(){
  try{
   prepareSkinProductPlacement();
   await ensureSkinCategory(true);
