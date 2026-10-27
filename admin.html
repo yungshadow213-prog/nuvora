@@ -2638,6 +2638,34 @@ function stableSkinJson(value){
  if(Array.isArray(value))return '['+value.map(stableSkinJson).join(',')+']';
  return '{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+stableSkinJson(value[key])).join(',')+'}';
 }
+// Tab-local recovery protects edits from refreshes and transient API failures.
+function skinStudioRecoveryStorageKey(){
+ const owner=typeof adminUser!=='undefined'&&adminUser?.id?String(adminUser.id):'signed-in-session';
+ return 'nuvora.skin-studio.recovery.v1.'+owner;
+}
+function writeSkinStudioRecovery(){
+ if(!skinSiteConfigLoaded||!skinBuilderConfig||!document.body.classList.contains('skin-studio-fullpage'))return;
+ try{
+  collectSkinConfigFields();
+  sessionStorage.setItem(skinStudioRecoveryStorageKey(),JSON.stringify({savedAt:new Date().toISOString(),config:mergeSkinSiteConfig(skinBuilderConfig),pageId:skinStudioPageId,selection:skinStudioSelection}));
+ }catch(error){}
+}
+function clearSkinStudioRecovery(){try{sessionStorage.removeItem(skinStudioRecoveryStorageKey());}catch(error){}}
+function restoreSkinStudioRecoveryIfAvailable(){
+ let recovery=null;
+ try{recovery=JSON.parse(sessionStorage.getItem(skinStudioRecoveryStorageKey())||'null');}catch(error){return false;}
+ if(!recovery?.config||typeof recovery.config!=='object')return false;
+ if(stableSkinJson(mergeSkinSiteConfig(recovery.config))===stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig))){clearSkinStudioRecovery();return false;}
+ const when=recovery.savedAt?new Date(recovery.savedAt).toLocaleString():'an earlier session';
+ if(!confirm('Skin Studio found unsaved local recovery edits from '+when+'. Restore them into the private draft? The published storefront will not change.'))return false;
+ skinBuilderConfig=mergeSkinSiteConfig(recovery.config);
+ skinStudioPageId=recovery.pageId||'home';
+ skinStudioSelection=recovery.selection||{type:'section',id:skinSectionsFor(recovery.pageId||'home')[0]?.id||''};
+ fillSkinConfigFields();
+ skinMarkDirty('Recovered unsaved edits. They will be saved to the private draft automatically.');
+ queueSkinStudioPreview();
+ return true;
+}
 function queueSkinDraftAutosave(){
  if(!skinSiteConfigLoaded||!skinBuilderConfig||!document.body.classList.contains('skin-studio-fullpage'))return;
  if(skinDraftAutosaveTimer)clearTimeout(skinDraftAutosaveTimer);
@@ -2701,7 +2729,7 @@ function redoSkinStudio(){
 function skinMarkDirty(message='Draft updated. Publish when you are ready.'){
  const label=document.getElementById('skinStudioSaveLabel');
  if(label){label.textContent='Unsaved changes';label.dataset.status='dirty';}
- skinBuilderMessage(message,'info');queueSkinDraftAutosave();syncSkinPreviewActionbar();
+ writeSkinStudioRecovery();skinBuilderMessage(message,'info');queueSkinDraftAutosave();syncSkinPreviewActionbar();
 }
 async function saveSkinStudioChangeImmediately(successMessage){
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
@@ -2798,12 +2826,15 @@ async function loadSkinSiteConfig(){
   skinSiteConfigLoaded=true;
   skinDraftLastSavedPayload=stableSkinJson(skinBuilderConfig);
   skinSetSavedLabel(skinSiteDraftExists?'Saved draft loaded':'Published version loaded');
+  const recoveredLocalEdits=homeLayoutMigration.changed?false:restoreSkinStudioRecoveryIfAvailable();
   if(homeLayoutMigration.changed){
    skinBuilderMessage(homeLayoutMigration.removedRoutine?'Removed the unnecessary routine finder and organized the home page into a clearer shop layout. Saving this as a private draft; the live store will not change until you publish.':'Organized the home page into a clearer shop layout with product categories and brand browsing. Saving this as a private draft; the live store will not change until you publish.','success');
    if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
    void saveSkinStudioChangeImmediately(homeLayoutMigration.removedRoutine?'Routine finder removed and home layout saved as a draft.':'Home layout reorganized and saved as a draft.');
-  }else{
+  }else if(!recoveredLocalEdits){
    skinBuilderMessage(skinSiteDraftExists?'Your saved draft is loaded. It is private and will not affect the live storefront until you publish.':'The published site settings are loaded. Save a draft to keep your work private, or publish when you are ready.','success');
+   if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
+  }else{
    if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
   }
  }catch(e){
@@ -3794,6 +3825,7 @@ async function persistSkinSiteDraft(quiet=false){
   saveVerified=true;
   skinSiteDraftExists=true;skinDraftLastSavedPayload=stableSkinJson(verified);
   const latest=stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig));
+   if(latest===skinDraftLastSavedPayload)clearSkinStudioRecovery();
   if(latest===serialized){skinBuilderConfig=verified;fillSkinConfigFields();sendSkinStudioPreview();skinSetSavedLabel('Draft saved');}
   else{skinSetSavedLabel('Newer edits not saved yet');sendSkinStudioPreview();}
   skinBuilderMessage(quiet?'Draft auto-saved and verified. Your live storefront is unchanged.':'Draft saved and verified. Your live storefront is unchanged until you publish.','success');
@@ -3846,6 +3878,7 @@ async function saveSkinSiteConfig(button){
   if(stableSkinJson(verified)!==stableSkinJson(published))throw new Error('The published configuration does not match the saved result. Reload the workspace before retrying.');
   if(check.skin_site_draft&&typeof check.skin_site_draft==='object')throw new Error('The site published, but a private draft is still present. Reload the workspace and verify the live page before retrying.');
   skinBuilderConfig=verified;skinSiteDraftExists=false;skinDraftLastSavedPayload=stableSkinJson(verified);
+   clearSkinStudioRecovery();
   fillSkinConfigFields();sendSkinStudioPreview();skinSetSavedLabel('All changes published');
   skinBuilderMessage('Published and verified. The live Nuvora Skin site now uses this configuration, and the private draft is cleared.','success');
  }catch(e){
