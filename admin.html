@@ -195,6 +195,9 @@ body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important
 .workspace-back{margin-right:8px}
 /* Skin Studio canvas controls: let the storefront preview take centre stage. */
 body.skin-studio-fullpage .studio-view-controls{display:flex;align-items:center;gap:4px;padding:3px;border:1px solid #e2e7df;border-radius:10px;background:#f8faf7}
+body.skin-studio-fullpage .studio-history-controls{display:flex;align-items:center;gap:4px}
+body.skin-studio-fullpage .studio-history-controls .btn{padding:8px 9px!important;min-height:32px;font-size:10px!important}
+body.skin-studio-fullpage .studio-history-controls .btn:disabled{opacity:.38;cursor:not-allowed}
 body.skin-studio-fullpage .studio-view-controls button{display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:7px;background:transparent;color:#617463;font-size:15px;cursor:pointer}
 body.skin-studio-fullpage .studio-view-controls button:hover,body.skin-studio-fullpage .studio-view-controls button[aria-pressed="true"]{background:#e7efe5;color:#285b36}
 body.skin-studio-fullpage .studio-layout{grid-template-columns:190px minmax(0,1fr) 250px}
@@ -777,6 +780,10 @@ body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
         <button type="button" onclick="toggleSkinStudioPanel('outline',this)" aria-label="Toggle page outline" aria-pressed="false" title="Show or hide page outline">☰</button>
         <button type="button" onclick="toggleSkinStudioPanel('inspector',this)" aria-label="Toggle settings inspector" aria-pressed="false" title="Show or hide settings inspector">☷</button>
         <button type="button" onclick="toggleSkinStudioFocus(this)" aria-label="Expand preview canvas" aria-pressed="false" title="Expand preview canvas">⤢</button>
+      </div>
+      <div class="studio-history-controls" role="group" aria-label="Edit history">
+        <button class="btn" id="skinStudioUndo" type="button" onclick="undoSkinStudio()" disabled aria-label="Undo last editor change" title="Undo (Ctrl/⌘+Z)">↶ Undo</button>
+        <button class="btn" id="skinStudioRedo" type="button" onclick="redoSkinStudio()" disabled aria-label="Redo editor change" title="Redo (Ctrl/⌘+Shift+Z)">↷ Redo</button>
       </div>
       <div class="studio-save-state"><span class="studio-save-dot"></span><span id="skinStudioSaveLabel">Saved version loaded</span></div>
       <button class="btn" type="button" onclick="openSkinManualProduct()">+ Add product</button>
@@ -2413,6 +2420,7 @@ async function adminBoot(){
 
 const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
 let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinSiteDraftExists=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='',skinStudioPendingProductTarget=null;
+let skinStudioUndoStack=[],skinStudioRedoStack=[],skinStudioHistoryLastCapture=0,skinStudioHistoryApplying=false;
 const defaultSkinSiteConfig=()=>({
   version:5,homeLayoutVersion:0,template:'soft-editorial',accentColor:'#66745f',
   announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
@@ -2628,6 +2636,53 @@ function queueSkinDraftAutosave(){
   });
  },1200);
 }
+function skinHistorySnapshot(){
+ return {config:JSON.parse(JSON.stringify(skinBuilderConfig)),pageId:skinStudioPageId,selection:JSON.parse(JSON.stringify(skinStudioSelection||{type:'none',id:''}))};
+}
+function skinHistoryUpdateButtons(){
+ const undo=document.getElementById('skinStudioUndo'),redo=document.getElementById('skinStudioRedo');
+ if(undo)undo.disabled=!skinStudioUndoStack.length;
+ if(redo)redo.disabled=!skinStudioRedoStack.length;
+}
+function skinHistoryCapture(){
+ if(!skinSiteConfigLoaded||!skinBuilderConfig||skinStudioHistoryApplying)return;
+ const now=Date.now();
+ // Group rapid keystrokes into one meaningful history step instead of recording each character.
+ if(now-skinStudioHistoryLastCapture>900){
+  skinStudioUndoStack.push(skinHistorySnapshot());
+  if(skinStudioUndoStack.length>60)skinStudioUndoStack.shift();
+  skinStudioRedoStack=[];
+ }
+ skinStudioHistoryLastCapture=now;
+ skinHistoryUpdateButtons();
+}
+function skinHistoryRestore(snapshot,label){
+ if(!snapshot?.config)return;
+ skinStudioHistoryApplying=true;
+ try{
+  skinBuilderConfig=JSON.parse(JSON.stringify(snapshot.config));
+  skinStudioPageId=snapshot.pageId||'home';
+  skinStudioSelection=JSON.parse(JSON.stringify(snapshot.selection||{type:'none',id:''}));
+  fillSkinConfigFields();
+  renderSkinStudioAll();
+  skinMarkDirty(label+' restored in the draft. Save status will update after persistence.');
+  queueSkinStudioPreview();
+ }finally{skinStudioHistoryApplying=false;}
+ skinStudioHistoryLastCapture=0;
+ skinHistoryUpdateButtons();
+}
+function undoSkinStudio(){
+ if(!skinStudioUndoStack.length)return;
+ skinStudioRedoStack.push(skinHistorySnapshot());
+ const snapshot=skinStudioUndoStack.pop();
+ skinHistoryRestore(snapshot,'Previous edit');
+}
+function redoSkinStudio(){
+ if(!skinStudioRedoStack.length)return;
+ skinStudioUndoStack.push(skinHistorySnapshot());
+ const snapshot=skinStudioRedoStack.pop();
+ skinHistoryRestore(snapshot,'Redo edit');
+}
 function skinMarkDirty(message='Draft updated. Publish when you are ready.'){
  const label=document.getElementById('skinStudioSaveLabel');
  if(label){label.textContent='Unsaved changes';label.dataset.status='dirty';}
@@ -2720,6 +2775,7 @@ async function loadSkinSiteConfig(){
   if(!settings||typeof settings!=='object')throw new Error('The settings endpoint returned an invalid response.');
   skinSiteDraftExists=!!(settings.skin_site_draft&&typeof settings.skin_site_draft==='object'&&!Array.isArray(settings.skin_site_draft));
   skinBuilderConfig=mergeSkinSiteConfig(skinSiteDraftExists?settings.skin_site_draft:settings.skin_site_config);
+  skinStudioUndoStack=[];skinStudioRedoStack=[];skinStudioHistoryLastCapture=0;skinHistoryUpdateButtons();
   const homeLayoutMigration=migrateSkinHomeLayout(skinBuilderConfig);
   skinStudioPageId='home';
   skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||'hero'};
@@ -3084,6 +3140,7 @@ function assignSkinProductCategory(id,slug){
 }
 function updateSkinCategory(slug,key,value){
  const cat=(skinBuilderConfig.customCategories||[]).find(x=>String(x.slug)===String(slug));if(!cat)return;
+ skinHistoryCapture();
  cat[key]=String(value??'');
  if(key==='name'){const label=document.getElementById('skinInspectorTitle');if(label)label.textContent=cat.name;}
  skinMarkDirty('Category details changed in the draft.');renderSkinLibrary();queueSkinStudioPreview();
@@ -3091,6 +3148,7 @@ function updateSkinCategory(slug,key,value){
 function deleteSkinCategory(slug){
  const cat=(skinBuilderConfig.customCategories||[]).find(x=>String(x.slug)===String(slug));if(!cat)return;
  if(!confirm('Delete the category “'+cat.name+'”? Products using it will return to automatic product-type categories.'))return;
+ skinHistoryCapture();
  skinBuilderConfig.customCategories=skinBuilderConfig.customCategories.filter(x=>String(x.slug)!==String(slug));
  skinBuilderConfig.navigationItems=(skinBuilderConfig.navigationItems||[]).filter(link=>String(link.id||'')!=='category-'+String(slug));
  Object.keys(skinBuilderConfig.productCategoryMap||{}).forEach(id=>{if(String(skinBuilderConfig.productCategoryMap[id])===String(slug))delete skinBuilderConfig.productCategoryMap[id];});
@@ -3100,6 +3158,7 @@ function deleteSkinCategory(slug){
 }
 function updateSkinPage(slug,key,value){
  const page=(skinBuilderConfig.pages||[]).find(p=>String(p.slug)===String(slug));if(!page)return;
+ skinHistoryCapture();
  page[key]=key==='visible'?!!value:String(value??'');
  skinMarkDirty('Page settings changed in the draft.');
  updateSkinStudioPageTitle();renderSkinLibrary();renderSkinSelectedInspector();queueSkinStudioPreview();
@@ -3107,6 +3166,7 @@ function updateSkinPage(slug,key,value){
 function deleteSkinPage(slug){
  const page=skinCurrentPage(slug);if(!page)return;
  if(!confirm('Delete the page “'+page.title+'”? This removes its layout from the draft.'))return;
+ skinHistoryCapture();
  skinBuilderConfig.pages=skinBuilderConfig.pages.filter(p=>String(p.slug)!==String(slug));
  skinBuilderConfig.navigationItems=(skinBuilderConfig.navigationItems||[]).filter(link=>String(link.url||'')!=='/pages/'+String(slug));
  skinStudioPageId='home';skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||''};skinMarkDirty('Page removed from the draft.');
@@ -3146,10 +3206,30 @@ document.addEventListener('keydown',event=>{
   document.body.classList.remove('skin-studio-hide-outline','skin-studio-hide-inspector');
   document.querySelectorAll('.studio-view-controls button').forEach(b=>{b.setAttribute('aria-pressed','false');});
  }
+ const editorOpen=document.body.classList.contains('skin-studio-fullpage');
+ const target=event.target;
+ const typing=target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+ if(editorOpen&&!typing&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){
+  event.preventDefault();
+  if(event.shiftKey)redoSkinStudio();else undoSkinStudio();
+ }else if(editorOpen&&!typing&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='y'){
+  event.preventDefault();redoSkinStudio();
+ }
 });
+document.addEventListener('input',event=>{
+ const target=event.target;
+ if(!document.body.classList.contains('skin-studio-fullpage')||!(target instanceof HTMLElement))return;
+ if(target.closest('.studio-selected-inspector,.studio-site-settings,.studio-quick-add')||/^skinCfg/.test(target.id||''))skinHistoryCapture();
+},true);
+document.addEventListener('change',event=>{
+ const target=event.target;
+ if(!document.body.classList.contains('skin-studio-fullpage')||!(target instanceof HTMLElement))return;
+ if(target.type==='file'||target.closest('.studio-selected-inspector,.studio-site-settings,.studio-quick-add')||/^skinCfg/.test(target.id||''))skinHistoryCapture();
+},true);
 function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();syncSkinPreviewActionbar();}
 function updateSkinSection(index,key,value,fromPreview=false){
  const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;
+ skinHistoryCapture();
  sec[key]=value;
  if(key==='type'){sec.product_ids=[];sec.category_id='';sec.filter=value==='featured-products'?'featured':'all';}
  if(skinStudioPageId==='home'&&sec.type==='hero'){
@@ -3196,17 +3276,20 @@ function skinBuilderDrop(event,targetIndex){
 }
 function moveSkinSection(index,delta){
  const sections=skinSectionsFor(),target=index+delta;if(target<0||target>=sections.length)return;
+ skinHistoryCapture();
  const [item]=sections.splice(index,1);sections.splice(target,0,item);
  skinStudioSelection={type:'section',id:String(item.id)};skinMarkDirty('Section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function duplicateSkinSection(index){
  const sections=skinSectionsFor(),original=sections[index];if(!original)return;
+ skinHistoryCapture();
  const clone=JSON.parse(JSON.stringify(original));clone.id='section-'+Date.now().toString(36);clone.title=(clone.title||'Section')+' copy';sections.splice(index+1,0,clone);
  skinStudioSelection={type:'section',id:String(clone.id)};skinMarkDirty('Section duplicated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function removeSkinSection(index,skipConfirm=false){
  const pageId=skinStudioPageId||'home',sections=skinSectionsFor(pageId),section=sections[index];if(!section)return false;
  if(!skipConfirm&&!confirm('Remove the “'+(section.title||section.type||'section')+'” section from this page draft?'))return false;
+ skinHistoryCapture();
  // Legacy sections can arrive without IDs. Give the target a stable ID before
  // resolving it again; comparing empty IDs used to select the wrong section or
  // make deletion silently fail.
@@ -3257,6 +3340,7 @@ function skinProductsForSection(sec){
 function addSkinProductToSection(productId,targetId,pageId){
  const product=adminProducts.find(p=>String(p.id)===String(productId));
  if(!product)return skinBuilderMessage('That product could not be found. Refresh the product library and try again.','error');
+ skinHistoryCapture();
  const pending=skinStudioPendingProductTarget;
  const effectivePageId=pending?.pageId||pageId||skinStudioPageId||'home';
  const sections=skinSectionsFor(effectivePageId);
@@ -3290,6 +3374,7 @@ function moveSkinProductInSection(productId,targetProductId,sectionId,pageId){
  if(!ids.length)ids=skinProductsForSection(sec).map(p=>String(p.id));
  const from=ids.indexOf(String(productId)),to=ids.indexOf(String(targetProductId));
  if(from<0||to<0||from===to)return;
+ skinHistoryCapture();
  const [item]=ids.splice(from,1);ids.splice(ids.indexOf(String(targetProductId)),0,item);sec.product_ids=ids.slice(0,60);
  skinStudioPageId=pageId||'home';skinStudioSelection={type:'section',id:String(sectionId)};skinMarkDirty('Product order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
  void saveSkinStudioChangeImmediately('Product order saved and verified in the page draft. Publish page changes to make it public.');
