@@ -3403,9 +3403,9 @@ function updateSkinSection(index,key,value,fromPreview=false){
 }
 function selectFirstSkinSection(){const section=skinSectionsFor()[0];if(section)selectSkinItem('section',section.id);else openSkinAdd('section');}
 function focusSkinInspector(){const panel=document.querySelector('.studio-right-panel');if(panel)panel.scrollTo({top:0,behavior:'smooth'});const root=document.getElementById('skinSelectedInspector');if(root)root.scrollIntoView({block:'nearest',behavior:'smooth'});if(!skinStudioSelection||skinStudioSelection.type==='none')selectFirstSkinSection();}
-function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;let ids=new Set((sec.product_ids||[]).map(String).filter(id=>id!=='__nuvora_manual_empty__'));if(sec.product_selection!=='manual')ids=new Set(skinProductsForSection({...sec,product_selection:'automatic',product_ids:[]}).map(p=>String(p.id)));if(checked)ids.add(String(productId));else ids.delete(String(productId));sec.product_selection='manual';sec.product_ids=ids.size?[...ids]:['__nuvora_manual_empty__'];updateSkinSection(index,'product_ids',sec.product_ids);}
+function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;skinHistoryCapture();let ids=new Set((sec.product_ids||[]).map(String).filter(id=>id!=='__nuvora_manual_empty__'));if(sec.product_selection!=='manual')ids=new Set(skinProductsForSection({...sec,product_selection:'automatic',product_ids:[]}).map(p=>String(p.id)));if(checked)ids.add(String(productId));else ids.delete(String(productId));sec.product_selection='manual';sec.product_ids=ids.size?[...ids]:['__nuvora_manual_empty__'];updateSkinSection(index,'product_ids',sec.product_ids);}
 function toggleSkinSectionVisibility(index){
- const sec=skinSectionsFor()[index];if(!sec)return;sec.visible=sec.visible===false;
+ const sec=skinSectionsFor()[index];if(!sec)return;skinHistoryCapture();sec.visible=sec.visible===false;
  skinMarkDirty('Section visibility changed in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function skinBuilderDragStart(event,index){
@@ -3417,7 +3417,7 @@ function skinBuilderDrop(event,targetIndex){
  if(!source.startsWith('section:'))return;
  const id=source.slice(8),sections=skinSectionsFor(),from=sections.findIndex(s=>String(s.id)===id);
  if(from<0||targetIndex<0||from===targetIndex)return;
- const [section]=sections.splice(from,1);sections.splice(targetIndex,0,section);
+ skinHistoryCapture();const [section]=sections.splice(from,1);sections.splice(targetIndex,0,section);
  skinStudioSelection={type:'section',id:String(section.id)};skinMarkDirty('Section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function moveSkinSection(index,delta){
