@@ -3176,6 +3176,20 @@ function renderSkinSelectedInspector(){
   html+='<label class="studio-inspector-field"><span>Heading size</span><select onchange="updateSkinSection('+index+',\'titleFontSize\',this.value===\'\'?null:Number(this.value))"><option value="" '+(!sec.titleFontSize?'selected':'')+'>Theme default</option>'+[24,28,32,36,40,48,56,64,72].map(n=>'<option value="'+n+'" '+(Number(sec.titleFontSize)===n?'selected':'')+'>'+n+' px</option>').join('')+'</select></label>';
   html+='<label class="studio-inspector-field"><span>Body text size</span><select onchange="updateSkinSection('+index+',\'bodyFontSize\',this.value===\'\'?null:Number(this.value))"><option value="" '+(!sec.bodyFontSize?'selected':'')+'>Theme default</option>'+[12,13,14,15,16,18,20,22,24].map(n=>'<option value="'+n+'" '+(Number(sec.bodyFontSize)===n?'selected':'')+'>'+n+' px</option>').join('')+'</select></label>';
   html+='<label class="studio-inspector-field"><span>Section spacing</span><select onchange="updateSkinSection('+index+',\'sectionPadding\',this.value===\'\'?null:Number(this.value))"><option value="" '+(!sec.sectionPadding?'selected':'')+'>Theme default</option>'+[24,32,40,48,64,80,96,120].map(n=>'<option value="'+n+'" '+(Number(sec.sectionPadding)===n?'selected':'')+'>'+n+' px</option>').join('')+'</select></label>';
+  html+='<div class="studio-inspector-subheading">Layout &amp; responsive</div>';
+  const numberSelect=(label,key,values,unit='px')=>'<label class="studio-inspector-field"><span>'+label+'</span><select onchange="updateSkinSection('+index+',\''+key+'\',this.value===\'\'?null:Number(this.value))"><option value="" '+(sec[key]==null?'selected':'')+'>Theme default</option>'+values.map(n=>'<option value="'+n+'" '+(Number(sec[key])===n?'selected':'')+'>'+n+(unit?' '+unit:'')+'</option>').join('')+'</select></label>';
+  html+=numberSelect('Padding top','sectionPaddingTop',[0,16,24,32,40,48,64,80,96]);
+  html+=numberSelect('Padding bottom','sectionPaddingBottom',[0,16,24,32,40,48,64,80,96]);
+  html+=numberSelect('Gap between items','sectionGap',[8,12,16,20,24,32,40]);
+  html+=numberSelect('Corner radius','sectionRadius',[0,4,8,12,16,20,24,32]);
+  html+='<label class="studio-inspector-field"><span>Content width</span><select onchange="updateSkinSection('+index+',\'contentWidth\',this.value)">'+[['theme','Theme default'],['full','Full width'],['page','Page width'],['narrow','Narrow']].map(([v,l])=>'<option value="'+v+'" '+((sec.contentWidth||'theme')===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
+  html+='<label class="studio-inspector-field"><span>Section shadow</span><select onchange="updateSkinSection('+index+',\'sectionShadow\',this.value)">'+[['none','None'],['soft','Soft'],['raised','Raised']].map(([v,l])=>'<option value="'+v+'" '+((sec.sectionShadow||'none')===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
+  html+=field('Border colour','sectionBorderColor',sec.sectionBorderColor||'#e5e7df','color','7');
+  html+=numberSelect('Border width','sectionBorderWidth',[0,1,2,3,4]);
+  html+='<label class="studio-inspector-check"><input type="checkbox" '+(sec.showDesktop!==false?'checked':'')+' onchange="updateSkinSection('+index+',\'showDesktop\',this.checked)"> Show on desktop</label><label class="studio-inspector-check"><input type="checkbox" '+(sec.showMobile!==false?'checked':'')+' onchange="updateSkinSection('+index+',\'showMobile\',this.checked)"> Show on mobile</label>';
+  html+=field('Background image URL','backgroundImage',sec.backgroundImage||'','url','1600');
+  html+='<label class="studio-inspector-field"><span>Background overlay · '+Number(sec.backgroundOverlay||0)+'%</span><input type="range" min="0" max="80" step="5" value="'+Number(sec.backgroundOverlay||0)+'" onchange="updateSkinSection('+index+',\'backgroundOverlay\',Number(this.value))"></label>';
+
 
   if(['hero','editorial','image-block'].includes(sec.type))html+=field('Section image URL','image',sec.image||'','url','1600')+'<label class="studio-inspector-field"><span>Upload section image from your device</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'section\','+index+')"><small class="studio-inline-help">JPG, PNG, WEBP or GIF · up to 6 MB. You can also drag an image file directly onto this section in the preview.</small></label>';
    if(['hero','editorial'].includes(sec.type)){
@@ -4588,6 +4602,11 @@ body.skin-studio-fullpage .studio-section-library-empty{grid-column:1/-1;color:#
 
 body.skin-studio-fullpage .studio-section-outline-actions button:disabled{opacity:.32;cursor:not-allowed}
 body.skin-studio-fullpage .studio-section-outline:has(.studio-section-outline-actions button[aria-pressed="true"]){background:#f5f7f1}
+
+
+body.skin-studio-fullpage .studio-inspector-subheading{margin:18px 0 6px;padding-top:12px;border-top:1px solid #e5e9e2;color:#516b53;font-size:10px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
+body.skin-studio-fullpage .studio-inspector-check{display:flex;align-items:center;gap:8px;margin:7px 0;padding:9px 10px;border:1px solid #e4e9e1;border-radius:8px;background:#fff;font-size:11px;color:#425645}
+body.skin-studio-fullpage .studio-inspector-check input{width:15px;height:15px;accent-color:#5f7c59}
 
 </style>
 </body></html>
