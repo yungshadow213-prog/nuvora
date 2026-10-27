@@ -1,35 +1,62 @@
-# Skin Studio Admin Rework — 27 October 2026
+# Skin Studio Admin and Skin Care Storefront Audit — 27 October 2026
 
-## Scope
+## Status and scope
 
-This work is in the main `yungshadow213-prog/nuvora` repository and is limited to Nuvora Admin / Skin Studio. The separate `client-store-platform` storefront repository is intentionally untouched. No merge, deployment, production configuration change, or authenticated live write test has been performed. Claude/product-research and image-generation integration remain planned, not active.
+This work spans two open, unmerged pull requests:
+- Admin and Worker: `yungshadow213-prog/nuvora`, [PR #161](https://github.com/yungshadow213-prog/nuvora/pull/161).
+- Customer storefront: `yungshadow213-prog/client-store-platform`, [PR #29](https://github.com/yungshadow213-prog/client-store-platform/pull/29).
 
-## Implemented in the current review branch
+No PR was merged. The storefront's Cloudflare deployment steps were skipped. Automated build/bundle checks do not establish that authenticated editing, publication, or the production storefront has been tested end to end.
 
-- Reduced the default page-outline and inspector widths so the live storefront canvas has more room.
-- Added controls to collapse/restore the page outline and selected-item inspector.
-- Added a canvas-focus mode that hides both side panels and can be exited with Escape.
-- Added mobile drawer behavior for the outline and inspector; the storefront preview starts expanded on narrow screens.
-- Added Undo/Redo buttons and Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, and Ctrl/Cmd+Y shortcuts. Common section, product placement/order, page, and category edits create grouped history snapshots; restoring a snapshot updates the draft editor and preview. Text-control history captures the pre-edit state on focus. Also fixed three mutation paths that were missing a pre-edit history capture: drag/drop section reorder, section visibility, and product selection.
-- Updated the Skin Studio product library to 10 products per page and added combined brand, category, publication-status, and known-availability filters alongside catalogue-wide search. Unknown availability stays distinct from known available/unavailable values.
-- Added a Media tab to browse up to the first 1,000 uploaded images in the existing `product-images/skin-site` storage path with 24 images per page, search filenames without reloading storage per keystroke, copy public URLs, and apply an existing image to the selected section or custom category. It intentionally has no destructive delete control.
-- Added a non-blocking publish preflight that warns about explicitly selected draft products, stale product references, empty manual product grids, and visible HTTP navigation/footer links. Admins can review warnings and choose whether to continue; it does not silently publish products.
-- Added account-scoped, tab-local unsaved-edit recovery. The editor keeps a recovery snapshot, offers to restore it after a refresh when it differs from the server-loaded draft, and clears it only after the latest state is verified as saved or published. It is a recovery safety net, not a replacement for server-side draft persistence.
-- Fixed the iframe ready/load race: an early `nuvora-skin-studio-ready` message is recorded, the subsequent load handler does not re-open the waiting notice, and the timeout cannot incorrectly replace a ready state.
-- Reset the ready flag and cancel stale timeouts when manually reloading the preview.
-- Prevented Place on Page from selecting a hidden product grid as the destination; it now prefers a visible grid and can fall back to another visible grid or create one.
-- Added release-contract checks for the preview handshake, timeout reset, canvas controls, and hidden-grid placement.
+## Concrete defects found and addressed in review branches
 
-## Still to do
+1. **Section deletion and legacy sections**
+   - The storefront preview previously normalized configuration in a way that could hide the legacy routine-finder section before its preview controls were rendered. The editor could therefore show a section in the preview but not offer a reliable way to remove it from the page outline.
+   - The storefront preview now retains legacy sections for editor selection; the admin has explicit delete controls in the page outline and preview, including a fallback for legacy sections without stable IDs.
+   - Must still verify in an authenticated browser that deleting a legacy section removes it from the draft, survives refresh/reopen, and remains removed after publish.
 
-- Run and inspect the automated GitHub checks against the latest review-branch head and resolve any failures.
-- Authenticated browser flows still need verification for save/reopen, product create/edit, image upload, section add/delete/reorder, product placement, and publish read-back.
-- Verify authenticated browser flows for product creation/editing, upload, save/reopen, section add/delete/reorder, product placement, and publish read-back. These require the authorized admin session and are not claimed as tested here.
-- Keep Skin Care product requirements intact: no price field in the editor, purchase label exactly `Check price on Amazon`, retailer ratings separate from Nuvora reviews, complete product-guide information, and only published products exposed publicly.
-- Added `docs/plans/SKIN-STUDIO-AI-RESEARCH-AND-IMAGES.md` covering Claude-backed product research, source evidence, admin approval, secure server-side provider calls, bulk processing, and a separate generated-creative workflow. AI integration remains planned, not active, until editor persistence and authenticated workflows are verified.
+2. **Preview vs published storefront**
+   - Preview intentionally uses the private draft and can show draft products/edits; the public storefront uses the published configuration and published catalog. Saving a draft alone must not change the public store.
+   - The admin publish path sends the current configuration, reads it back, compares the result, and verifies that the private draft was cleared. This path still requires an authenticated end-to-end browser test and public-page read-back.
+   - If the live storefront remains unchanged after Save Draft, that is expected. If it remains unchanged after a confirmed Publish, treat that as a defect and verify the published settings and storefront response; do not infer success from the preview alone.
 
-## Verification status
+3. **Product description fields were collapsed by the public API**
+   - The Worker could replace the original product description with the editorial/store description when constructing public product data. This meant one field could hide the other.
+   - The public API now passes the original product description and the editorial overview as separate fields, allowing the guide to display both when they differ.
 
-- Earlier implementation revision `71fa2202ecc6b2ddcbfc7f0c8386f0acbc0f4f42` passed all 9 jobs in run #1560. The current head `1c0238e419ad8bc812a078f16ea80297748d06ea` has run #1600 in progress; check its final result before claiming the latest changes passed.
-- No deployment or production write was performed.
-- Authenticated browser verification remains outstanding. The broader rework is not complete.
+4. **Additional product images could be dropped**
+   - Public product normalization previously preferred `image_urls` whenever it existed, ignoring additional images in source/gallery/media fields.
+   - The Worker now merges the primary image, `image_urls`, `source_image_urls`, additional/gallery/product images, and legacy media entries before deduplicating.
+   - The storefront maps supported image sources and renders selectable thumbnails; its active image resets when the gallery changes and can recover after an image-load error.
+   - Must still verify that every uploaded image is saved, returned by the public API, visible as a thumbnail, and selectable on a real product.
+
+5. **Product guide presentation**
+   - The storefront review branch now renders every populated product-information field without an arbitrary list slice and does not invent filler product facts when fields are empty.
+   - The guide separates the overview from full description, displays populated benefits/features, skin concerns, ingredients, usage, warnings/precautions and size, and distinguishes explicitly curated pairings from general related-category suggestions.
+   - Must still inspect representative products with long descriptions, multiline ingredients, several images, and curated recommendations in the real storefront.
+
+## Other Skin Studio work in PR #161
+
+- Wider preview canvas, collapsible page outline/inspector, canvas-focus mode and mobile side drawers.
+- Undo/Redo controls and keyboard shortcuts; grouped history and pre-edit snapshots for common section/product changes.
+- Product library pagination (10 per page), search and combined brand/category/publication/known-availability filters.
+- Media library for existing Skin Studio storage images: browse, search, paginate, copy URLs, and apply existing media without deleting stored files.
+- Account-scoped, tab-local unsaved-edit recovery, cleared only after verified save/publish of the current state.
+- Publish preflight warnings for empty manual grids, draft products, stale product references and visible HTTP navigation/footer links.
+- Preview iframe ready/load race and stale-timeout handling; product placement avoids hidden grids.
+- Claude-backed research and generated-creative plan exists at `docs/plans/SKIN-STUDIO-AI-RESEARCH-AND-IMAGES.md`; provider integrations are not active.
+
+## Automated verification
+
+- Admin/Worker latest reviewed head: `281c2550570cce0f77de4ec72c55fea841e89c60`. GitHub Actions run #1606 completed with all 9 jobs successful: Worker syntax, admin/editor JS, storefront JS audit, release-contract audit, deep runtime audit, and Wrangler/Cloudflare dry-run bundle checks.
+- Storefront latest reviewed head: `6ac0d40a8325a720fca115d69f72998b0fba6e30`. GitHub Actions run #163 passed the production build; the Cloudflare production-bundle validation passed. The deploy steps were skipped.
+- No authenticated browser session was used to verify product CRUD, save/reopen, section deletion, image upload, draft-to-published parity, or public-page read-back.
+
+## Remaining work before calling it finished
+
+1. Use the authorized admin session to test section deletion (including the stubborn legacy section), save/reopen, section add/reorder, and preview reload.
+2. Test a real product with long full descriptions, every information field, multiple uploaded images, and recommendations; verify admin save → public API response → storefront product guide.
+3. Test image replacement through draft save, then explicit publish, and verify the actual public storefront uses the new image/configuration.
+4. Confirm preview and live storefront use the same published layout after publishing, while preserving intentional draft/public separation.
+5. Fix any failures found by those browser tests. Do not merge or deploy until explicitly approved.
+6. Only then activate Claude/API integrations; the editor's save and publication workflow must be reliable first.
