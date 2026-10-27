@@ -53,9 +53,9 @@ The design applies their general recommendations for legible product information
 ## Verification and acceptance checklist
 
 ### Automated
-- [ ] Latest Skin Care production build passes after the image-fallback and final stylesheet commits.
-- [ ] Latest Admin PR JavaScript/runtime checks pass after the navigation and modal updates.
-- [ ] Review the diff and confirm the redesign branches do not change catalog/database records.
+- [x] Latest Skin Care production build passed on redesign commit `5fb8cf7f4221169c6e8b6eb67118c4bcf178bc50` (GitHub Actions run #171).
+- [x] Latest Admin PR check passed all 9 jobs after the navigation, modal, contrast and regression-guard updates (GitHub Actions PR run #1623 on `bac7f49627e3d53fc2dd90ea29d5c7bcabf1bb53`).
+- [x] Reviewed changed paths: Admin `admin.html`, CI workflow and audit doc; storefront `src/app.jsx` and `src/styles.css`. No catalog/data/database files or product records were changed in the redesign branches.
 
 ### Storefront desktop and mobile
 - [ ] Header, mobile menu and search overlay open/close without being clipped.
