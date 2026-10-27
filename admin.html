@@ -3255,15 +3255,12 @@ document.addEventListener('keydown',event=>{
   event.preventDefault();redoSkinStudio();
  }
 });
-document.addEventListener('input',event=>{
+// Capture the pre-edit state when a control receives focus. Capturing on input/change
+// would snapshot the already-mutated state and make the first Undo appear to do nothing.
+document.addEventListener('focusin',event=>{
  const target=event.target;
  if(!document.body.classList.contains('skin-studio-fullpage')||!(target instanceof HTMLElement))return;
  if(target.closest('.studio-selected-inspector,.studio-site-settings,.studio-quick-add')||/^skinCfg/.test(target.id||''))skinHistoryCapture();
-},true);
-document.addEventListener('change',event=>{
- const target=event.target;
- if(!document.body.classList.contains('skin-studio-fullpage')||!(target instanceof HTMLElement))return;
- if(target.type==='file'||target.closest('.studio-selected-inspector,.studio-site-settings,.studio-quick-add')||/^skinCfg/.test(target.id||''))skinHistoryCapture();
 },true);
 function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();syncSkinPreviewActionbar();}
 function updateSkinSection(index,key,value,fromPreview=false){
