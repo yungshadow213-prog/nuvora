@@ -526,18 +526,33 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
 body.skin-studio-fullpage .studio-canvas-inner{border-radius:7px!important}
 body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
 .studio-library-pagination button:focus-visible{outline:2px solid #6e8c65;outline-offset:2px}
-</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">private admin</div></div><nav class="nav">
-<button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
-<button data-icon="↥" onclick="show('import',this)">Import</button>
-<button data-icon="▣" onclick="show('products',this)">Products</button>
-<button data-icon="✿" onclick="window.location.href='/admin/skin-studio'">Skin Care Studio</button>
-<button data-icon="▦" onclick="window.location.href='/admin/storefronts'">Other Storefronts</button>
-<button data-icon="☷" onclick="show('categories',this)">Categories</button>
-<button data-icon="◫" onclick="show('collections',this)">Collections</button>
-<button data-icon="□" onclick="show('orders',this)">Orders</button>
-<button data-icon="↗" onclick="show('social',this)">Content</button>
-<button data-icon="◌" onclick="show('analytics',this)">Analytics</button>
-<button data-icon="⚙" onclick="show('settings',this)">Settings</button>
+</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
+  <div class="nav-group">
+    <span class="nav-group-label">Workspace</span>
+    <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
+  </div>
+  <div class="nav-group nav-group-stores">
+    <span class="nav-group-label">Your storefronts</span>
+    <button data-icon="✿" onclick="window.location.href='/admin/skin-studio'">Skin Care Studio</button>
+    <button data-icon="▦" onclick="window.location.href='/admin/storefronts'">Other Storefronts</button>
+  </div>
+  <div class="nav-group">
+    <span class="nav-group-label">Catalog</span>
+    <button data-icon="▣" onclick="show('products',this)">Products</button>
+    <button data-icon="↥" onclick="show('import',this)">Import products</button>
+    <button data-icon="☷" onclick="show('categories',this)">Categories</button>
+    <button data-icon="◫" onclick="show('collections',this)">Collections</button>
+    <button data-icon="□" onclick="show('orders',this)">Orders</button>
+  </div>
+  <div class="nav-group">
+    <span class="nav-group-label">Growth</span>
+    <button data-icon="↗" onclick="show('social',this)">Content</button>
+    <button data-icon="◌" onclick="show('analytics',this)">Analytics</button>
+  </div>
+  <div class="nav-group nav-group-system">
+    <span class="nav-group-label">System</span>
+    <button data-icon="⚙" onclick="show('settings',this)">Settings</button>
+  </div>
 </nav><div class="private">Private control center.<br><button class="btn" style="width:100%;margin-top:10px" onclick="signOutAdmin()">Sign out</button></div></aside><main class="main"><header class="top">
   <div class="top-copy">
     <div class="top-breadcrumb"><span>Nuvora</span><i>/</i><span>Control center</span></div>
@@ -802,7 +817,7 @@ body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
       <div class="studio-save-state"><span class="studio-save-dot"></span><span id="skinStudioSaveLabel">Saved version loaded</span></div>
       <button class="btn" type="button" onclick="openSkinManualProduct()">+ Add product</button>
       <button class="btn" type="button" onclick="openSkinSiteSettings()">Edit whole site</button>
-      <button class="btn" type="button" onclick="previewSkinSite()">View live ↗</button>
+      <button class="btn" type="button" onclick="previewSkinSite()">Preview storefront ↗</button>
       <button class="btn" type="button" onclick="saveSkinSiteDraft(this)">Save draft</button>
       <button class="btn primary studio-publish-button" type="button" onclick="saveSkinSiteConfig(this)">Publish changes</button>
     </div>
@@ -4123,4 +4138,25 @@ body.skin-studio-fullpage .studio-toolbar-actions .btn:focus-visible,body.skin-s
  body.skin-studio-fullpage .studio-save-state{flex:1 1 100%!important}
  body.skin-studio-fullpage .studio-canvas-viewport{padding:8px!important;min-height:520px!important}
 }
+</style>
+<style id="nuvora-admin-structure-redesign">
+.nav{align-content:start!important;gap:16px!important}
+.nav-group{display:grid;gap:4px;min-width:0}
+.nav-group-label{padding:0 12px 3px;color:#a5c4a9;font-size:9px;font-weight:800;letter-spacing:.15em;text-transform:uppercase}
+.nav-group button{width:100%;text-align:left;min-width:0}
+.nav-group-stores button:first-of-type{background:#d7e8cf10!important;border-color:#d7e8cf24!important;color:#f7fff5!important}
+.nav-group-stores button:first-of-type:before{background:#d7e8cf!important;color:#234731!important}
+.nav-group-system{padding-top:10px;border-top:1px solid #ffffff18}
+body.skin-studio-fullpage .studio-back{display:inline-flex!important;align-items:center;justify-content:center;min-width:38px;min-height:38px;padding:0!important;text-decoration:none!important}
+body.skin-studio-fullpage .studio-toolbar-actions .btn{white-space:nowrap}
+body.skin-studio-fullpage .studio-layout{min-height:0!important}
+body.skin-studio-fullpage .studio-left-panel,body.skin-studio-fullpage .studio-right-panel{overscroll-behavior:contain}
+body.skin-studio-fullpage .studio-canvas-viewport{overscroll-behavior:contain}
+body.skin-studio-fullpage .studio-toolbar-actions button:disabled{opacity:.42!important;cursor:not-allowed!important}
+body.skin-studio-fullpage .studio-left-panel button,body.skin-studio-fullpage .studio-right-panel button{min-height:32px}
+body.skin-studio-fullpage .studio-left-panel input,body.skin-studio-fullpage .studio-right-panel input,body.skin-studio-fullpage .studio-right-panel textarea,body.skin-studio-fullpage .studio-right-panel select{font-size:12px!important}
+body.skin-studio-fullpage .studio-canvas-head small,body.skin-studio-fullpage .studio-canvas-head p{color:#6c7d70!important}
+@media(min-width:951px){.side{scrollbar-width:thin;scrollbar-color:#ffffff3b transparent}.main{min-width:0}.nav button{overflow-wrap:anywhere}}
+@media(max-width:950px){.nav-group{display:flex;gap:4px;align-items:center}.nav-group-label{display:none}.nav-group-system{padding-top:0;border-top:0}.nav{align-items:center}.nav button{white-space:nowrap}}
+@media(max-width:560px){.nav button:before{display:none!important}.nav button{min-width:max-content!important}.side{padding:8px 8px 10px!important}.studio-toolbar-actions{align-items:stretch!important}}
 </style></body></html>
