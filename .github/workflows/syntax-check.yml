@@ -351,6 +351,14 @@ jobs:
                   failures.append("Skin Studio local recovery contract missing "+recovery_token)
           if "document.addEventListener('focusin',event=>" not in admin or "document.addEventListener('input',event=>" in admin[admin.find("function skinHistoryCapture"):admin.find("function renderSkinStudioAll")]:
               failures.append("Skin Studio history must capture pre-edit state, not post-input state")
+          history_mutation_checks = [
+              ("function toggleSkinSectionVisibility(index){\n const sec=skinSectionsFor()[index];if(!sec)return;skinHistoryCapture();", "Section visibility must capture history before changing visibility"),
+              ("function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;skinHistoryCapture();", "Product selection must capture history before mutating selected IDs"),
+              ("if(from<0||targetIndex<0||from===targetIndex)return;\n skinHistoryCapture();const [section]=sections.splice(from,1);", "Drag-and-drop reorder must capture history before changing order"),
+          ]
+          for needle, message in history_mutation_checks:
+              if needle not in admin:
+                  failures.append(message)
           placement_start=admin.find("function addSkinProductToSection")
           placement_end=admin.find("function moveSkinProductInSection",placement_start)
           placement_block=admin[placement_start:placement_end]
