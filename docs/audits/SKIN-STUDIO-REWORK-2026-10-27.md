@@ -1,0 +1,27 @@
+# Skin Studio Admin Rework — 27 October 2026
+
+## Scope
+
+This work is in the main `yungshadow213-prog/nuvora` repository and is limited to Nuvora Admin / Skin Studio. The separate `client-store-platform` storefront repository is intentionally untouched. No merge, deployment, production configuration change, or authenticated live write test has been performed. Claude/product-research and image-generation integration remain paused.
+
+## Implemented in the current review branch
+
+- Reduced the default page-outline and inspector widths so the live storefront canvas has more room.
+- Added controls to collapse/restore the page outline and selected-item inspector.
+- Added a canvas-focus mode that hides both side panels and can be exited with Escape.
+- Added mobile drawer behavior for the outline and inspector; the storefront preview starts expanded on narrow screens.
+- Fixed the iframe ready/load race: an early `nuvora-skin-studio-ready` message is recorded, the subsequent load handler does not re-open the waiting notice, and the timeout cannot incorrectly replace a ready state.
+- Reset the ready flag and cancel stale timeouts when manually reloading the preview.
+- Prevented Place on Page from selecting a hidden product grid as the destination; it now prefers a visible grid and can fall back to another visible grid or create one.
+- Added release-contract checks for the preview handshake, timeout reset, canvas controls, and hidden-grid placement.
+
+## Still to do
+
+- Run the automated GitHub checks against this review branch and resolve any failures.
+- Continue the larger visual-builder work: history/undo-redo, reliable draft recovery, faster in-preview selection, stronger direct-editing controls, product/media-library workflow, and publish preflight validation.
+- Verify authenticated browser flows for product creation/editing, upload, save/reopen, section add/delete/reorder, product placement, and publish read-back. These require the authorized admin session and are not claimed as tested here.
+- Keep Skin Care product requirements intact: no price field in the editor, purchase label exactly `Check price on Amazon`, retailer ratings separate from Nuvora reviews, complete product-guide information, and only published products exposed publicly.
+
+## Verification status
+
+Source-level release contracts have been added. Automated CI results and authenticated browser verification are pending; this document does not claim the rework is complete.
