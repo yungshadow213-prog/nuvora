@@ -2505,6 +2505,7 @@ let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,
 let skinStudioUndoStack=[],skinStudioRedoStack=[],skinStudioHistoryLastCapture=0,skinStudioHistoryApplying=false;
 const defaultSkinSiteConfig=()=>({
   version:5,homeLayoutVersion:0,template:'soft-editorial',accentColor:'#66745f',
+  designSettings:{backgroundColor:'#f7f4ee',surfaceColor:'#fffdf9',textColor:'#342f2b',mutedColor:'#77756c',borderColor:'#e4dfd5',successColor:'#3d7d57',errorColor:'#b24b42',saleColor:'#c77d5b',headingFont:'Playfair Display',bodyFont:'DM Sans',pageMaxWidth:1280,sideGutters:24,sectionSpacing:64,gridGap:22,cornerRadius:14,shadowStyle:'soft',productImageRatio:'4:5',productHoverEffect:'none'},
   announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
   brandName:'nuvora',brandSuffix:'skin',headerTagline:'YOUR EVERYDAY SKIN EDIT',
   announcementAside:'A LITTLE MORE CONSIDERED',headerCtaLabel:'Explore the edit',
@@ -2668,6 +2669,18 @@ function mergeSkinSiteConfig(raw){
  cfg.template=['soft-editorial','clean-minimal','sage-botanical'].includes(cfg.template)?cfg.template:'soft-editorial';
  cfg.accentColor=/^#[0-9a-f]{6}$/i.test(String(cfg.accentColor||''))?cfg.accentColor:'#66745f';
  cfg.productGuideTemplate=['editorial','compact','minimal'].includes(cfg.productGuideTemplate)?cfg.productGuideTemplate:'editorial';
+ const designDefaults=base.designSettings;
+ const rawDesign=src.designSettings&&typeof src.designSettings==='object'?src.designSettings:{};
+ const colorKeys=['backgroundColor','surfaceColor','textColor','mutedColor','borderColor','successColor','errorColor','saleColor'];
+ cfg.designSettings={...designDefaults,...rawDesign};
+ colorKeys.forEach(key=>cfg.designSettings[key]=/^#[0-9a-f]{6}$/i.test(String(rawDesign[key]||''))?String(rawDesign[key]):designDefaults[key]);
+ cfg.designSettings.headingFont=['Playfair Display','DM Sans','Arial','Georgia'].includes(rawDesign.headingFont)?rawDesign.headingFont:designDefaults.headingFont;
+ cfg.designSettings.bodyFont=['DM Sans','Arial','Georgia','Playfair Display'].includes(rawDesign.bodyFont)?rawDesign.bodyFont:designDefaults.bodyFont;
+ const designRanges={pageMaxWidth:[960,1040,1120,1200,1280,1360,1440],sideGutters:[16,20,24,28,32,40,48],sectionSpacing:[24,32,40,48,56,64,80,96],gridGap:[8,12,16,20,22,24,28,32],cornerRadius:[0,4,8,12,14,16,20,24,32]};
+ Object.entries(designRanges).forEach(([key,allowed])=>cfg.designSettings[key]=allowed.includes(Number(rawDesign[key]))?Number(rawDesign[key]):designDefaults[key]);
+ cfg.designSettings.shadowStyle=['none','soft','strong'].includes(rawDesign.shadowStyle)?rawDesign.shadowStyle:designDefaults.shadowStyle;
+ cfg.designSettings.productImageRatio=['square','4:5','landscape','natural'].includes(rawDesign.productImageRatio)?rawDesign.productImageRatio:designDefaults.productImageRatio;
+ cfg.designSettings.productHoverEffect=['none','zoom','second-image'].includes(rawDesign.productHoverEffect)?rawDesign.productHoverEffect:designDefaults.productHoverEffect;
  const guideDefaults={benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true,size:true};
  cfg.productGuideFields={...guideDefaults,...(src.productGuideFields&&typeof src.productGuideFields==='object'?src.productGuideFields:{})};
  Object.keys(guideDefaults).forEach(key=>cfg.productGuideFields[key]=cfg.productGuideFields[key]!==false);
