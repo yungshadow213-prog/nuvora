@@ -3307,8 +3307,40 @@ function openSkinAdd(type){
  }else if(type==='category'){
   panel.innerHTML='<h4>Create a category</h4><p>Categories organize products while keeping the existing storefront card style.</p><label>Category name<input id="skinQuickTitle" maxlength="100" placeholder="e.g. Serums"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="serums"></label><label>Description<textarea id="skinQuickDescription" maxlength="1000" placeholder="What shoppers will find here"></textarea></label><label>Category image URL (optional)<input id="skinQuickImage" type="url" maxlength="1600" placeholder="https://…"></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create category</button></div>';
  }else{
-  panel.innerHTML='<h4>Add a section</h4><p>Choose a section type. Its design will follow the existing Nuvora Skin storefront style.</p><label>Section type<select id="skinQuickType"><optgroup label="Shop &amp; product display"><option value="product-grid">Product grid</option><option value="featured-products">Featured products</option><option value="category-grid">Category browse</option><option value="brand-grid">Brand directory</option></optgroup><optgroup label="Editorial &amp; content"><option value="hero">Hero / banner</option><option value="editorial">Image and text</option><option value="journal-grid">Journal cards</option><option value="text-block">Text block</option><option value="image-block">Image block</option></optgroup></select></label><label>Section title<input id="skinQuickTitle" maxlength="180" placeholder="Section title"></label><label>Small heading<input id="skinQuickEyebrow" maxlength="100" placeholder="Optional eyebrow"></label><label>Supporting text<textarea id="skinQuickDescription" maxlength="3000" placeholder="Optional supporting text"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Add section</button></div>';
+  panel.innerHTML='<h4>Add a section</h4><p>Choose a section type. Search or filter the library, then select a visual tile to configure it.</p><div class="studio-section-library-tools"><input id="skinSectionLibrarySearch" type="search" placeholder="Search sections…" aria-label="Search section library" oninput="filterSkinSectionLibrary(this.value)"><div class="studio-section-library-categories" role="group" aria-label="Section categories"><button type="button" class="is-active" data-library-category="all" onclick="filterSkinSectionLibraryCategory('all',this)">All</button><button type="button" data-library-category="shop" onclick="filterSkinSectionLibraryCategory('shop',this)">Shop &amp; products</button><button type="button" data-library-category="content" onclick="filterSkinSectionLibraryCategory('content',this)">Editorial &amp; content</button></div><div id="skinSectionLibraryGrid" class="studio-section-library-grid" aria-label="Available sections"></div></div><label>Section type<select id="skinQuickType" onchange="syncSkinSectionLibrarySelection()"><optgroup label="Shop &amp; product display"><option value="product-grid">Product grid</option><option value="featured-products">Featured products</option><option value="category-grid">Category browse</option><option value="brand-grid">Brand directory</option></optgroup><optgroup label="Editorial &amp; content"><option value="hero">Hero / banner</option><option value="editorial">Image and text</option><option value="journal-grid">Journal cards</option><option value="text-block">Text block</option><option value="image-block">Image block</option></optgroup></select></label><label>Section title<input id="skinQuickTitle" maxlength="180" placeholder="Section title"></label><label>Small heading<input id="skinQuickEyebrow" maxlength="100" placeholder="Optional eyebrow"></label><label>Supporting text<textarea id="skinQuickDescription" maxlength="3000" placeholder="Optional supporting text"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Add section</button></div>';renderSkinSectionLibraryPicker();
  }
+}
+let skinSectionLibraryCategory='all';
+const skinSectionLibraryItems=[
+ {type:'product-grid',title:'Product grid',category:'shop',icon:'▦',description:'A browsable skincare product collection'},
+ {type:'featured-products',title:'Featured products',category:'shop',icon:'✳',description:'Highlight selected products'},
+ {type:'category-grid',title:'Category browse',category:'shop',icon:'▧',description:'Tiles for skincare categories'},
+ {type:'brand-grid',title:'Brand directory',category:'shop',icon:'◈',description:'Browse by product brand'},
+ {type:'hero',title:'Hero / banner',category:'content',icon:'▱',description:'Lead with a headline and image'},
+ {type:'editorial',title:'Image and text',category:'content',icon:'▥',description:'Pair editorial copy with imagery'},
+ {type:'journal-grid',title:'Journal cards',category:'content',icon:'▤',description:'Feature skincare articles'},
+ {type:'text-block',title:'Text block',category:'content',icon:'¶',description:'Introduce a topic with copy'},
+ {type:'image-block',title:'Image block',category:'content',icon:'▣',description:'Add a standalone visual'}
+];
+function renderSkinSectionLibraryPicker(){
+ const grid=document.getElementById('skinSectionLibraryGrid');if(!grid)return;
+ const query=String(document.getElementById('skinSectionLibrarySearch')?.value||'').trim().toLowerCase();
+ const items=skinSectionLibraryItems.filter(item=>(skinSectionLibraryCategory==='all'||item.category===skinSectionLibraryCategory)&&(!query||(item.title+' '+item.description+' '+item.category).toLowerCase().includes(query)));
+ grid.innerHTML=items.map(item=>'<button type="button" class="studio-section-library-card '+(document.getElementById('skinQuickType')?.value===item.type?'is-selected':'')+'" data-section-type="'+item.type+'" onclick="chooseSkinSectionLibraryItem(\\''+item.type+'\\')"><span class="studio-section-library-thumb studio-section-thumb-'+item.type+'"><b>'+item.icon+'</b><i></i><i></i></span><strong>'+item.title+'</strong><small>'+item.description+'</small></button>').join('')||'<p class="studio-section-library-empty">No sections match that search.</p>';
+}
+function chooseSkinSectionLibraryItem(type){
+ const select=document.getElementById('skinQuickType');if(!select||!skinSectionLibraryItems.some(item=>item.type===type))return;
+ select.value=type;syncSkinSectionLibrarySelection();
+}
+function syncSkinSectionLibrarySelection(){
+ const select=document.getElementById('skinQuickType');if(!select)return;
+ document.querySelectorAll('#skinSectionLibraryGrid .studio-section-library-card').forEach(card=>card.classList.toggle('is-selected',card.dataset.sectionType===select.value));
+}
+function filterSkinSectionLibrary(query){renderSkinSectionLibraryPicker();}
+function filterSkinSectionLibraryCategory(category,button){
+ skinSectionLibraryCategory=category;
+ document.querySelectorAll('.studio-section-library-categories button').forEach(item=>item.classList.toggle('is-active',item===button));
+ renderSkinSectionLibraryPicker();
 }
 function closeSkinQuickAdd(){const panel=document.getElementById('skinQuickAddPanel');if(panel){panel.hidden=true;panel.innerHTML='';}skinQuickAddType='';}
 function createSkinQuickItem(){
@@ -4507,6 +4539,31 @@ body.skin-studio-fullpage #skinPreviewFrameOuter:fullscreen{width:100vw;height:1
 body.skin-studio-fullpage #skinPreviewFrameOuter:fullscreen .studio-canvas-inner{width:100%;height:100%;border-radius:0}
 body.skin-studio-fullpage #skinPreviewFrameOuter:fullscreen iframe{width:100%;height:100%}
 @media(max-width:600px){body.skin-studio-fullpage .studio-zoom-controls{flex:1;justify-content:center}body.skin-studio-fullpage .studio-fullscreen-preview{flex:1}}
+
+
+/* Searchable section library with visual previews, category filters and clear selection. */
+body.skin-studio-fullpage .studio-section-library-tools{display:grid;gap:9px;margin:10px 0 14px}
+body.skin-studio-fullpage .studio-section-library-tools>input{width:100%;min-height:38px;border:1px solid #dce5d9;border-radius:9px;padding:8px 10px;font:inherit}
+body.skin-studio-fullpage .studio-section-library-categories{display:flex;flex-wrap:wrap;gap:5px}
+body.skin-studio-fullpage .studio-section-library-categories button{border:1px solid #dce5d9;border-radius:999px;background:#fff;padding:6px 8px;color:#536653;font-size:10px;font-weight:700}
+body.skin-studio-fullpage .studio-section-library-categories button.is-active{background:#eaf2e5;border-color:#bfd2b7;color:#2f4a33}
+body.skin-studio-fullpage .studio-section-library-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+body.skin-studio-fullpage .studio-section-library-card{display:flex;min-width:0;flex-direction:column;gap:5px;padding:6px;text-align:left;border:1px solid #e0e6dd;border-radius:10px;background:#fff;color:#324936;cursor:pointer}
+body.skin-studio-fullpage .studio-section-library-card:hover{border-color:#9ab291;transform:translateY(-1px)}
+body.skin-studio-fullpage .studio-section-library-card.is-selected{border-color:#72976b;box-shadow:0 0 0 2px #dcebd6;background:#f8fbf6}
+body.skin-studio-fullpage .studio-section-library-card strong{font-size:10px;line-height:1.25}
+body.skin-studio-fullpage .studio-section-library-card small{font-size:9px;line-height:1.35;color:#718071}
+body.skin-studio-fullpage .studio-section-library-thumb{position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;aspect-ratio:1.55;border-radius:6px;background:linear-gradient(135deg,#f3eee4,#dce8d7);color:#657b5c}
+body.skin-studio-fullpage .studio-section-library-thumb b{font-size:24px;font-weight:500}
+body.skin-studio-fullpage .studio-section-library-thumb i{position:absolute;bottom:7px;width:24%;height:4px;border-radius:5px;background:#c0d0b7}
+body.skin-studio-fullpage .studio-section-library-thumb i:first-of-type{left:7px}
+body.skin-studio-fullpage .studio-section-library-thumb i:last-of-type{left:calc(7px + 27%)}
+body.skin-studio-fullpage .studio-section-thumb-hero{background:linear-gradient(110deg,#e5eadf 0%,#d0dccc 60%,#b5c6ac 100%)}
+body.skin-studio-fullpage .studio-section-thumb-product-grid{background:linear-gradient(180deg,#f8f7f2,#e5eadf)}
+body.skin-studio-fullpage .studio-section-thumb-product-grid b{font-size:19px}
+body.skin-studio-fullpage .studio-section-thumb-editorial{background:linear-gradient(90deg,#e4eadd 50%,#f2eee5 50%)}
+body.skin-studio-fullpage .studio-section-library-empty{grid-column:1/-1;color:#718071;font-size:11px}
+@media(max-width:600px){body.skin-studio-fullpage .studio-section-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 </style>
 </body></html>
