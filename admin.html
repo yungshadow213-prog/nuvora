@@ -895,7 +895,14 @@ body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
           <button type="button" class="active" onclick="setSkinPreviewDevice('desktop',this)">Desktop</button>
           <button type="button" onclick="setSkinPreviewDevice('tablet',this)">Tablet</button>
           <button type="button" onclick="setSkinPreviewDevice('mobile',this)">Mobile</button>
-          <button type="button" class="studio-refresh-button" onclick="reloadSkinStudioPreview()" title="Reload storefront preview">↻</button>
+          <button type="button" class="studio-refresh-button" onclick="reloadSkinStudioPreview()" title="Reload storefront preview" aria-label="Reload storefront preview">↻</button>
+          <div class="studio-zoom-controls" role="group" aria-label="Preview zoom">
+            <button type="button" onclick="adjustSkinPreviewZoom(-10)" aria-label="Zoom out" title="Zoom out">−</button>
+            <output id="skinPreviewZoomValue" aria-live="polite">100%</output>
+            <button type="button" onclick="adjustSkinPreviewZoom(10)" aria-label="Zoom in" title="Zoom in">+</button>
+            <button type="button" onclick="resetSkinPreviewZoom()" title="Reset zoom">Reset</button>
+          </div>
+          <button type="button" class="studio-fullscreen-preview" onclick="toggleSkinPreviewFullscreen(this)" title="Open preview canvas full screen" aria-label="Open preview canvas full screen">⛶ Full screen</button>
         </div>
       </div>
       <div class="studio-preview-actionbar" aria-label="Actions for selected preview item">
@@ -3144,7 +3151,7 @@ function renderSkinBuilderSections(){
  root.innerHTML=sections.map((sec,index)=>{
   const selected=skinStudioSelection?.type==='section'&&String(skinStudioSelection.id)===String(sec.id);
   const visible=sec.visible!==false;
-  return '<article class="studio-section-outline '+(selected?'is-selected':'')+'" data-section-index="'+index+'" onclick="selectSkinItem(\'section\','+esc(JSON.stringify(String(sec.id)))+')">'+
+  return '<article class="studio-section-outline '+(selected?'is-selected':'')+'" data-section-index="'+index+'" draggable="true" ondragstart="skinSectionDragStart(event,'+index+')" onclick="selectSkinItem(\'section\','+esc(JSON.stringify(String(sec.id)))+')">'+
    '<span class="studio-outline-grip studio-outline-number" aria-hidden="true">'+(index+1)+'</span><div class="studio-section-outline-copy"><b>'+esc(sec.title||typeLabels[sec.type]||sec.type||'Section')+'</b><small>'+esc(typeLabels[sec.type]||'Section')+' · '+(visible?'Visible':'Hidden')+'</small></div>'+
    '<div class="studio-section-outline-actions"><button type="button" title="Move up" '+(index===0?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',-1)">↑</button><button type="button" title="Move down" '+(index===sections.length-1?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',1)">↓</button><button type="button" title="'+(visible?'Hide':'Show')+'" onclick="event.stopPropagation();toggleSkinSectionVisibility('+index+')">'+(visible?'◉':'○')+'</button><button type="button" title="Delete section" aria-label="Delete '+esc(sec.title||typeLabels[sec.type]||'section')+'" style="color:#a33d31!important;border:1px solid #f0d7d2;border-radius:6px;background:#fff7f5" onclick="event.stopPropagation();deleteSkinSectionImmediately('+index+')">×</button></div></article>';
  }).join('')||'<div class="studio-library-empty">This page has no sections yet. Use + Add → Section to start building it.</div>';
@@ -3395,6 +3402,24 @@ function selectSkinPreviewDevice(device,button){
  reloadSkinStudioPreview();
 }
 function setSkinPreviewDevice(device,button){selectSkinPreviewDevice(device,button);}
+let skinPreviewZoom=100;
+function applySkinPreviewZoom(){
+ const canvas=document.querySelector('#skinPreviewFrameOuter .studio-canvas-inner'),output=document.getElementById('skinPreviewZoomValue');
+ if(canvas)canvas.style.zoom=skinPreviewZoom+'%';if(output)output.textContent=skinPreviewZoom+'%';
+}
+function adjustSkinPreviewZoom(delta){skinPreviewZoom=Math.max(50,Math.min(150,skinPreviewZoom+delta));applySkinPreviewZoom();}
+function resetSkinPreviewZoom(){skinPreviewZoom=100;applySkinPreviewZoom();}
+async function toggleSkinPreviewFullscreen(button){
+ const target=document.getElementById('skinPreviewFrameOuter');if(!target)return;
+ try{if(document.fullscreenElement)await document.exitFullscreen();else await target.requestFullscreen();}
+ catch(error){skinBuilderMessage('Full-screen preview is unavailable in this browser. You can still expand the canvas using the workspace controls.','error');return;}
+ const active=Boolean(document.fullscreenElement);if(button){button.setAttribute('aria-pressed',String(active));button.textContent=active?'⛶ Exit full screen':'⛶ Full screen';}
+}
+document.addEventListener('fullscreenchange',()=>{
+ const button=document.querySelector('.studio-fullscreen-preview');
+ if(button){const active=Boolean(document.fullscreenElement);button.setAttribute('aria-pressed',String(active));button.textContent=active?'⛶ Exit full screen':'⛶ Full screen';}
+});
+
 function toggleSkinStudioPanel(which,button){
  const body=document.body;
  const className=which==='outline'?'skin-studio-hide-outline':'skin-studio-hide-inspector';
@@ -3489,6 +3514,25 @@ function moveSkinSection(index,delta){
  skinHistoryCapture();
  const [item]=sections.splice(index,1);sections.splice(target,0,item);
  skinStudioSelection={type:'section',id:String(item.id)};skinMarkDirty('Section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
+}
+let skinStudioDraggedSectionIndex=null;
+function skinSectionDragStart(event,index){
+ skinStudioDraggedSectionIndex=index;event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',String(index));event.currentTarget.classList.add('is-dragging');
+}
+function skinSectionDragOver(event,index){
+ if(skinStudioDraggedSectionIndex===null)return;event.preventDefault();event.dataTransfer.dropEffect='move';
+ event.currentTarget.classList.toggle('is-drop-target',index!==skinStudioDraggedSectionIndex);
+}
+function skinSectionDrop(event,index){
+ event.preventDefault();const from=skinStudioDraggedSectionIndex;skinStudioDraggedSectionIndex=null;
+ if(from===null||from===index)return;const sections=skinSectionsFor();
+ if(from<0||from>=sections.length||index<0||index>=sections.length)return;
+ skinHistoryCapture();const [item]=sections.splice(from,1);sections.splice(index,0,item);
+ skinStudioSelection={type:'section',id:String(item.id)};skinMarkDirty('Section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
+}
+function skinSectionDragEnd(){
+ skinStudioDraggedSectionIndex=null;
+ document.querySelectorAll('.studio-section-outline.is-dragging,.studio-section-outline.is-drop-target').forEach(row=>row.classList.remove('is-dragging','is-drop-target'));
 }
 function duplicateSkinSection(index){
  const sections=skinSectionsFor(),original=sections[index];if(!original)return;
@@ -4402,6 +4446,22 @@ body.skin-studio-fullpage .skin-builder-fields .field input,body.skin-studio-ful
  body.skin-studio-fullpage .studio-canvas-viewport{padding:5px!important}
  body.skin-studio-fullpage .studio-left-panel,body.skin-studio-fullpage .studio-right-panel{max-height:100dvh;overflow:auto}
 }
+
+
+/* P0 editor affordances: draggable page outline, zoom, and true fullscreen preview. */
+body.skin-studio-fullpage .studio-zoom-controls{display:flex;align-items:center;gap:3px;padding:3px;border:1px solid #dce5d9;border-radius:9px;background:#fff}
+body.skin-studio-fullpage .studio-zoom-controls button{min-width:28px;min-height:29px;padding:4px 7px;border:0;border-radius:6px;background:transparent;color:#425b45;font-size:11px;font-weight:750}
+body.skin-studio-fullpage .studio-zoom-controls button:hover{background:#edf4e9}
+body.skin-studio-fullpage .studio-zoom-controls output{min-width:38px;text-align:center;font-size:10px;font-weight:750;color:#526853;font-variant-numeric:tabular-nums}
+body.skin-studio-fullpage .studio-fullscreen-preview{min-height:34px;padding:6px 9px;border:1px solid #dce5d8;border-radius:9px;background:#fff;color:#405a44;font-size:10px;font-weight:750}
+body.skin-studio-fullpage .studio-fullscreen-preview[aria-pressed="true"]{background:#eaf3e6;border-color:#c5d8bf}
+body.skin-studio-fullpage .studio-section-outline[draggable="true"]{cursor:grab}
+body.skin-studio-fullpage .studio-section-outline.is-dragging{opacity:.45;cursor:grabbing}
+body.skin-studio-fullpage .studio-section-outline.is-drop-target{outline:2px solid #83a87a;outline-offset:1px;background:#f1f7ee}
+body.skin-studio-fullpage #skinPreviewFrameOuter:fullscreen{width:100vw;height:100vh;padding:18px!important;box-sizing:border-box;background:#e9eee6;overflow:auto}
+body.skin-studio-fullpage #skinPreviewFrameOuter:fullscreen .studio-canvas-inner{width:100%;height:100%;border-radius:0}
+body.skin-studio-fullpage #skinPreviewFrameOuter:fullscreen iframe{width:100%;height:100%}
+@media(max-width:600px){body.skin-studio-fullpage .studio-zoom-controls{flex:1;justify-content:center}body.skin-studio-fullpage .studio-fullscreen-preview{flex:1}}
 
 </style>
 </body></html>
