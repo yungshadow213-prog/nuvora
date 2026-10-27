@@ -3153,8 +3153,8 @@ function renderSkinBuilderSections(){
   const selected=skinStudioSelection?.type==='section'&&String(skinStudioSelection.id)===String(sec.id);
   const visible=sec.visible!==false;
   return '<article class="studio-section-outline '+(selected?'is-selected':'')+'" data-section-index="'+index+'" draggable="true" ondragstart="skinSectionDragStart(event,'+index+')" ondragover="skinSectionDragOver(event,' +index+ ')" ondrop="skinSectionDrop(event,' +index+ ')" ondragend="skinSectionDragEnd(event)" onclick="selectSkinItem(\'section\','+esc(JSON.stringify(String(sec.id)))+')">'+
-   '<span class="studio-outline-grip studio-outline-number" aria-hidden="true">'+(index+1)+'</span><div class="studio-section-outline-copy"><b>'+esc(sec.title||typeLabels[sec.type]||sec.type||'Section')+'</b><small>'+esc(typeLabels[sec.type]||'Section')+' · '+(visible?'Visible':'Hidden')+'</small></div>'+
-   '<div class="studio-section-outline-actions"><button type="button" title="Move up" '+(index===0?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',-1)">↑</button><button type="button" title="Move down" '+(index===sections.length-1?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',1)">↓</button><button type="button" title="'+(visible?'Hide':'Show')+'" onclick="event.stopPropagation();toggleSkinSectionVisibility('+index+')">'+(visible?'◉':'○')+'</button><button type="button" title="Delete section" aria-label="Delete '+esc(sec.title||typeLabels[sec.type]||'section')+'" style="color:#a33d31!important;border:1px solid #f0d7d2;border-radius:6px;background:#fff7f5" onclick="event.stopPropagation();deleteSkinSectionImmediately('+index+')">×</button></div></article>';
+   '<span class="studio-outline-grip studio-outline-number" aria-hidden="true">'+(index+1)+'</span><div class="studio-section-outline-copy"><b>'+esc(sec.title||typeLabels[sec.type]||sec.type||'Section')+(sec.locked?' 🔒':'')+'</b><small>'+esc(typeLabels[sec.type]||'Section')+' · '+(visible?'Visible':'Hidden')+(sec.locked?' · Locked':'')+'</small></div>'+
+   '<div class="studio-section-outline-actions"><button type="button" title="Move up" '+(index===0||sec.locked?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',-1)">↑</button><button type="button" title="Move down" '+(index===sections.length-1||sec.locked?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',1)">↓</button><button type="button" title="Duplicate section" '+(sec.locked?'disabled':'')+' onclick="event.stopPropagation();duplicateSkinSection('+index+')">⧉</button><button type="button" title="'+(sec.locked?'Unlock layout':'Lock layout')+'" aria-pressed="'+String(!!sec.locked)+'" onclick="event.stopPropagation();toggleSkinSectionLock('+index+')">'+(sec.locked?'🔒':'🔓')+'</button><button type="button" title="'+(visible?'Hide':'Show')+'" '+(sec.locked?'disabled':'')+' onclick="event.stopPropagation();toggleSkinSectionVisibility('+index+')">'+(visible?'◉':'○')+'</button><button type="button" title="Delete section" aria-label="Delete '+esc(sec.title||typeLabels[sec.type]||'section')+'" '+(sec.locked?'disabled':'')+' style="color:#a33d31!important;border:1px solid #f0d7d2;border-radius:6px;background:#fff7f5" onclick="event.stopPropagation();deleteSkinSectionImmediately('+index+')">×</button></div></article>';
  }).join('')||'<div class="studio-library-empty">This page has no sections yet. Use + Add → Section to start building it.</div>';
  renderSkinLibrary();
 }
@@ -3539,8 +3539,14 @@ function updateSkinSection(index,key,value,fromPreview=false){
 function selectFirstSkinSection(){const section=skinSectionsFor()[0];if(section)selectSkinItem('section',section.id);else openSkinAdd('section');}
 function focusSkinInspector(){const panel=document.querySelector('.studio-right-panel');if(panel)panel.scrollTo({top:0,behavior:'smooth'});const root=document.getElementById('skinSelectedInspector');if(root)root.scrollIntoView({block:'nearest',behavior:'smooth'});if(!skinStudioSelection||skinStudioSelection.type==='none')selectFirstSkinSection();}
 function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;skinHistoryCapture();let ids=new Set((sec.product_ids||[]).map(String).filter(id=>id!=='__nuvora_manual_empty__'));if(sec.product_selection!=='manual')ids=new Set(skinProductsForSection({...sec,product_selection:'automatic',product_ids:[]}).map(p=>String(p.id)));if(checked)ids.add(String(productId));else ids.delete(String(productId));sec.product_selection='manual';sec.product_ids=ids.size?[...ids]:['__nuvora_manual_empty__'];updateSkinSection(index,'product_ids',sec.product_ids);}
+function toggleSkinSectionLock(index){
+ const sections=skinSectionsFor(),section=sections[index];if(!section)return;
+ skinHistoryCapture();section.locked=!section.locked;
+ skinMarkDirty(section.locked?'Section layout locked. Unlock it before moving, hiding, duplicating or deleting.':'Section unlocked for editing.');
+ renderSkinStudioAll();queueSkinStudioPreview();
+}
 function toggleSkinSectionVisibility(index){
- const sec=skinSectionsFor()[index];if(!sec)return;skinHistoryCapture();sec.visible=sec.visible===false;
+ const sec=skinSectionsFor()[index];if(!sec||sec.locked){if(sec?.locked)skinBuilderMessage('Unlock this section before changing visibility.','warning');return;}skinHistoryCapture();sec.visible=sec.visible===false;
  skinMarkDirty('Section visibility changed in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function skinBuilderDragStart(event,index){
@@ -3556,7 +3562,7 @@ function skinBuilderDrop(event,targetIndex){
  skinStudioSelection={type:'section',id:String(section.id)};skinMarkDirty('Section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function moveSkinSection(index,delta){
- const sections=skinSectionsFor(),target=index+delta;if(target<0||target>=sections.length)return;
+ const sections=skinSectionsFor(),target=index+delta;if(target<0||target>=sections.length||sections[index]?.locked||sections[target]?.locked)return;
  skinHistoryCapture();
  const [item]=sections.splice(index,1);sections.splice(target,0,item);
  skinStudioSelection={type:'section',id:String(item.id)};skinMarkDirty('Section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
@@ -3581,13 +3587,13 @@ function skinSectionDragEnd(){
  document.querySelectorAll('.studio-section-outline.is-dragging,.studio-section-outline.is-drop-target').forEach(row=>row.classList.remove('is-dragging','is-drop-target'));
 }
 function duplicateSkinSection(index){
- const sections=skinSectionsFor(),original=sections[index];if(!original)return;
+ const sections=skinSectionsFor(),original=sections[index];if(!original||original.locked)return;
  skinHistoryCapture();
  const clone=JSON.parse(JSON.stringify(original));clone.id='section-'+Date.now().toString(36);clone.title=(clone.title||'Section')+' copy';sections.splice(index+1,0,clone);
  skinStudioSelection={type:'section',id:String(clone.id)};skinMarkDirty('Section duplicated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function removeSkinSection(index,skipConfirm=false){
- const pageId=skinStudioPageId||'home',sections=skinSectionsFor(pageId),section=sections[index];if(!section)return false;
+ const pageId=skinStudioPageId||'home',sections=skinSectionsFor(pageId),section=sections[index];if(!section||section.locked){if(section?.locked)skinBuilderMessage('Unlock this section before deleting it.','warning');return false;}
  if(!skipConfirm&&!confirm('Remove the “'+(section.title||section.type||'section')+'” section from this page draft?'))return false;
  skinHistoryCapture();
  // Legacy sections can arrive without IDs. Give the target a stable ID before
@@ -4564,6 +4570,10 @@ body.skin-studio-fullpage .studio-section-thumb-product-grid b{font-size:19px}
 body.skin-studio-fullpage .studio-section-thumb-editorial{background:linear-gradient(90deg,#e4eadd 50%,#f2eee5 50%)}
 body.skin-studio-fullpage .studio-section-library-empty{grid-column:1/-1;color:#718071;font-size:11px}
 @media(max-width:600px){body.skin-studio-fullpage .studio-section-library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+body.skin-studio-fullpage .studio-section-outline-actions button:disabled{opacity:.32;cursor:not-allowed}
+body.skin-studio-fullpage .studio-section-outline:has(.studio-section-outline-actions button[aria-pressed="true"]){background:#f5f7f1}
 
 </style>
 </body></html>
