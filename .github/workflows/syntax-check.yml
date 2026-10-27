@@ -343,6 +343,9 @@ jobs:
           for media_token in ["function renderSkinMediaLibrary(root,forceRefresh=false)","function paintSkinStudioMediaLibrary(root)","function useSkinStudioMedia(url)","skinTabMedia","product-images').list('skin-site'"]:
               if media_token not in admin:
                   failures.append("Skin Studio media library contract missing "+media_token)
+          for publish_token in ["function skinStudioPublishWarnings()","Draft products will not be visible to public shoppers","Continue publishing anyway?"]:
+              if publish_token not in admin:
+                  failures.append("Skin Studio publish preflight contract missing "+publish_token)
           if "document.addEventListener('focusin',event=>" not in admin or "document.addEventListener('input',event=>" in admin[admin.find("function skinHistoryCapture"):admin.find("function renderSkinStudioAll")]:
               failures.append("Skin Studio history must capture pre-edit state, not post-input state")
           placement_start=admin.find("function addSkinProductToSection")
