@@ -207,7 +207,7 @@ body.skin-studio-fullpage.skin-studio-hide-outline.skin-studio-hide-inspector .s
 body.skin-studio-fullpage .studio-layout{transition:grid-template-columns .18s ease}
 @media(min-width:1500px){body.skin-studio-fullpage .studio-layout{grid-template-columns:205px minmax(0,1fr) 270px}body.skin-studio-fullpage.skin-studio-hide-outline .studio-layout{grid-template-columns:minmax(0,1fr) 270px}body.skin-studio-fullpage.skin-studio-hide-inspector .studio-layout{grid-template-columns:205px minmax(0,1fr)}}
 @media(max-width:1050px){body.skin-studio-fullpage .studio-layout{grid-template-columns:175px minmax(0,1fr) 225px}body.skin-studio-fullpage.skin-studio-hide-outline .studio-layout{grid-template-columns:minmax(0,1fr) 225px}body.skin-studio-fullpage.skin-studio-hide-inspector .studio-layout{grid-template-columns:175px minmax(0,1fr)}}
-@media(max-width:760px){body.skin-studio-fullpage .studio-toolbar{flex-wrap:wrap;gap:10px;padding:10px 12px}body.skin-studio-fullpage .studio-toolbar-actions{width:100%;justify-content:flex-start;flex-wrap:wrap}body.skin-studio-fullpage .studio-layout,body.skin-studio-fullpage.skin-studio-hide-outline .studio-layout,body.skin-studio-fullpage.skin-studio-hide-inspector .studio-layout,body.skin-studio-fullpage.skin-studio-hide-outline.skin-studio-hide-inspector .studio-layout{grid-template-columns:minmax(0,1fr)}body.skin-studio-fullpage .studio-left-panel,body.skin-studio-fullpage .studio-right-panel{display:none}body.skin-studio-fullpage .studio-view-controls{order:-1}body.skin-studio-fullpage .studio-canvas-head{flex-wrap:wrap}body.skin-studio-fullpage .studio-canvas-viewport{padding:5px}body.skin-studio-fullpage .studio-canvas-inner{border-radius:7px}}
+@media(max-width:760px){body.skin-studio-fullpage .studio-toolbar{flex-wrap:wrap;gap:10px;padding:10px 12px}body.skin-studio-fullpage .studio-toolbar-actions{width:100%;justify-content:flex-start;flex-wrap:wrap}body.skin-studio-fullpage .studio-layout,body.skin-studio-fullpage.skin-studio-hide-outline .studio-layout,body.skin-studio-fullpage.skin-studio-hide-inspector .studio-layout,body.skin-studio-fullpage.skin-studio-hide-outline.skin-studio-hide-inspector .studio-layout{grid-template-columns:minmax(0,1fr)}body.skin-studio-fullpage .studio-left-panel,body.skin-studio-fullpage .studio-right-panel{display:none}body.skin-studio-fullpage:not(.skin-studio-hide-outline) .studio-left-panel{display:flex;position:fixed;left:0;top:138px;bottom:0;width:min(320px,90vw);z-index:150;box-shadow:16px 0 40px rgba(24,43,28,.16)}body.skin-studio-fullpage:not(.skin-studio-hide-inspector) .studio-right-panel{display:flex;position:fixed;right:0;top:138px;bottom:0;width:min(340px,92vw);z-index:150;box-shadow:-16px 0 40px rgba(24,43,28,.16)}body.skin-studio-fullpage .studio-view-controls{order:-1}body.skin-studio-fullpage .studio-canvas-head{flex-wrap:wrap}body.skin-studio-fullpage .studio-canvas-viewport{padding:5px}body.skin-studio-fullpage .studio-canvas-inner{border-radius:7px}}
 </style><style id="nuvora-skin-studio">
 .skin-studio{max-width:1440px;margin:0 auto}
 .skin-studio-hero{display:flex;align-items:center;justify-content:space-between;gap:28px;padding:26px 28px;margin-bottom:16px;border:1px solid #e1e8df;border-radius:22px;background:linear-gradient(115deg,#f0f6ef 0%,#fff 58%,#f7f4e9 100%);box-shadow:var(--shadow)}
@@ -2348,7 +2348,13 @@ async function signInWithGoogle(){
 }
 async function adminBoot(){
   const isSkinStudioRoute=/^\/admin\/skin-studio\/?$/.test(location.pathname);
-  if(isSkinStudioRoute)document.body.classList.add('skin-studio-fullpage');
+  if(isSkinStudioRoute){
+    document.body.classList.add('skin-studio-fullpage');
+    if(window.matchMedia('(max-width:760px)').matches){
+      document.body.classList.add('skin-studio-hide-outline','skin-studio-hide-inspector');
+      requestAnimationFrame(()=>document.querySelectorAll('.studio-view-controls button').forEach(button=>button.setAttribute('aria-pressed','true')));
+    }
+  }
   try{
     const cfg=await fetch('/api/config').then(r=>r.json());
     if(!cfg.supabaseUrl||!cfg.supabaseAnonKey)throw new Error('Supabase is not configured. Add the server environment variables before using Admin.');
