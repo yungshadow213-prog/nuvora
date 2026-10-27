@@ -1003,7 +1003,20 @@ function extractRelatedAmazonProducts(html,asin){
   return out.slice(0,20);
 }
 function normalizeAmazonProduct(product={}){
-  const images=dedupeImages(Array.isArray(product.image_urls)?product.image_urls:(isValidHttpUrl(product.image_url)?[product.image_url]:[]),60);
+  // Product media may be stored across the editor gallery, imported retailer images,
+  // or legacy media fields. Merge every known source instead of letting a populated
+  // image_urls array silently hide the additional images the owner uploaded.
+  const mediaValues=[
+    product.image_url,product.main_image_url,product.mainImageUrl,
+    ...(Array.isArray(product.image_urls)?product.image_urls:[]),
+    ...(Array.isArray(product.source_image_urls)?product.source_image_urls:[]),
+    ...(Array.isArray(product.additional_images)?product.additional_images:[]),
+    ...(Array.isArray(product.gallery_images)?product.gallery_images:[]),
+    ...(Array.isArray(product.product_images)?product.product_images:[]),
+    ...(Array.isArray(product.images)?product.images:[]),
+    ...(Array.isArray(product.media)?product.media:[])
+  ].map(value=>typeof value==='string'?value:(value?.url||value?.image_url||value?.src||''));
+  const images=dedupeImages(mediaValues,60);
   const rawName=smartProductTitle(product.name||'Nuvora product',product.brand||'');
   const description=cleanMultilineText(product.description,12000)||null;
   const features=cleanMultilineText(product.features,12000)||null;
