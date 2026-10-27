@@ -2915,9 +2915,10 @@ function setSkinStudioProductFilter(key,value){
  window.skinStudioProductPage=1;
  renderSkinLibrary();
 }
-async function renderSkinMediaLibrary(root){
+async function renderSkinMediaLibrary(root,forceRefresh=false){
  if(!root)return;
  if(!adminSB){root.innerHTML='<div class="studio-library-empty">Media storage is not connected. Sign in again to browse uploaded images.</div>';return;}
+ if(!forceRefresh&&Array.isArray(window.skinStudioMediaItems)){paintSkinStudioMediaLibrary(root);return;}
  const requestId=(window.skinStudioMediaRequestId||0)+1;window.skinStudioMediaRequestId=requestId;
  root.innerHTML='<div class="studio-library-empty">Loading uploaded Skin Studio images…</div>';
  try{
@@ -2925,21 +2926,30 @@ async function renderSkinMediaLibrary(root){
   if(error)throw error;
   if(requestId!==window.skinStudioMediaRequestId)return;
   const files=(data||[]).filter(item=>item?.name&&!item.name.endsWith('/')&&/\.(jpe?g|png|webp|gif)$/i.test(item.name));
-  const urls=files.map(item=>({name:item.name,createdAt:item.created_at||item.updated_at||'',url:adminSB.storage.from('product-images').getPublicUrl('skin-site/'+item.name).data?.publicUrl||''})).filter(item=>item.url);
-  const needle=String(window.skinStudioMediaSearch||'').trim().toLowerCase();
-  const filtered=urls.filter(item=>item.name.toLowerCase().includes(needle));
-  root.innerHTML='<p class="studio-inline-help">Uploaded Skin Studio images. Choose “Use selected” to apply an image to the current section or custom category. Removing an image from a page does not delete the stored file.</p>'+
-   '<div class="studio-media-toolbar"><input aria-label="Search media files" placeholder="Search uploaded images" value="'+esc(window.skinStudioMediaSearch||'')+'" oninput="setSkinStudioMediaSearch(this.value)"><button type="button" class="btn" onclick="renderSkinMediaLibrary(document.getElementById(\'skinLibraryItems\'))">Refresh</button></div>'+
-   (filtered.length?'<div class="studio-media-grid">'+filtered.map(item=>'<article class="studio-media-card"><div class="studio-media-thumb"><img loading="lazy" src="'+esc(item.url)+'" alt=""></div><div class="studio-media-meta"><div class="studio-media-name">'+esc(item.name)+'</div><div class="studio-media-actions"><button type="button" onclick="useSkinStudioMedia('+esc(JSON.stringify(item.url))+')">Use selected</button><button type="button" onclick="copySkinStudioMediaUrl('+esc(JSON.stringify(item.url))+')">Copy URL</button></div></div></article>').join('')+'</div>':'<div class="studio-library-empty">No matching uploaded images found in the Skin Studio media folder.</div>')+
-   '<p class="studio-inline-help">Showing '+filtered.length+' of '+urls.length+' images in the first 100 storage entries.</p>';
+  window.skinStudioMediaItems=files.map(item=>({name:item.name,createdAt:item.created_at||item.updated_at||'',url:adminSB.storage.from('product-images').getPublicUrl('skin-site/'+item.name).data?.publicUrl||''})).filter(item=>item.url);
+  paintSkinStudioMediaLibrary(root);
  }catch(error){
   if(requestId!==window.skinStudioMediaRequestId)return;
   root.innerHTML='<div class="studio-library-empty">Could not load media: '+esc(error?.message||'Storage request failed')+'. Check storage access and try Refresh.</div>';
  }
 }
+function paintSkinStudioMediaLibrary(root){
+ if(!root)return;
+ const urls=Array.isArray(window.skinStudioMediaItems)?window.skinStudioMediaItems:[];
+ const needle=String(window.skinStudioMediaSearch||'').trim().toLowerCase();
+ const filtered=urls.filter(item=>item.name.toLowerCase().includes(needle));
+ root.innerHTML='<p class="studio-inline-help">Uploaded Skin Studio images. Choose “Use selected” to apply an image to the current section or custom category. Removing an image from a page does not delete the stored file.</p>'+
+  '<div class="studio-media-toolbar"><input aria-label="Search media files" placeholder="Search uploaded images" value="'+esc(window.skinStudioMediaSearch||'')+'" oninput="setSkinStudioMediaSearch(this.value)"><button type="button" class="btn" onclick="renderSkinMediaLibrary(document.getElementById(\'skinLibraryItems\'),true)">Refresh</button></div>'+
+  (filtered.length?'<div class="studio-media-grid">'+filtered.map(item=>'<article class="studio-media-card"><div class="studio-media-thumb"><img loading="lazy" src="'+esc(item.url)+'" alt=""></div><div class="studio-media-meta"><div class="studio-media-name">'+esc(item.name)+'</div><div class="studio-media-actions"><button type="button" onclick="useSkinStudioMedia('+esc(JSON.stringify(item.url))+')">Use selected</button><button type="button" onclick="copySkinStudioMediaUrl('+esc(JSON.stringify(item.url))+')">Copy URL</button></div></div></article>').join('')+'</div>':'<div class="studio-library-empty">No matching uploaded images found in the Skin Studio media folder.</div>')+
+  '<p class="studio-inline-help">Showing '+filtered.length+' of '+urls.length+' images in the first 100 storage entries.</p>';
+}
 function setSkinStudioMediaSearch(value){
+ const current=document.querySelector('#skinLibraryItems input[aria-label="Search media files"]');
+ const caret=current?.selectionStart??String(value||'').length;
  window.skinStudioMediaSearch=String(value||'');
- renderSkinMediaLibrary(document.getElementById('skinLibraryItems'));
+ paintSkinStudioMediaLibrary(document.getElementById('skinLibraryItems'));
+ const input=document.querySelector('#skinLibraryItems input[aria-label="Search media files"]');
+ if(input){input.focus();const position=Math.min(caret,input.value.length);input.setSelectionRange(position,position);}
 }
 async function copySkinStudioMediaUrl(url){
  try{await navigator.clipboard.writeText(String(url||''));skinBuilderMessage('Image URL copied.','success');}
