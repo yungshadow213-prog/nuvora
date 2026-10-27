@@ -340,6 +340,11 @@ jobs:
           for library_token in ["const pageSize=10","setSkinStudioProductFilter","skinStudioProductAvailability","Filter products by brand","Filter products by category","Filter products by publication status"]:
               if library_token not in admin:
                   failures.append("Skin Studio product library control missing "+library_token)
+          for media_token in ["function renderSkinMediaLibrary(root,forceRefresh=false)","function paintSkinStudioMediaLibrary(root)","function useSkinStudioMedia(url)","skinTabMedia","product-images').list('skin-site'"]:
+              if media_token not in admin:
+                  failures.append("Skin Studio media library contract missing "+media_token)
+          if "document.addEventListener('focusin',event=>" not in admin or "document.addEventListener('input',event=>" in admin[admin.find("function skinHistoryCapture"):admin.find("function renderSkinStudioAll")]:
+              failures.append("Skin Studio history must capture pre-edit state, not post-input state")
           placement_start=admin.find("function addSkinProductToSection")
           placement_end=admin.find("function moveSkinProductInSection",placement_start)
           placement_block=admin[placement_start:placement_end]
