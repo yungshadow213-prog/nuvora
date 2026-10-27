@@ -53,9 +53,10 @@ The design applies their general recommendations for legible product information
 ## Verification and acceptance checklist
 
 ### Automated
-- [x] Latest Skin Care production build passed on redesign commit `5fb8cf7f4221169c6e8b6eb67118c4bcf178bc50` (GitHub Actions run #171).
-- [x] Latest Admin PR check passed all 9 jobs after the navigation, modal, contrast and regression-guard updates (GitHub Actions PR run #1623 on `bac7f49627e3d53fc2dd90ea29d5c7bcabf1bb53`).
-- [x] Reviewed changed paths: Admin `admin.html`, CI workflow and audit doc; storefront `src/app.jsx` and `src/styles.css`. No catalog/data/database files or product records were changed in the redesign branches.
+- [x] Latest Skin Care CI on `0c87d4b14973e08a06afee254f935900d20223c4` passed the redesign-contract checks and production build (GitHub Actions run #177).
+- [x] Latest Admin PR check passed all 9 jobs on current head `a1e02bb5e2cf723c1442231a2e5cd00be8975db5` (GitHub Actions run #1625); it includes the documented navigation, modal, contrast and regression-guard updates.
+- [x] Reviewed changed paths: Admin `admin.html`, CI workflow and audit doc; storefront `src/app.jsx`, `src/styles.css`, the CI workflow and `scripts/verify-redesign-contracts.mjs`. No catalog/data/database files or product records were changed in the redesign branches.
+- [x] Added and passed automated storefront redesign contracts covering full product names, the populated product-guide fields, exact Amazon prompt, gallery fallbacks, the mobile filter dialog's keyboard/focus states, and the theme's core responsive/accessibility rules (run #177).
 
 ### Storefront desktop and mobile
 - [ ] Header, mobile menu and search overlay open/close without being clipped.
