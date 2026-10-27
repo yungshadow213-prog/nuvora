@@ -53,9 +53,8 @@ The design applies their general recommendations for legible product information
 ## Verification and acceptance checklist
 
 ### Automated
-- [x] Storefront redesign-contract checks and production build passed in GitHub Actions run #177 before the final footer/mobile refinements.
-- [x] Latest storefront production build passed on head `e124347ffa7384cd8d076757f271f424d0012c01` (GitHub Actions run #179).
-- [x] All 9 Admin checks passed on current head `165d2b76979d86e4649023720acb61df2d4619e2` (GitHub Actions run #1612), including editor JavaScript, release-contract, runtime, Wrangler dry-run and bundle checks.
+- [x] Latest storefront redesign-contract checks and production build passed on head `e124347ffa7384cd8d076757f271f424d0012c01` (GitHub Actions run #179).
+- [x] All 9 Admin checks passed on current head `d9b01c45e4bf1a1b1f8d6fe50a44a42676d10b85` (GitHub Actions run #1633), including editor JavaScript, release-contract, runtime, Wrangler dry-run and bundle checks.
 - [x] Reviewed changed paths: Admin `admin.html`, CI workflow and audit doc; storefront `src/app.jsx`, `src/styles.css`, the CI workflow and `scripts/verify-redesign-contracts.mjs`. No catalog/data/database files or product records were changed in the redesign branches.
 - [x] Added and passed automated storefront redesign contracts covering full product names, the populated product-guide fields, exact Amazon prompt, gallery fallbacks, the mobile filter dialog's keyboard/focus states, and the theme's core responsive/accessibility rules (run #177).
 
