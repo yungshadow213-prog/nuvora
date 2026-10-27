@@ -3256,7 +3256,7 @@ function addSkinProductToSection(productId,targetId,pageId){
  const sections=skinSectionsFor(effectivePageId);
  const preferredIds=[pending?.pageId===effectivePageId?pending.sectionId:null,targetId,skinStudioSelection?.type==='section'?skinStudioSelection.id:null].filter(Boolean);
  let sec=null;
- for(const preferredId of preferredIds){const candidate=sections.find(s=>String(s.id)===String(preferredId));if(candidate&&['product-grid','featured-products'].includes(candidate.type)){sec=candidate;break;}}
+ for(const preferredId of preferredIds){const candidate=sections.find(s=>String(s.id)===String(preferredId));if(candidate&&candidate.visible!==false&&['product-grid','featured-products'].includes(candidate.type)){sec=candidate;break;}}
  if(!sec)sec=sections.find(s=>s.visible!==false&&['product-grid','featured-products'].includes(s.type));
  if(!sec){
   sec={id:'section-'+Date.now().toString(36),type:'product-grid',visible:true,title:'New skincare picks',eyebrow:'The edit',text:'',filter:'all',columns:3,product_ids:[]};
