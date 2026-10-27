@@ -198,6 +198,9 @@ body.skin-studio-fullpage .studio-view-controls{display:flex;align-items:center;
 body.skin-studio-fullpage .studio-history-controls{display:flex;align-items:center;gap:4px}
 body.skin-studio-fullpage .studio-history-controls .btn{padding:8px 9px!important;min-height:32px;font-size:10px!important}
 body.skin-studio-fullpage .studio-history-controls .btn:disabled{opacity:.38;cursor:not-allowed}
+body.skin-studio-fullpage .studio-product-filters{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0 10px}
+body.skin-studio-fullpage .studio-product-filters label{display:grid;gap:4px;min-width:0;color:#7b887b;font-size:9px;font-weight:750}
+body.skin-studio-fullpage .studio-product-filters select{width:100%;min-width:0;padding:8px 6px;border:1px solid #dbe4d7;border-radius:8px;background:#fff;color:#2b3d2e;font-size:10px}
 body.skin-studio-fullpage .studio-view-controls button{display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:7px;background:transparent;color:#617463;font-size:15px;cursor:pointer}
 body.skin-studio-fullpage .studio-view-controls button:hover,body.skin-studio-fullpage .studio-view-controls button[aria-pressed="true"]{background:#e7efe5;color:#285b36}
 body.skin-studio-fullpage .studio-layout{grid-template-columns:190px minmax(0,1fr) 250px}
@@ -2882,6 +2885,25 @@ function setSkinStudioProductSearch(value){
  const input=document.getElementById('skinStudioProductSearch');
  if(input){input.focus();const position=Math.min(caret,input.value.length);input.setSelectionRange(position,position);}
 }
+function skinStudioProductCategory(product){
+ return String(product?.category?.name||product?.category_name||product?.category?.slug||product?.category_id||'Uncategorised').trim()||'Uncategorised';
+}
+function skinStudioProductAvailability(product){
+ const value=product?.availability_status??product?.availability??product?.stock_status;
+ const booleanValue=typeof product?.is_available==='boolean'?product.is_available:(typeof product?.available==='boolean'?product.available:null);
+ if(booleanValue!==null)return booleanValue?'available':'unavailable';
+ if(value===undefined||value===null||String(value).trim()==='')return 'unknown';
+ const normalized=String(value).trim().toLowerCase().replace(/[ _-]+/g,' ');
+ if(['available','in stock','instock','yes','true'].includes(normalized))return 'available';
+ if(['unavailable','out of stock','outofstock','no','false','sold out'].includes(normalized))return 'unavailable';
+ return 'unknown';
+}
+function setSkinStudioProductFilter(key,value){
+ window.skinStudioProductFilters=window.skinStudioProductFilters||{brand:'all',category:'all',status:'all',availability:'all'};
+ window.skinStudioProductFilters[key]=String(value||'all');
+ window.skinStudioProductPage=1;
+ renderSkinLibrary();
+}
 function renderSkinLibrary(){
  const root=document.getElementById('skinLibraryItems');if(!root)return;
  const outline=document.getElementById('skinBuilderSections');
@@ -2893,12 +2915,28 @@ function renderSkinLibrary(){
   const productIdentity=item=>String(item?.amazon_asin||item?.asin||retailerDestination(item)||item?.destination_url||item?.amazon_source_url||item?.source_url||item?.id||'').trim().toLowerCase();
   const allRows=adminProducts.filter(isSkinProduct).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))).filter((p,index,list)=>list.findIndex(other=>String(other.name||'').trim().toLowerCase()===String(p.name||'').trim().toLowerCase()&&productIdentity(other)===productIdentity(p))===index);
   const needle=String(window.skinStudioProductSearch||'').trim().toLowerCase();
-  const rows=allRows.filter(p=>!needle||[p.name,p.brand,p.product_type,p.productType,p.product_type_name,p.type,p.category?.name,p.category_name,p.description,p.store_description,p.amazon_asin,p.asin,p.source_type,p.retailer].filter(Boolean).join(' ').toLowerCase().includes(needle));
-  const pageSize=8,pageCount=Math.max(1,Math.ceil(rows.length/pageSize));
+  const filters=window.skinStudioProductFilters=window.skinStudioProductFilters||{brand:'all',category:'all',status:'all',availability:'all'};
+  const brands=[...new Set(allRows.map(p=>String(p.brand||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const categories=[...new Set(allRows.map(skinStudioProductCategory).filter(value=>value!=='Uncategorised'))].sort((a,b)=>a.localeCompare(b));
+  const rows=allRows.filter(p=>{
+   const matchesSearch=!needle||[p.name,p.brand,p.product_type,p.productType,p.product_type_name,p.type,p.category?.name,p.category_name,p.description,p.store_description,p.amazon_asin,p.asin,p.source_type,p.retailer].filter(Boolean).join(' ').toLowerCase().includes(needle);
+   const matchesBrand=filters.brand==='all'||String(p.brand||'').trim()===filters.brand;
+   const matchesCategory=filters.category==='all'||skinStudioProductCategory(p)===filters.category;
+   const matchesStatus=filters.status==='all'||(filters.status==='published'?!!p.published:!p.published);
+   const matchesAvailability=filters.availability==='all'||skinStudioProductAvailability(p)===filters.availability;
+   return matchesSearch&&matchesBrand&&matchesCategory&&matchesStatus&&matchesAvailability;
+  });
+  const pageSize=10,pageCount=Math.max(1,Math.ceil(rows.length/pageSize));
   const currentPage=Math.min(Math.max(1,Number(window.skinStudioProductPage)||1),pageCount);
   window.skinStudioProductPage=currentPage;
   const visibleRows=rows.slice((currentPage-1)*pageSize,currentPage*pageSize);
-  root.innerHTML='<div class="studio-product-add-actions"><button type="button" class="studio-outline-add" onclick="openSkinManualProduct()">＋ Add manually</button><button type="button" class="studio-outline-add" onclick="openSkinProduct()">↗ Import Amazon link</button></div><label class="studio-product-search" style="display:block;margin:12px 0"><span class="muted" style="display:block;margin-bottom:5px">Search product library</span><input id="skinStudioProductSearch" type="search" value="'+esc(window.skinStudioProductSearch||'')+'" oninput="setSkinStudioProductSearch(this.value)" placeholder="Search by name, brand, type, category or ASIN" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.04);color:inherit"></label><p class="studio-inline-help">'+rows.length+' of '+allRows.length+' products · Products are shown side by side. Choose Edit details to change a product, or Place on page to add it to the selected product section.</p>'+
+  root.innerHTML='<div class="studio-product-add-actions"><button type="button" class="studio-outline-add" onclick="openSkinManualProduct()">＋ Add manually</button><button type="button" class="studio-outline-add" onclick="openSkinProduct()">↗ Import Amazon link</button></div><label class="studio-product-search" style="display:block;margin:12px 0"><span class="muted" style="display:block;margin-bottom:5px">Search product library</span><input id="skinStudioProductSearch" type="search" value="'+esc(window.skinStudioProductSearch||'')+'" oninput="setSkinStudioProductSearch(this.value)" placeholder="Search by name, brand, type, category or ASIN" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.04);color:inherit"></label>'+
+   '<div class="studio-product-filters">'+
+   '<label>Brand<select aria-label="Filter products by brand" onchange="setSkinStudioProductFilter(\'brand\',this.value)"><option value="all">All brands</option>'+brands.map(value=>'<option value="'+esc(value)+'" '+(filters.brand===value?'selected':'')+'>'+esc(value)+'</option>').join('')+'</select></label>'+
+   '<label>Category<select aria-label="Filter products by category" onchange="setSkinStudioProductFilter(\'category\',this.value)"><option value="all">All categories</option>'+categories.map(value=>'<option value="'+esc(value)+'" '+(filters.category===value?'selected':'')+'>'+esc(value)+'</option>').join('')+'</select></label>'+
+   '<label>Publication<select aria-label="Filter products by publication status" onchange="setSkinStudioProductFilter(\'status\',this.value)"><option value="all">All statuses</option><option value="published" '+(filters.status==='published'?'selected':'')+'>Published</option><option value="draft" '+(filters.status==='draft'?'selected':'')+'>Draft</option></select></label>'+
+   '<label>Availability<select aria-label="Filter products by known availability" onchange="setSkinStudioProductFilter(\'availability\',this.value)"><option value="all">All availability</option><option value="available" '+(filters.availability==='available'?'selected':'')+'>Available</option><option value="unavailable" '+(filters.availability==='unavailable'?'selected':'')+'>Unavailable</option><option value="unknown" '+(filters.availability==='unknown'?'selected':'')+'>Unknown</option></select></label>'+
+   '</div><p class="studio-inline-help">'+rows.length+' of '+allRows.length+' products · 10 products per page. Choose Edit details to change a product, or Place on page to add it to the selected product section.</p>'+
    (rows.length?'<div class="studio-products-grid">'+visibleRows.map(p=>{
     const id=String(p.id),image=skinImageOf(p),published=!!p.published;
     const selection=skinStudioSelection?.type==='product'&&String(skinStudioSelection.id)===id;
