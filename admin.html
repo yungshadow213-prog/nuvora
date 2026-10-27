@@ -3142,7 +3142,7 @@ function createSkinQuickItem(){
    {id:slug+'-hero',type:'hero',visible:true,title,eyebrow:'',text:'',image:'',columns:4,product_ids:[]},
    {id:slug+'-products',type:'product-grid',visible:true,title:'Explore '+title,eyebrow:'The Nuvora Skin edit',text:'Browse the products selected for this page.',filter:'all',columns:3,product_ids:[]}
   ]};
-  skinBuilderConfig.pages.push(page);
+  skinHistoryCapture();skinBuilderConfig.pages.push(page);
   if(Array.isArray(skinBuilderConfig.navigationItems)&&!skinBuilderConfig.navigationItems.some(link=>String(link.url||'')==='/pages/'+slug))skinBuilderConfig.navigationItems.push({id:'page-'+slug,label:title,url:'/pages/'+slug,visible:true});
   renderSkinSiteLinkEditor('navigationItems');
   skinStudioPageId=slug;skinStudioSelection={type:'section',id:page.sections[0].id};closeSkinQuickAdd();skinMarkDirty('Page created in draft. Add and arrange its content, then publish when it is ready.');setSkinStudioPage(slug);return;
@@ -3152,7 +3152,7 @@ function createSkinQuickItem(){
   if(skinBuilderConfig.customCategories.some(x=>x.slug===slug)||categories.some(x=>String(x.slug)===slug))return skinBuilderMessage('That category address already exists. Choose another slug.','error');
   const image=String(document.getElementById('skinQuickImage')?.value||'').trim();
   if(image&&(!validURL(image)||!/^https:\/\//i.test(image)))return skinBuilderMessage('Category images must use a valid HTTPS URL.','error');
-  skinBuilderConfig.customCategories.push({id:slug,slug,name:title,description:String(document.getElementById('skinQuickDescription')?.value||''),image});
+  skinHistoryCapture();skinBuilderConfig.customCategories.push({id:slug,slug,name:title,description:String(document.getElementById('skinQuickDescription')?.value||''),image});
   if(Array.isArray(skinBuilderConfig.navigationItems)&&!skinBuilderConfig.navigationItems.some(link=>String(link.id||'')==='category-'+slug))skinBuilderConfig.navigationItems.push({id:'category-'+slug,label:title,url:'/shop?category='+encodeURIComponent(title),visible:true});
   renderSkinSiteLinkEditor('navigationItems');
   skinStudioSelection={type:'category',id:slug};closeSkinQuickAdd();skinMarkDirty('Category created in draft. Assign products to it in the product inspector.');switchSkinStudioTab('categories');renderSkinSelectedInspector();void saveSkinStudioChangeImmediately('Category created and saved to the page draft.');return;
@@ -3161,7 +3161,7 @@ function createSkinQuickItem(){
   const type=document.getElementById('skinQuickType')?.value||'product-grid';
   const id='section-'+Date.now().toString(36);
   const section={id,type,visible:true,title,eyebrow:String(document.getElementById('skinQuickEyebrow')?.value||''),text:String(document.getElementById('skinQuickDescription')?.value||''),image:'',imageAlignment:'center',imageWidth:70,backgroundColor:'',textAlignment:'left',filter:type==='featured-products'?'featured':'all',columns:3,productsPerPage:8,product_ids:[],category_id:''};
-  skinSectionsFor().push(section);skinStudioSelection={type:'section',id};closeSkinQuickAdd();skinMarkDirty('Section added to the current page. Drag it in the outline or canvas to arrange it.');switchSkinStudioTab('outline');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('New section added and saved to the page draft.');
+  skinHistoryCapture();skinSectionsFor().push(section);skinStudioSelection={type:'section',id};closeSkinQuickAdd();skinMarkDirty('Section added to the current page. Drag it in the outline or canvas to arrange it.');switchSkinStudioTab('outline');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('New section added and saved to the page draft.');
  }
 }
 function addSkinBuilderSection(){openSkinAdd('section');}
@@ -3170,6 +3170,7 @@ function skinProductDragStart(event,id){
  event.dataTransfer.setData('text/plain','product:'+String(id));event.dataTransfer.effectAllowed='copy';
 }
 function assignSkinProductCategory(id,slug){
+ skinHistoryCapture();
  skinBuilderConfig.productCategoryMap=skinBuilderConfig.productCategoryMap||{};
  if(!slug)delete skinBuilderConfig.productCategoryMap[String(id)];
  else skinBuilderConfig.productCategoryMap[String(id)]=String(slug);
