@@ -334,6 +334,9 @@ jobs:
           for workspace_token in ["toggleSkinStudioPanel('outline',this)","toggleSkinStudioPanel('inspector',this)","toggleSkinStudioFocus(this)","skin-studio-hide-outline","skin-studio-hide-inspector"]:
               if workspace_token not in admin:
                   failures.append("Skin Studio canvas controls missing "+workspace_token)
+          for history_token in ["function skinHistoryCapture()","function undoSkinStudio()","function redoSkinStudio()","skinStudioUndo","skinStudioRedo","event.key.toLowerCase()==='z'","event.key.toLowerCase()==='y'"]:
+              if history_token not in admin:
+                  failures.append("Skin Studio undo/redo history contract missing "+history_token)
           placement_start=admin.find("function addSkinProductToSection")
           placement_end=admin.find("function moveSkinProductInSection",placement_start)
           placement_block=admin[placement_start:placement_end]
