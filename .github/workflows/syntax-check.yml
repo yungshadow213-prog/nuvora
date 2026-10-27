@@ -346,6 +346,9 @@ jobs:
           for publish_token in ["function skinStudioPublishWarnings()","Draft products will not be visible to public shoppers","Continue publishing anyway?"]:
               if publish_token not in admin:
                   failures.append("Skin Studio publish preflight contract missing "+publish_token)
+          for recovery_token in ["function skinStudioRecoveryStorageKey()","function writeSkinStudioRecovery()","function restoreSkinStudioRecoveryIfAvailable()","Recovered unsaved edits","clearSkinStudioRecovery()","sessionStorage.setItem(skinStudioRecoveryStorageKey()"]:
+              if recovery_token not in admin:
+                  failures.append("Skin Studio local recovery contract missing "+recovery_token)
           if "document.addEventListener('focusin',event=>" not in admin or "document.addEventListener('input',event=>" in admin[admin.find("function skinHistoryCapture"):admin.find("function renderSkinStudioAll")]:
               failures.append("Skin Studio history must capture pre-edit state, not post-input state")
           placement_start=admin.find("function addSkinProductToSection")
