@@ -3500,6 +3500,19 @@ window.addEventListener('beforeunload',event=>{
   event.preventDefault();event.returnValue='';
  }
 });
+function skinSelectedSectionIsLocked(){
+ if(skinStudioSelection?.type!=='section')return false;
+ return !!skinSectionsFor().find(section=>String(section.id)===String(skinStudioSelection.id))?.locked;
+}
+function blockLockedSectionInspectorEdit(event){
+ if(!document.body.classList.contains('skin-studio-fullpage')||!skinSelectedSectionIsLocked()||!event.target?.closest?.('#skinSelectedInspector'))return;
+ event.preventDefault();event.stopImmediatePropagation();
+ if(event.type==='click'||event.type==='beforeinput')skinBuilderMessage('This section is locked. Unlock it in the page outline before editing its settings.','warning');
+}
+document.addEventListener('click',blockLockedSectionInspectorEdit,true);
+document.addEventListener('beforeinput',blockLockedSectionInspectorEdit,true);
+document.addEventListener('change',blockLockedSectionInspectorEdit,true);
+document.addEventListener('paste',blockLockedSectionInspectorEdit,true);
 // Capture the pre-edit state when a control receives focus. Capturing on input/change
 // would snapshot the already-mutated state and make the first Undo appear to do nothing.
 document.addEventListener('focusin',event=>{
@@ -3569,6 +3582,7 @@ function moveSkinSection(index,delta){
 }
 let skinStudioDraggedSectionIndex=null;
 function skinSectionDragStart(event,index){
+ if(skinSectionsFor()[index]?.locked){event.preventDefault();skinStudioDraggedSectionIndex=null;return;}
  skinStudioDraggedSectionIndex=index;event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',String(index));event.currentTarget.classList.add('is-dragging');
 }
 function skinSectionDragOver(event,index){
@@ -3578,7 +3592,7 @@ function skinSectionDragOver(event,index){
 function skinSectionDrop(event,index){
  event.preventDefault();const from=skinStudioDraggedSectionIndex;skinStudioDraggedSectionIndex=null;
  if(from===null||from===index)return;const sections=skinSectionsFor();
- if(from<0||from>=sections.length||index<0||index>=sections.length)return;
+ if(from<0||from>=sections.length||index<0||index>=sections.length||sections[from]?.locked||sections[index]?.locked)return;
  skinHistoryCapture();const [item]=sections.splice(from,1);sections.splice(index,0,item);
  skinStudioSelection={type:'section',id:String(item.id)};skinMarkDirty('Section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
