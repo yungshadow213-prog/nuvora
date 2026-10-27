@@ -26,4 +26,6 @@ This work is in the main `yungshadow213-prog/nuvora` repository and is limited t
 
 ## Verification status
 
-Source-level release contracts have been added. Automated CI results and authenticated browser verification are pending; this document does not claim the rework is complete.
+- The implementation revision `71fa2202ecc6b2ddcbfc7f0c8386f0acbc0f4f42` passed all 9 jobs in GitHub Actions run #1560, including admin/editor JavaScript syntax, release-contract audit, deep runtime audit, storefront JavaScript, and Cloudflare/Wrangler dry-run bundle checks.
+- The later changes after that tested revision were documentation-only; no deployment or production write was performed.
+- Authenticated browser verification remains outstanding. The broader rework is not complete.
