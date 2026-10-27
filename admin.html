@@ -2582,7 +2582,18 @@ function mergeSkinSiteConfig(raw){
    textAlignment:['left','center','right'].includes(x.textAlignment)?x.textAlignment:'left',
    titleFontSize:x.titleFontSize!==undefined&&x.titleFontSize!==null&&Number.isFinite(Number(x.titleFontSize))?Math.max(20,Math.min(88,Number(x.titleFontSize))):null,
    bodyFontSize:x.bodyFontSize!==undefined&&x.bodyFontSize!==null&&Number.isFinite(Number(x.bodyFontSize))?Math.max(10,Math.min(26,Number(x.bodyFontSize))):null,
-   sectionPadding:x.sectionPadding!==undefined&&x.sectionPadding!==null&&Number.isFinite(Number(x.sectionPadding))?Math.max(16,Math.min(160,Number(x.sectionPadding))):null
+   sectionPadding:x.sectionPadding!==undefined&&x.sectionPadding!==null&&Number.isFinite(Number(x.sectionPadding))?Math.max(16,Math.min(160,Number(x.sectionPadding))):null,
+   sectionPaddingTop:x.sectionPaddingTop!==undefined&&x.sectionPaddingTop!==null&&Number.isFinite(Number(x.sectionPaddingTop))?Math.max(0,Math.min(160,Number(x.sectionPaddingTop))):null,
+   sectionPaddingBottom:x.sectionPaddingBottom!==undefined&&x.sectionPaddingBottom!==null&&Number.isFinite(Number(x.sectionPaddingBottom))?Math.max(0,Math.min(160,Number(x.sectionPaddingBottom))):null,
+   sectionGap:x.sectionGap!==undefined&&x.sectionGap!==null&&Number.isFinite(Number(x.sectionGap))?Math.max(0,Math.min(64,Number(x.sectionGap))):null,
+   sectionRadius:x.sectionRadius!==undefined&&x.sectionRadius!==null&&Number.isFinite(Number(x.sectionRadius))?Math.max(0,Math.min(40,Number(x.sectionRadius))):null,
+   sectionBorderWidth:x.sectionBorderWidth!==undefined&&x.sectionBorderWidth!==null&&Number.isFinite(Number(x.sectionBorderWidth))?Math.max(0,Math.min(4,Number(x.sectionBorderWidth))):null,
+   sectionBorderColor:/^#[0-9a-f]{6}$/i.test(String(x.sectionBorderColor||''))?String(x.sectionBorderColor):'',
+   contentWidth:['theme','full','page','narrow'].includes(x.contentWidth)?x.contentWidth:'theme',
+   sectionShadow:['none','soft','raised'].includes(x.sectionShadow)?x.sectionShadow:'none',
+   backgroundImage:String(x.backgroundImage||'').slice(0,1600),
+   backgroundOverlay:x.backgroundOverlay!==undefined&&Number.isFinite(Number(x.backgroundOverlay))?Math.max(0,Math.min(80,Number(x.backgroundOverlay))):0,
+   showDesktop:x.showDesktop!==false,showMobile:x.showMobile!==false,locked:x.locked===true
  })):fallback;
  const cleanLinks=(items,fallback,max=20)=>Array.isArray(items)?items.slice(0,max).map((item,i)=>({
   id:String(item.id||('site-link-'+(i+1))).slice(0,80),
