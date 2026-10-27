@@ -3559,7 +3559,7 @@ function toggleSkinSectionLock(index){
  renderSkinStudioAll();queueSkinStudioPreview();
 }
 function toggleSkinSectionVisibility(index){
- const sec=skinSectionsFor()[index];if(!sec||sec.locked){if(sec?.locked)skinBuilderMessage('Unlock this section before changing visibility.','warning');return;}skinHistoryCapture();sec.visible=sec.visible===false;
+ const sec=skinSectionsFor()[index];if(!sec)return;skinHistoryCapture();if(sec.locked){skinBuilderMessage('Unlock this section before changing visibility.','warning');return;}sec.visible=sec.visible===false;
  skinMarkDirty('Section visibility changed in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function skinBuilderDragStart(event,index){
