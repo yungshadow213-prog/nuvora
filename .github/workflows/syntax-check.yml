@@ -140,8 +140,8 @@ jobs:
           # change as well as a visual theme, and the full-page editor remains in the admin.
           for ui_token in [
               'aria-label="Primary navigation"',
-              'class="nav-group-stores"',
-              'class="nav-group-system"',
+              'class="nav-group nav-group-stores"',
+              'class="nav-group nav-group-system"',
               'Your storefronts',
               'Import products',
               'id="nuvora-skin-care-redesign-2026"',
