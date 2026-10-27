@@ -863,6 +863,7 @@ body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
       <button class="btn" type="button" onclick="openSkinSiteSettings()">Edit whole site</button>
       <button class="btn" type="button" onclick="previewSkinSite()">Preview storefront ↗</button>
       <button class="btn" type="button" onclick="saveSkinSiteDraft(this)">Save draft</button>
+      <button class="btn" type="button" onclick="discardSkinSiteDraft(this)" title="Discard the private draft and restore the currently published version">Discard draft</button>
       <button class="btn primary studio-publish-button" type="button" onclick="saveSkinSiteConfig(this)">Publish changes</button>
     </div>
   </header>
@@ -3447,11 +3448,24 @@ document.addEventListener('keydown',event=>{
  const editorOpen=document.body.classList.contains('skin-studio-fullpage');
  const target=event.target;
  const typing=target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
- if(editorOpen&&!typing&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){
+ if(editorOpen&&!typing&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){
+  event.preventDefault();saveSkinSiteDraft();
+ }else if(editorOpen&&!typing&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){
   event.preventDefault();
   if(event.shiftKey)redoSkinStudio();else undoSkinStudio();
  }else if(editorOpen&&!typing&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='y'){
   event.preventDefault();redoSkinStudio();
+ }
+});
+window.addEventListener('beforeunload',event=>{
+ if(!document.body.classList.contains('skin-studio-fullpage')||!skinSiteConfigLoaded||!skinBuilderConfig)return;
+ collectSkinConfigFields();
+ const label=document.getElementById('skinStudioSaveLabel');
+ const status=label?.dataset.status||'';
+ const pending=!!skinDraftAutosaveTimer||!!skinDraftSavePromise;
+ const changed=stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig))!==skinDraftLastSavedPayload;
+ if(pending||changed||status==='error'||status==='dirty'){
+  event.preventDefault();event.returnValue='';
  }
 });
 // Capture the pre-edit state when a control receives focus. Capturing on input/change
@@ -3955,6 +3969,37 @@ async function saveSkinSiteDraft(button){
  try{await persistSkinSiteDraft(false);}
  catch(e){skinBuilderMessage('Save draft failed: '+(e?.message||'The server did not confirm the save.')+'. Your published storefront has not been changed.','error');}
  finally{if(btn){btn.disabled=false;btn.textContent='Save draft';}}
+}
+async function discardSkinSiteDraft(button){
+ const btn=button instanceof HTMLElement?button:document.querySelector('button[onclick="discardSkinSiteDraft(this)"]');
+ if(btn?.disabled)return;
+ if(!confirm('Discard the private Skin Care draft and restore the currently published storefront configuration? This permanently removes unpublished draft changes.'))return;
+ if(btn){btn.disabled=true;btn.textContent='Discarding…';}
+ try{
+  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
+  if(skinDraftSavePromise){try{await skinDraftSavePromise;}catch(error){/* Re-read the server state before deciding what to discard. */}}
+  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
+  skinBuilderMessage('Discarding the private draft…','info');
+  const current=await api('/api/admin/settings');
+  if(!current?.skin_site_config||typeof current.skin_site_config!=='object')throw new Error('The published configuration could not be loaded.');
+  const published=mergeSkinSiteConfig(current.skin_site_config);
+  const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_draft:null}});
+  if(response?.skin_site_draft&&typeof response.skin_site_draft==='object')throw new Error('The server still reports a private draft.');
+  const check=await api('/api/admin/settings');
+  if(!check?.skin_site_config||typeof check.skin_site_config!=='object')throw new Error('Could not verify the published configuration after discarding.');
+  const verified=mergeSkinSiteConfig(check.skin_site_config);
+  if(stableSkinJson(verified)!==stableSkinJson(published))throw new Error('The published configuration changed during discard; reload and verify before editing again.');
+  if(check.skin_site_draft&&typeof check.skin_site_draft==='object')throw new Error('The private draft still exists after discard.');
+  skinBuilderConfig=verified;skinSiteDraftExists=false;skinDraftLastSavedPayload=stableSkinJson(verified);
+  skinStudioPageId='home';skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||'hero'};
+  skinStudioUndoStack=[];skinStudioRedoStack=[];skinStudioHistoryLastCapture=0;skinHistoryUpdateButtons();
+  clearSkinStudioRecovery();fillSkinConfigFields();renderSkinStudioAll();sendSkinStudioPreview();skinSetSavedLabel('Published version restored');
+  skinBuilderMessage('Draft discarded. The editor now matches the verified published storefront.','success');
+ }catch(error){
+  skinBuilderMessage('Draft discard could not be verified: '+(error?.message||'unknown error')+'. Reload the workspace and check the saved draft before retrying.','error');
+ }finally{
+  if(btn){btn.disabled=false;btn.textContent='Discard draft';}
+ }
 }
 async function saveSkinSiteConfig(button){
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
