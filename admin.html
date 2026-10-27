@@ -3704,6 +3704,26 @@ function previewSkinSite(){
  window.open(SKIN_CLIENT_ORIGIN+'/', '_blank','noopener');
  skinBuilderMessage('Opened the live Nuvora Skin storefront. Unsaved changes remain in the builder draft.','info');
 }
+function skinStudioPublishWarnings(){
+ const warnings=[],pageIds=['home',...(skinBuilderConfig?.pages||[]).map(page=>String(page.slug||'' )).filter(Boolean)];
+ for(const pageId of pageIds){
+  const sections=skinSectionsFor(pageId);
+  for(const section of sections){
+   if(section.visible===false||!['product-grid','featured-products'].includes(section.type))continue;
+   const ids=Array.isArray(section.product_ids)?section.product_ids.map(String):[];
+   const filter=String(section.filter||'').toLowerCase();
+   if(!ids.length&&['manual','selected','specific'].includes(filter))warnings.push('“'+(section.title||'Product grid')+'” on '+(pageId==='home'?'the home page':'/'+pageId)+' has no selected products.');
+   const unpublished=ids.map(id=>adminProducts.find(product=>String(product.id)===id)).filter(product=>product&&!product.published);
+   if(unpublished.length)warnings.push((unpublished.length===1?'One selected product is':'Some selected products are')+' still drafts in “'+(section.title||'Product grid')+'” on '+(pageId==='home'?'the home page':'/'+pageId)+'. Draft products will not be visible to public shoppers.');
+   const missing=ids.filter(id=>!adminProducts.some(product=>String(product.id)===id));
+   if(missing.length)warnings.push('“'+(section.title||'Product grid')+'” contains '+missing.length+' product reference(s) that are no longer in the catalogue.');
+  }
+ }
+ const links=[...(skinBuilderConfig?.navigationItems||[]),...(skinBuilderConfig?.footerExploreLinks||[]),...(skinBuilderConfig?.footerReadLinks||[])].filter(item=>item&&item.visible!==false);
+ const unsafe=links.filter(item=>item.url&&/^http:\/\//i.test(String(item.url)));
+ if(unsafe.length)warnings.push(unsafe.length+' visible navigation/footer link(s) use HTTP rather than HTTPS.');
+ return [...new Set(warnings)];
+}
 function skinConfigValidationMessage(requireProductGrid=true){
  if(!skinSiteConfigLoaded)return 'The existing site settings did not load successfully. Reload the Skin Care workspace before saving.';
  if(!skinBuilderConfig)return 'The saved configuration has not loaded yet. Reload and retry.';
@@ -3804,6 +3824,8 @@ async function saveSkinSiteConfig(button){
   collectSkinConfigFields();
   const validation=skinConfigValidationMessage();
   if(validation){skinBuilderMessage(validation,'error');return;}
+  const warnings=skinStudioPublishWarnings();
+  if(warnings.length&&!confirm('Please review these publish checks before continuing:\n\n• '+warnings.join('\n• ')+'\n\nContinue publishing anyway? Draft products will remain hidden from public shoppers.'))return;
   const payload=mergeSkinSiteConfig(skinBuilderConfig);
   skinBuilderMessage('Publishing the current site draft…','info');
   const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_config:payload,skin_site_draft:null}});
