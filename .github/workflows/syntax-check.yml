@@ -133,8 +133,25 @@ jobs:
           for studio_token in ["/api/admin/storefronts/","save-draft","publish","uploadProductImages","product-images","eventPrefix:\"nuvora-home-studio\"","eventPrefix:\"nuvora-clothing-studio\"","eventPrefix:\"nuvora-games-studio\""]:
               if studio_token not in studio:
                   failures.append("storefront-studio.html: missing integration contract "+studio_token)
-          if "Other Storefronts" not in Path("admin.html").read_text(encoding="utf-8"):
+          admin_html = Path("admin.html").read_text(encoding="utf-8")
+          if "Other Storefronts" not in admin_html:
               failures.append("admin.html: multi-storefront studio navigation missing")
+          # Regression guard for the Skin Care redesign: it is an information-architecture
+          # change as well as a visual theme, and the full-page editor remains in the admin.
+          for ui_token in [
+              'aria-label="Primary navigation"',
+              'class="nav-group-stores"',
+              'class="nav-group-system"',
+              'Your storefronts',
+              'Import products',
+              'id="nuvora-skin-care-redesign-2026"',
+              'id="nuvora-admin-structure-redesign"',
+              'id="nuvora-admin-modal-catalog-polish"',
+              'id="nuvora-admin-contrast-pass"',
+              'class="skin-site-builder studio-shell"'
+          ]:
+              if ui_token not in admin_html:
+                  failures.append("admin.html: Skin Care redesign contract missing " + ui_token)
           if 'product_selection:type==="product-grid"?"manual":undefined' not in studio:
               failures.append("storefront-studio.html: newly created product grids must use explicit manual selection")
           for persistence_token in ["function stableJson(value)","stableJson(readback.draft)!==stableJson(result.draft)","stableJson({config:readback.config,products:readback.products})","Save not confirmed"]:
