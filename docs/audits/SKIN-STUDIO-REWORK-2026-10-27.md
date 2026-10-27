@@ -10,6 +10,7 @@ This work is in the main `yungshadow213-prog/nuvora` repository and is limited t
 - Added controls to collapse/restore the page outline and selected-item inspector.
 - Added a canvas-focus mode that hides both side panels and can be exited with Escape.
 - Added mobile drawer behavior for the outline and inspector; the storefront preview starts expanded on narrow screens.
+- Added Undo/Redo buttons and Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z, and Ctrl/Cmd+Y shortcuts. Common section, product placement/order, page, and category edits create grouped history snapshots; restoring a snapshot updates the draft editor and preview.
 - Fixed the iframe ready/load race: an early `nuvora-skin-studio-ready` message is recorded, the subsequent load handler does not re-open the waiting notice, and the timeout cannot incorrectly replace a ready state.
 - Reset the ready flag and cancel stale timeouts when manually reloading the preview.
 - Prevented Place on Page from selecting a hidden product grid as the destination; it now prefers a visible grid and can fall back to another visible grid or create one.
