@@ -2592,6 +2592,7 @@ function mergeSkinSiteConfig(raw){
   eyebrow:String(x.eyebrow||'').slice(0,100),text:String(x.text||'').slice(0,3000),
   image:String(x.image||'').slice(0,1600),
   backgroundColor:/^#[0-9a-f]{6}$/i.test(String(x.backgroundColor||''))?String(x.backgroundColor):'',
+  colorScheme:['theme','light','soft','dark','accent'].includes(x.colorScheme)?x.colorScheme:'theme',
   filter:['all','featured','top_pick','trending'].includes(x.filter)?x.filter:'all',
   columns:[2,3,4].includes(Number(x.columns))?Number(x.columns):4,
   product_ids:Array.isArray(x.product_ids)?x.product_ids.map(String).slice(0,60):[],
@@ -3226,6 +3227,7 @@ function renderSkinSelectedInspector(){
   let html='<label class="studio-inspector-field"><span>Section type</span><select onchange="updateSkinSection('+index+',\'type\',this.value)">'+Object.entries(types).map(([val,label])=>'<option value="'+val+'" '+(sec.type===val?'selected':'')+'>'+label+'</option>').join('')+'</select></label>';
   html+=field('Section title','title',sec.title,'text','180')+field('Small heading / eyebrow','eyebrow',sec.eyebrow,'text','100')+field('Supporting text','text',sec.text,'textarea','3000');
   html+=field('Section background','backgroundColor',sec.backgroundColor||'#ffffff','color','7');
+  html+='<label class="studio-inspector-field"><span>Colour scheme</span><select onchange="updateSkinSection('+index+',\'colorScheme\',this.value)">'+[['theme','Theme default'],['light','Light surface'],['soft','Soft background'],['dark','Dark / ink'],['accent','Accent colour']].map(([v,l])=>'<option value="'+v+'" '+((sec.colorScheme||'theme')===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
   html+='<label class="studio-inspector-field"><span>Text alignment</span><select onchange="updateSkinSection('+index+',\'textAlignment\',this.value)">'+[['left','Left'],['center','Center'],['right','Right']].map(([v,l])=>'<option value="'+v+'" '+((sec.textAlignment||'left')===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
   html+='<label class="studio-inspector-field"><span>Heading size</span><select onchange="updateSkinSection('+index+',\'titleFontSize\',this.value===\'\'?null:Number(this.value))"><option value="" '+(!sec.titleFontSize?'selected':'')+'>Theme default</option>'+[24,28,32,36,40,48,56,64,72].map(n=>'<option value="'+n+'" '+(Number(sec.titleFontSize)===n?'selected':'')+'>'+n+' px</option>').join('')+'</select></label>';
   html+='<label class="studio-inspector-field"><span>Body text size</span><select onchange="updateSkinSection('+index+',\'bodyFontSize\',this.value===\'\'?null:Number(this.value))"><option value="" '+(!sec.bodyFontSize?'selected':'')+'>Theme default</option>'+[12,13,14,15,16,18,20,22,24].map(n=>'<option value="'+n+'" '+(Number(sec.bodyFontSize)===n?'selected':'')+'>'+n+' px</option>').join('')+'</select></label>';
