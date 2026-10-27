@@ -18,9 +18,9 @@ Make Nuvora Skin Care easier to browse and make Nuvora Admin / Skin Studio easie
 
 ## Baseline inspection
 
-A live production browser inspection on 27 October 2026 covered the public storefront at desktop width. The homepage had a clear header and hero, product cards, category browsing, editorial content and a footer. Issues observed included very small footer links and a very small “Content studio” link. Production was still showing the retired routine-finder section at the time of inspection; the existing unmerged storefront feature PR contains the public-render exclusion for that legacy section. The deployed site cannot demonstrate this redesign until changes are authorized for release.
+A live production browser inspection on 27 October 2026 covered desktop and a 390px mobile viewport. The homepage structure, category browsing, product cards and editorial content were visible and no horizontal overflow was reported. The audit found footer links and the “Content studio” link were too small, the footer tagline looked clipped, and product-guide “Save for later” / “Copy product link” controls had borderline tap targets. The redesign adds clearer footer typography, wrapping for the tagline, a larger Content studio target, and 44px minimum product-guide action targets. The deployed site cannot demonstrate these changes until release is authorized.
 
-A complete mobile-browser pass and authenticated editor workflow pass have not yet been completed.
+The live browser pass inspected the currently deployed baseline, not the unmerged redesign branch. The redesigned branch still needs its own browser verification and an authenticated editor workflow pass.
 
 ## Storefront redesign
 
@@ -53,13 +53,14 @@ The design applies their general recommendations for legible product information
 ## Verification and acceptance checklist
 
 ### Automated
-- [x] Latest Skin Care CI on `0c87d4b14973e08a06afee254f935900d20223c4` passed the redesign-contract checks and production build (GitHub Actions run #177).
-- [x] Latest Admin PR check passed all 9 jobs on current head `a1e02bb5e2cf723c1442231a2e5cd00be8975db5` (GitHub Actions run #1625); it includes the documented navigation, modal, contrast and regression-guard updates.
+- [x] Storefront redesign-contract checks and production build passed in GitHub Actions run #177 before the final footer/mobile refinements.
+- [x] Latest storefront production build passed on head `e124347ffa7384cd8d076757f271f424d0012c01` (GitHub Actions run #179).
+- [x] All 9 Admin checks passed on the prior functional redesign commit; the latest Admin head `3d597414349d1836a2443bdbdeaa1643b96426c7` passed its syntax check (GitHub Actions run #1611).
 - [x] Reviewed changed paths: Admin `admin.html`, CI workflow and audit doc; storefront `src/app.jsx`, `src/styles.css`, the CI workflow and `scripts/verify-redesign-contracts.mjs`. No catalog/data/database files or product records were changed in the redesign branches.
 - [x] Added and passed automated storefront redesign contracts covering full product names, the populated product-guide fields, exact Amazon prompt, gallery fallbacks, the mobile filter dialog's keyboard/focus states, and the theme's core responsive/accessibility rules (run #177).
 
 ### Storefront desktop and mobile
-- [ ] Header, mobile menu and search overlay open/close without being clipped.
+- [ ] Verify redesigned header, mobile menu and search overlay open/close without clipping (production baseline had no horizontal overflow at 390px, but the redesign branch itself is not deployed).
 - [ ] Shop category filter sheet opens/closes, selected filters and counts are accurate, search resets page, and pagination remains reachable.
 - [ ] Product cards show image, full product name, brand, retailer rating and availability only when reliable.
 - [ ] Product detail displays every populated text field without arbitrary truncation; gallery thumbnails change the main image; a failed image tries remaining existing sources before showing the fallback.
