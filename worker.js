@@ -1003,7 +1003,20 @@ function extractRelatedAmazonProducts(html,asin){
   return out.slice(0,20);
 }
 function normalizeAmazonProduct(product={}){
-  const images=dedupeImages(Array.isArray(product.image_urls)?product.image_urls:(isValidHttpUrl(product.image_url)?[product.image_url]:[]),60);
+  // Product media may be stored across the editor gallery, imported retailer images,
+  // or legacy media fields. Merge every known source instead of letting a populated
+  // image_urls array silently hide the additional images the owner uploaded.
+  const mediaValues=[
+    product.image_url,product.main_image_url,product.mainImageUrl,
+    ...(Array.isArray(product.image_urls)?product.image_urls:[]),
+    ...(Array.isArray(product.source_image_urls)?product.source_image_urls:[]),
+    ...(Array.isArray(product.additional_images)?product.additional_images:[]),
+    ...(Array.isArray(product.gallery_images)?product.gallery_images:[]),
+    ...(Array.isArray(product.product_images)?product.product_images:[]),
+    ...(Array.isArray(product.images)?product.images:[]),
+    ...(Array.isArray(product.media)?product.media:[])
+  ].map(value=>typeof value==='string'?value:(value?.url||value?.image_url||value?.src||''));
+  const images=dedupeImages(mediaValues,60);
   const rawName=smartProductTitle(product.name||'Nuvora product',product.brand||'');
   const description=cleanMultilineText(product.description,12000)||null;
   const features=cleanMultilineText(product.features,12000)||null;
@@ -1937,18 +1950,17 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const storedName=cleanText(source.name,180)||normalized.name;
           const storedDescription=safeText(source.description);
           const curatedDescription=safeText(source.store_description);
-          // Imported text is normalized before storage. Do not run a second
-          // title rewrite on every public read: repeated cleanup can damage
-          // perfectly good titles/descriptions. If a legacy description is
-          // visibly fragmented, prefer the clean editorial description.
-          const publicDescription=curatedDescription
-            ||(storedDescription&&!looksFragmentedText(storedDescription)?storedDescription:normalized.description);
+          // Keep the original product description and the store's separate
+          // editorial overview as distinct fields. Collapsing them into one
+          // publicDescription silently discarded one of the two pieces of
+          // content and made the product guide look incomplete.
+          const publicDescription=storedDescription||curatedDescription||normalized.description;
           const storedFeatures=safeText(source.features);
           const publicFeatures=storedFeatures&&!looksFragmentedText(storedFeatures)?storedFeatures:null;
           const isAmazonSource=/amazon/i.test(String(source.retailer||source.source_type||''))||!!source.amazon_asin||!!source.amazon_source_url;
           const publicProduct={
             id:source.id,name:storedName,slug:source.slug,kind:source.kind,brand:cleanText(source.brand,180)||normalized.brand,
-            description:publicDescription,store_description:source.store_description||null,features:publicFeatures,
+            description:publicDescription,store_description:curatedDescription||null,features:publicFeatures,
             ingredients:source.ingredients||null,usage_instructions:source.usage_instructions||null,product_warnings:source.product_warnings||null,product_size:source.product_size||null,
             benefits:source.benefits||source.why_we_picked_it||null,skin_types:source.skin_types||source.best_for||null,skin_concerns:source.skin_concerns||source.skip_if||null,
             recommended_product_ids:Array.isArray(source.recommended_product_ids)?source.recommended_product_ids:[],recommendation_reason:source.recommendation_reason||null,

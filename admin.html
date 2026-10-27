@@ -193,6 +193,37 @@ body.admin-workspace-open .modal-backdrop .modal{width:100%!important;max-width:
 body.admin-workspace-open .modal-backdrop .modal-head{position:sticky!important;top:0!important;background:rgba(245,246,243,.96)!important;border-bottom:1px solid var(--line)!important;padding:22px max(22px,calc((100vw - 1180px)/2))!important}
 body.admin-workspace-open .modal-backdrop .modal-body{max-width:1180px!important;margin:0 auto!important;padding:28px 22px 70px!important;background:var(--bg)!important}
 .workspace-back{margin-right:8px}
+/* Skin Studio canvas controls: let the storefront preview take centre stage. */
+body.skin-studio-fullpage .studio-view-controls{display:flex;align-items:center;gap:4px;padding:3px;border:1px solid #e2e7df;border-radius:10px;background:#f8faf7}
+body.skin-studio-fullpage .studio-history-controls{display:flex;align-items:center;gap:4px}
+body.skin-studio-fullpage .studio-history-controls .btn{padding:8px 9px!important;min-height:32px;font-size:10px!important}
+body.skin-studio-fullpage .studio-history-controls .btn:disabled{opacity:.38;cursor:not-allowed}
+body.skin-studio-fullpage .studio-product-filters{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0 10px}
+body.skin-studio-fullpage .studio-product-filters label{display:grid;gap:4px;min-width:0;color:#7b887b;font-size:9px;font-weight:750}
+body.skin-studio-fullpage .studio-product-filters select{width:100%;min-width:0;padding:8px 6px;border:1px solid #dbe4d7;border-radius:8px;background:#fff;color:#2b3d2e;font-size:10px}
+body.skin-studio-fullpage .studio-media-toolbar{display:flex;gap:7px;align-items:center;margin:8px 0}
+body.skin-studio-fullpage .studio-media-toolbar input{min-width:0;flex:1;padding:9px;border:1px solid #dbe4d7;border-radius:8px;font-size:10px}
+body.skin-studio-fullpage .studio-media-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+body.skin-studio-fullpage .studio-media-card{min-width:0;border:1px solid #e1e8dd;border-radius:10px;overflow:hidden;background:#fff}
+body.skin-studio-fullpage .studio-media-thumb{height:105px;background:#f4f6f1;display:grid;place-items:center}
+body.skin-studio-fullpage .studio-media-thumb img{width:100%;height:100%;object-fit:contain}
+body.skin-studio-fullpage .studio-media-meta{padding:7px}
+body.skin-studio-fullpage .studio-media-name{font-size:9px;line-height:1.4;overflow-wrap:anywhere;color:#455447}
+body.skin-studio-fullpage .studio-media-actions{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+body.skin-studio-fullpage .studio-media-actions button{padding:5px 6px;border:1px solid #dbe4d7;border-radius:6px;background:#fff;color:#354736;font-size:9px;cursor:pointer}
+body.skin-studio-fullpage .studio-view-controls button{display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:7px;background:transparent;color:#617463;font-size:15px;cursor:pointer}
+body.skin-studio-fullpage .studio-view-controls button:hover,body.skin-studio-fullpage .studio-view-controls button[aria-pressed="true"]{background:#e7efe5;color:#285b36}
+body.skin-studio-fullpage .studio-layout{grid-template-columns:190px minmax(0,1fr) 250px}
+body.skin-studio-fullpage.skin-studio-hide-outline .studio-layout{grid-template-columns:minmax(0,1fr) 250px}
+body.skin-studio-fullpage.skin-studio-hide-outline .studio-left-panel{display:none}
+body.skin-studio-fullpage.skin-studio-hide-inspector .studio-layout{grid-template-columns:190px minmax(0,1fr)}
+body.skin-studio-fullpage.skin-studio-hide-inspector .studio-right-panel{display:none}
+body.skin-studio-fullpage.skin-studio-hide-outline.skin-studio-hide-inspector .studio-layout{grid-template-columns:minmax(0,1fr)}
+body.skin-studio-fullpage.skin-studio-hide-outline.skin-studio-hide-inspector .skin-builder-preview-panel{border-right:0!important}
+body.skin-studio-fullpage .studio-layout{transition:grid-template-columns .18s ease}
+@media(min-width:1500px){body.skin-studio-fullpage .studio-layout{grid-template-columns:205px minmax(0,1fr) 270px}body.skin-studio-fullpage.skin-studio-hide-outline .studio-layout{grid-template-columns:minmax(0,1fr) 270px}body.skin-studio-fullpage.skin-studio-hide-inspector .studio-layout{grid-template-columns:205px minmax(0,1fr)}}
+@media(max-width:1050px){body.skin-studio-fullpage .studio-layout{grid-template-columns:175px minmax(0,1fr) 225px}body.skin-studio-fullpage.skin-studio-hide-outline .studio-layout{grid-template-columns:minmax(0,1fr) 225px}body.skin-studio-fullpage.skin-studio-hide-inspector .studio-layout{grid-template-columns:175px minmax(0,1fr)}}
+@media(max-width:760px){body.skin-studio-fullpage .studio-toolbar{flex-wrap:wrap;gap:10px;padding:10px 12px}body.skin-studio-fullpage .studio-toolbar-actions{width:100%;justify-content:flex-start;flex-wrap:wrap}body.skin-studio-fullpage .studio-layout,body.skin-studio-fullpage.skin-studio-hide-outline .studio-layout,body.skin-studio-fullpage.skin-studio-hide-inspector .studio-layout,body.skin-studio-fullpage.skin-studio-hide-outline.skin-studio-hide-inspector .studio-layout{grid-template-columns:minmax(0,1fr)}body.skin-studio-fullpage .studio-left-panel,body.skin-studio-fullpage .studio-right-panel{display:none}body.skin-studio-fullpage:not(.skin-studio-hide-outline) .studio-left-panel{display:flex;position:fixed;left:0;top:138px;bottom:0;width:min(320px,90vw);z-index:150;box-shadow:16px 0 40px rgba(24,43,28,.16)}body.skin-studio-fullpage:not(.skin-studio-hide-inspector) .studio-right-panel{display:flex;position:fixed;right:0;top:138px;bottom:0;width:min(340px,92vw);z-index:150;box-shadow:-16px 0 40px rgba(24,43,28,.16)}body.skin-studio-fullpage .studio-view-controls{order:-1}body.skin-studio-fullpage .studio-canvas-head{flex-wrap:wrap}body.skin-studio-fullpage .studio-canvas-viewport{padding:5px}body.skin-studio-fullpage .studio-canvas-inner{border-radius:7px}}
 </style><style id="nuvora-skin-studio">
 .skin-studio{max-width:1440px;margin:0 auto}
 .skin-studio-hero{display:flex;align-items:center;justify-content:space-between;gap:28px;padding:26px 28px;margin-bottom:16px;border:1px solid #e1e8df;border-radius:22px;background:linear-gradient(115deg,#f0f6ef 0%,#fff 58%,#f7f4e9 100%);box-shadow:var(--shadow)}
@@ -235,7 +266,7 @@ body.skin-studio-fullpage .studio-save-state[data-status="dirty"] .studio-save-d
 body.skin-studio-fullpage .studio-status{flex-shrink:0;margin:8px 12px 0!important;padding:7px 10px!important;min-height:30px;border-radius:10px!important;font-size:10px!important}
 body.skin-studio-fullpage .studio-status[data-status="error"]{background:#fff0ef;border-color:#f4cbc6;color:#a33d31}
 body.skin-studio-fullpage .studio-status[data-status="success"]{background:#edf6ed;border-color:#d8e9d6;color:#366641}
-body.skin-studio-fullpage .studio-layout{display:grid!important;grid-template-columns:220px minmax(0,1fr) 270px;gap:0!important;align-items:stretch!important;flex:1;min-height:0;overflow:hidden;padding-top:9px}
+body.skin-studio-fullpage .studio-layout{display:grid!important;grid-template-columns:190px minmax(0,1fr) 250px;gap:0!important;align-items:stretch!important;flex:1;min-height:0;overflow:hidden;padding-top:9px}
 body.skin-studio-fullpage .studio-left-panel{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;border-right:1px solid #dde4db;background:#fff}
 body.skin-studio-fullpage .studio-panel-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:15px 13px 12px}
 body.skin-studio-fullpage .studio-panel-head h3,body.skin-studio-fullpage .studio-inspector-heading h3{margin:5px 0 0;font-size:16px;letter-spacing:-.04em;color:#26392a}
@@ -249,6 +280,7 @@ body.skin-studio-fullpage .studio-add-menu b,body.skin-studio-fullpage .studio-a
 body.skin-studio-fullpage .studio-add-menu b{font-size:11px}
 body.skin-studio-fullpage .studio-add-menu small{margin-top:2px;color:#859184;font-size:9px;line-height:1.35}
 body.skin-studio-fullpage .studio-library-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;padding:0 9px 10px;border-bottom:1px solid #eef1ec}
+body.skin-studio-fullpage .studio-library-tabs{grid-template-columns:repeat(5,minmax(0,1fr))}
 body.skin-studio-fullpage .studio-library-tabs button{padding:8px 2px;border:0;border-radius:8px;background:transparent;color:#859084;font-size:10px;font-weight:700;cursor:pointer}
 body.skin-studio-fullpage .studio-library-tabs button.active{background:#edf4eb;color:#315739}
 body.skin-studio-fullpage .studio-quick-add{padding:11px;border-bottom:1px solid #e9eee6;background:#f8faf6}
@@ -758,6 +790,15 @@ body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
       <div><span class="studio-overline">NUVORA ADMIN / WEBSITE BUILDER</span><div class="studio-page-line">Nuvora Skin <span>/</span> <strong id="skinStudioPageTitle">Home page</strong></div></div>
     </div>
     <div class="studio-toolbar-actions">
+      <div class="studio-view-controls" role="group" aria-label="Preview workspace layout">
+        <button type="button" onclick="toggleSkinStudioPanel('outline',this)" aria-label="Toggle page outline" aria-pressed="false" title="Show or hide page outline">☰</button>
+        <button type="button" onclick="toggleSkinStudioPanel('inspector',this)" aria-label="Toggle settings inspector" aria-pressed="false" title="Show or hide settings inspector">☷</button>
+        <button type="button" onclick="toggleSkinStudioFocus(this)" aria-label="Expand preview canvas" aria-pressed="false" title="Expand preview canvas">⤢</button>
+      </div>
+      <div class="studio-history-controls" role="group" aria-label="Edit history">
+        <button class="btn" id="skinStudioUndo" type="button" onclick="undoSkinStudio()" disabled aria-label="Undo last editor change" title="Undo (Ctrl/⌘+Z)">↶ Undo</button>
+        <button class="btn" id="skinStudioRedo" type="button" onclick="redoSkinStudio()" disabled aria-label="Redo editor change" title="Redo (Ctrl/⌘+Shift+Z)">↷ Redo</button>
+      </div>
       <div class="studio-save-state"><span class="studio-save-dot"></span><span id="skinStudioSaveLabel">Saved version loaded</span></div>
       <button class="btn" type="button" onclick="openSkinManualProduct()">+ Add product</button>
       <button class="btn" type="button" onclick="openSkinSiteSettings()">Edit whole site</button>
@@ -781,6 +822,7 @@ body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
         <button id="skinTabProducts" type="button" onclick="switchSkinStudioTab('products')">Products</button>
         <button id="skinTabPages" type="button" onclick="switchSkinStudioTab('pages')">Pages</button>
         <button id="skinTabCategories" type="button" onclick="switchSkinStudioTab('categories')">Categories</button>
+        <button id="skinTabMedia" type="button" onclick="switchSkinStudioTab('media')">Media</button>
       </div>
       <div id="skinQuickAddPanel" class="studio-quick-add" hidden></div>
       <div id="skinLibraryItems" class="studio-library-items" hidden></div>
@@ -2328,7 +2370,13 @@ async function signInWithGoogle(){
 }
 async function adminBoot(){
   const isSkinStudioRoute=/^\/admin\/skin-studio\/?$/.test(location.pathname);
-  if(isSkinStudioRoute)document.body.classList.add('skin-studio-fullpage');
+  if(isSkinStudioRoute){
+    document.body.classList.add('skin-studio-fullpage');
+    if(window.matchMedia('(max-width:760px)').matches){
+      document.body.classList.add('skin-studio-hide-outline','skin-studio-hide-inspector');
+      requestAnimationFrame(()=>document.querySelectorAll('.studio-view-controls button').forEach(button=>button.setAttribute('aria-pressed','true')));
+    }
+  }
   try{
     const cfg=await fetch('/api/config').then(r=>r.json());
     if(!cfg.supabaseUrl||!cfg.supabaseAnonKey)throw new Error('Supabase is not configured. Add the server environment variables before using Admin.');
@@ -2387,6 +2435,7 @@ async function adminBoot(){
 
 const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
 let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinSiteDraftExists=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='',skinStudioPendingProductTarget=null;
+let skinStudioUndoStack=[],skinStudioRedoStack=[],skinStudioHistoryLastCapture=0,skinStudioHistoryApplying=false;
 const defaultSkinSiteConfig=()=>({
   version:5,homeLayoutVersion:0,template:'soft-editorial',accentColor:'#66745f',
   announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
@@ -2589,6 +2638,34 @@ function stableSkinJson(value){
  if(Array.isArray(value))return '['+value.map(stableSkinJson).join(',')+']';
  return '{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+stableSkinJson(value[key])).join(',')+'}';
 }
+// Tab-local recovery protects edits from refreshes and transient API failures.
+function skinStudioRecoveryStorageKey(){
+ const owner=typeof adminUser!=='undefined'&&adminUser?.id?String(adminUser.id):'signed-in-session';
+ return 'nuvora.skin-studio.recovery.v1.'+owner;
+}
+function writeSkinStudioRecovery(){
+ if(!skinSiteConfigLoaded||!skinBuilderConfig||!document.body.classList.contains('skin-studio-fullpage'))return;
+ try{
+  collectSkinConfigFields();
+  sessionStorage.setItem(skinStudioRecoveryStorageKey(),JSON.stringify({savedAt:new Date().toISOString(),config:mergeSkinSiteConfig(skinBuilderConfig),pageId:skinStudioPageId,selection:skinStudioSelection}));
+ }catch(error){}
+}
+function clearSkinStudioRecovery(){try{sessionStorage.removeItem(skinStudioRecoveryStorageKey());}catch(error){}}
+function restoreSkinStudioRecoveryIfAvailable(){
+ let recovery=null;
+ try{recovery=JSON.parse(sessionStorage.getItem(skinStudioRecoveryStorageKey())||'null');}catch(error){return false;}
+ if(!recovery?.config||typeof recovery.config!=='object')return false;
+ if(stableSkinJson(mergeSkinSiteConfig(recovery.config))===stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig))){clearSkinStudioRecovery();return false;}
+ const when=recovery.savedAt?new Date(recovery.savedAt).toLocaleString():'an earlier session';
+ if(!confirm('Skin Studio found unsaved local recovery edits from '+when+'. Restore them into the private draft? The published storefront will not change.'))return false;
+ skinBuilderConfig=mergeSkinSiteConfig(recovery.config);
+ skinStudioPageId=recovery.pageId||'home';
+ skinStudioSelection=recovery.selection||{type:'section',id:skinSectionsFor(recovery.pageId||'home')[0]?.id||''};
+ fillSkinConfigFields();
+ skinMarkDirty('Recovered unsaved edits. They will be saved to the private draft automatically.');
+ queueSkinStudioPreview();
+ return true;
+}
 function queueSkinDraftAutosave(){
  if(!skinSiteConfigLoaded||!skinBuilderConfig||!document.body.classList.contains('skin-studio-fullpage'))return;
  if(skinDraftAutosaveTimer)clearTimeout(skinDraftAutosaveTimer);
@@ -2602,10 +2679,57 @@ function queueSkinDraftAutosave(){
   });
  },1200);
 }
+function skinHistorySnapshot(){
+ return {config:JSON.parse(JSON.stringify(skinBuilderConfig)),pageId:skinStudioPageId,selection:JSON.parse(JSON.stringify(skinStudioSelection||{type:'none',id:''}))};
+}
+function skinHistoryUpdateButtons(){
+ const undo=document.getElementById('skinStudioUndo'),redo=document.getElementById('skinStudioRedo');
+ if(undo)undo.disabled=!skinStudioUndoStack.length;
+ if(redo)redo.disabled=!skinStudioRedoStack.length;
+}
+function skinHistoryCapture(){
+ if(!skinSiteConfigLoaded||!skinBuilderConfig||skinStudioHistoryApplying)return;
+ const now=Date.now();
+ // Group rapid keystrokes into one meaningful history step instead of recording each character.
+ if(now-skinStudioHistoryLastCapture>900){
+  skinStudioUndoStack.push(skinHistorySnapshot());
+  if(skinStudioUndoStack.length>60)skinStudioUndoStack.shift();
+  skinStudioRedoStack=[];
+ }
+ skinStudioHistoryLastCapture=now;
+ skinHistoryUpdateButtons();
+}
+function skinHistoryRestore(snapshot,label){
+ if(!snapshot?.config)return;
+ skinStudioHistoryApplying=true;
+ try{
+  skinBuilderConfig=JSON.parse(JSON.stringify(snapshot.config));
+  skinStudioPageId=snapshot.pageId||'home';
+  skinStudioSelection=JSON.parse(JSON.stringify(snapshot.selection||{type:'none',id:''}));
+  fillSkinConfigFields();
+  renderSkinStudioAll();
+  skinMarkDirty(label+' restored in the draft. Save status will update after persistence.');
+  queueSkinStudioPreview();
+ }finally{skinStudioHistoryApplying=false;}
+ skinStudioHistoryLastCapture=0;
+ skinHistoryUpdateButtons();
+}
+function undoSkinStudio(){
+ if(!skinStudioUndoStack.length)return;
+ skinStudioRedoStack.push(skinHistorySnapshot());
+ const snapshot=skinStudioUndoStack.pop();
+ skinHistoryRestore(snapshot,'Previous edit');
+}
+function redoSkinStudio(){
+ if(!skinStudioRedoStack.length)return;
+ skinStudioUndoStack.push(skinHistorySnapshot());
+ const snapshot=skinStudioRedoStack.pop();
+ skinHistoryRestore(snapshot,'Redo edit');
+}
 function skinMarkDirty(message='Draft updated. Publish when you are ready.'){
  const label=document.getElementById('skinStudioSaveLabel');
  if(label){label.textContent='Unsaved changes';label.dataset.status='dirty';}
- skinBuilderMessage(message,'info');queueSkinDraftAutosave();syncSkinPreviewActionbar();
+ writeSkinStudioRecovery();skinBuilderMessage(message,'info');queueSkinDraftAutosave();syncSkinPreviewActionbar();
 }
 async function saveSkinStudioChangeImmediately(successMessage){
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
@@ -2694,6 +2818,7 @@ async function loadSkinSiteConfig(){
   if(!settings||typeof settings!=='object')throw new Error('The settings endpoint returned an invalid response.');
   skinSiteDraftExists=!!(settings.skin_site_draft&&typeof settings.skin_site_draft==='object'&&!Array.isArray(settings.skin_site_draft));
   skinBuilderConfig=mergeSkinSiteConfig(skinSiteDraftExists?settings.skin_site_draft:settings.skin_site_config);
+  skinStudioUndoStack=[];skinStudioRedoStack=[];skinStudioHistoryLastCapture=0;skinHistoryUpdateButtons();
   const homeLayoutMigration=migrateSkinHomeLayout(skinBuilderConfig);
   skinStudioPageId='home';
   skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||'hero'};
@@ -2701,12 +2826,15 @@ async function loadSkinSiteConfig(){
   skinSiteConfigLoaded=true;
   skinDraftLastSavedPayload=stableSkinJson(skinBuilderConfig);
   skinSetSavedLabel(skinSiteDraftExists?'Saved draft loaded':'Published version loaded');
+  const recoveredLocalEdits=homeLayoutMigration.changed?false:restoreSkinStudioRecoveryIfAvailable();
   if(homeLayoutMigration.changed){
    skinBuilderMessage(homeLayoutMigration.removedRoutine?'Removed the unnecessary routine finder and organized the home page into a clearer shop layout. Saving this as a private draft; the live store will not change until you publish.':'Organized the home page into a clearer shop layout with product categories and brand browsing. Saving this as a private draft; the live store will not change until you publish.','success');
    if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
    void saveSkinStudioChangeImmediately(homeLayoutMigration.removedRoutine?'Routine finder removed and home layout saved as a draft.':'Home layout reorganized and saved as a draft.');
-  }else{
+  }else if(!recoveredLocalEdits){
    skinBuilderMessage(skinSiteDraftExists?'Your saved draft is loaded. It is private and will not affect the live storefront until you publish.':'The published site settings are loaded. Save a draft to keep your work private, or publish when you are ready.','success');
+   if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
+  }else{
    if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
   }
  }catch(e){
@@ -2780,8 +2908,8 @@ function updateSkinStudioPageTitle(){
  const el=document.getElementById('skinStudioPageTitle');if(el)el.textContent=skinPageLabel();
 }
 function switchSkinStudioTab(tab){
- skinStudioTab=['outline','products','pages','categories'].includes(tab)?tab:'outline';
- ['outline','products','pages','categories'].forEach(key=>{const b=document.getElementById('skinTab'+key.charAt(0).toUpperCase()+key.slice(1));if(b)b.classList.toggle('active',skinStudioTab===key);});
+ skinStudioTab=['outline','products','pages','categories','media'].includes(tab)?tab:'outline';
+ ['outline','products','pages','categories','media'].forEach(key=>{const b=document.getElementById('skinTab'+key.charAt(0).toUpperCase()+key.slice(1));if(b)b.classList.toggle('active',skinStudioTab===key);});
  const outline=document.getElementById('skinBuilderSections'),library=document.getElementById('skinLibraryItems');
  if(outline)outline.hidden=skinStudioTab!=='outline';
  if(library)library.hidden=skinStudioTab==='outline';
@@ -2800,6 +2928,91 @@ function setSkinStudioProductSearch(value){
  const input=document.getElementById('skinStudioProductSearch');
  if(input){input.focus();const position=Math.min(caret,input.value.length);input.setSelectionRange(position,position);}
 }
+function skinStudioProductCategory(product){
+ return String(product?.category?.name||product?.category_name||product?.category?.slug||product?.category_id||'Uncategorised').trim()||'Uncategorised';
+}
+function skinStudioProductAvailability(product){
+ const value=product?.availability_status??product?.availability??product?.stock_status;
+ const booleanValue=typeof product?.is_available==='boolean'?product.is_available:(typeof product?.available==='boolean'?product.available:null);
+ if(booleanValue!==null)return booleanValue?'available':'unavailable';
+ if(value===undefined||value===null||String(value).trim()==='')return 'unknown';
+ const normalized=String(value).trim().toLowerCase().replace(/[ _-]+/g,' ');
+ if(['available','in stock','instock','yes','true'].includes(normalized))return 'available';
+ if(['unavailable','out of stock','outofstock','no','false','sold out'].includes(normalized))return 'unavailable';
+ return 'unknown';
+}
+function setSkinStudioProductFilter(key,value){
+ window.skinStudioProductFilters=window.skinStudioProductFilters||{brand:'all',category:'all',status:'all',availability:'all'};
+ window.skinStudioProductFilters[key]=String(value||'all');
+ window.skinStudioProductPage=1;
+ renderSkinLibrary();
+}
+async function renderSkinMediaLibrary(root,forceRefresh=false){
+ if(!root)return;
+ if(!adminSB){root.innerHTML='<div class="studio-library-empty">Media storage is not connected. Sign in again to browse uploaded images.</div>';return;}
+ if(!forceRefresh&&Array.isArray(window.skinStudioMediaItems)){paintSkinStudioMediaLibrary(root);return;}
+ const requestId=(window.skinStudioMediaRequestId||0)+1;window.skinStudioMediaRequestId=requestId;
+ root.innerHTML='<div class="studio-library-empty">Loading uploaded Skin Studio images…</div>';
+ try{
+  const {data,error}=await adminSB.storage.from('product-images').list('skin-site',{limit:1000,offset:0,sortBy:{column:'created_at',order:'desc'}});
+  if(error)throw error;
+  if(requestId!==window.skinStudioMediaRequestId)return;
+  const files=(data||[]).filter(item=>item?.name&&!item.name.endsWith('/')&&/\.(jpe?g|png|webp|gif)$/i.test(item.name));
+  window.skinStudioMediaItems=files.map(item=>({name:item.name,createdAt:item.created_at||item.updated_at||'',url:adminSB.storage.from('product-images').getPublicUrl('skin-site/'+item.name).data?.publicUrl||''})).filter(item=>item.url);
+  paintSkinStudioMediaLibrary(root);
+ }catch(error){
+  if(requestId!==window.skinStudioMediaRequestId)return;
+  root.innerHTML='<div class="studio-library-empty">Could not load media: '+esc(error?.message||'Storage request failed')+'. Check storage access and try Refresh.</div>';
+ }
+}
+function paintSkinStudioMediaLibrary(root){
+ if(!root)return;
+ const urls=Array.isArray(window.skinStudioMediaItems)?window.skinStudioMediaItems:[];
+ const needle=String(window.skinStudioMediaSearch||'').trim().toLowerCase();
+ const filtered=urls.filter(item=>item.name.toLowerCase().includes(needle));
+ const pageSize=24,pageCount=Math.max(1,Math.ceil(filtered.length/pageSize));
+ window.skinStudioMediaPage=Math.min(Math.max(1,Number(window.skinStudioMediaPage)||1),pageCount);
+ const page=window.skinStudioMediaPage,visible=filtered.slice((page-1)*pageSize,page*pageSize);
+ root.innerHTML='<p class="studio-inline-help">Uploaded Skin Studio images. Choose “Use selected” to apply an image to the current section or custom category. Removing an image from a page does not delete the stored file.</p>'+
+  '<div class="studio-media-toolbar"><input aria-label="Search media files" placeholder="Search uploaded images" value="'+esc(window.skinStudioMediaSearch||'')+'" oninput="setSkinStudioMediaSearch(this.value)"><button type="button" class="btn" onclick="renderSkinMediaLibrary(document.getElementById(\'skinLibraryItems\'),true)">Refresh</button></div>'+
+  (visible.length?'<div class="studio-media-grid">'+visible.map(item=>'<article class="studio-media-card"><div class="studio-media-thumb"><img loading="lazy" src="'+esc(item.url)+'" alt=""></div><div class="studio-media-meta"><div class="studio-media-name">'+esc(item.name)+'</div><div class="studio-media-actions"><button type="button" onclick="useSkinStudioMedia('+esc(JSON.stringify(item.url))+')">Use selected</button><button type="button" onclick="copySkinStudioMediaUrl('+esc(JSON.stringify(item.url))+')">Copy URL</button></div></div></article>').join('')+'</div>':'<div class="studio-library-empty">No matching uploaded images found in the Skin Studio media folder.</div>')+
+  (pageCount>1?'<nav aria-label="Media pages" style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:12px"><button type="button" class="btn" '+(page===1?'disabled':'')+' onclick="setSkinStudioMediaPage('+(page-1)+')">Previous</button><span class="studio-inline-help">Page '+page+' of '+pageCount+'</span><button type="button" class="btn" '+(page===pageCount?'disabled':'')+' onclick="setSkinStudioMediaPage('+(page+1)+')">Next</button></nav>':'')+
+  '<p class="studio-inline-help">Showing '+(filtered.length?((page-1)*pageSize+1):0)+'–'+Math.min(page*pageSize,filtered.length)+' of '+filtered.length+' matching images ('+urls.length+' loaded; up to 1,000 storage entries).</p>';
+}
+function setSkinStudioMediaPage(page){
+ window.skinStudioMediaPage=Math.max(1,Number(page)||1);
+ paintSkinStudioMediaLibrary(document.getElementById('skinLibraryItems'));
+}
+function setSkinStudioMediaSearch(value){
+ const current=document.querySelector('#skinLibraryItems input[aria-label="Search media files"]');
+ const caret=current?.selectionStart??String(value||'').length;
+ window.skinStudioMediaSearch=String(value||'');window.skinStudioMediaPage=1;
+ paintSkinStudioMediaLibrary(document.getElementById('skinLibraryItems'));
+ const input=document.querySelector('#skinLibraryItems input[aria-label="Search media files"]');
+ if(input){input.focus();const position=Math.min(caret,input.value.length);input.setSelectionRange(position,position);}
+}
+async function copySkinStudioMediaUrl(url){
+ try{await navigator.clipboard.writeText(String(url||''));skinBuilderMessage('Image URL copied.','success');}
+ catch(e){window.prompt('Copy this image URL',String(url||''));}
+}
+async function useSkinStudioMedia(url){
+ const selection=skinStudioSelection||{};
+ if(!skinBuilderConfig||!url){skinBuilderMessage('Choose an editable section or category before applying an image.','warning');return;}
+ if(selection.type==='section'){
+  const sections=skinSectionsFor(),index=sections.findIndex(section=>String(section.id)===String(selection.id));
+  if(index<0){skinBuilderMessage('The selected section is no longer available.','error');return;}
+  updateSkinSection(index,'image',String(url));
+ }else if(selection.type==='category'){
+  updateSkinCategory(String(selection.id),'image',String(url));
+ }else if(selection.type==='default-category'){
+  skinBuilderMessage('Default categories are managed by the storefront. Choose a custom category or section to replace its image.','warning');return;
+ }else{
+  skinBuilderMessage('Select a section or custom category to use this image.','warning');return;
+ }
+ await saveSkinStudioChangeImmediately('Image applied and saved to the page draft. Publish when ready.');
+ renderSkinStudioAll();
+ queueSkinStudioPreview();
+}
 function renderSkinLibrary(){
  const root=document.getElementById('skinLibraryItems');if(!root)return;
  const outline=document.getElementById('skinBuilderSections');
@@ -2807,16 +3020,33 @@ function renderSkinLibrary(){
  root.hidden=skinStudioTab==='outline';
  if(skinStudioTab==='outline'){root.innerHTML='';return;}
  if(!skinBuilderConfig){root.innerHTML='<div class="studio-library-empty">Loading your site content…</div>';return;}
+ if(skinStudioTab==='media'){renderSkinMediaLibrary(root);return;}
  if(skinStudioTab==='products'){
   const productIdentity=item=>String(item?.amazon_asin||item?.asin||retailerDestination(item)||item?.destination_url||item?.amazon_source_url||item?.source_url||item?.id||'').trim().toLowerCase();
   const allRows=adminProducts.filter(isSkinProduct).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))).filter((p,index,list)=>list.findIndex(other=>String(other.name||'').trim().toLowerCase()===String(p.name||'').trim().toLowerCase()&&productIdentity(other)===productIdentity(p))===index);
   const needle=String(window.skinStudioProductSearch||'').trim().toLowerCase();
-  const rows=allRows.filter(p=>!needle||[p.name,p.brand,p.product_type,p.productType,p.product_type_name,p.type,p.category?.name,p.category_name,p.description,p.store_description,p.amazon_asin,p.asin,p.source_type,p.retailer].filter(Boolean).join(' ').toLowerCase().includes(needle));
-  const pageSize=8,pageCount=Math.max(1,Math.ceil(rows.length/pageSize));
+  const filters=window.skinStudioProductFilters=window.skinStudioProductFilters||{brand:'all',category:'all',status:'all',availability:'all'};
+  const brands=[...new Set(allRows.map(p=>String(p.brand||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+  const categories=[...new Set(allRows.map(skinStudioProductCategory).filter(value=>value!=='Uncategorised'))].sort((a,b)=>a.localeCompare(b));
+  const rows=allRows.filter(p=>{
+   const matchesSearch=!needle||[p.name,p.brand,p.product_type,p.productType,p.product_type_name,p.type,p.category?.name,p.category_name,p.description,p.store_description,p.amazon_asin,p.asin,p.source_type,p.retailer].filter(Boolean).join(' ').toLowerCase().includes(needle);
+   const matchesBrand=filters.brand==='all'||String(p.brand||'').trim()===filters.brand;
+   const matchesCategory=filters.category==='all'||skinStudioProductCategory(p)===filters.category;
+   const matchesStatus=filters.status==='all'||(filters.status==='published'?!!p.published:!p.published);
+   const matchesAvailability=filters.availability==='all'||skinStudioProductAvailability(p)===filters.availability;
+   return matchesSearch&&matchesBrand&&matchesCategory&&matchesStatus&&matchesAvailability;
+  });
+  const pageSize=10,pageCount=Math.max(1,Math.ceil(rows.length/pageSize));
   const currentPage=Math.min(Math.max(1,Number(window.skinStudioProductPage)||1),pageCount);
   window.skinStudioProductPage=currentPage;
   const visibleRows=rows.slice((currentPage-1)*pageSize,currentPage*pageSize);
-  root.innerHTML='<div class="studio-product-add-actions"><button type="button" class="studio-outline-add" onclick="openSkinManualProduct()">＋ Add manually</button><button type="button" class="studio-outline-add" onclick="openSkinProduct()">↗ Import Amazon link</button></div><label class="studio-product-search" style="display:block;margin:12px 0"><span class="muted" style="display:block;margin-bottom:5px">Search product library</span><input id="skinStudioProductSearch" type="search" value="'+esc(window.skinStudioProductSearch||'')+'" oninput="setSkinStudioProductSearch(this.value)" placeholder="Search by name, brand, type, category or ASIN" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.04);color:inherit"></label><p class="studio-inline-help">'+rows.length+' of '+allRows.length+' products · Products are shown side by side. Choose Edit details to change a product, or Place on page to add it to the selected product section.</p>'+
+  root.innerHTML='<div class="studio-product-add-actions"><button type="button" class="studio-outline-add" onclick="openSkinManualProduct()">＋ Add manually</button><button type="button" class="studio-outline-add" onclick="openSkinProduct()">↗ Import Amazon link</button></div><label class="studio-product-search" style="display:block;margin:12px 0"><span class="muted" style="display:block;margin-bottom:5px">Search product library</span><input id="skinStudioProductSearch" type="search" value="'+esc(window.skinStudioProductSearch||'')+'" oninput="setSkinStudioProductSearch(this.value)" placeholder="Search by name, brand, type, category or ASIN" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.04);color:inherit"></label>'+
+   '<div class="studio-product-filters">'+
+   '<label>Brand<select aria-label="Filter products by brand" onchange="setSkinStudioProductFilter(\'brand\',this.value)"><option value="all">All brands</option>'+brands.map(value=>'<option value="'+esc(value)+'" '+(filters.brand===value?'selected':'')+'>'+esc(value)+'</option>').join('')+'</select></label>'+
+   '<label>Category<select aria-label="Filter products by category" onchange="setSkinStudioProductFilter(\'category\',this.value)"><option value="all">All categories</option>'+categories.map(value=>'<option value="'+esc(value)+'" '+(filters.category===value?'selected':'')+'>'+esc(value)+'</option>').join('')+'</select></label>'+
+   '<label>Publication<select aria-label="Filter products by publication status" onchange="setSkinStudioProductFilter(\'status\',this.value)"><option value="all">All statuses</option><option value="published" '+(filters.status==='published'?'selected':'')+'>Published</option><option value="draft" '+(filters.status==='draft'?'selected':'')+'>Draft</option></select></label>'+
+   '<label>Availability<select aria-label="Filter products by known availability" onchange="setSkinStudioProductFilter(\'availability\',this.value)"><option value="all">All availability</option><option value="available" '+(filters.availability==='available'?'selected':'')+'>Available</option><option value="unavailable" '+(filters.availability==='unavailable'?'selected':'')+'>Unavailable</option><option value="unknown" '+(filters.availability==='unknown'?'selected':'')+'>Unknown</option></select></label>'+
+   '</div><p class="studio-inline-help">'+rows.length+' of '+allRows.length+' products · 10 products per page. Choose Edit details to change a product, or Place on page to add it to the selected product section.</p>'+
    (rows.length?'<div class="studio-products-grid">'+visibleRows.map(p=>{
     const id=String(p.id),image=skinImageOf(p),published=!!p.published;
     const selection=skinStudioSelection?.type==='product'&&String(skinStudioSelection.id)===id;
@@ -3022,7 +3252,7 @@ function createSkinQuickItem(){
    {id:slug+'-hero',type:'hero',visible:true,title,eyebrow:'',text:'',image:'',columns:4,product_ids:[]},
    {id:slug+'-products',type:'product-grid',visible:true,title:'Explore '+title,eyebrow:'The Nuvora Skin edit',text:'Browse the products selected for this page.',filter:'all',columns:3,product_ids:[]}
   ]};
-  skinBuilderConfig.pages.push(page);
+  skinHistoryCapture();skinBuilderConfig.pages.push(page);
   if(Array.isArray(skinBuilderConfig.navigationItems)&&!skinBuilderConfig.navigationItems.some(link=>String(link.url||'')==='/pages/'+slug))skinBuilderConfig.navigationItems.push({id:'page-'+slug,label:title,url:'/pages/'+slug,visible:true});
   renderSkinSiteLinkEditor('navigationItems');
   skinStudioPageId=slug;skinStudioSelection={type:'section',id:page.sections[0].id};closeSkinQuickAdd();skinMarkDirty('Page created in draft. Add and arrange its content, then publish when it is ready.');setSkinStudioPage(slug);return;
@@ -3032,7 +3262,7 @@ function createSkinQuickItem(){
   if(skinBuilderConfig.customCategories.some(x=>x.slug===slug)||categories.some(x=>String(x.slug)===slug))return skinBuilderMessage('That category address already exists. Choose another slug.','error');
   const image=String(document.getElementById('skinQuickImage')?.value||'').trim();
   if(image&&(!validURL(image)||!/^https:\/\//i.test(image)))return skinBuilderMessage('Category images must use a valid HTTPS URL.','error');
-  skinBuilderConfig.customCategories.push({id:slug,slug,name:title,description:String(document.getElementById('skinQuickDescription')?.value||''),image});
+  skinHistoryCapture();skinBuilderConfig.customCategories.push({id:slug,slug,name:title,description:String(document.getElementById('skinQuickDescription')?.value||''),image});
   if(Array.isArray(skinBuilderConfig.navigationItems)&&!skinBuilderConfig.navigationItems.some(link=>String(link.id||'')==='category-'+slug))skinBuilderConfig.navigationItems.push({id:'category-'+slug,label:title,url:'/shop?category='+encodeURIComponent(title),visible:true});
   renderSkinSiteLinkEditor('navigationItems');
   skinStudioSelection={type:'category',id:slug};closeSkinQuickAdd();skinMarkDirty('Category created in draft. Assign products to it in the product inspector.');switchSkinStudioTab('categories');renderSkinSelectedInspector();void saveSkinStudioChangeImmediately('Category created and saved to the page draft.');return;
@@ -3041,7 +3271,7 @@ function createSkinQuickItem(){
   const type=document.getElementById('skinQuickType')?.value||'product-grid';
   const id='section-'+Date.now().toString(36);
   const section={id,type,visible:true,title,eyebrow:String(document.getElementById('skinQuickEyebrow')?.value||''),text:String(document.getElementById('skinQuickDescription')?.value||''),image:'',imageAlignment:'center',imageWidth:70,backgroundColor:'',textAlignment:'left',filter:type==='featured-products'?'featured':'all',columns:3,productsPerPage:8,product_ids:[],category_id:''};
-  skinSectionsFor().push(section);skinStudioSelection={type:'section',id};closeSkinQuickAdd();skinMarkDirty('Section added to the current page. Drag it in the outline or canvas to arrange it.');switchSkinStudioTab('outline');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('New section added and saved to the page draft.');
+  skinHistoryCapture();skinSectionsFor().push(section);skinStudioSelection={type:'section',id};closeSkinQuickAdd();skinMarkDirty('Section added to the current page. Drag it in the outline or canvas to arrange it.');switchSkinStudioTab('outline');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('New section added and saved to the page draft.');
  }
 }
 function addSkinBuilderSection(){openSkinAdd('section');}
@@ -3050,6 +3280,7 @@ function skinProductDragStart(event,id){
  event.dataTransfer.setData('text/plain','product:'+String(id));event.dataTransfer.effectAllowed='copy';
 }
 function assignSkinProductCategory(id,slug){
+ skinHistoryCapture();
  skinBuilderConfig.productCategoryMap=skinBuilderConfig.productCategoryMap||{};
  if(!slug)delete skinBuilderConfig.productCategoryMap[String(id)];
  else skinBuilderConfig.productCategoryMap[String(id)]=String(slug);
@@ -3058,6 +3289,7 @@ function assignSkinProductCategory(id,slug){
 }
 function updateSkinCategory(slug,key,value){
  const cat=(skinBuilderConfig.customCategories||[]).find(x=>String(x.slug)===String(slug));if(!cat)return;
+ skinHistoryCapture();
  cat[key]=String(value??'');
  if(key==='name'){const label=document.getElementById('skinInspectorTitle');if(label)label.textContent=cat.name;}
  skinMarkDirty('Category details changed in the draft.');renderSkinLibrary();queueSkinStudioPreview();
@@ -3065,6 +3297,7 @@ function updateSkinCategory(slug,key,value){
 function deleteSkinCategory(slug){
  const cat=(skinBuilderConfig.customCategories||[]).find(x=>String(x.slug)===String(slug));if(!cat)return;
  if(!confirm('Delete the category “'+cat.name+'”? Products using it will return to automatic product-type categories.'))return;
+ skinHistoryCapture();
  skinBuilderConfig.customCategories=skinBuilderConfig.customCategories.filter(x=>String(x.slug)!==String(slug));
  skinBuilderConfig.navigationItems=(skinBuilderConfig.navigationItems||[]).filter(link=>String(link.id||'')!=='category-'+String(slug));
  Object.keys(skinBuilderConfig.productCategoryMap||{}).forEach(id=>{if(String(skinBuilderConfig.productCategoryMap[id])===String(slug))delete skinBuilderConfig.productCategoryMap[id];});
@@ -3074,6 +3307,7 @@ function deleteSkinCategory(slug){
 }
 function updateSkinPage(slug,key,value){
  const page=(skinBuilderConfig.pages||[]).find(p=>String(p.slug)===String(slug));if(!page)return;
+ skinHistoryCapture();
  page[key]=key==='visible'?!!value:String(value??'');
  skinMarkDirty('Page settings changed in the draft.');
  updateSkinStudioPageTitle();renderSkinLibrary();renderSkinSelectedInspector();queueSkinStudioPreview();
@@ -3081,6 +3315,7 @@ function updateSkinPage(slug,key,value){
 function deleteSkinPage(slug){
  const page=skinCurrentPage(slug);if(!page)return;
  if(!confirm('Delete the page “'+page.title+'”? This removes its layout from the draft.'))return;
+ skinHistoryCapture();
  skinBuilderConfig.pages=skinBuilderConfig.pages.filter(p=>String(p.slug)!==String(slug));
  skinBuilderConfig.navigationItems=(skinBuilderConfig.navigationItems||[]).filter(link=>String(link.url||'')!=='/pages/'+String(slug));
  skinStudioPageId='home';skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||''};skinMarkDirty('Page removed from the draft.');
@@ -3096,9 +3331,51 @@ function selectSkinPreviewDevice(device,button){
  reloadSkinStudioPreview();
 }
 function setSkinPreviewDevice(device,button){selectSkinPreviewDevice(device,button);}
+function toggleSkinStudioPanel(which,button){
+ const body=document.body;
+ const className=which==='outline'?'skin-studio-hide-outline':'skin-studio-hide-inspector';
+ body.classList.toggle(className);
+ const hidden=body.classList.contains(className);
+ if(button){button.setAttribute('aria-pressed',String(hidden));button.title=(hidden?'Show ':'Hide ')+(which==='outline'?'page outline':'settings inspector');}
+ const focus=document.querySelector('.studio-view-controls button[aria-label="Expand preview canvas"]');
+ if(focus){focus.setAttribute('aria-pressed',String(body.classList.contains('skin-studio-hide-outline')&&body.classList.contains('skin-studio-hide-inspector')));}
+}
+function toggleSkinStudioFocus(button){
+ const body=document.body;
+ const focusOn=!(body.classList.contains('skin-studio-hide-outline')&&body.classList.contains('skin-studio-hide-inspector'));
+ body.classList.toggle('skin-studio-hide-outline',focusOn);
+ body.classList.toggle('skin-studio-hide-inspector',focusOn);
+ document.querySelectorAll('.studio-view-controls button').forEach(b=>{
+  if(b===button){b.setAttribute('aria-pressed',String(focusOn));b.title=focusOn?'Restore side panels':'Expand preview canvas';}
+  else if(b.getAttribute('aria-label')==='Toggle page outline'||b.getAttribute('aria-label')==='Toggle settings inspector'){b.setAttribute('aria-pressed',String(focusOn));}
+ });
+}
+document.addEventListener('keydown',event=>{
+ if(event.key==='Escape'&&document.body.classList.contains('skin-studio-fullpage')&&document.body.classList.contains('skin-studio-hide-outline')&&document.body.classList.contains('skin-studio-hide-inspector')){
+  document.body.classList.remove('skin-studio-hide-outline','skin-studio-hide-inspector');
+  document.querySelectorAll('.studio-view-controls button').forEach(b=>{b.setAttribute('aria-pressed','false');});
+ }
+ const editorOpen=document.body.classList.contains('skin-studio-fullpage');
+ const target=event.target;
+ const typing=target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+ if(editorOpen&&!typing&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){
+  event.preventDefault();
+  if(event.shiftKey)redoSkinStudio();else undoSkinStudio();
+ }else if(editorOpen&&!typing&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='y'){
+  event.preventDefault();redoSkinStudio();
+ }
+});
+// Capture the pre-edit state when a control receives focus. Capturing on input/change
+// would snapshot the already-mutated state and make the first Undo appear to do nothing.
+document.addEventListener('focusin',event=>{
+ const target=event.target;
+ if(!document.body.classList.contains('skin-studio-fullpage')||!(target instanceof HTMLElement))return;
+ if(target.closest('.studio-selected-inspector,.studio-site-settings,.studio-quick-add')||/^skinCfg/.test(target.id||''))skinHistoryCapture();
+},true);
 function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();syncSkinPreviewActionbar();}
 function updateSkinSection(index,key,value,fromPreview=false){
  const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;
+ skinHistoryCapture();
  sec[key]=value;
  if(key==='type'){sec.product_ids=[];sec.category_id='';sec.filter=value==='featured-products'?'featured':'all';}
  if(skinStudioPageId==='home'&&sec.type==='hero'){
@@ -3126,9 +3403,9 @@ function updateSkinSection(index,key,value,fromPreview=false){
 }
 function selectFirstSkinSection(){const section=skinSectionsFor()[0];if(section)selectSkinItem('section',section.id);else openSkinAdd('section');}
 function focusSkinInspector(){const panel=document.querySelector('.studio-right-panel');if(panel)panel.scrollTo({top:0,behavior:'smooth'});const root=document.getElementById('skinSelectedInspector');if(root)root.scrollIntoView({block:'nearest',behavior:'smooth'});if(!skinStudioSelection||skinStudioSelection.type==='none')selectFirstSkinSection();}
-function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;let ids=new Set((sec.product_ids||[]).map(String).filter(id=>id!=='__nuvora_manual_empty__'));if(sec.product_selection!=='manual')ids=new Set(skinProductsForSection({...sec,product_selection:'automatic',product_ids:[]}).map(p=>String(p.id)));if(checked)ids.add(String(productId));else ids.delete(String(productId));sec.product_selection='manual';sec.product_ids=ids.size?[...ids]:['__nuvora_manual_empty__'];updateSkinSection(index,'product_ids',sec.product_ids);}
+function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;skinHistoryCapture();let ids=new Set((sec.product_ids||[]).map(String).filter(id=>id!=='__nuvora_manual_empty__'));if(sec.product_selection!=='manual')ids=new Set(skinProductsForSection({...sec,product_selection:'automatic',product_ids:[]}).map(p=>String(p.id)));if(checked)ids.add(String(productId));else ids.delete(String(productId));sec.product_selection='manual';sec.product_ids=ids.size?[...ids]:['__nuvora_manual_empty__'];updateSkinSection(index,'product_ids',sec.product_ids);}
 function toggleSkinSectionVisibility(index){
- const sec=skinSectionsFor()[index];if(!sec)return;sec.visible=sec.visible===false;
+ const sec=skinSectionsFor()[index];if(!sec)return;skinHistoryCapture();sec.visible=sec.visible===false;
  skinMarkDirty('Section visibility changed in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function skinBuilderDragStart(event,index){
@@ -3140,22 +3417,25 @@ function skinBuilderDrop(event,targetIndex){
  if(!source.startsWith('section:'))return;
  const id=source.slice(8),sections=skinSectionsFor(),from=sections.findIndex(s=>String(s.id)===id);
  if(from<0||targetIndex<0||from===targetIndex)return;
- const [section]=sections.splice(from,1);sections.splice(targetIndex,0,section);
+ skinHistoryCapture();const [section]=sections.splice(from,1);sections.splice(targetIndex,0,section);
  skinStudioSelection={type:'section',id:String(section.id)};skinMarkDirty('Section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function moveSkinSection(index,delta){
  const sections=skinSectionsFor(),target=index+delta;if(target<0||target>=sections.length)return;
+ skinHistoryCapture();
  const [item]=sections.splice(index,1);sections.splice(target,0,item);
  skinStudioSelection={type:'section',id:String(item.id)};skinMarkDirty('Section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function duplicateSkinSection(index){
  const sections=skinSectionsFor(),original=sections[index];if(!original)return;
+ skinHistoryCapture();
  const clone=JSON.parse(JSON.stringify(original));clone.id='section-'+Date.now().toString(36);clone.title=(clone.title||'Section')+' copy';sections.splice(index+1,0,clone);
  skinStudioSelection={type:'section',id:String(clone.id)};skinMarkDirty('Section duplicated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function removeSkinSection(index,skipConfirm=false){
  const pageId=skinStudioPageId||'home',sections=skinSectionsFor(pageId),section=sections[index];if(!section)return false;
  if(!skipConfirm&&!confirm('Remove the “'+(section.title||section.type||'section')+'” section from this page draft?'))return false;
+ skinHistoryCapture();
  // Legacy sections can arrive without IDs. Give the target a stable ID before
  // resolving it again; comparing empty IDs used to select the wrong section or
  // make deletion silently fail.
@@ -3206,12 +3486,13 @@ function skinProductsForSection(sec){
 function addSkinProductToSection(productId,targetId,pageId){
  const product=adminProducts.find(p=>String(p.id)===String(productId));
  if(!product)return skinBuilderMessage('That product could not be found. Refresh the product library and try again.','error');
+ skinHistoryCapture();
  const pending=skinStudioPendingProductTarget;
  const effectivePageId=pending?.pageId||pageId||skinStudioPageId||'home';
  const sections=skinSectionsFor(effectivePageId);
  const preferredIds=[pending?.pageId===effectivePageId?pending.sectionId:null,targetId,skinStudioSelection?.type==='section'?skinStudioSelection.id:null].filter(Boolean);
  let sec=null;
- for(const preferredId of preferredIds){const candidate=sections.find(s=>String(s.id)===String(preferredId));if(candidate&&['product-grid','featured-products'].includes(candidate.type)){sec=candidate;break;}}
+ for(const preferredId of preferredIds){const candidate=sections.find(s=>String(s.id)===String(preferredId));if(candidate&&candidate.visible!==false&&['product-grid','featured-products'].includes(candidate.type)){sec=candidate;break;}}
  if(!sec)sec=sections.find(s=>s.visible!==false&&['product-grid','featured-products'].includes(s.type));
  if(!sec){
   sec={id:'section-'+Date.now().toString(36),type:'product-grid',visible:true,title:'New skincare picks',eyebrow:'The edit',text:'',filter:'all',columns:3,product_ids:[]};
@@ -3239,6 +3520,7 @@ function moveSkinProductInSection(productId,targetProductId,sectionId,pageId){
  if(!ids.length)ids=skinProductsForSection(sec).map(p=>String(p.id));
  const from=ids.indexOf(String(productId)),to=ids.indexOf(String(targetProductId));
  if(from<0||to<0||from===to)return;
+ skinHistoryCapture();
  const [item]=ids.splice(from,1);ids.splice(ids.indexOf(String(targetProductId)),0,item);sec.product_ids=ids.slice(0,60);
  skinStudioPageId=pageId||'home';skinStudioSelection={type:'section',id:String(sectionId)};skinMarkDirty('Product order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
  void saveSkinStudioChangeImmediately('Product order saved and verified in the page draft. Publish page changes to make it public.');
@@ -3268,6 +3550,8 @@ function reloadSkinStudioPreview(){
  if(!document.body.classList.contains('skin-studio-fullpage')||!skinBuilderConfig)return;
  collectSkinConfigFields();
  const frame=document.getElementById('skinStudioPreview');if(!frame)return;
+ window.__nuvoraSkinPreviewReady=false;
+ if(window.__nuvoraSkinPreviewTimeout){clearTimeout(window.__nuvoraSkinPreviewTimeout);window.__nuvoraSkinPreviewTimeout=null;}
  const notice=document.getElementById('skinStudioPreviewNotice');
  if(notice){notice.hidden=false;notice.innerHTML='<b>Reloading storefront preview…</b><span>Waiting for Nuvora Skin to respond.</span>';}
  frame.src=skinStudioPreviewUrl();
@@ -3321,11 +3605,20 @@ function wireSkinStudioCanvas(){
  if(!frame.dataset.canvasWired){
   frame.dataset.canvasWired='1';
   frame.addEventListener('load',()=>{
+   // The storefront can send its ready message before the iframe load event.
+   // Preserve that signal so the load handler cannot show a false timeout.
+   if(window.__nuvoraSkinPreviewReady){
+    if(window.__nuvoraSkinPreviewTimeout){clearTimeout(window.__nuvoraSkinPreviewTimeout);window.__nuvoraSkinPreviewTimeout=null;}
+    const readyNotice=document.getElementById('skinStudioPreviewNotice');if(readyNotice)readyNotice.hidden=true;
+    sendSkinStudioPreview();
+    return;
+   }
    sendSkinStudioPreview();
    const notice=document.getElementById('skinStudioPreviewNotice');
    if(notice){notice.hidden=false;notice.innerHTML='<b>Waiting for the storefront…</b><span>Checking for the live preview connection.</span>';}
    if(window.__nuvoraSkinPreviewTimeout)clearTimeout(window.__nuvoraSkinPreviewTimeout);
    window.__nuvoraSkinPreviewTimeout=setTimeout(()=>{
+    if(window.__nuvoraSkinPreviewReady)return;
     const box=document.getElementById('skinStudioPreviewNotice');
     if(box){box.hidden=false;box.innerHTML='<b>Preview did not respond</b><span>No editor-ready signal came back from the storefront. It may be blank, not deployed, running an older build, or its preview JavaScript may have failed. Your draft is safe. Open the storefront separately to check it, then reload this preview after the storefront is working.</span><a href="'+SKIN_CLIENT_ORIGIN+'/" target="_blank" rel="noopener noreferrer">Open storefront separately ↗</a><button type="button" onclick="reloadSkinStudioPreview()">Reload preview</button>';}
    },10000);
@@ -3336,7 +3629,7 @@ function wireSkinStudioCanvas(){
   window.addEventListener('message',event=>{
    if(event.origin!==SKIN_CLIENT_ORIGIN||event.source!==document.getElementById('skinStudioPreview')?.contentWindow||!event.data)return;
    const data=event.data;
-   if(data.type==='nuvora-skin-studio-ready'){if(window.__nuvoraSkinPreviewTimeout)clearTimeout(window.__nuvoraSkinPreviewTimeout);const notice=document.getElementById('skinStudioPreviewNotice');if(notice)notice.hidden=true;sendSkinStudioPreview();return;}
+   if(data.type==='nuvora-skin-studio-ready'){window.__nuvoraSkinPreviewReady=true;if(window.__nuvoraSkinPreviewTimeout){clearTimeout(window.__nuvoraSkinPreviewTimeout);window.__nuvoraSkinPreviewTimeout=null;}const notice=document.getElementById('skinStudioPreviewNotice');if(notice)notice.hidden=true;sendSkinStudioPreview();return;}
    if(!skinBuilderConfig)return;
    if(data.type==='nuvora-skin-studio-remove-section-image'){
     const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId||''));
@@ -3451,6 +3744,26 @@ function previewSkinSite(){
  window.open(SKIN_CLIENT_ORIGIN+'/', '_blank','noopener');
  skinBuilderMessage('Opened the live Nuvora Skin storefront. Unsaved changes remain in the builder draft.','info');
 }
+function skinStudioPublishWarnings(){
+ const warnings=[],pageIds=['home',...(skinBuilderConfig?.pages||[]).map(page=>String(page.slug||'' )).filter(Boolean)];
+ for(const pageId of pageIds){
+  const sections=skinSectionsFor(pageId);
+  for(const section of sections){
+   if(section.visible===false||!['product-grid','featured-products'].includes(section.type))continue;
+   const ids=Array.isArray(section.product_ids)?section.product_ids.map(String):[];
+   const filter=String(section.filter||'').toLowerCase();
+   if(!ids.length&&['manual','selected','specific'].includes(filter))warnings.push('“'+(section.title||'Product grid')+'” on '+(pageId==='home'?'the home page':'/'+pageId)+' has no selected products.');
+   const unpublished=ids.map(id=>adminProducts.find(product=>String(product.id)===id)).filter(product=>product&&!product.published);
+   if(unpublished.length)warnings.push((unpublished.length===1?'One selected product is':'Some selected products are')+' still drafts in “'+(section.title||'Product grid')+'” on '+(pageId==='home'?'the home page':'/'+pageId)+'. Draft products will not be visible to public shoppers.');
+   const missing=ids.filter(id=>!adminProducts.some(product=>String(product.id)===id));
+   if(missing.length)warnings.push('“'+(section.title||'Product grid')+'” contains '+missing.length+' product reference(s) that are no longer in the catalogue.');
+  }
+ }
+ const links=[...(skinBuilderConfig?.navigationItems||[]),...(skinBuilderConfig?.footerExploreLinks||[]),...(skinBuilderConfig?.footerReadLinks||[])].filter(item=>item&&item.visible!==false);
+ const unsafe=links.filter(item=>item.url&&/^http:\/\//i.test(String(item.url)));
+ if(unsafe.length)warnings.push(unsafe.length+' visible navigation/footer link(s) use HTTP rather than HTTPS.');
+ return [...new Set(warnings)];
+}
 function skinConfigValidationMessage(requireProductGrid=true){
  if(!skinSiteConfigLoaded)return 'The existing site settings did not load successfully. Reload the Skin Care workspace before saving.';
  if(!skinBuilderConfig)return 'The saved configuration has not loaded yet. Reload and retry.';
@@ -3512,6 +3825,7 @@ async function persistSkinSiteDraft(quiet=false){
   saveVerified=true;
   skinSiteDraftExists=true;skinDraftLastSavedPayload=stableSkinJson(verified);
   const latest=stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig));
+   if(latest===skinDraftLastSavedPayload)clearSkinStudioRecovery();
   if(latest===serialized){skinBuilderConfig=verified;fillSkinConfigFields();sendSkinStudioPreview();skinSetSavedLabel('Draft saved');}
   else{skinSetSavedLabel('Newer edits not saved yet');sendSkinStudioPreview();}
   skinBuilderMessage(quiet?'Draft auto-saved and verified. Your live storefront is unchanged.':'Draft saved and verified. Your live storefront is unchanged until you publish.','success');
@@ -3551,6 +3865,8 @@ async function saveSkinSiteConfig(button){
   collectSkinConfigFields();
   const validation=skinConfigValidationMessage();
   if(validation){skinBuilderMessage(validation,'error');return;}
+  const warnings=skinStudioPublishWarnings();
+  if(warnings.length&&!confirm('Please review these publish checks before continuing:\n\n• '+warnings.join('\n• ')+'\n\nContinue publishing anyway? Draft products will remain hidden from public shoppers.'))return;
   const payload=mergeSkinSiteConfig(skinBuilderConfig);
   skinBuilderMessage('Publishing the current site draft…','info');
   const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_config:payload,skin_site_draft:null}});
@@ -3562,6 +3878,7 @@ async function saveSkinSiteConfig(button){
   if(stableSkinJson(verified)!==stableSkinJson(published))throw new Error('The published configuration does not match the saved result. Reload the workspace before retrying.');
   if(check.skin_site_draft&&typeof check.skin_site_draft==='object')throw new Error('The site published, but a private draft is still present. Reload the workspace and verify the live page before retrying.');
   skinBuilderConfig=verified;skinSiteDraftExists=false;skinDraftLastSavedPayload=stableSkinJson(verified);
+   clearSkinStudioRecovery();
   fillSkinConfigFields();sendSkinStudioPreview();skinSetSavedLabel('All changes published');
   skinBuilderMessage('Published and verified. The live Nuvora Skin site now uses this configuration, and the private draft is cleared.','success');
  }catch(e){

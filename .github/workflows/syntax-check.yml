@@ -316,6 +316,54 @@ jobs:
           for needle, message in skin_contracts:
               if needle not in admin:
                   failures.append(message)
+          # Skin Studio preview lifecycle and canvas-first workspace regression contracts.
+          preview_wire_start=admin.find("function wireSkinStudioCanvas()")
+          preview_wire_end=admin.find("if(!window.__nuvoraSkinStudioBridgeWired)",preview_wire_start)
+          preview_wire_block=admin[preview_wire_start:preview_wire_end]
+          if "if(window.__nuvoraSkinPreviewReady)" not in preview_wire_block:
+              failures.append("Skin Studio iframe load must preserve an early ready handshake")
+          if "if(window.__nuvoraSkinPreviewReady)return" not in preview_wire_block:
+              failures.append("Skin Studio preview timeout must not overwrite a ready preview")
+          if "window.__nuvoraSkinPreviewReady=true" not in admin:
+              failures.append("Skin Studio ready messages must record the handshake")
+          reload_preview_start=admin.find("function reloadSkinStudioPreview")
+          reload_preview_end=admin.find("function refreshSkinStudioPreview",reload_preview_start)
+          reload_preview_block=admin[reload_preview_start:reload_preview_end]
+          if "window.__nuvoraSkinPreviewReady=false" not in reload_preview_block or "clearTimeout(window.__nuvoraSkinPreviewTimeout)" not in reload_preview_block:
+              failures.append("Skin Studio preview reload must reset the ready flag and cancel stale timeouts")
+          for workspace_token in ["toggleSkinStudioPanel('outline',this)","toggleSkinStudioPanel('inspector',this)","toggleSkinStudioFocus(this)","skin-studio-hide-outline","skin-studio-hide-inspector"]:
+              if workspace_token not in admin:
+                  failures.append("Skin Studio canvas controls missing "+workspace_token)
+          for history_token in ["function skinHistoryCapture()","function undoSkinStudio()","function redoSkinStudio()","skinStudioUndo","skinStudioRedo","event.key.toLowerCase()==='z'","event.key.toLowerCase()==='y'"]:
+              if history_token not in admin:
+                  failures.append("Skin Studio undo/redo history contract missing "+history_token)
+          for library_token in ["const pageSize=10","setSkinStudioProductFilter","skinStudioProductAvailability","Filter products by brand","Filter products by category","Filter products by publication status"]:
+              if library_token not in admin:
+                  failures.append("Skin Studio product library control missing "+library_token)
+          for media_token in ["function renderSkinMediaLibrary(root,forceRefresh=false)","function paintSkinStudioMediaLibrary(root)","function useSkinStudioMedia(url)","function setSkinStudioMediaPage(page)","const pageSize=24","skinTabMedia","product-images').list('skin-site'"]:
+              if media_token not in admin:
+                  failures.append("Skin Studio media library contract missing "+media_token)
+          for publish_token in ["function skinStudioPublishWarnings()","Draft products will not be visible to public shoppers","Continue publishing anyway?"]:
+              if publish_token not in admin:
+                  failures.append("Skin Studio publish preflight contract missing "+publish_token)
+          for recovery_token in ["function skinStudioRecoveryStorageKey()","function writeSkinStudioRecovery()","function restoreSkinStudioRecoveryIfAvailable()","Recovered unsaved edits","clearSkinStudioRecovery()","sessionStorage.setItem(skinStudioRecoveryStorageKey()"]:
+              if recovery_token not in admin:
+                  failures.append("Skin Studio local recovery contract missing "+recovery_token)
+          if "document.addEventListener('focusin',event=>" not in admin or "document.addEventListener('input',event=>" in admin[admin.find("function skinHistoryCapture"):admin.find("function renderSkinStudioAll")]:
+              failures.append("Skin Studio history must capture pre-edit state, not post-input state")
+          history_mutation_checks = [
+              ("function toggleSkinSectionVisibility(index){\n const sec=skinSectionsFor()[index];if(!sec)return;skinHistoryCapture();", "Section visibility must capture history before changing visibility"),
+              ("function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;skinHistoryCapture();", "Product selection must capture history before mutating selected IDs"),
+              ("if(from<0||targetIndex<0||from===targetIndex)return;\n skinHistoryCapture();const [section]=sections.splice(from,1);", "Drag-and-drop reorder must capture history before changing order"),
+          ]
+          for needle, message in history_mutation_checks:
+              if needle not in admin:
+                  failures.append(message)
+          placement_start=admin.find("function addSkinProductToSection")
+          placement_end=admin.find("function moveSkinProductInSection",placement_start)
+          placement_block=admin[placement_start:placement_end]
+          if "candidate.visible!==false&&['product-grid','featured-products'].includes(candidate.type)" not in placement_block:
+              failures.append("Place on Page must not silently target a hidden product section")
           open_skin_start=admin.find("async function openSkinProduct(){")
           open_skin_end=admin.find("function productReviewFlags",open_skin_start)
           open_skin_block=admin[open_skin_start:open_skin_end]
