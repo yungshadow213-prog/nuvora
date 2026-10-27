@@ -337,6 +337,9 @@ jobs:
           for history_token in ["function skinHistoryCapture()","function undoSkinStudio()","function redoSkinStudio()","skinStudioUndo","skinStudioRedo","event.key.toLowerCase()==='z'","event.key.toLowerCase()==='y'"]:
               if history_token not in admin:
                   failures.append("Skin Studio undo/redo history contract missing "+history_token)
+          for library_token in ["const pageSize=10","setSkinStudioProductFilter","skinStudioProductAvailability","Filter products by brand","Filter products by category","Filter products by publication status"]:
+              if library_token not in admin:
+                  failures.append("Skin Studio product library control missing "+library_token)
           placement_start=admin.find("function addSkinProductToSection")
           placement_end=admin.find("function moveSkinProductInSection",placement_start)
           placement_block=admin[placement_start:placement_end]
