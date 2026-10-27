@@ -201,6 +201,16 @@ body.skin-studio-fullpage .studio-history-controls .btn:disabled{opacity:.38;cur
 body.skin-studio-fullpage .studio-product-filters{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:8px 0 10px}
 body.skin-studio-fullpage .studio-product-filters label{display:grid;gap:4px;min-width:0;color:#7b887b;font-size:9px;font-weight:750}
 body.skin-studio-fullpage .studio-product-filters select{width:100%;min-width:0;padding:8px 6px;border:1px solid #dbe4d7;border-radius:8px;background:#fff;color:#2b3d2e;font-size:10px}
+body.skin-studio-fullpage .studio-media-toolbar{display:flex;gap:7px;align-items:center;margin:8px 0}
+body.skin-studio-fullpage .studio-media-toolbar input{min-width:0;flex:1;padding:9px;border:1px solid #dbe4d7;border-radius:8px;font-size:10px}
+body.skin-studio-fullpage .studio-media-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+body.skin-studio-fullpage .studio-media-card{min-width:0;border:1px solid #e1e8dd;border-radius:10px;overflow:hidden;background:#fff}
+body.skin-studio-fullpage .studio-media-thumb{height:105px;background:#f4f6f1;display:grid;place-items:center}
+body.skin-studio-fullpage .studio-media-thumb img{width:100%;height:100%;object-fit:contain}
+body.skin-studio-fullpage .studio-media-meta{padding:7px}
+body.skin-studio-fullpage .studio-media-name{font-size:9px;line-height:1.4;overflow-wrap:anywhere;color:#455447}
+body.skin-studio-fullpage .studio-media-actions{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+body.skin-studio-fullpage .studio-media-actions button{padding:5px 6px;border:1px solid #dbe4d7;border-radius:6px;background:#fff;color:#354736;font-size:9px;cursor:pointer}
 body.skin-studio-fullpage .studio-view-controls button{display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:7px;background:transparent;color:#617463;font-size:15px;cursor:pointer}
 body.skin-studio-fullpage .studio-view-controls button:hover,body.skin-studio-fullpage .studio-view-controls button[aria-pressed="true"]{background:#e7efe5;color:#285b36}
 body.skin-studio-fullpage .studio-layout{grid-template-columns:190px minmax(0,1fr) 250px}
@@ -811,6 +821,7 @@ body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
         <button id="skinTabProducts" type="button" onclick="switchSkinStudioTab('products')">Products</button>
         <button id="skinTabPages" type="button" onclick="switchSkinStudioTab('pages')">Pages</button>
         <button id="skinTabCategories" type="button" onclick="switchSkinStudioTab('categories')">Categories</button>
+        <button id="skinTabMedia" type="button" onclick="switchSkinStudioTab('media')">Media</button>
       </div>
       <div id="skinQuickAddPanel" class="studio-quick-add" hidden></div>
       <div id="skinLibraryItems" class="studio-library-items" hidden></div>
@@ -2865,8 +2876,8 @@ function updateSkinStudioPageTitle(){
  const el=document.getElementById('skinStudioPageTitle');if(el)el.textContent=skinPageLabel();
 }
 function switchSkinStudioTab(tab){
- skinStudioTab=['outline','products','pages','categories'].includes(tab)?tab:'outline';
- ['outline','products','pages','categories'].forEach(key=>{const b=document.getElementById('skinTab'+key.charAt(0).toUpperCase()+key.slice(1));if(b)b.classList.toggle('active',skinStudioTab===key);});
+ skinStudioTab=['outline','products','pages','categories','media'].includes(tab)?tab:'outline';
+ ['outline','products','pages','categories','media'].forEach(key=>{const b=document.getElementById('skinTab'+key.charAt(0).toUpperCase()+key.slice(1));if(b)b.classList.toggle('active',skinStudioTab===key);});
  const outline=document.getElementById('skinBuilderSections'),library=document.getElementById('skinLibraryItems');
  if(outline)outline.hidden=skinStudioTab!=='outline';
  if(library)library.hidden=skinStudioTab==='outline';
@@ -2904,6 +2915,54 @@ function setSkinStudioProductFilter(key,value){
  window.skinStudioProductPage=1;
  renderSkinLibrary();
 }
+async function renderSkinMediaLibrary(root){
+ if(!root)return;
+ if(!adminSB){root.innerHTML='<div class="studio-library-empty">Media storage is not connected. Sign in again to browse uploaded images.</div>';return;}
+ const requestId=(window.skinStudioMediaRequestId||0)+1;window.skinStudioMediaRequestId=requestId;
+ root.innerHTML='<div class="studio-library-empty">Loading uploaded Skin Studio images…</div>';
+ try{
+  const {data,error}=await adminSB.storage.from('product-images').list('skin-site',{limit:100,offset:0,sortBy:{column:'created_at',order:'desc'}});
+  if(error)throw error;
+  if(requestId!==window.skinStudioMediaRequestId)return;
+  const files=(data||[]).filter(item=>item?.name&&!item.name.endsWith('/')&&/\.(jpe?g|png|webp|gif)$/i.test(item.name));
+  const urls=files.map(item=>({name:item.name,createdAt:item.created_at||item.updated_at||'',url:adminSB.storage.from('product-images').getPublicUrl('skin-site/'+item.name).data?.publicUrl||''})).filter(item=>item.url);
+  const needle=String(window.skinStudioMediaSearch||'').trim().toLowerCase();
+  const filtered=urls.filter(item=>item.name.toLowerCase().includes(needle));
+  root.innerHTML='<p class="studio-inline-help">Uploaded Skin Studio images. Choose “Use selected” to apply an image to the current section or custom category. Removing an image from a page does not delete the stored file.</p>'+
+   '<div class="studio-media-toolbar"><input aria-label="Search media files" placeholder="Search uploaded images" value="'+esc(window.skinStudioMediaSearch||'')+'" oninput="setSkinStudioMediaSearch(this.value)"><button type="button" class="btn" onclick="renderSkinMediaLibrary(document.getElementById(\'skinLibraryItems\'))">Refresh</button></div>'+
+   (filtered.length?'<div class="studio-media-grid">'+filtered.map(item=>'<article class="studio-media-card"><div class="studio-media-thumb"><img loading="lazy" src="'+esc(item.url)+'" alt=""></div><div class="studio-media-meta"><div class="studio-media-name">'+esc(item.name)+'</div><div class="studio-media-actions"><button type="button" onclick="useSkinStudioMedia('+esc(JSON.stringify(item.url))+')">Use selected</button><button type="button" onclick="copySkinStudioMediaUrl('+esc(JSON.stringify(item.url))+')">Copy URL</button></div></div></article>').join('')+'</div>':'<div class="studio-library-empty">No matching uploaded images found in the Skin Studio media folder.</div>')+
+   '<p class="studio-inline-help">Showing '+filtered.length+' of '+urls.length+' images in the first 100 storage entries.</p>';
+ }catch(error){
+  if(requestId!==window.skinStudioMediaRequestId)return;
+  root.innerHTML='<div class="studio-library-empty">Could not load media: '+esc(error?.message||'Storage request failed')+'. Check storage access and try Refresh.</div>';
+ }
+}
+function setSkinStudioMediaSearch(value){
+ window.skinStudioMediaSearch=String(value||'');
+ renderSkinMediaLibrary(document.getElementById('skinLibraryItems'));
+}
+async function copySkinStudioMediaUrl(url){
+ try{await navigator.clipboard.writeText(String(url||''));skinBuilderMessage('Image URL copied.','success');}
+ catch(e){window.prompt('Copy this image URL',String(url||''));}
+}
+async function useSkinStudioMedia(url){
+ const selection=skinStudioSelection||{};
+ if(!skinBuilderConfig||!url){skinBuilderMessage('Choose an editable section or category before applying an image.','warning');return;}
+ if(selection.type==='section'){
+  const sections=skinSectionsFor(),index=sections.findIndex(section=>String(section.id)===String(selection.id));
+  if(index<0){skinBuilderMessage('The selected section is no longer available.','error');return;}
+  updateSkinSection(index,'image',String(url));
+ }else if(selection.type==='category'){
+  updateSkinCategory(String(selection.id),'image',String(url));
+ }else if(selection.type==='default-category'){
+  skinBuilderMessage('Default categories are managed by the storefront. Choose a custom category or section to replace its image.','warning');return;
+ }else{
+  skinBuilderMessage('Select a section or custom category to use this image.','warning');return;
+ }
+ await saveSkinStudioChangeImmediately('Image applied and saved to the page draft. Publish when ready.');
+ renderSkinStudioAll();
+ queueSkinStudioPreview();
+}
 function renderSkinLibrary(){
  const root=document.getElementById('skinLibraryItems');if(!root)return;
  const outline=document.getElementById('skinBuilderSections');
@@ -2911,6 +2970,7 @@ function renderSkinLibrary(){
  root.hidden=skinStudioTab==='outline';
  if(skinStudioTab==='outline'){root.innerHTML='';return;}
  if(!skinBuilderConfig){root.innerHTML='<div class="studio-library-empty">Loading your site content…</div>';return;}
+ if(skinStudioTab==='media'){renderSkinMediaLibrary(root);return;}
  if(skinStudioTab==='products'){
   const productIdentity=item=>String(item?.amazon_asin||item?.asin||retailerDestination(item)||item?.destination_url||item?.amazon_source_url||item?.source_url||item?.id||'').trim().toLowerCase();
   const allRows=adminProducts.filter(isSkinProduct).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''))).filter((p,index,list)=>list.findIndex(other=>String(other.name||'').trim().toLowerCase()===String(p.name||'').trim().toLowerCase()&&productIdentity(other)===productIdentity(p))===index);
