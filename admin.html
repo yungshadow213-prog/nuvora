@@ -2923,7 +2923,7 @@ async function renderSkinMediaLibrary(root,forceRefresh=false){
  const requestId=(window.skinStudioMediaRequestId||0)+1;window.skinStudioMediaRequestId=requestId;
  root.innerHTML='<div class="studio-library-empty">Loading uploaded Skin Studio images…</div>';
  try{
-  const {data,error}=await adminSB.storage.from('product-images').list('skin-site',{limit:100,offset:0,sortBy:{column:'created_at',order:'desc'}});
+  const {data,error}=await adminSB.storage.from('product-images').list('skin-site',{limit:1000,offset:0,sortBy:{column:'created_at',order:'desc'}});
   if(error)throw error;
   if(requestId!==window.skinStudioMediaRequestId)return;
   const files=(data||[]).filter(item=>item?.name&&!item.name.endsWith('/')&&/\.(jpe?g|png|webp|gif)$/i.test(item.name));
@@ -2939,15 +2939,23 @@ function paintSkinStudioMediaLibrary(root){
  const urls=Array.isArray(window.skinStudioMediaItems)?window.skinStudioMediaItems:[];
  const needle=String(window.skinStudioMediaSearch||'').trim().toLowerCase();
  const filtered=urls.filter(item=>item.name.toLowerCase().includes(needle));
+ const pageSize=24,pageCount=Math.max(1,Math.ceil(filtered.length/pageSize));
+ window.skinStudioMediaPage=Math.min(Math.max(1,Number(window.skinStudioMediaPage)||1),pageCount);
+ const page=window.skinStudioMediaPage,visible=filtered.slice((page-1)*pageSize,page*pageSize);
  root.innerHTML='<p class="studio-inline-help">Uploaded Skin Studio images. Choose “Use selected” to apply an image to the current section or custom category. Removing an image from a page does not delete the stored file.</p>'+
   '<div class="studio-media-toolbar"><input aria-label="Search media files" placeholder="Search uploaded images" value="'+esc(window.skinStudioMediaSearch||'')+'" oninput="setSkinStudioMediaSearch(this.value)"><button type="button" class="btn" onclick="renderSkinMediaLibrary(document.getElementById(\'skinLibraryItems\'),true)">Refresh</button></div>'+
-  (filtered.length?'<div class="studio-media-grid">'+filtered.map(item=>'<article class="studio-media-card"><div class="studio-media-thumb"><img loading="lazy" src="'+esc(item.url)+'" alt=""></div><div class="studio-media-meta"><div class="studio-media-name">'+esc(item.name)+'</div><div class="studio-media-actions"><button type="button" onclick="useSkinStudioMedia('+esc(JSON.stringify(item.url))+')">Use selected</button><button type="button" onclick="copySkinStudioMediaUrl('+esc(JSON.stringify(item.url))+')">Copy URL</button></div></div></article>').join('')+'</div>':'<div class="studio-library-empty">No matching uploaded images found in the Skin Studio media folder.</div>')+
-  '<p class="studio-inline-help">Showing '+filtered.length+' of '+urls.length+' images in the first 100 storage entries.</p>';
+  (visible.length?'<div class="studio-media-grid">'+visible.map(item=>'<article class="studio-media-card"><div class="studio-media-thumb"><img loading="lazy" src="'+esc(item.url)+'" alt=""></div><div class="studio-media-meta"><div class="studio-media-name">'+esc(item.name)+'</div><div class="studio-media-actions"><button type="button" onclick="useSkinStudioMedia('+esc(JSON.stringify(item.url))+')">Use selected</button><button type="button" onclick="copySkinStudioMediaUrl('+esc(JSON.stringify(item.url))+')">Copy URL</button></div></div></article>').join('')+'</div>':'<div class="studio-library-empty">No matching uploaded images found in the Skin Studio media folder.</div>')+
+  (pageCount>1?'<nav aria-label="Media pages" style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:12px"><button type="button" class="btn" '+(page===1?'disabled':'')+' onclick="setSkinStudioMediaPage('+(page-1)+')">Previous</button><span class="studio-inline-help">Page '+page+' of '+pageCount+'</span><button type="button" class="btn" '+(page===pageCount?'disabled':'')+' onclick="setSkinStudioMediaPage('+(page+1)+')">Next</button></nav>':'')+
+  '<p class="studio-inline-help">Showing '+(filtered.length?((page-1)*pageSize+1):0)+'–'+Math.min(page*pageSize,filtered.length)+' of '+filtered.length+' matching images ('+urls.length+' loaded; up to 1,000 storage entries).</p>';
+}
+function setSkinStudioMediaPage(page){
+ window.skinStudioMediaPage=Math.max(1,Number(page)||1);
+ paintSkinStudioMediaLibrary(document.getElementById('skinLibraryItems'));
 }
 function setSkinStudioMediaSearch(value){
  const current=document.querySelector('#skinLibraryItems input[aria-label="Search media files"]');
  const caret=current?.selectionStart??String(value||'').length;
- window.skinStudioMediaSearch=String(value||'');
+ window.skinStudioMediaSearch=String(value||'');window.skinStudioMediaPage=1;
  paintSkinStudioMediaLibrary(document.getElementById('skinLibraryItems'));
  const input=document.querySelector('#skinLibraryItems input[aria-label="Search media files"]');
  if(input){input.focus();const position=Math.min(caret,input.value.length);input.setSelectionRange(position,position);}
