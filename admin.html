@@ -4159,4 +4159,87 @@ body.skin-studio-fullpage .studio-canvas-head small,body.skin-studio-fullpage .s
 @media(min-width:951px){.side{scrollbar-width:thin;scrollbar-color:#ffffff3b transparent}.main{min-width:0}.nav button{overflow-wrap:anywhere}}
 @media(max-width:950px){.nav-group{display:flex;gap:4px;align-items:center}.nav-group-label{display:none}.nav-group-system{padding-top:0;border-top:0}.nav{align-items:center}.nav button{white-space:nowrap}}
 @media(max-width:560px){.nav button:before{display:none!important}.nav button{min-width:max-content!important}.side{padding:8px 8px 10px!important}.studio-toolbar-actions{align-items:stretch!important}}
+</style>
+<style id="nuvora-admin-modal-catalog-polish">
+/* Product editing and catalog are part of the redesign too — not a leftover dark modal */
+.modal-backdrop{background:rgba(24,43,29,.45)!important;backdrop-filter:blur(7px)!important;align-items:center!important;justify-content:center!important;padding:22px!important}
+.modal{width:min(1120px,100%)!important;max-height:min(92vh,1000px)!important;background:#fff!important;color:#263b2c!important;border:1px solid #e0e8dd!important;border-radius:22px!important;box-shadow:0 28px 90px rgba(24,43,29,.24)!important;overflow:auto!important}
+.modal-head{position:sticky!important;top:0!important;align-items:center!important;gap:20px!important;padding:20px 24px!important;background:rgba(255,255,255,.97)!important;border-bottom:1px solid #e6ece3!important;backdrop-filter:blur(14px)!important}
+.modal-head .eyebrow{color:#6d8b6f!important}
+.modal-head h2{font-family:Manrope,sans-serif!important;font-size:clamp(22px,3vw,30px)!important;color:#24412e!important;letter-spacing:-1px!important}
+.modal-head .muted{font-size:12px!important;line-height:1.65!important;color:#748277!important}
+.modal-body{padding:24px!important}
+.workspace-note{background:#f2f7ef!important;border:1px solid #dfebd9!important;color:#506a52!important;line-height:1.65!important}
+.modal-actions{border-color:#e2e9df!important}
+.modal .field label{font-size:11px!important;color:#627466!important;font-weight:800!important;letter-spacing:.01em}
+.modal input,.modal textarea,.modal select{background:#fbfcfa!important;border-color:#dfe7dc!important;color:#263b2c!important;border-radius:10px!important}
+.modal input::placeholder,.modal textarea::placeholder{color:#9ba79b!important}
+.modal .importbar{gap:9px!important}
+.modal .importbar input{min-width:0!important}
+.modal .image-strip{gap:10px!important}
+.modal .image-strip>div,.modal .image-strip button{border-radius:12px!important;border-color:#dfe8dc!important}
+.modal .notice{background:#f7faf5!important;color:#536a54!important;border-color:#dfebd9!important}
+.modal .ai-studio,.modal .ai-studio-head,.modal .ai-grid{color:#294632!important}
+.modal .ai-studio-head h3{font-family:Manrope,sans-serif!important;color:#294632!important}
+.modal .admin-inline-status{max-width:none!important}
+.modal .btn{min-height:38px!important}
+.catalog-head{display:flex!important;align-items:flex-end!important;justify-content:space-between!important;gap:18px!important;flex-wrap:wrap!important;padding-bottom:22px!important;border-bottom:1px solid #e1e8df!important;margin-bottom:18px!important}
+.catalog-head h2{font-family:Manrope,sans-serif!important;font-size:clamp(28px,3vw,38px)!important;letter-spacing:-1.5px!important;color:#233d2b!important;margin:7px 0!important}
+.catalog-head p{max-width:670px!important;line-height:1.75!important;color:#718075!important}
+.catalog-actions{display:flex!important;gap:8px!important;flex-wrap:wrap!important;justify-content:flex-end!important}
+.catalog-toolbar{display:flex!important;flex-wrap:wrap!important;gap:10px!important;border:1px solid #e1e8df!important;background:#fff!important;border-radius:15px!important;padding:12px!important}
+.catalog-search{min-width:220px!important;flex:1 1 270px!important;border-color:#dfe7dc!important;border-radius:10px!important;background:#f9fbf8!important}
+.catalog-search input{min-width:0!important}
+.catalog-filter-select{border-color:#dfe7dc!important;background:#fff!important;color:#395641!important}
+.catalog-filter-note{font-size:11px!important;color:#6d806f!important}
+.catalog-health-grid{gap:12px!important;margin:16px 0 20px!important}
+.catalog-health-card{background:#fff!important;border-color:#e1e8df!important;border-radius:15px!important;padding:17px!important}
+.catalog-health-card strong{font-family:Manrope,sans-serif!important;color:#294632!important;font-size:27px!important}
+.catalog-health-card span{color:#728174!important;font-size:11px!important;line-height:1.55!important}
+.catalog-health-card.attention{background:#fffaf1!important;border-color:#ede1c9!important}
+.catalog-health-card.attention strong{color:#9b6c2c!important}
+.catalog-panel{padding:0!important;overflow:hidden!important;border-radius:18px!important}
+.catalog-panel-head{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;flex-wrap:wrap!important;padding:19px 20px!important;background:#fbfcfa!important;border-bottom:1px solid #e8eee5!important}
+.catalog-panel-head h2{font-size:20px!important;margin:5px 0 0!important}
+.library-note{font-size:10px!important;font-weight:700!important;color:#6f8370!important}
+.product-library{padding:8px 12px 14px!important}
+.product-library .row{display:flex!important;align-items:center!important;gap:12px!important;flex-wrap:wrap!important;background:#fff!important;border:1px solid #e3eae0!important;border-radius:13px!important;padding:14px!important;margin:6px 0!important;min-width:0!important}
+.product-library .row:hover{border-color:#c5d9bf!important;background:#fcfefb!important;box-shadow:0 8px 20px #233b2c0b!important}
+.product-library .row>div{min-width:0!important}
+.product-library .row strong,.product-library .row b{overflow-wrap:anywhere!important}
+.product-library .row .actions{display:flex!important;flex-wrap:wrap!important;gap:7px!important;margin-top:0!important}
+.product-library .row .btn{font-size:11px!important;padding:8px 10px!important}
+.product-library .row .muted{font-size:10px!important;line-height:1.6!important}
+.product-library .tag{background:#edf4e9!important;color:#4e7050!important;border-color:#dce8d7!important}
+.bulk-drop{border-color:#ccddc5!important;background:#f8fbf6!important;border-radius:15px!important}
+.bulk-icon{background:#e7f0e3!important;color:#426c49!important;border-radius:11px!important}
+#products .catalog-panel,#skin-care .catalog-panel{margin-bottom:16px!important}
+#categories .panel,#collections .panel,#orders .panel,#social .panel,#analytics .panel,#settings .panel{max-width:1100px!important;margin:0 auto!important;padding:clamp(18px,3vw,30px)!important}
+#categories .panel h2,#collections .panel h2,#orders .panel h2,#social .panel h2,#analytics .panel h2,#settings .panel h2{font-size:26px!important;margin-bottom:9px!important}
+#categories .panel>p,#collections .panel>p,#orders .panel>p,#social .panel>p,#analytics .panel>p,#settings .panel>p{max-width:780px!important;line-height:1.75!important}
+#social .formgrid,#settings .formgrid{gap:16px!important}
+#social textarea,#settings textarea,#categories textarea,#collections textarea{min-height:125px!important}
+@media(max-width:800px){
+ .modal-backdrop{align-items:flex-end!important;padding:0!important}
+ .modal{width:100%!important;max-height:94dvh!important;border-radius:20px 20px 0 0!important}
+ .modal-head{padding:16px!important}
+ .modal-body{padding:16px!important}
+ .catalog-actions{justify-content:flex-start!important}
+ .catalog-toolbar{align-items:stretch!important}
+ .catalog-search{flex-basis:100%!important;max-width:none!important}
+ .catalog-filter-select{flex:1 1 100%!important}
+ .catalog-filter-note{flex:1 1 100%!important}
+ .catalog-health-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .product-library{padding:7px!important}
+ .product-library .row{align-items:flex-start!important}
+}
+@media(max-width:480px){
+ .modal .importbar{flex-direction:column!important;align-items:stretch!important}
+ .modal .importbar button{width:100%!important}
+ .catalog-head h2{font-size:28px!important}
+ .catalog-actions .btn{flex:1 1 130px!important}
+ .catalog-health-card{padding:12px!important}
+ .catalog-health-card strong{font-size:23px!important}
+ .catalog-panel-head{padding:15px!important}
+}
 </style></body></html>
