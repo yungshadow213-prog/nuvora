@@ -3212,7 +3212,7 @@ function renderSkinLibrary(){
  const root=document.getElementById('skinLibraryItems');if(!root)return;
  const outline=document.getElementById('skinBuilderSections');
  if(outline)outline.hidden=skinStudioTab!=='outline';
- root.hidden=skinStudioTab==='outline';
+ root.hidden=skinStudioTab==='outline'||skinStudioTab==='settings';
  if(skinStudioTab==='outline'||skinStudioTab==='settings'){root.innerHTML='';return;}
  if(!skinBuilderConfig){root.innerHTML='<div class="studio-library-empty">Loading your site content…</div>';return;}
  if(skinStudioTab==='media'){renderSkinMediaLibrary(root);return;}
