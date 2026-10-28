@@ -2598,7 +2598,7 @@ async function adminBoot(){
 
 const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
 let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinSiteDraftExists=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='',skinStudioPendingProductTarget=null;
-let skinStudioUndoStack=[],skinStudioRedoStack=[],skinStudioHistoryLastCapture=0,skinStudioHistoryApplying=false;
+let skinStudioUndoStack=[],skinStudioRedoStack=[],skinStudioHistoryLastCapture=0,skinStudioHistoryApplying=false,skinSitePublishInProgress=false;
 const defaultSkinSiteConfig=()=>({
   version:5,homeLayoutVersion:0,template:'soft-editorial',accentColor:'#66745f',
   designSettings:{backgroundColor:'#f7f4ee',surfaceColor:'#fffdf9',textColor:'#342f2b',mutedColor:'#77756c',borderColor:'#e4dfd5',successColor:'#3d7d57',errorColor:'#b24b42',saleColor:'#c77d5b',headingFont:'Playfair Display',bodyFont:'DM Sans',pageMaxWidth:1280,sideGutters:24,sectionSpacing:64,gridGap:22,cornerRadius:14,shadowStyle:'soft',productImageRatio:'4:5',productHoverEffect:'none'},
@@ -2855,7 +2855,7 @@ function restoreSkinStudioRecoveryIfAvailable(){
  return true;
 }
 function queueSkinDraftAutosave(){
- if(!skinSiteConfigLoaded||!skinBuilderConfig||!document.body.classList.contains('skin-studio-fullpage'))return;
+ if(skinSitePublishInProgress||!skinSiteConfigLoaded||!skinBuilderConfig||!document.body.classList.contains('skin-studio-fullpage'))return;
  if(skinDraftAutosaveTimer)clearTimeout(skinDraftAutosaveTimer);
  skinDraftAutosaveTimer=setTimeout(()=>{
   persistSkinSiteDraft(true).catch(error=>{
@@ -4205,6 +4205,7 @@ async function persistSkinSiteDraft(quiet=false){
  }
 }
 async function saveSkinSiteDraft(button){
+ if(skinSitePublishInProgress){skinBuilderMessage('Publishing is in progress. Wait for verification to finish before saving another draft.','warning');return;}
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
  const btn=button instanceof HTMLElement?button:document.querySelector('button[onclick="saveSkinSiteDraft(this)"]');if(btn){btn.disabled=true;btn.textContent='Saving…';}
  try{await persistSkinSiteDraft(false);}
@@ -4243,9 +4244,11 @@ async function discardSkinSiteDraft(button){
  }
 }
 async function saveSkinSiteConfig(button){
+ if(skinSitePublishInProgress){skinBuilderMessage('A publish is already in progress. Wait for its read-back verification before retrying.','warning');return;}
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
  const btn=button instanceof HTMLElement?button:document.querySelector('button[onclick="saveSkinSiteConfig(this)"]');
  if(btn?.disabled)return;
+ skinSitePublishInProgress=true;
  if(btn){btn.disabled=true;btn.textContent='Publishing…';}
  skinBuilderMessage('Preparing the latest edits for publishing…','info');
  try{
@@ -4278,6 +4281,7 @@ async function saveSkinSiteConfig(button){
  }catch(e){
   skinBuilderMessage('Publish could not be verified: '+(e.message||'unknown error')+'. Reload the workspace and check the live site before retrying.','error');
  }finally{
+  skinSitePublishInProgress=false;
   if(btn){btn.disabled=false;btn.textContent='Publish changes';}
  }
 }
