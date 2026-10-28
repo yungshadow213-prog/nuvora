@@ -603,6 +603,13 @@ body.skin-studio-fullpage .studio-right-panel.is-settings-workspace .studio-site
 body.skin-studio-fullpage .studio-right-panel.is-settings-workspace{overflow-y:auto!important;max-height:calc(100vh - 150px)!important}
 @media(max-width:950px){body.skin-studio-fullpage .studio-right-panel.is-settings-workspace{max-height:none!important}}
 </style>
+
+<style id="skin-studio-settings-workspace-cleanup">
+body.skin-studio-fullpage .studio-left-panel.is-settings-workspace .studio-add-button,
+body.skin-studio-fullpage .studio-left-panel.is-settings-workspace .studio-left-foot{display:none!important}
+body.skin-studio-fullpage .studio-left-panel.is-settings-workspace .studio-panel-head{border-bottom:0!important}
+body.skin-studio-fullpage .studio-left-panel.is-settings-workspace .studio-panel-head h3{font-size:14px!important}
+</style>
 </head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
   <div class="nav-group">
     <span class="nav-group-label">Workspace</span>
@@ -3092,9 +3099,11 @@ function switchSkinStudioTab(tab){
  const panel=document.getElementById('skinQuickAddPanel');if(panel&&skinStudioTab!=='pages'&&skinStudioTab!=='categories')panel.hidden=true;
  const settingsNav=document.getElementById('skinStudioGlobalDesignNav');
  if(settingsNav){const active=skinStudioTab==='settings';settingsNav.classList.toggle('active',active);if(active)settingsNav.setAttribute('aria-current','page');else settingsNav.removeAttribute('aria-current');}
- const right=document.querySelector('.studio-right-panel'),settings=document.querySelector('.studio-site-settings');
+ const right=document.querySelector('.studio-right-panel'),settings=document.querySelector('.studio-site-settings'),left=document.querySelector('.studio-left-panel');
  if(right)right.classList.toggle('is-settings-workspace',skinStudioTab==='settings');
+ if(left)left.classList.toggle('is-settings-workspace',skinStudioTab==='settings');
  if(settings){settings.open=skinStudioTab==='settings';}
+ if(skinStudioTab==='settings'){const addMenu=document.getElementById('skinStudioAddMenu');if(addMenu)addMenu.hidden=true;}
  const title=document.querySelector('.studio-panel-head h3');
  const helper=document.querySelector('.studio-panel-helper');
  const labels={outline:['Page layout','Select a section to edit it. Drag sections to reorder the storefront.'],products:['Product library','Manage affiliate products here; placement on a page is a separate action.'],pages:['Pages','Create and switch between storefront pages without mixing page settings with the catalog.'],categories:['Categories & brands','Organize product discovery separately from product records.'],media:['Media library','Reuse uploaded images without deleting the stored source file.'],settings:['Design & navigation','Configure the shared brand system, header, menus, announcement bar and footer.']};
