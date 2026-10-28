@@ -171,3 +171,10 @@ This is an incremental UI-architecture slice, not completion of the full specifi
 - These actions already updated the draft and refreshed the preview; now they also participate in the editor's undo/redo model so accidental canvas changes can be reversed consistently.
 - Re-fetched admin.html from the feature branch and compiled its complete inline JavaScript successfully with new Function. Targeted source assertions confirmed the history hooks and publish/draft concurrency guards are present.
 - These are static source checks only. The authenticated preview bridge and API persistence still require browser-based acceptance testing.
+
+
+### Implementation log — 28 October 2026 (preview navigation readiness)
+
+- Fixed a stale readiness-state edge case when switching pages in Skin Studio: the prior iframe's ready signal could survive navigation and make the newly loaded page appear connected before it sent its own ready message.
+- Page navigation now resets the ready flag, clears any previous timeout, and displays a page-specific loading notice. The fallback path that initializes the preview URL also resets readiness and shows a connection notice.
+- Re-fetched the changed admin file and compiled its inline JavaScript successfully. This validates syntax and source shape only; a live browser test is still needed to verify the iframe handshake and timeout behavior against the storefront.
