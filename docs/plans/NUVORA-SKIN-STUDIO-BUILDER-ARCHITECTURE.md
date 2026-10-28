@@ -139,3 +139,18 @@ Keep the main Nuvora Admin and the Skin Studio distinct. The studio is a full-pa
 ## Current build slice
 
 This branch begins by making the editor's left-side workspace navigation explicit and grouped into Storefront, Catalog and Content, with Design & navigation clearly separated. It builds on the existing three-panel editor and existing save/publish implementation rather than replacing working product data or creating a parallel editor. The roadmap above is the acceptance map for subsequent implementation slices.
+
+
+## Implementation log — 28 October 2026
+
+### Completed in the current workspace slice
+
+- Grouped Skin Studio navigation into **Storefront**, **Catalog**, **Content**, and a distinct **Design** workspace.
+- Made Design & navigation a dedicated editor mode instead of leaving global settings mixed into the selected-element inspector.
+- When Design is active, the section/content list and Add action are hidden; the shared settings controls occupy the inspector area, and the active workspace is marked accessibly.
+- Returning to Theme editor or another workspace restores the normal selection inspector and closes the global-settings mode.
+- Kept the current affiliate data model and the customer storefront repository unchanged.
+
+### Still outstanding
+
+This is an incremental UI-architecture slice, not completion of the full specification. Continue in priority order: validate the editor workspace in an authenticated browser; finish section/block authoring and template coverage; audit product/category/media workflows; verify draft persistence and publish read-back; then expand global design controls and storefront feature coverage. Automated and authenticated browser checks remain required before this PR can be considered release-ready.
