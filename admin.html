@@ -610,6 +610,15 @@ body.skin-studio-fullpage .studio-left-panel.is-settings-workspace .studio-left-
 body.skin-studio-fullpage .studio-left-panel.is-settings-workspace .studio-panel-head{border-bottom:0!important}
 body.skin-studio-fullpage .studio-left-panel.is-settings-workspace .studio-panel-head h3{font-size:14px!important}
 </style>
+
+<style id="skin-studio-section-outline-search">
+body.skin-studio-fullpage .studio-outline-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px;padding:10px 10px 12px;border-bottom:1px solid #edf1eb;background:#fff}
+body.skin-studio-fullpage .studio-outline-tools label{display:grid;gap:5px;min-width:0}
+body.skin-studio-fullpage .studio-outline-tools label span{font-size:10px;font-weight:750;color:#667767}
+body.skin-studio-fullpage .studio-outline-tools input{width:100%;min-width:0;min-height:38px;border:1px solid #dfe7dc;border-radius:8px;padding:8px 10px;background:#fbfcfa;color:#293b2e;font-size:12px}
+body.skin-studio-fullpage .studio-outline-count{font-size:10px;color:#718174;white-space:nowrap;padding-bottom:10px}
+body.skin-studio-fullpage .studio-section-outline[hidden]{display:none!important}
+</style>
 </head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
   <div class="nav-group">
     <span class="nav-group-label">Workspace</span>
@@ -3281,15 +3290,27 @@ function renderSkinBuilderSections(){
  const root=document.getElementById('skinBuilderSections');if(!root||!skinBuilderConfig)return;
  const sections=skinSectionsFor();
  const typeLabels={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Featured products','category-grid':'Category browse','journal-grid':'Journal cards','routine-finder':'Skin routine finder','image-block':'Image block','text-block':'Text block','brand-grid':'Brand directory'};
- root.innerHTML=sections.map((sec,index)=>{
+ const needle=String(window.skinStudioSectionSearch||'').trim().toLowerCase();
+ root.innerHTML='<div class="studio-outline-tools"><label><span>Find a section</span><input id="skinStudioSectionSearch" type="search" value="'+esc(needle)+'" placeholder="Search sections…" aria-label="Search page sections" oninput="filterSkinSectionOutline(this.value)"></label><span id="skinStudioSectionCount" class="studio-outline-count">'+sections.length+' sections</span></div>'+ (sections.map((sec,index)=>{
   const selected=skinStudioSelection?.type==='section'&&String(skinStudioSelection.id)===String(sec.id);
   const visible=sec.visible!==false;
-  return '<article class="studio-section-outline '+(selected?'is-selected':'')+'" data-section-index="'+index+'" draggable="true" ondragstart="skinSectionDragStart(event,'+index+')" ondragover="skinSectionDragOver(event,' +index+ ')" ondrop="skinSectionDrop(event,' +index+ ')" ondragend="skinSectionDragEnd(event)" onclick="selectSkinItem(\'section\','+esc(JSON.stringify(String(sec.id)))+')">'+
+  return '<article class="studio-section-outline '+(selected?'is-selected':'')+'" data-search="'+esc(String(sec.title||typeLabels[sec.type]||sec.type||'Section')+' '+String(typeLabels[sec.type]||'Section')).toLowerCase()+'" data-section-index="'+index+'" draggable="true" ondragstart="skinSectionDragStart(event,'+index+')" ondragover="skinSectionDragOver(event,' +index+ ')" ondrop="skinSectionDrop(event,' +index+ ')" ondragend="skinSectionDragEnd(event)" onclick="selectSkinItem(\'section\','+esc(JSON.stringify(String(sec.id)))+')">'+
    '<span class="studio-outline-grip studio-outline-number" aria-hidden="true">'+(index+1)+'</span><div class="studio-section-outline-copy"><b>'+esc(sec.title||typeLabels[sec.type]||sec.type||'Section')+(sec.locked?' 🔒':'')+'</b><small>'+esc(typeLabels[sec.type]||'Section')+' · '+(visible?'Visible':'Hidden')+(sec.locked?' · Locked':'')+'</small></div>'+
    '<div class="studio-section-outline-actions"><button type="button" title="Move up" '+(index===0||sec.locked?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',-1)">↑</button><button type="button" title="Move down" '+(index===sections.length-1||sec.locked?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',1)">↓</button><button type="button" title="Duplicate section" '+(sec.locked?'disabled':'')+' onclick="event.stopPropagation();duplicateSkinSection('+index+')">⧉</button><button type="button" title="'+(sec.locked?'Unlock layout':'Lock layout')+'" aria-pressed="'+String(!!sec.locked)+'" onclick="event.stopPropagation();toggleSkinSectionLock('+index+')">'+(sec.locked?'🔒':'🔓')+'</button><button type="button" title="'+(visible?'Hide':'Show')+'" '+(sec.locked?'disabled':'')+' onclick="event.stopPropagation();toggleSkinSectionVisibility('+index+')">'+(visible?'◉':'○')+'</button><button type="button" title="Delete section" aria-label="Delete '+esc(sec.title||typeLabels[sec.type]||'section')+'" '+(sec.locked?'disabled':'')+' style="color:#a33d31!important;border:1px solid #f0d7d2;border-radius:6px;background:#fff7f5" onclick="event.stopPropagation();deleteSkinSectionImmediately('+index+')">×</button></div></article>';
- }).join('')||'<div class="studio-library-empty">This page has no sections yet. Use + Add → Section to start building it.</div>';
+ }).join('')||'<div class="studio-library-empty">This page has no sections yet. Use + Add → Section to start building it.</div>');
+ filterSkinSectionOutline(needle);
  renderSkinLibrary();
 }
+function filterSkinSectionOutline(value){
+ window.skinStudioSectionSearch=String(value||'');
+ const needle=window.skinStudioSectionSearch.trim().toLowerCase();
+ const rows=[...document.querySelectorAll('#skinBuilderSections .studio-section-outline')];
+ let shown=0;
+ rows.forEach(row=>{const match=!needle||String(row.dataset.search||'').includes(needle);row.hidden=!match;if(match)shown++;});
+ const count=document.getElementById('skinStudioSectionCount');
+ if(count)count.textContent=needle?shown+' of '+rows.length+' sections':rows.length+' sections';
+}
+
 function renderSkinSelectedInspector(){
  const root=document.getElementById('skinSelectedInspector');if(!root)return;
  const title=document.getElementById('skinInspectorTitle'),subtitle=document.getElementById('skinInspectorSubtitle');
