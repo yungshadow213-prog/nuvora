@@ -186,3 +186,10 @@ This is an incremental UI-architecture slice, not completion of the full specifi
 - Preview-driven section reordering now captures a history snapshot before mutation, so the action participates in Undo/Redo.
 - Preview-driven reorder now refuses to move a locked section or move another section across a locked target; the user receives an explicit warning.
 - Validation: fetched the committed `admin.html` from the feature branch and compiled its inline JavaScript with the JavaScript parser successfully. This is static validation, not an authenticated browser or live persistence test.
+
+## Implementation log — history safety after settings-load failure
+
+- Commit: `56d958b94b86ae579e3c68970b9dbeb62b9109c2`.
+- Undo and Redo now require a successfully loaded site configuration, preventing stale snapshots from being applied while the editor is in its recovery fallback state.
+- If the settings API fails during load, the editor clears the prior undo/redo stacks and resets history bookkeeping instead of retaining snapshots from a previous configuration.
+- Validation: re-fetched `admin.html`; its complete inline JavaScript compiled successfully, and targeted assertions confirmed both guards and failure-path reset. Static validation only; no authenticated browser/API failure simulation was run.
