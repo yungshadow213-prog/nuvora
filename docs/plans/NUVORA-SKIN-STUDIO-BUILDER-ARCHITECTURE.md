@@ -164,3 +164,10 @@ This is an incremental UI-architecture slice, not completion of the full specifi
 - Prevented manual draft-save requests and newly queued autosaves from racing with the publish operation. This matters because publishing clears the private draft; a late autosave could otherwise recreate stale draft data immediately after publication.
 - Kept the existing publish read-back verification: the UI only reports success after fetching settings again and confirming the published configuration matches and the private draft is cleared.
 - Re-fetched the updated branch and validated the complete inline JavaScript with a syntax compile check. This is a static check, not authenticated browser or live API verification.
+
+### Implementation log — 28 October 2026 (preview edit history)
+
+- Added undo-history snapshots before preview-driven removal of a product from a section, insertion of a text block, and adjustment of supported image focal-position coordinates.
+- These actions already updated the draft and refreshed the preview; now they also participate in the editor's undo/redo model so accidental canvas changes can be reversed consistently.
+- Re-fetched admin.html from the feature branch and compiled its complete inline JavaScript successfully with new Function. Targeted source assertions confirmed the history hooks and publish/draft concurrency guards are present.
+- These are static source checks only. The authenticated preview bridge and API persistence still require browser-based acceptance testing.
