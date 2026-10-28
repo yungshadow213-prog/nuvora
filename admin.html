@@ -570,7 +570,30 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
 body.skin-studio-fullpage .studio-canvas-inner{border-radius:7px!important}
 body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
 .studio-library-pagination button:focus-visible{outline:2px solid #6e8c65;outline-offset:2px}
-</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
+</style>
+<style id="skin-studio-workspace-ia">
+/* Shopify-style information architecture: grouped workspaces, not a flat strip of unrelated tabs. */
+body.skin-studio-fullpage .studio-workspace-nav{display:grid;gap:18px;padding:12px 10px 16px;border-bottom:1px solid #e7eee4;background:#fff}
+body.skin-studio-fullpage .studio-workspace-group{display:grid;gap:5px}
+body.skin-studio-fullpage .studio-workspace-label{padding:0 9px 3px;color:#879386;font-size:9px;font-weight:800;letter-spacing:1.15px}
+body.skin-studio-fullpage .studio-workspace-item{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:9px;width:100%;min-height:48px;padding:8px 9px;border:1px solid transparent;border-radius:9px;background:transparent;color:#415343;text-align:left;cursor:pointer}
+body.skin-studio-fullpage .studio-workspace-item:hover{background:#f7f9f5;border-color:#e6ede2}
+body.skin-studio-fullpage .studio-workspace-item.active,body.skin-studio-fullpage .studio-workspace-item[aria-selected="true"]{background:#edf5e9;border-color:#d4e4ce;color:#28583b}
+body.skin-studio-fullpage .studio-workspace-icon{display:grid;place-items:center;width:29px;height:29px;border:1px solid #e2e9df;border-radius:8px;background:#fff;color:#58765b;font-size:15px}
+body.skin-studio-fullpage .studio-workspace-item b{display:block;font-size:11px;font-weight:750;line-height:1.35}
+body.skin-studio-fullpage .studio-workspace-item small{display:block;margin-top:2px;color:#829080;font-size:9px;line-height:1.35;font-weight:500}
+body.skin-studio-fullpage .studio-workspace-item:focus-visible{outline:2px solid #4f8057;outline-offset:2px}
+body.skin-studio-fullpage .studio-left-panel{overflow-y:auto}
+body.skin-studio-fullpage .studio-panel-head{position:sticky;top:0;z-index:3}
+body.skin-studio-fullpage .studio-library-items[hidden],body.skin-studio-fullpage .studio-quick-add[hidden],body.skin-studio-fullpage .studio-outline-list[hidden]{display:none!important}
+body.skin-studio-fullpage .studio-toolbar{position:sticky;top:0;z-index:20;flex-wrap:wrap}
+body.skin-studio-fullpage .studio-toolbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+body.skin-studio-fullpage .studio-toolbar-actions .btn{white-space:nowrap}
+@media(max-width:1100px){body.skin-studio-fullpage .studio-layout{grid-template-columns:220px minmax(0,1fr)!important}body.skin-studio-fullpage .studio-right-panel{grid-column:1/-1;max-height:none}}
+@media(max-width:720px){body.skin-studio-fullpage .studio-layout{grid-template-columns:minmax(0,1fr)!important;padding:8px!important;gap:9px!important}body.skin-studio-fullpage .studio-left-panel,body.skin-studio-fullpage .studio-right-panel,body.skin-studio-fullpage .studio-canvas-panel{min-width:0}body.skin-studio-fullpage .studio-workspace-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:10px}body.skin-studio-fullpage .studio-workspace-group{align-content:start}body.skin-studio-fullpage .studio-workspace-item{grid-template-columns:25px minmax(0,1fr);gap:6px;padding:7px;min-height:44px}body.skin-studio-fullpage .studio-workspace-icon{width:24px;height:24px}body.skin-studio-fullpage .studio-workspace-item small{font-size:8px}body.skin-studio-fullpage .studio-toolbar{padding:10px!important}body.skin-studio-fullpage .studio-toolbar-actions{justify-content:flex-start}}
+</style>
+
+</head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
   <div class="nav-group">
     <span class="nav-group-label">Workspace</span>
     <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
@@ -877,13 +900,23 @@ body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
         <button type="button" onclick="openSkinAdd('category')"><span>◫</span><span><b>Category</b><small>Group and organize skincare picks</small></span></button>
         <button type="button" onclick="openSkinAdd('section')"><span>▦</span><span><b>Section</b><small>Add a block to the current page</small></span></button>
       </div>
-      <div class="studio-library-tabs" role="tablist" aria-label="Skin Studio content">
-        <button id="skinTabOutline" class="active" type="button" onclick="switchSkinStudioTab('outline')">Page layout</button>
-        <button id="skinTabProducts" type="button" onclick="switchSkinStudioTab('products')">Products</button>
-        <button id="skinTabPages" type="button" onclick="switchSkinStudioTab('pages')">Pages</button>
-        <button id="skinTabCategories" type="button" onclick="switchSkinStudioTab('categories')">Categories</button>
-        <button id="skinTabMedia" type="button" onclick="switchSkinStudioTab('media')">Media</button>
-      </div>
+      <nav class="studio-workspace-nav" aria-label="Store builder workspaces">
+        <div class="studio-workspace-group">
+          <span class="studio-workspace-label">STOREFRONT</span>
+          <button id="skinTabOutline" class="studio-workspace-item active" type="button" role="tab" aria-selected="true" onclick="switchSkinStudioTab('outline')"><span class="studio-workspace-icon" aria-hidden="true">▦</span><span><b>Theme editor</b><small>Sections and live layout</small></span></button>
+          <button id="skinTabPages" class="studio-workspace-item" type="button" role="tab" aria-selected="false" onclick="switchSkinStudioTab('pages')"><span class="studio-workspace-icon" aria-hidden="true">▤</span><span><b>Pages</b><small>Page structure and content</small></span></button>
+        </div>
+        <div class="studio-workspace-group">
+          <span class="studio-workspace-label">CATALOG</span>
+          <button id="skinTabProducts" class="studio-workspace-item" type="button" role="tab" aria-selected="false" onclick="switchSkinStudioTab('products')"><span class="studio-workspace-icon" aria-hidden="true">□</span><span><b>Products</b><small>Affiliate product library</small></span></button>
+          <button id="skinTabCategories" class="studio-workspace-item" type="button" role="tab" aria-selected="false" onclick="switchSkinStudioTab('categories')"><span class="studio-workspace-icon" aria-hidden="true">▧</span><span><b>Categories & brands</b><small>Organize product discovery</small></span></button>
+        </div>
+        <div class="studio-workspace-group">
+          <span class="studio-workspace-label">CONTENT</span>
+          <button id="skinTabMedia" class="studio-workspace-item" type="button" role="tab" aria-selected="false" onclick="switchSkinStudioTab('media')"><span class="studio-workspace-icon" aria-hidden="true">▧</span><span><b>Media library</b><small>Uploaded store imagery</small></span></button>
+          <button id="skinStudioGlobalDesignNav" class="studio-workspace-item" type="button" role="button" aria-label="Open global design and navigation settings" onclick="openSkinStudioSettingsWorkspace()"><span class="studio-workspace-icon" aria-hidden="true">⚙</span><span><b>Design & navigation</b><small>Brand, header, footer and links</small></span></button>
+        </div>
+      </nav>
       <div id="skinQuickAddPanel" class="studio-quick-add" hidden></div>
       <div id="skinLibraryItems" class="studio-library-items" hidden></div>
       <div id="skinBuilderSections" class="skin-builder-sections studio-outline-list" aria-label="Page section outline"></div>
@@ -3036,12 +3069,30 @@ function updateSkinStudioPageTitle(){
 }
 function switchSkinStudioTab(tab){
  skinStudioTab=['outline','products','pages','categories','media'].includes(tab)?tab:'outline';
- ['outline','products','pages','categories','media'].forEach(key=>{const b=document.getElementById('skinTab'+key.charAt(0).toUpperCase()+key.slice(1));if(b)b.classList.toggle('active',skinStudioTab===key);});
+ ['outline','products','pages','categories','media'].forEach(key=>{
+  const b=document.getElementById('skinTab'+key.charAt(0).toUpperCase()+key.slice(1));
+  if(b){const active=skinStudioTab===key;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));}
+ });
  const outline=document.getElementById('skinBuilderSections'),library=document.getElementById('skinLibraryItems');
  if(outline)outline.hidden=skinStudioTab!=='outline';
  if(library)library.hidden=skinStudioTab==='outline';
+ const panel=document.getElementById('skinQuickAddPanel');if(panel&&skinStudioTab!=='pages'&&skinStudioTab!=='categories')panel.hidden=true;
+ const title=document.querySelector('.studio-panel-head h3');
+ const helper=document.querySelector('.studio-panel-helper');
+ const labels={outline:['Page layout','Select a section to edit it. Drag sections to reorder the storefront.'],products:['Product library','Manage affiliate products here; placement on a page is a separate action.'],pages:['Pages','Create and switch between storefront pages without mixing page settings with the catalog.'],categories:['Categories & brands','Organize product discovery separately from product records.'],media:['Media library','Reuse uploaded images without deleting the stored source file.']};
+ if(title&&labels[skinStudioTab])title.textContent=labels[skinStudioTab][0];
+ if(helper&&labels[skinStudioTab])helper.textContent=labels[skinStudioTab][1];
  renderSkinLibrary();
  if(skinStudioTab==='outline')renderSkinBuilderSections();
+}
+function openSkinStudioSettingsWorkspace(){
+ const details=document.querySelector('.studio-site-settings');
+ if(!details){skinBuilderMessage('Global design settings are not available in this editor view.','error');return;}
+ details.open=true;
+ details.scrollIntoView({behavior:'smooth',block:'start'});
+ const summary=details.querySelector('summary');
+ if(summary){summary.setAttribute('aria-expanded','true');summary.focus({preventScroll:true});}
+ skinBuilderMessage('Global design, header, navigation and footer settings are open in the inspector.','info');
 }
 function setSkinStudioProductPage(page){
  window.skinStudioProductPage=Math.max(1,Number(page)||1);
