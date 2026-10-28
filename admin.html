@@ -578,7 +578,7 @@ body.skin-studio-fullpage .studio-workspace-group{display:grid;gap:5px}
 body.skin-studio-fullpage .studio-workspace-label{padding:0 9px 3px;color:#879386;font-size:9px;font-weight:800;letter-spacing:1.15px}
 body.skin-studio-fullpage .studio-workspace-item{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:9px;width:100%;min-height:48px;padding:8px 9px;border:1px solid transparent;border-radius:9px;background:transparent;color:#415343;text-align:left;cursor:pointer}
 body.skin-studio-fullpage .studio-workspace-item:hover{background:#f7f9f5;border-color:#e6ede2}
-body.skin-studio-fullpage .studio-workspace-item.active,body.skin-studio-fullpage .studio-workspace-item[aria-selected="true"]{background:#edf5e9;border-color:#d4e4ce;color:#28583b}
+body.skin-studio-fullpage .studio-workspace-item.active,body.skin-studio-fullpage .studio-workspace-item[aria-current="page"]{background:#edf5e9;border-color:#d4e4ce;color:#28583b}
 body.skin-studio-fullpage .studio-workspace-icon{display:grid;place-items:center;width:29px;height:29px;border:1px solid #e2e9df;border-radius:8px;background:#fff;color:#58765b;font-size:15px}
 body.skin-studio-fullpage .studio-workspace-item b{display:block;font-size:11px;font-weight:750;line-height:1.35}
 body.skin-studio-fullpage .studio-workspace-item small{display:block;margin-top:2px;color:#829080;font-size:9px;line-height:1.35;font-weight:500}
@@ -903,18 +903,18 @@ body.skin-studio-fullpage .studio-toolbar-actions .btn{white-space:nowrap}
       <nav class="studio-workspace-nav" aria-label="Store builder workspaces">
         <div class="studio-workspace-group">
           <span class="studio-workspace-label">STOREFRONT</span>
-          <button id="skinTabOutline" class="studio-workspace-item active" type="button" role="tab" aria-selected="true" onclick="switchSkinStudioTab('outline')"><span class="studio-workspace-icon" aria-hidden="true">▦</span><span><b>Theme editor</b><small>Sections and live layout</small></span></button>
-          <button id="skinTabPages" class="studio-workspace-item" type="button" role="tab" aria-selected="false" onclick="switchSkinStudioTab('pages')"><span class="studio-workspace-icon" aria-hidden="true">▤</span><span><b>Pages</b><small>Page structure and content</small></span></button>
+          <button id="skinTabOutline" class="studio-workspace-item active" type="button" aria-current="page" onclick="switchSkinStudioTab('outline')"><span class="studio-workspace-icon" aria-hidden="true">▦</span><span><b>Theme editor</b><small>Sections and live layout</small></span></button>
+          <button id="skinTabPages" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('pages')"><span class="studio-workspace-icon" aria-hidden="true">▤</span><span><b>Pages</b><small>Page structure and content</small></span></button>
         </div>
         <div class="studio-workspace-group">
           <span class="studio-workspace-label">CATALOG</span>
-          <button id="skinTabProducts" class="studio-workspace-item" type="button" role="tab" aria-selected="false" onclick="switchSkinStudioTab('products')"><span class="studio-workspace-icon" aria-hidden="true">□</span><span><b>Products</b><small>Affiliate product library</small></span></button>
-          <button id="skinTabCategories" class="studio-workspace-item" type="button" role="tab" aria-selected="false" onclick="switchSkinStudioTab('categories')"><span class="studio-workspace-icon" aria-hidden="true">▧</span><span><b>Categories & brands</b><small>Organize product discovery</small></span></button>
+          <button id="skinTabProducts" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('products')"><span class="studio-workspace-icon" aria-hidden="true">□</span><span><b>Products</b><small>Affiliate product library</small></span></button>
+          <button id="skinTabCategories" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('categories')"><span class="studio-workspace-icon" aria-hidden="true">▧</span><span><b>Categories</b><small>Organize product discovery</small></span></button>
         </div>
         <div class="studio-workspace-group">
           <span class="studio-workspace-label">CONTENT</span>
-          <button id="skinTabMedia" class="studio-workspace-item" type="button" role="tab" aria-selected="false" onclick="switchSkinStudioTab('media')"><span class="studio-workspace-icon" aria-hidden="true">▧</span><span><b>Media library</b><small>Uploaded store imagery</small></span></button>
-          <button id="skinStudioGlobalDesignNav" class="studio-workspace-item" type="button" role="button" aria-label="Open global design and navigation settings" onclick="openSkinStudioSettingsWorkspace()"><span class="studio-workspace-icon" aria-hidden="true">⚙</span><span><b>Design & navigation</b><small>Brand, header, footer and links</small></span></button>
+          <button id="skinTabMedia" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('media')"><span class="studio-workspace-icon" aria-hidden="true">▧</span><span><b>Media library</b><small>Uploaded store imagery</small></span></button>
+          <button id="skinStudioGlobalDesignNav" class="studio-workspace-item" type="button" aria-label="Open global design and navigation settings" onclick="openSkinStudioSettingsWorkspace()"><span class="studio-workspace-icon" aria-hidden="true">⚙</span><span><b>Design & navigation</b><small>Brand, header, footer and links</small></span></button>
         </div>
       </nav>
       <div id="skinQuickAddPanel" class="studio-quick-add" hidden></div>
@@ -3071,7 +3071,7 @@ function switchSkinStudioTab(tab){
  skinStudioTab=['outline','products','pages','categories','media'].includes(tab)?tab:'outline';
  ['outline','products','pages','categories','media'].forEach(key=>{
   const b=document.getElementById('skinTab'+key.charAt(0).toUpperCase()+key.slice(1));
-  if(b){const active=skinStudioTab===key;b.classList.toggle('active',active);b.setAttribute('aria-selected',String(active));}
+  if(b){const active=skinStudioTab===key;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');}
  });
  const outline=document.getElementById('skinBuilderSections'),library=document.getElementById('skinLibraryItems');
  if(outline)outline.hidden=skinStudioTab!=='outline';
