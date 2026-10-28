@@ -151,6 +151,7 @@ This branch begins by making the editor's left-side workspace navigation explici
 - Returning to Theme editor or another workspace restores the normal selection inspector and closes the global-settings mode.
 - Added a searchable section outline with a live matching count while preserving each section's original reorder, duplicate, lock, visibility and delete actions.
 - Reorganized selected-section settings into clearly separated Content, Appearance, and Section behaviour groups, with dedicated primary/secondary button labels and links for hero/editorial sections and a direct lock-position control.
+- Fixed the editor's Ctrl/Cmd+S shortcut so it saves the private draft even when focus is inside a form field; it prevents the browser's Save Page dialog and does not publish implicitly.
 - Kept the current affiliate data model and the customer storefront repository unchanged.
 
 ### Still outstanding
