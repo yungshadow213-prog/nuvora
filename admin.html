@@ -4100,12 +4100,14 @@ function wireSkinStudioCanvas(){
     return;
    }
    if(data.type==='nuvora-skin-studio-reorder'){
-    const sections=skinSectionsFor(data.pageId||'home');
+    const pageId=data.pageId||'home',sections=skinSectionsFor(pageId);
     const from=sections.findIndex(section=>String(section.id)===String(data.sourceId));
     const to=sections.findIndex(section=>String(section.id)===String(data.targetId));
     if(from<0||to<0||from===to)return;
+    if(sections[from]?.locked||sections[to]?.locked)return skinBuilderMessage('Unlock the section before moving it in the preview.','warning');
+    skinHistoryCapture();
     const [section]=sections.splice(from,1);sections.splice(to,0,section);
-    skinStudioPageId=data.pageId||'home';skinStudioSelection={type:'section',id:String(section.id)};
+    skinStudioPageId=pageId;skinStudioSelection={type:'section',id:String(section.id)};
     skinMarkDirty('Page section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('Page section order saved and verified in the draft.');return;
    }
    if(data.type==='nuvora-skin-studio-add-product'){addSkinProductToSection(data.productId,data.targetId,data.pageId||'home');return;}
