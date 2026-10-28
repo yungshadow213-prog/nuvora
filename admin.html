@@ -619,6 +619,17 @@ body.skin-studio-fullpage .studio-outline-tools input{width:100%;min-width:0;min
 body.skin-studio-fullpage .studio-outline-count{font-size:10px;color:#718174;white-space:nowrap;padding-bottom:10px}
 body.skin-studio-fullpage .studio-section-outline[hidden]{display:none!important}
 </style>
+
+<style id="skin-studio-inspector-hierarchy">
+body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-subheading{display:flex;align-items:center;gap:8px;margin:18px 0 9px;padding:9px 10px;border:1px solid #e6ece3;border-radius:8px;background:#f7f9f5;color:#53634f;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-subheading:first-child{margin-top:4px}
+body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field{margin-bottom:12px}
+body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field>span{font-size:11px;font-weight:650;color:#3e4e40}
+body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field input:not([type=checkbox]):not([type=range]),body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field textarea,body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field select{width:100%;min-height:38px;border:1px solid #dfe6dc;border-radius:8px;padding:8px 10px;background:#fff;color:#29382b;font:inherit;font-size:12px}
+body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field textarea{min-height:88px;resize:vertical}
+body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field input:focus-visible,body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field textarea:focus-visible,body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field select:focus-visible{outline:2px solid #728b65;outline-offset:2px}
+@media(max-width:700px){body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field{margin-bottom:10px}}
+</style>
 </head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
   <div class="nav-group">
     <span class="nav-group-label">Workspace</span>
@@ -3323,7 +3334,13 @@ function renderSkinSelectedInspector(){
   const types={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Featured products','category-grid':'Category browse','journal-grid':'Journal cards','routine-finder':'Skin routine finder','image-block':'Image block','text-block':'Text block','brand-grid':'Brand directory'};
   const field=(label,key,value,kind='text',max='180')=>'<label class="studio-inspector-field"><span>'+label+'</span>'+(kind==='textarea'?'<textarea maxlength="'+max+'" oninput="updateSkinSection('+index+',\''+key+'\',this.value)">'+esc(value||'')+'</textarea>':'<input type="'+kind+'" maxlength="'+(kind==='color'?'7':max)+'" value="'+esc(value||'')+'" oninput="updateSkinSection('+index+',\''+key+'\',this.value)">')+'</label>';
   let html='<label class="studio-inspector-field"><span>Section type</span><select onchange="updateSkinSection('+index+',\'type\',this.value)">'+Object.entries(types).map(([val,label])=>'<option value="'+val+'" '+(sec.type===val?'selected':'')+'>'+label+'</option>').join('')+'</select></label>';
+  html+='<div class="studio-inspector-subheading">Content</div>';
   html+=field('Section title','title',sec.title,'text','180')+field('Small heading / eyebrow','eyebrow',sec.eyebrow,'text','100')+field('Supporting text','text',sec.text,'textarea','3000');
+  if(['hero','editorial'].includes(sec.type)){
+   html+=field('Primary button label','buttonLabel',sec.buttonLabel||'','text','80')+field('Primary button link','buttonHref',sec.buttonHref||'','url','1600');
+   html+=field('Secondary button label','secondaryButtonLabel',sec.secondaryButtonLabel||'','text','80')+field('Secondary button link','secondaryButtonHref',sec.secondaryButtonHref||'','url','1600');
+  }
+  html+='<div class="studio-inspector-subheading">Appearance</div>';
   html+=field('Section background','backgroundColor',sec.backgroundColor||'#ffffff','color','7');
   html+='<label class="studio-inspector-field"><span>Colour scheme</span><select onchange="updateSkinSection('+index+',\'colorScheme\',this.value)">'+[['theme','Theme default'],['light','Light surface'],['soft','Soft background'],['dark','Dark / ink'],['accent','Accent colour']].map(([v,l])=>'<option value="'+v+'" '+((sec.colorScheme||'theme')===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
   html+='<label class="studio-inspector-field"><span>Text alignment</span><select onchange="updateSkinSection('+index+',\'textAlignment\',this.value)">'+[['left','Left'],['center','Center'],['right','Right']].map(([v,l])=>'<option value="'+v+'" '+((sec.textAlignment||'left')===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
@@ -3361,7 +3378,9 @@ function renderSkinSelectedInspector(){
     }
     html+='<label class="studio-inspector-field"><span>Image width</span><select onchange="updateSkinSection('+index+',\'imageWidth\',Number(this.value))">'+[20,30,40,50,60,70,80,90,100].map(n=>'<option value="'+n+'" '+(Number(sec.imageWidth||70)===n?'selected':'')+'>'+n+'%</option>').join('')+'</select></label>';
    }
+  html+='<div class="studio-inspector-subheading">Section behaviour</div>';
   html+='<label class="studio-inspector-check"><input type="checkbox" '+(sec.visible!==false?'checked':'')+' onchange="updateSkinSection('+index+',\'visible\',this.checked)"> Show this section on the published page</label>';
+  html+='<label class="studio-inspector-check"><input type="checkbox" '+(sec.locked===true?'checked':'')+' onchange="toggleSkinSectionLock('+index+')"> Lock section position</label>';
   if(sec.type==='product-grid'||sec.type==='featured-products'){
    const activeIds=new Set((sec.product_ids||[]).map(String));
    html+='<label class="studio-inspector-field"><span>Product filter</span><select onchange="updateSkinSection('+index+',\'filter\',this.value)">'+[['all','All eligible skincare products'],['featured','Featured picks'],['top_pick','Top picks'],['trending','Trending picks']].map(([v,l])=>'<option value="'+v+'" '+(sec.filter===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
