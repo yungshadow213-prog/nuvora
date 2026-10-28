@@ -3466,6 +3466,12 @@ function setSkinStudioPage(pageId){
  renderSkinStudioAll();
  const frame=document.getElementById('skinStudioPreview');
  if(frame){
+  // A page switch navigates the iframe. Do not let the previous page's ready
+  // signal make the new document look connected before it answers.
+  window.__nuvoraSkinPreviewReady=false;
+  if(window.__nuvoraSkinPreviewTimeout){clearTimeout(window.__nuvoraSkinPreviewTimeout);window.__nuvoraSkinPreviewTimeout=null;}
+  const notice=document.getElementById('skinStudioPreviewNotice');
+  if(notice){notice.hidden=false;notice.innerHTML='<b>Loading '+String(skinPageLabel()).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]))+' preview…</b><span>Waiting for the storefront to reconnect.</span>';}
   frame.src=skinStudioPreviewUrl();
  }
  skinBuilderMessage('Editing '+skinPageLabel()+'. Changes remain in your draft until published.','info');
@@ -3924,6 +3930,10 @@ function refreshSkinStudioPreview(){
  collectSkinConfigFields();
  const frame=document.getElementById('skinStudioPreview');if(!frame)return;
  if(!String(frame.src||'').startsWith(SKIN_CLIENT_ORIGIN+'/')){
+  window.__nuvoraSkinPreviewReady=false;
+  if(window.__nuvoraSkinPreviewTimeout){clearTimeout(window.__nuvoraSkinPreviewTimeout);window.__nuvoraSkinPreviewTimeout=null;}
+  const notice=document.getElementById('skinStudioPreviewNotice');
+  if(notice){notice.hidden=false;notice.innerHTML='<b>Connecting to Nuvora Skin…</b><span>Waiting for the storefront preview to respond.</span>';}
   frame.src=skinStudioPreviewUrl();
   return;
  }
