@@ -2903,13 +2903,13 @@ function skinHistoryRestore(snapshot,label){
  skinHistoryUpdateButtons();
 }
 function undoSkinStudio(){
- if(!skinStudioUndoStack.length)return;
+ if(!skinSiteConfigLoaded||!skinBuilderConfig||!skinStudioUndoStack.length)return;
  skinStudioRedoStack.push(skinHistorySnapshot());
  const snapshot=skinStudioUndoStack.pop();
  skinHistoryRestore(snapshot,'Previous edit');
 }
 function redoSkinStudio(){
- if(!skinStudioRedoStack.length)return;
+ if(!skinSiteConfigLoaded||!skinBuilderConfig||!skinStudioRedoStack.length)return;
  skinStudioUndoStack.push(skinHistorySnapshot());
  const snapshot=skinStudioRedoStack.pop();
  skinHistoryRestore(snapshot,'Redo edit');
@@ -3033,6 +3033,8 @@ async function loadSkinSiteConfig(){
    if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
   }
  }catch(e){
+  // Never allow history from a previously loaded site config to mutate the recovery fallback.
+  skinStudioUndoStack=[];skinStudioRedoStack=[];skinStudioHistoryLastCapture=0;skinStudioHistoryApplying=false;skinHistoryUpdateButtons();
   skinSiteDraftExists=false;
   skinBuilderConfig=mergeSkinConfigForRecovery();
   fillSkinConfigFields();
