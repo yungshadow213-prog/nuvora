@@ -3667,7 +3667,9 @@ document.addEventListener('keydown',event=>{
  const editorOpen=document.body.classList.contains('skin-studio-fullpage');
  const target=event.target;
  const typing=target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
- if(editorOpen&&!typing&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){
+ if(editorOpen&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){
+  // Ctrl/Cmd+S must save the private storefront draft even when focus is inside a form field.
+  // Prevent the browser's unrelated "Save page" dialog and never publish implicitly.
   event.preventDefault();saveSkinSiteDraft();
  }else if(editorOpen&&!typing&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){
   event.preventDefault();
