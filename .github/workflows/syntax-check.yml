@@ -399,6 +399,8 @@ jobs:
           placement_start=admin.find("function addSkinProductToSection")
           placement_end=admin.find("function moveSkinProductInSection",placement_start)
           placement_block=admin[placement_start:placement_end]
+          if "candidate.visible!==false&&['product-grid','featured-products'].includes(candidate.type)" not in placement_block:
+              failures.append("Place on Page must not silently target a hidden product section")
           for needle, message in [
               ("sec.product_selection='manual';sec.product_ids=ids.slice(0,60)", "Place on Page must explicitly persist a manual product selection"),
               ("sendSkinStudioPreview();queueSkinStudioPreview();", "Place on Page must refresh the live preview"),
