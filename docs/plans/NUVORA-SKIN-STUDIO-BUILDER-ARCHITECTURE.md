@@ -157,3 +157,10 @@ This branch begins by making the editor's left-side workspace navigation explici
 ### Still outstanding
 
 This is an incremental UI-architecture slice, not completion of the full specification. Continue in priority order: validate the editor workspace in an authenticated browser; finish section/block authoring and template coverage; audit product/category/media workflows; verify draft persistence and publish read-back; then expand global design controls and storefront feature coverage. Automated and authenticated browser checks remain required before this PR can be considered release-ready.
+
+### Implementation log — 28 October 2026 (publish-safety pass)
+
+- Added a single in-flight publish guard so repeated clicks or duplicate invocation cannot start concurrent Skin Studio publish requests.
+- Prevented manual draft-save requests and newly queued autosaves from racing with the publish operation. This matters because publishing clears the private draft; a late autosave could otherwise recreate stale draft data immediately after publication.
+- Kept the existing publish read-back verification: the UI only reports success after fetching settings again and confirming the published configuration matches and the private draft is cleared.
+- Re-fetched the updated branch and validated the complete inline JavaScript with a syntax compile check. This is a static check, not authenticated browser or live API verification.
