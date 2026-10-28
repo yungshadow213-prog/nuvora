@@ -4010,6 +4010,7 @@ function wireSkinStudioCanvas(){
     const section=sections[index],product=adminProducts.find(item=>String(item.id)===String(data.productId||''));
     if(!product)return skinBuilderMessage('That product could not be found in the catalog. Refresh the product library and try again.','error');
     if(!confirm('Remove “'+String(product.name||'this product')+'” from this page section? The product itself will remain in your catalog.'))return;
+    skinHistoryCapture();
     const ids=new Set((Array.isArray(section.product_ids)?section.product_ids:[]).map(String).filter(id=>id!=='__nuvora_manual_empty__'));
     if(section.product_selection!=='manual'){
       for(const item of skinProductsForSection({...section,product_selection:'automatic',product_ids:[]}))ids.add(String(item.id));
@@ -4041,6 +4042,7 @@ function wireSkinStudioCanvas(){
     const sections=skinSectionsFor(skinStudioPageId),currentIndex=sections.findIndex(section=>String(section.id)===String(data.sectionId||''));
     const id='text-'+Date.now().toString(36);
     const section={id,type:'text-block',visible:true,title:'A new note',eyebrow:'',text:'Double-click to edit this text.',backgroundColor:'',textAlignment:'left',sectionPadding:48};
+    skinHistoryCapture();
     sections.splice(currentIndex>=0?currentIndex+1:sections.length,0,section);
     skinStudioSelection={type:'section',id};
     skinMarkDirty('Text block added after the selected section. Edit it directly in the preview or use the inspector.');
@@ -4068,6 +4070,7 @@ function wireSkinStudioCanvas(){
      if(index<0)return;
      const sec=sections[index],canMove=sec.type==='image-block'?sec.imageFreePosition===true:['hero','editorial'].includes(sec.type);
      if(!canMove)return;
+     skinHistoryCapture();
      const clamp=value=>Math.max(0,Math.min(100,Number.isFinite(Number(value))?Number(value):50));
      const x=clamp(data.imagePositionX),y=clamp(data.imagePositionY);
      if(Math.abs(Number(sec.imagePositionX??50)-x)<1&&Math.abs(Number(sec.imagePositionY??50)-y)<1)return;
