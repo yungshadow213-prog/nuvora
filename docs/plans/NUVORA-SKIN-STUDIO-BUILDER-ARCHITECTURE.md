@@ -193,3 +193,10 @@ This is an incremental UI-architecture slice, not completion of the full specifi
 - Undo and Redo now require a successfully loaded site configuration, preventing stale snapshots from being applied while the editor is in its recovery fallback state.
 - If the settings API fails during load, the editor clears the prior undo/redo stacks and resets history bookkeeping instead of retaining snapshots from a previous configuration.
 - Validation: re-fetched `admin.html`; its complete inline JavaScript compiled successfully, and targeted assertions confirmed both guards and failure-path reset. Static validation only; no authenticated browser/API failure simulation was run.
+
+## Implementation log — preserve edits made during publishing
+
+- Commit: `3f1fab1ca840e845d4c2e30d2ea72c5d9789e94e`.
+- Addressed a publish-time data-loss race: the editor stays interactive while the publish request and read-back verification run, so a newer edit could previously be overwritten by the older published response.
+- The publish flow now snapshots the exact payload sent to the server and compares the current editor state with that snapshot after verification. If the editor changed during the request, it preserves those newer edits, marks them as unsaved, and resumes private-draft autosave after publishing finishes. The older payload is still verified as the published version.
+- Validation: fetched the updated `admin.html` from the feature branch; the full inline JavaScript compiled successfully. Targeted source assertions confirmed the payload snapshot, preservation branch, status message, and autosave resumption. Static validation only; browser-based race testing and live API persistence verification remain outstanding.
