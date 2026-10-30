@@ -246,3 +246,9 @@ This is an incremental UI-architecture slice, not completion of the full specifi
 - Section outline rows can now receive keyboard focus and be selected with Enter or Space. Alt + Arrow Up / Alt + Arrow Down reorders the focused section, alongside the existing drag-and-drop and visible move buttons. The panel helper text documents the alternatives, which are useful on touch devices where drag-and-drop is less reliable.
 - Automated source validation: the complete inline JavaScript compiles, and targeted checks pass for workspace-specific actions, context-aware headings, lock enforcement, keyboard selection/reordering and responsive layout rules.
 - Browser acceptance limitation: the live admin dashboard session was authenticated, but opening Skin Studio prompted a separate Google re-authentication modal. No credentials were submitted and no data was changed. Visual desktop/mobile inspection remains pending an authorized sign-in to the Skin Studio profile.
+
+## Implementation log — visual page-builder inspector pass (30 October 2026)
+
+- Section settings are now grouped into keyboard-operable collapsible panels (Content, Appearance, Layout & responsive, Section behaviour) instead of one uninterrupted inspector form. Content and Appearance open by default; advanced layout and behaviour controls remain available without overwhelming the initial view.
+- The grouping is applied after the selected section inspector is rendered, preserving the existing section-specific controls and their handlers. The duplicate/delete actions remain outside the collapsible groups so they stay easy to find.
+- Validation: the complete inline JavaScript compiles; targeted source checks confirm inspector grouping is invoked, group styling exists, default-open groups are configured, and earlier lock/keyboard protections remain present.
