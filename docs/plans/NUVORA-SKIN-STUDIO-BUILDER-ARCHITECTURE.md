@@ -200,3 +200,11 @@ This is an incremental UI-architecture slice, not completion of the full specifi
 - Addressed a publish-time data-loss race: the editor stays interactive while the publish request and read-back verification run, so a newer edit could previously be overwritten by the older published response.
 - The publish flow now snapshots the exact payload sent to the server and compares the current editor state with that snapshot after verification. If the editor changed during the request, it preserves those newer edits, marks them as unsaved, and resumes private-draft autosave after publishing finishes. The older payload is still verified as the published version.
 - Validation: fetched the updated `admin.html` from the feature branch; the full inline JavaScript compiled successfully. Targeted source assertions confirmed the payload snapshot, preservation branch, status message, and autosave resumption. Static validation only; browser-based race testing and live API persistence verification remain outstanding.
+
+
+## Implementation log — safe draft discard
+
+- Prevented the private-draft discard action from starting while a publish is in progress, and blocked manual draft saves/publishing while discard is active.
+- Suspended autosave scheduling during discard so a delayed autosave cannot race the server-side draft clear.
+- Compared the editor state before and after the discard request. If the user makes newer edits during the request, the editor keeps those edits instead of replacing them with the published snapshot, then queues them as a fresh private draft after discard completes.
+- Validation on 2026-10-30: the `admin.html` inline script compiles successfully with `new Function`; targeted source assertions confirm the publish/discard guard, autosave suspension, concurrent-edit preservation, and post-discard autosave scheduling. Authenticated browser workflows and persistence/preview integration still require runtime testing.
