@@ -978,9 +978,9 @@ body.skin-studio-fullpage .studio-inspector-group>summary:focus-visible{outline:
       <div class="skin-preview-head studio-canvas-head">
         <div><b>Live page preview</b><small>Edit the page directly: double-click text, click sections to select them, drag sections or products to rearrange, and use the toolbar below to move, replace images, or delete.</small></div>
         <div class="studio-device-controls" aria-label="Preview size">
-          <button type="button" class="active" onclick="setSkinPreviewDevice('desktop',this)">Desktop</button>
-          <button type="button" onclick="setSkinPreviewDevice('tablet',this)">Tablet</button>
-          <button type="button" onclick="setSkinPreviewDevice('mobile',this)">Mobile</button>
+          <button type="button" class="active" aria-pressed="true" onclick="setSkinPreviewDevice('desktop',this)">Desktop</button>
+          <button type="button" aria-pressed="false" onclick="setSkinPreviewDevice('tablet',this)">Tablet</button>
+          <button type="button" aria-pressed="false" onclick="setSkinPreviewDevice('mobile',this)">Mobile</button>
           <button type="button" class="studio-refresh-button" onclick="reloadSkinStudioPreview()" title="Reload storefront preview" aria-label="Reload storefront preview">↻</button>
           <div class="studio-zoom-controls" role="group" aria-label="Preview zoom">
             <button type="button" onclick="adjustSkinPreviewZoom(-10)" aria-label="Zoom out" title="Zoom out">−</button>
@@ -3680,8 +3680,9 @@ function skinSelectedCategoryValue(id){
 }
 function selectSkinPreviewDevice(device,button){
  const root=document.getElementById('skinPreviewFrameOuter');if(root)root.dataset.device=device;
- document.querySelectorAll('.studio-device-controls button').forEach(b=>b.classList.remove('active'));
- if(button)button.classList.add('active');
+ document.querySelectorAll('.studio-device-controls button[onclick^="setSkinPreviewDevice"]').forEach(b=>{
+  const active=b===button;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));
+ });
  reloadSkinStudioPreview();
 }
 function setSkinPreviewDevice(device,button){selectSkinPreviewDevice(device,button);}
