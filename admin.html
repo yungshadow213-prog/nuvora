@@ -3767,7 +3767,9 @@ function toggleSkinSectionLock(index){
  renderSkinStudioAll();queueSkinStudioPreview();
 }
 function toggleSkinSectionVisibility(index){
- const sec=skinSectionsFor()[index];if(!sec)return;skinHistoryCapture();if(sec.locked){skinBuilderMessage('Unlock this section before changing visibility.','warning');return;}sec.visible=sec.visible===false;
+ const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;if(sec.locked){skinBuilderMessage('Unlock this section before changing visibility.','warning');return;}
+ if(skinStudioPageId==='home'&&sec.visible!==false&&['product-grid','featured-products'].includes(sec.type)&&!sections.some((item,itemIndex)=>itemIndex!==index&&item.visible!==false&&['product-grid','featured-products'].includes(item.type))){skinBuilderMessage('Keep at least one visible product grid on the homepage. Add another product grid before hiding this one.','warning');return;}
+ skinHistoryCapture();sec.visible=sec.visible===false;
  skinMarkDirty('Section visibility changed in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function skinBuilderDragStart(event,index){
@@ -3778,7 +3780,7 @@ function skinBuilderDrop(event,targetIndex){
  event.preventDefault();const source=event.dataTransfer?.getData('text/plain')||'';
  if(!source.startsWith('section:'))return;
  const id=source.slice(8),sections=skinSectionsFor(),from=sections.findIndex(s=>String(s.id)===id);
- if(from<0||targetIndex<0||from===targetIndex)return;
+ if(from<0||targetIndex<0||from===targetIndex||sections[from]?.locked||sections[targetIndex]?.locked)return;
  skinHistoryCapture();const [section]=sections.splice(from,1);sections.splice(targetIndex,0,section);
  skinStudioSelection={type:'section',id:String(section.id)};skinMarkDirty('Section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
