@@ -254,3 +254,11 @@ This is an incremental UI-architecture slice, not completion of the full specifi
 - Validation: the complete inline JavaScript compiles; targeted source checks confirm inspector grouping is invoked, group styling exists, default-open groups are configured, and earlier lock/keyboard protections remain present.
 
 - Preview device presets now expose and update their selected state with `aria-pressed`. The state update is scoped to the Desktop / Tablet / Mobile preset buttons, avoiding accidental removal of active styling from refresh, zoom and fullscreen controls.
+
+
+## Implementation log — locked-section mutation boundary (30 October 2026)
+
+- Added a second, authoritative lock check inside updateSkinSection, not just in the rendered inspector controls. A stale inspector event or preview-originated callback can no longer mutate a locked section by calling the update function directly.
+- The editor reports that the section must be unlocked from the page outline before its settings can be changed. Unlocking remains available through the dedicated outline control.
+- Extended the release-contract audit to assert that the mutation-boundary guard remains present.
+- This is a targeted integrity improvement within the visual page-builder pass; no section or product data was changed.
