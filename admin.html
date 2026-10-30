@@ -2920,6 +2920,9 @@ function skinMarkDirty(message='Draft updated. Publish when you are ready.'){
  writeSkinStudioRecovery();skinBuilderMessage(message,'info');queueSkinDraftAutosave();syncSkinPreviewActionbar();
 }
 async function saveSkinStudioChangeImmediately(successMessage){
+ // Preview actions and other immediate-save controls must not race a server-side
+ // discard. The discard finalizer will queue the preserved editor state afterwards.
+ if(window.__nuvoraSkinDiscardInProgress){skinBuilderMessage('Draft discard is in progress. Your edit is being kept in the editor and will be saved when discard finishes.','warning');return false;}
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
  if(!skinSiteConfigLoaded||!skinBuilderConfig){skinBuilderMessage('This change is not saved because the page draft has not loaded. Reload Skin Studio before retrying.','error');return false;}
  skinBuilderMessage('Saving this change to your page draft…','info');
