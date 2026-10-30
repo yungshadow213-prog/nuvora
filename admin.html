@@ -3984,14 +3984,15 @@ function syncSkinPreviewActionbar(){
  const selection=skinStudioSelection||{type:'none',id:''},isSection=selection.type==='section',sections=skinSectionsFor();
  const index=isSection?sections.findIndex(x=>String(x.id)===String(selection.id)):-1,section=index>=0?sections[index]:null;
  const product=selection.type==='product'?adminProducts.find(p=>String(p.id)===String(selection.id)):null;
- context.textContent=product?'Selected product: '+String(product.name||'Product'):(section?'Selected section: '+String(section.title||section.type):'Click a section or product in the preview to edit it here.');
+ const locked=!!section?.locked;
+ context.textContent=product?'Selected product: '+String(product.name||'Product'):(section?'Selected section: '+String(section.title||section.type)+(locked?' · Locked':''):'Click a section or product in the preview to edit it here.');
  context.dataset.status=document.getElementById('skinStudioSaveLabel')?.dataset.status||'';
- if(controls.moveUp)controls.moveUp.disabled=!section||index<=0;
- if(controls.moveDown)controls.moveDown.disabled=!section||index<0||index>=sections.length-1;
- if(controls.replace)controls.replace.disabled=!section||!['hero','editorial','category-grid','product-grid','featured-products','image-block'].includes(section.type);
- if(controls.remove)controls.remove.disabled=!section||!section.image;
+ if(controls.moveUp)controls.moveUp.disabled=!section||locked||index<=0;
+ if(controls.moveDown)controls.moveDown.disabled=!section||locked||index<0||index>=sections.length-1;
+ if(controls.replace)controls.replace.disabled=!section||locked||!['hero','editorial','category-grid','product-grid','featured-products','image-block'].includes(section.type);
+ if(controls.remove)controls.remove.disabled=!section||locked||!section.image;
  if(controls.edit)controls.edit.disabled=!product;
- if(controls.del)controls.del.disabled=!section;
+ if(controls.del)controls.del.disabled=!section||locked;
 }
 function skinPreviewAction(action){
  const selection=skinStudioSelection||{type:'none',id:''};
@@ -3999,6 +4000,9 @@ function skinPreviewAction(action){
  if(selection.type!=='section')return;
  const sections=skinSectionsFor(),index=sections.findIndex(x=>String(x.id)===String(selection.id)),section=sections[index];
  if(index<0||!section)return;
+ if(section.locked&&['move-up','move-down','replace-image','remove-image','delete'].includes(action)){
+  skinBuilderMessage('Unlock this section in the page outline before changing it.','warning');return;
+ }
  if(action==='move-up'){moveSkinSection(index,-1);return;}
  if(action==='move-down'){moveSkinSection(index,1);return;}
  if(action==='replace-image'){requestSkinSectionImageUpload(section.id,skinStudioPageId);return;}
