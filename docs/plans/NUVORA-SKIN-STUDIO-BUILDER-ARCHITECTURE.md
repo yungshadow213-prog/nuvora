@@ -252,3 +252,5 @@ This is an incremental UI-architecture slice, not completion of the full specifi
 - Section settings are now grouped into keyboard-operable collapsible panels (Content, Appearance, Layout & responsive, Section behaviour) instead of one uninterrupted inspector form. Content and Appearance open by default; advanced layout and behaviour controls remain available without overwhelming the initial view.
 - The grouping is applied after the selected section inspector is rendered, preserving the existing section-specific controls and their handlers. The duplicate/delete actions remain outside the collapsible groups so they stay easy to find.
 - Validation: the complete inline JavaScript compiles; targeted source checks confirm inspector grouping is invoked, group styling exists, default-open groups are configured, and earlier lock/keyboard protections remain present.
+
+- Preview device presets now expose and update their selected state with `aria-pressed`. The state update is scoped to the Desktop / Tablet / Mobile preset buttons, avoiding accidental removal of active styling from refresh, zoom and fullscreen controls.
