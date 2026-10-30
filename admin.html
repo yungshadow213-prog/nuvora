@@ -3759,7 +3759,7 @@ function updateSkinSection(index,key,value,fromPreview=false){
 }
 function selectFirstSkinSection(){const section=skinSectionsFor()[0];if(section)selectSkinItem('section',section.id);else openSkinAdd('section');}
 function focusSkinInspector(){const panel=document.querySelector('.studio-right-panel');if(panel)panel.scrollTo({top:0,behavior:'smooth'});const root=document.getElementById('skinSelectedInspector');if(root)root.scrollIntoView({block:'nearest',behavior:'smooth'});if(!skinStudioSelection||skinStudioSelection.type==='none')selectFirstSkinSection();}
-function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;skinHistoryCapture();let ids=new Set((sec.product_ids||[]).map(String).filter(id=>id!=='__nuvora_manual_empty__'));if(sec.product_selection!=='manual')ids=new Set(skinProductsForSection({...sec,product_selection:'automatic',product_ids:[]}).map(p=>String(p.id)));if(checked)ids.add(String(productId));else ids.delete(String(productId));sec.product_selection='manual';sec.product_ids=ids.size?[...ids]:['__nuvora_manual_empty__'];updateSkinSection(index,'product_ids',sec.product_ids);}
+function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;if(sec.locked){skinBuilderMessage('Unlock this section before changing its products.','warning');return;}skinHistoryCapture();let ids=new Set((sec.product_ids||[]).map(String).filter(id=>id!=='__nuvora_manual_empty__'));if(sec.product_selection!=='manual')ids=new Set(skinProductsForSection({...sec,product_selection:'automatic',product_ids:[]}).map(p=>String(p.id)));if(checked)ids.add(String(productId));else ids.delete(String(productId));sec.product_selection='manual';sec.product_ids=ids.size?[...ids]:['__nuvora_manual_empty__'];updateSkinSection(index,'product_ids',sec.product_ids);}
 function toggleSkinSectionLock(index){
  const sections=skinSectionsFor(),section=sections[index];if(!section)return;
  skinHistoryCapture();section.locked=!section.locked;
@@ -3879,10 +3879,10 @@ function addSkinProductToSection(productId,targetId,pageId){
  const sections=skinSectionsFor(effectivePageId);
  const preferredIds=[pending?.pageId===effectivePageId?pending.sectionId:null,targetId,skinStudioSelection?.type==='section'?skinStudioSelection.id:null].filter(Boolean);
  let sec=null;
- for(const preferredId of preferredIds){const candidate=sections.find(s=>String(s.id)===String(preferredId));if(candidate&&candidate.visible!==false&&['product-grid','featured-products'].includes(candidate.type)){sec=candidate;break;}}
- if(!sec)sec=sections.find(s=>s.visible!==false&&['product-grid','featured-products'].includes(s.type));
+ for(const preferredId of preferredIds){const candidate=sections.find(s=>String(s.id)===String(preferredId));if(candidate&&candidate.visible!==false&&!candidate.locked&&['product-grid','featured-products'].includes(candidate.type)){sec=candidate;break;}}
+ if(!sec)sec=sections.find(s=>s.visible!==false&&!s.locked&&['product-grid','featured-products'].includes(s.type));
  if(!sec){
-  sec={id:'section-'+Date.now().toString(36),type:'product-grid',visible:true,title:'New skincare picks',eyebrow:'The edit',text:'',filter:'all',columns:3,product_ids:[]};
+  sec={id:'section-'+crypto.randomUUID(),type:'product-grid',visible:true,title:'New skincare picks',eyebrow:'The edit',text:'',filter:'all',columns:3,product_ids:[]};
   const anchorId=preferredIds[0]||preferredIds[1],anchorIndex=sections.findIndex(s=>String(s.id)===String(anchorId));
   const heroIndex=sections.findIndex(s=>s.type==='hero');
   const insertAt=anchorIndex>=0?anchorIndex+1:(heroIndex>=0?heroIndex+1:sections.length);
@@ -3902,7 +3902,7 @@ function addSkinProductToSection(productId,targetId,pageId){
 }
 function moveSkinProductInSection(productId,targetProductId,sectionId,pageId){
  const sections=skinSectionsFor(pageId),sec=sections.find(s=>String(s.id)===String(sectionId));
- if(!sec||!['product-grid','featured-products'].includes(sec.type))return;
+ if(!sec||!['product-grid','featured-products'].includes(sec.type))return;if(sec.locked){skinBuilderMessage('Unlock this section before reordering its products.','warning');return;}
  let ids=Array.isArray(sec.product_ids)?sec.product_ids.map(String):[];
  if(!ids.length)ids=skinProductsForSection(sec).map(p=>String(p.id));
  const from=ids.indexOf(String(productId)),to=ids.indexOf(String(targetProductId));
