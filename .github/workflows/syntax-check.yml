@@ -389,6 +389,11 @@ jobs:
           reorder_mutation=reorder_block.find("sections.splice(")
           if reorder_history < 0 or reorder_mutation < 0 or reorder_history > reorder_mutation:
               failures.append("Drag-and-drop reorder must capture history before changing order")
+          update_section_start=admin.find("function updateSkinSection(index,key,value,fromPreview=false){")
+          update_section_end=admin.find("function selectFirstSkinSection",update_section_start)
+          update_section_block=admin[update_section_start:update_section_end]
+          if "if(sec.locked)" not in update_section_block or "Unlock it in the page outline before editing its settings." not in update_section_block:
+              failures.append("Section settings mutation must enforce the locked-section guard")
           placement_start=admin.find("function addSkinProductToSection")
           placement_end=admin.find("function moveSkinProductInSection",placement_start)
           placement_block=admin[placement_start:placement_end]
