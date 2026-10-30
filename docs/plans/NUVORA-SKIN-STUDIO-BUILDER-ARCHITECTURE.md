@@ -208,3 +208,11 @@ This is an incremental UI-architecture slice, not completion of the full specifi
 - Suspended autosave scheduling during discard so a delayed autosave cannot race the server-side draft clear.
 - Compared the editor state before and after the discard request. If the user makes newer edits during the request, the editor keeps those edits instead of replacing them with the published snapshot, then queues them as a fresh private draft after discard completes.
 - Validation on 2026-10-30: the `admin.html` inline script compiles successfully with `new Function`; targeted source assertions confirm the publish/discard guard, autosave suspension, concurrent-edit preservation, and post-discard autosave scheduling. Authenticated browser workflows and persistence/preview integration still require runtime testing.
+
+
+## Implementation log — section guard consistency
+
+- Applied the homepage's minimum visible product-grid rule to the dedicated visibility toggle as well as inspector edits and deletion, so all section-editing paths enforce the same storefront safety rule.
+- Added lock checks to the alternate canvas drag/drop reorder path, matching the outline drag/drop and move controls.
+- Blocked preview-driven immediate saves while draft discard is active; the discard finalizer preserves and schedules the latest editor state afterwards.
+- Validation on 2026-10-30: the `admin.html` inline script compiles successfully; five targeted source assertions confirm the visibility, deletion, inspector, alternate drag/drop, and discard-save guards. Browser interaction tests remain outstanding.
