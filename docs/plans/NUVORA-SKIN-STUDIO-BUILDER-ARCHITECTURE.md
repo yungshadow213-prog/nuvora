@@ -231,3 +231,11 @@ This is an incremental UI-architecture slice, not completion of the full specifi
 - Storefront-preview bridge actions now respect section locks when removing a section image, removing a product from a section, dropping/replacing an image, editing section text, and repositioning an image.
 - Section deletion already rejects locked sections; this closes additional preview-originated mutation paths that could bypass the inspector's lock affordance.
 - Validation on 2026-10-30: the `admin.html` inline JavaScript compiles successfully; six targeted source assertions confirm the relevant lock guards. Authenticated browser and cross-repository preview/publish parity tests remain outstanding.
+
+## Implementation log — workspace-specific navigation and actions (30 October 2026)
+
+- Replaced the static left-panel context with workspace-aware labels for Storefront, Catalog, Content and Design, so the kicker, heading and helper text always describe the active area.
+- Made the primary action contextual: Theme editor retains the section/block Add menu; Products opens manual product creation; Pages opens page creation; Categories & brands opens category creation; Media library and Design & navigation do not show an unrelated Add button.
+- Renamed the navigation entry to **Categories & brands** and clarified its separation from product records.
+- Switching workspaces now closes the generic Theme editor Add menu, preventing stale actions from remaining open in a different workspace.
+- Validation: fetched the updated branch file and compiled its complete inline JavaScript successfully. Targeted assertions confirm each workspace action mode and the hide/show behavior. This remains static validation; authenticated browser verification is still outstanding.
