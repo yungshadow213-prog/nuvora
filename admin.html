@@ -2855,7 +2855,7 @@ function restoreSkinStudioRecoveryIfAvailable(){
  return true;
 }
 function queueSkinDraftAutosave(){
- if(skinSitePublishInProgress||!skinSiteConfigLoaded||!skinBuilderConfig||!document.body.classList.contains('skin-studio-fullpage'))return;
+ if(window.__nuvoraSkinDiscardInProgress||skinSitePublishInProgress||!skinSiteConfigLoaded||!skinBuilderConfig||!document.body.classList.contains('skin-studio-fullpage'))return;
  if(skinDraftAutosaveTimer)clearTimeout(skinDraftAutosaveTimer);
  skinDraftAutosaveTimer=setTimeout(()=>{
   persistSkinSiteDraft(true).catch(error=>{
@@ -4222,6 +4222,7 @@ async function persistSkinSiteDraft(quiet=false){
  }
 }
 async function saveSkinSiteDraft(button){
+ if(window.__nuvoraSkinDiscardInProgress){skinBuilderMessage('Draft discard is in progress. Wait for it to finish before saving.','warning');return;}
  if(skinSitePublishInProgress){skinBuilderMessage('Publishing is in progress. Wait for verification to finish before saving another draft.','warning');return;}
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
  const btn=button instanceof HTMLElement?button:document.querySelector('button[onclick="saveSkinSiteDraft(this)"]');if(btn){btn.disabled=true;btn.textContent='Saving…';}
@@ -4231,8 +4232,10 @@ async function saveSkinSiteDraft(button){
 }
 async function discardSkinSiteDraft(button){
  const btn=button instanceof HTMLElement?button:document.querySelector('button[onclick="discardSkinSiteDraft(this)"]');
- if(btn?.disabled)return;
+ if(btn?.disabled||window.__nuvoraSkinDiscardInProgress)return;
+ if(skinSitePublishInProgress){skinBuilderMessage('A publish is in progress. Wait for its verification to finish before discarding the draft.','warning');return;}
  if(!confirm('Discard the private Skin Care draft and restore the currently published storefront configuration? This permanently removes unpublished draft changes.'))return;
+ window.__nuvoraSkinDiscardInProgress=true;
  if(btn){btn.disabled=true;btn.textContent='Discarding…';}
  try{
   if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
@@ -4242,6 +4245,10 @@ async function discardSkinSiteDraft(button){
   const current=await api('/api/admin/settings');
   if(!current?.skin_site_config||typeof current.skin_site_config!=='object')throw new Error('The published configuration could not be loaded.');
   const published=mergeSkinSiteConfig(current.skin_site_config);
+  const publishedJson=stableSkinJson(published);
+  // Keep a snapshot boundary: edits made while the server clears the draft must
+  // survive locally and be written back as a fresh private draft afterwards.
+  const editorAtDiscardStart=stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig));
   const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_draft:null}});
   if(response?.skin_site_draft&&typeof response.skin_site_draft==='object')throw new Error('The server still reports a private draft.');
   const check=await api('/api/admin/settings');
@@ -4249,19 +4256,32 @@ async function discardSkinSiteDraft(button){
   const verified=mergeSkinSiteConfig(check.skin_site_config);
   if(stableSkinJson(verified)!==stableSkinJson(published))throw new Error('The published configuration changed during discard; reload and verify before editing again.');
   if(check.skin_site_draft&&typeof check.skin_site_draft==='object')throw new Error('The private draft still exists after discard.');
-  skinBuilderConfig=verified;skinSiteDraftExists=false;skinDraftLastSavedPayload=stableSkinJson(verified);
-  skinStudioPageId='home';skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||'hero'};
-  skinStudioUndoStack=[];skinStudioRedoStack=[];skinStudioHistoryLastCapture=0;skinHistoryUpdateButtons();
-  clearSkinStudioRecovery();fillSkinConfigFields();renderSkinStudioAll();sendSkinStudioPreview();skinSetSavedLabel('Published version restored');
-  skinBuilderMessage('Draft discarded. The editor now matches the verified published storefront.','success');
+  const newerEditsExist=stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig))!==editorAtDiscardStart;
+  skinSiteDraftExists=false;skinDraftLastSavedPayload=publishedJson;
+  if(newerEditsExist){
+   // Do not replace newer in-memory edits with the published snapshot. The
+   // server draft was cleared, so autosave these edits back as a new draft.
+   skinBuilderMessage('The previous draft was discarded. Newer edits made during that operation are being preserved as a fresh draft.','warning');
+   skinSetSavedLabel('Newer edits need saving');
+   sendSkinStudioPreview();
+  }else{
+   skinBuilderConfig=verified;
+   skinStudioPageId='home';skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||'hero'};
+   skinStudioUndoStack=[];skinStudioRedoStack=[];skinStudioHistoryLastCapture=0;skinHistoryUpdateButtons();
+   clearSkinStudioRecovery();fillSkinConfigFields();renderSkinStudioAll();sendSkinStudioPreview();skinSetSavedLabel('Published version restored');
+   skinBuilderMessage('Draft discarded. The editor now matches the verified published storefront.','success');
+  }
  }catch(error){
   skinBuilderMessage('Draft discard could not be verified: '+(error?.message||'unknown error')+'. Reload the workspace and check the saved draft before retrying.','error');
  }finally{
+  window.__nuvoraSkinDiscardInProgress=false;
+  if(stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig))!==skinDraftLastSavedPayload)queueSkinDraftAutosave();
   if(btn){btn.disabled=false;btn.textContent='Discard draft';}
  }
 }
 async function saveSkinSiteConfig(button){
  let skinEditsChangedDuringPublish=false;
+ if(window.__nuvoraSkinDiscardInProgress){skinBuilderMessage('Draft discard is in progress. Wait for it to finish before publishing.','warning');return;}
  if(skinSitePublishInProgress){skinBuilderMessage('A publish is already in progress. Wait for its read-back verification before retrying.','warning');return;}
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
  const btn=button instanceof HTMLElement?button:document.querySelector('button[onclick="saveSkinSiteConfig(this)"]');
