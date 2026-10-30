@@ -224,3 +224,10 @@ This is an incremental UI-architecture slice, not completion of the full specifi
 - Product reordering now refuses to mutate a locked product grid.
 - Product placement skips locked grids when resolving the preview-selected target or fallback grid; if no editable visible grid exists, the builder creates a new editable grid with a unique ID.
 - Validation on 2026-10-30: `admin.html` inline JavaScript compiles successfully and five targeted source assertions confirm these lock and target-selection safeguards. Authenticated interaction tests remain outstanding.
+
+
+## Implementation log — preview lock enforcement
+
+- Storefront-preview bridge actions now respect section locks when removing a section image, removing a product from a section, dropping/replacing an image, editing section text, and repositioning an image.
+- Section deletion already rejects locked sections; this closes additional preview-originated mutation paths that could bypass the inspector's lock affordance.
+- Validation on 2026-10-30: the `admin.html` inline JavaScript compiles successfully; six targeted source assertions confirm the relevant lock guards. Authenticated browser and cross-repository preview/publish parity tests remain outstanding.
