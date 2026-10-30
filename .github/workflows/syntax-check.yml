@@ -368,19 +368,37 @@ jobs:
                   failures.append("Skin Studio local recovery contract missing "+recovery_token)
           if "document.addEventListener('focusin',event=>" not in admin or "document.addEventListener('input',event=>" in admin[admin.find("function skinHistoryCapture"):admin.find("function renderSkinStudioAll")]:
               failures.append("Skin Studio history must capture pre-edit state, not post-input state")
-          history_mutation_checks = [
-              ("function toggleSkinSectionVisibility(index){\n const sec=skinSectionsFor()[index];if(!sec)return;skinHistoryCapture();", "Section visibility must capture history before changing visibility"),
-              ("function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;skinHistoryCapture();", "Product selection must capture history before mutating selected IDs"),
-              ("if(from<0||targetIndex<0||from===targetIndex)return;\n skinHistoryCapture();const [section]=sections.splice(from,1);", "Drag-and-drop reorder must capture history before changing order"),
-          ]
-          for needle, message in history_mutation_checks:
-              if needle not in admin:
-                  failures.append(message)
+          visibility_start=admin.find("function toggleSkinSectionVisibility(index){")
+          visibility_end=admin.find("function skinBuilderDragStart",visibility_start)
+          visibility_block=admin[visibility_start:visibility_end]
+          visibility_history=visibility_block.find("skinHistoryCapture()")
+          visibility_mutation=visibility_block.find("sec.visible=")
+          if visibility_history < 0 or visibility_mutation < 0 or visibility_history > visibility_mutation:
+              failures.append("Section visibility must capture history before changing visibility")
+          selection_start=admin.find("function toggleSkinSectionProduct(index,productId,checked){")
+          selection_end=admin.find("function toggleSkinSectionLock",selection_start)
+          selection_block=admin[selection_start:selection_end]
+          selection_history=selection_block.find("skinHistoryCapture()")
+          selection_mutation=selection_block.find("sec.product_selection=")
+          if selection_history < 0 or selection_mutation < 0 or selection_history > selection_mutation:
+              failures.append("Product selection must capture history before mutating selected IDs")
+          reorder_start=admin.find("function skinSectionDrop(event,index){")
+          reorder_end=admin.find("function skinSectionDragEnd",reorder_start)
+          reorder_block=admin[reorder_start:reorder_end]
+          reorder_history=reorder_block.find("skinHistoryCapture()")
+          reorder_mutation=reorder_block.find("sections.splice(")
+          if reorder_history < 0 or reorder_mutation < 0 or reorder_history > reorder_mutation:
+              failures.append("Drag-and-drop reorder must capture history before changing order")
+          update_section_start=admin.find("function updateSkinSection(index,key,value,fromPreview=false){")
+          update_section_end=admin.find("function selectFirstSkinSection",update_section_start)
+          update_section_block=admin[update_section_start:update_section_end]
+          if "if(sec.locked)" not in update_section_block or "Unlock it in the page outline before editing its settings." not in update_section_block:
+              failures.append("Section settings mutation must enforce the locked-section guard")
           placement_start=admin.find("function addSkinProductToSection")
           placement_end=admin.find("function moveSkinProductInSection",placement_start)
           placement_block=admin[placement_start:placement_end]
-          if "candidate.visible!==false&&['product-grid','featured-products'].includes(candidate.type)" not in placement_block:
-              failures.append("Place on Page must not silently target a hidden product section")
+          if "candidate.visible!==false" not in placement_block or "s.visible!==false" not in placement_block or "!candidate.locked" not in placement_block:
+              failures.append("Place on Page must only target visible, unlocked product sections")
           open_skin_start=admin.find("async function openSkinProduct(){")
           open_skin_end=admin.find("function productReviewFlags",open_skin_start)
           open_skin_block=admin[open_skin_start:open_skin_end]

@@ -570,7 +570,79 @@ body.skin-studio-fullpage .studio-toolbar-actions .studio-add-product-quick{disp
 body.skin-studio-fullpage .studio-canvas-inner{border-radius:7px!important}
 body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
 .studio-library-pagination button:focus-visible{outline:2px solid #6e8c65;outline-offset:2px}
-</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
+</style>
+<style id="skin-studio-workspace-ia">
+/* Shopify-style information architecture: grouped workspaces, not a flat strip of unrelated tabs. */
+body.skin-studio-fullpage .studio-workspace-nav{display:grid;gap:18px;padding:12px 10px 16px;border-bottom:1px solid #e7eee4;background:#fff}
+body.skin-studio-fullpage .studio-workspace-group{display:grid;gap:5px}
+body.skin-studio-fullpage .studio-workspace-label{padding:0 9px 3px;color:#879386;font-size:9px;font-weight:800;letter-spacing:1.15px}
+body.skin-studio-fullpage .studio-workspace-item{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:9px;width:100%;min-height:48px;padding:8px 9px;border:1px solid transparent;border-radius:9px;background:transparent;color:#415343;text-align:left;cursor:pointer}
+body.skin-studio-fullpage .studio-workspace-item:hover{background:#f7f9f5;border-color:#e6ede2}
+body.skin-studio-fullpage .studio-workspace-item.active,body.skin-studio-fullpage .studio-workspace-item[aria-current="page"]{background:#edf5e9;border-color:#d4e4ce;color:#28583b}
+body.skin-studio-fullpage .studio-workspace-icon{display:grid;place-items:center;width:29px;height:29px;border:1px solid #e2e9df;border-radius:8px;background:#fff;color:#58765b;font-size:15px}
+body.skin-studio-fullpage .studio-workspace-item b{display:block;font-size:11px;font-weight:750;line-height:1.35}
+body.skin-studio-fullpage .studio-workspace-item small{display:block;margin-top:2px;color:#829080;font-size:9px;line-height:1.35;font-weight:500}
+body.skin-studio-fullpage .studio-workspace-item:focus-visible{outline:2px solid #4f8057;outline-offset:2px}
+body.skin-studio-fullpage .studio-left-panel{overflow-y:auto}
+body.skin-studio-fullpage .studio-panel-head{position:sticky;top:0;z-index:3}
+body.skin-studio-fullpage .studio-library-items[hidden],body.skin-studio-fullpage .studio-quick-add[hidden],body.skin-studio-fullpage .studio-outline-list[hidden]{display:none!important}
+body.skin-studio-fullpage .studio-toolbar{position:sticky;top:0;z-index:20;flex-wrap:wrap}
+body.skin-studio-fullpage .studio-toolbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-wrap:wrap}
+body.skin-studio-fullpage .studio-toolbar-actions .btn{white-space:nowrap}
+@media(max-width:1100px){body.skin-studio-fullpage .studio-layout{grid-template-columns:220px minmax(0,1fr)!important}body.skin-studio-fullpage .studio-right-panel{grid-column:1/-1;max-height:none}}
+@media(max-width:720px){body.skin-studio-fullpage .studio-layout{grid-template-columns:minmax(0,1fr)!important;padding:8px!important;gap:9px!important}body.skin-studio-fullpage .studio-left-panel,body.skin-studio-fullpage .studio-right-panel,body.skin-studio-fullpage .studio-canvas-panel{min-width:0}body.skin-studio-fullpage .studio-workspace-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:10px}body.skin-studio-fullpage .studio-workspace-group{align-content:start}body.skin-studio-fullpage .studio-workspace-item{grid-template-columns:25px minmax(0,1fr);gap:6px;padding:7px;min-height:44px}body.skin-studio-fullpage .studio-workspace-icon{width:24px;height:24px}body.skin-studio-fullpage .studio-workspace-item small{font-size:8px}body.skin-studio-fullpage .studio-toolbar{padding:10px!important}body.skin-studio-fullpage .studio-toolbar-actions{justify-content:flex-start}}
+</style>
+
+
+<style id="skin-studio-dedicated-settings-workspace">
+body.skin-studio-fullpage .studio-right-panel.is-settings-workspace .studio-inspector-heading,
+body.skin-studio-fullpage .studio-right-panel.is-settings-workspace #skinSelectedInspector{display:none!important}
+body.skin-studio-fullpage .studio-right-panel.is-settings-workspace .studio-site-settings{display:block!important;margin:0!important;border:0!important;background:transparent!important}
+body.skin-studio-fullpage .studio-right-panel.is-settings-workspace .studio-site-settings>summary{display:none!important}
+body.skin-studio-fullpage .studio-right-panel.is-settings-workspace .studio-site-settings .skin-builder-controls{max-height:none!important;overflow:visible!important}
+body.skin-studio-fullpage .studio-right-panel.is-settings-workspace{overflow-y:auto!important;max-height:calc(100vh - 150px)!important}
+@media(max-width:950px){body.skin-studio-fullpage .studio-right-panel.is-settings-workspace{max-height:none!important}}
+</style>
+
+<style id="skin-studio-settings-workspace-cleanup">
+body.skin-studio-fullpage .studio-left-panel.is-settings-workspace .studio-add-button,
+body.skin-studio-fullpage .studio-left-panel.is-settings-workspace .studio-left-foot{display:none!important}
+body.skin-studio-fullpage .studio-left-panel.is-settings-workspace .studio-panel-head{border-bottom:0!important}
+body.skin-studio-fullpage .studio-left-panel.is-settings-workspace .studio-panel-head h3{font-size:14px!important}
+</style>
+
+<style id="skin-studio-section-outline-search">
+body.skin-studio-fullpage .studio-outline-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px;padding:10px 10px 12px;border-bottom:1px solid #edf1eb;background:#fff}
+body.skin-studio-fullpage .studio-outline-tools label{display:grid;gap:5px;min-width:0}
+body.skin-studio-fullpage .studio-outline-tools label span{font-size:10px;font-weight:750;color:#667767}
+body.skin-studio-fullpage .studio-outline-tools input{width:100%;min-width:0;min-height:38px;border:1px solid #dfe7dc;border-radius:8px;padding:8px 10px;background:#fbfcfa;color:#293b2e;font-size:12px}
+body.skin-studio-fullpage .studio-outline-count{font-size:10px;color:#718174;white-space:nowrap;padding-bottom:10px}
+body.skin-studio-fullpage .studio-section-outline[hidden]{display:none!important}
+</style>
+
+<style id="skin-studio-inspector-hierarchy">
+body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-subheading{display:flex;align-items:center;gap:8px;margin:18px 0 9px;padding:9px 10px;border:1px solid #e6ece3;border-radius:8px;background:#f7f9f5;color:#53634f;font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}
+body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-subheading:first-child{margin-top:4px}
+body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field{margin-bottom:12px}
+body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field>span{font-size:11px;font-weight:650;color:#3e4e40}
+body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field input:not([type=checkbox]):not([type=range]),body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field textarea,body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field select{width:100%;min-height:38px;border:1px solid #dfe6dc;border-radius:8px;padding:8px 10px;background:#fff;color:#29382b;font:inherit;font-size:12px}
+body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field textarea{min-height:88px;resize:vertical}
+body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field input:focus-visible,body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field textarea:focus-visible,body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field select:focus-visible{outline:2px solid #728b65;outline-offset:2px}
+@media(max-width:700px){body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field{margin-bottom:10px}}
+</style>
+<style id="skin-studio-inspector-groups">
+body.skin-studio-fullpage .studio-inspector-group{margin:10px 0;border:1px solid #e4ebe1;border-radius:10px;background:#fff;overflow:hidden}
+body.skin-studio-fullpage .studio-inspector-group>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;background:#f7f9f5;color:#435746;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;list-style:none}
+body.skin-studio-fullpage .studio-inspector-group>summary::-webkit-details-marker{display:none}
+body.skin-studio-fullpage .studio-inspector-group>summary::after{content:'＋';font-size:13px;color:#718571}
+body.skin-studio-fullpage .studio-inspector-group[open]>summary::after{content:'−'}
+body.skin-studio-fullpage .studio-inspector-group[open]>summary{border-bottom:1px solid #e8eee5}
+body.skin-studio-fullpage .studio-inspector-group>*:not(summary){margin-left:12px;margin-right:12px}
+body.skin-studio-fullpage .studio-inspector-group>.studio-inspector-field:first-of-type{margin-top:12px}
+body.skin-studio-fullpage .studio-inspector-group>.studio-inline-help:last-child{margin-bottom:12px}
+body.skin-studio-fullpage .studio-inspector-group>summary:focus-visible{outline:2px solid #477b55;outline-offset:-2px}
+</style>
+</head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
   <div class="nav-group">
     <span class="nav-group-label">Workspace</span>
     <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
@@ -870,20 +942,33 @@ body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
   <div id="skinBuilderStatus" class="studio-status notice" role="status" aria-live="polite">Loading your saved Skin Care site…</div>
     <div class="skin-builder-layout studio-layout">
     <aside class="studio-left-panel">
-      <div class="studio-panel-head"><div><span class="section-kicker">PAGE CONTENT</span><h3>Page layout</h3><small class="studio-panel-helper">Click a section to edit it. Use ↑ and ↓ to move it.</small></div><button class="btn primary studio-add-button" type="button" onclick="toggleSkinAddMenu()">+ Add</button></div>
+      <div class="studio-panel-head"><div><span id="skinWorkspaceKicker" class="section-kicker">PAGE CONTENT</span><h3 id="skinWorkspaceHeading">Page layout</h3><small id="skinWorkspaceHelper" class="studio-panel-helper">Click a section to edit it. Use ↑ and ↓ to move it.</small></div><button id="skinWorkspaceAddButton" class="btn primary studio-add-button" type="button" onclick="toggleSkinAddMenu()">+ Add</button></div>
       <div id="skinStudioAddMenu" class="studio-add-menu" hidden>
         <button type="button" onclick="openSkinAdd('product')"><span>＋</span><span><b>Product</b><small>Import an Amazon link or add a product</small></span></button>
         <button type="button" onclick="openSkinAdd('page')"><span>▤</span><span><b>Page</b><small>Create a new storefront page</small></span></button>
         <button type="button" onclick="openSkinAdd('category')"><span>◫</span><span><b>Category</b><small>Group and organize skincare picks</small></span></button>
         <button type="button" onclick="openSkinAdd('section')"><span>▦</span><span><b>Section</b><small>Add a block to the current page</small></span></button>
       </div>
-      <div class="studio-library-tabs" role="tablist" aria-label="Skin Studio content">
-        <button id="skinTabOutline" class="active" type="button" onclick="switchSkinStudioTab('outline')">Page layout</button>
-        <button id="skinTabProducts" type="button" onclick="switchSkinStudioTab('products')">Products</button>
-        <button id="skinTabPages" type="button" onclick="switchSkinStudioTab('pages')">Pages</button>
-        <button id="skinTabCategories" type="button" onclick="switchSkinStudioTab('categories')">Categories</button>
-        <button id="skinTabMedia" type="button" onclick="switchSkinStudioTab('media')">Media</button>
-      </div>
+      <nav class="studio-workspace-nav" aria-label="Store builder workspaces">
+        <div class="studio-workspace-group">
+          <span class="studio-workspace-label">STOREFRONT</span>
+          <button id="skinTabOutline" class="studio-workspace-item active" type="button" aria-current="page" onclick="switchSkinStudioTab('outline')"><span class="studio-workspace-icon" aria-hidden="true">▦</span><span><b>Theme editor</b><small>Sections and live layout</small></span></button>
+          <button id="skinTabPages" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('pages')"><span class="studio-workspace-icon" aria-hidden="true">▤</span><span><b>Pages</b><small>Page structure and content</small></span></button>
+        </div>
+        <div class="studio-workspace-group">
+          <span class="studio-workspace-label">CATALOG</span>
+          <button id="skinTabProducts" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('products')"><span class="studio-workspace-icon" aria-hidden="true">□</span><span><b>Products</b><small>Affiliate product library</small></span></button>
+          <button id="skinTabCategories" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('categories')"><span class="studio-workspace-icon" aria-hidden="true">▧</span><span><b>Categories &amp; brands</b><small>Organize product discovery</small></span></button>
+        </div>
+        <div class="studio-workspace-group">
+          <span class="studio-workspace-label">CONTENT</span>
+          <button id="skinTabMedia" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('media')"><span class="studio-workspace-icon" aria-hidden="true">▧</span><span><b>Media library</b><small>Uploaded store imagery</small></span></button>
+        </div>
+        <div class="studio-workspace-group">
+          <span class="studio-workspace-label">DESIGN</span>
+          <button id="skinStudioGlobalDesignNav" class="studio-workspace-item" type="button" aria-label="Open global design and navigation settings" onclick="openSkinStudioSettingsWorkspace()"><span class="studio-workspace-icon" aria-hidden="true">⚙</span><span><b>Design & navigation</b><small>Brand, theme, header and footer</small></span></button>
+        </div>
+      </nav>
       <div id="skinQuickAddPanel" class="studio-quick-add" hidden></div>
       <div id="skinLibraryItems" class="studio-library-items" hidden></div>
       <div id="skinBuilderSections" class="skin-builder-sections studio-outline-list" aria-label="Page section outline"></div>
@@ -893,9 +978,9 @@ body.skin-studio-fullpage #skinStudioPreview{width:100%!important}
       <div class="skin-preview-head studio-canvas-head">
         <div><b>Live page preview</b><small>Edit the page directly: double-click text, click sections to select them, drag sections or products to rearrange, and use the toolbar below to move, replace images, or delete.</small></div>
         <div class="studio-device-controls" aria-label="Preview size">
-          <button type="button" class="active" onclick="setSkinPreviewDevice('desktop',this)">Desktop</button>
-          <button type="button" onclick="setSkinPreviewDevice('tablet',this)">Tablet</button>
-          <button type="button" onclick="setSkinPreviewDevice('mobile',this)">Mobile</button>
+          <button type="button" class="active" aria-pressed="true" onclick="setSkinPreviewDevice('desktop',this)">Desktop</button>
+          <button type="button" aria-pressed="false" onclick="setSkinPreviewDevice('tablet',this)">Tablet</button>
+          <button type="button" aria-pressed="false" onclick="setSkinPreviewDevice('mobile',this)">Mobile</button>
           <button type="button" class="studio-refresh-button" onclick="reloadSkinStudioPreview()" title="Reload storefront preview" aria-label="Reload storefront preview">↻</button>
           <div class="studio-zoom-controls" role="group" aria-label="Preview zoom">
             <button type="button" onclick="adjustSkinPreviewZoom(-10)" aria-label="Zoom out" title="Zoom out">−</button>
@@ -2525,7 +2610,7 @@ async function adminBoot(){
 
 const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
 let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinSiteDraftExists=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='',skinStudioPendingProductTarget=null;
-let skinStudioUndoStack=[],skinStudioRedoStack=[],skinStudioHistoryLastCapture=0,skinStudioHistoryApplying=false;
+let skinStudioUndoStack=[],skinStudioRedoStack=[],skinStudioHistoryLastCapture=0,skinStudioHistoryApplying=false,skinSitePublishInProgress=false;
 const defaultSkinSiteConfig=()=>({
   version:5,homeLayoutVersion:0,template:'soft-editorial',accentColor:'#66745f',
   designSettings:{backgroundColor:'#f7f4ee',surfaceColor:'#fffdf9',textColor:'#342f2b',mutedColor:'#77756c',borderColor:'#e4dfd5',successColor:'#3d7d57',errorColor:'#b24b42',saleColor:'#c77d5b',headingFont:'Playfair Display',bodyFont:'DM Sans',pageMaxWidth:1280,sideGutters:24,sectionSpacing:64,gridGap:22,cornerRadius:14,shadowStyle:'soft',productImageRatio:'4:5',productHoverEffect:'none'},
@@ -2782,7 +2867,7 @@ function restoreSkinStudioRecoveryIfAvailable(){
  return true;
 }
 function queueSkinDraftAutosave(){
- if(!skinSiteConfigLoaded||!skinBuilderConfig||!document.body.classList.contains('skin-studio-fullpage'))return;
+ if(window.__nuvoraSkinDiscardInProgress||skinSitePublishInProgress||!skinSiteConfigLoaded||!skinBuilderConfig||!document.body.classList.contains('skin-studio-fullpage'))return;
  if(skinDraftAutosaveTimer)clearTimeout(skinDraftAutosaveTimer);
  skinDraftAutosaveTimer=setTimeout(()=>{
   persistSkinSiteDraft(true).catch(error=>{
@@ -2830,13 +2915,13 @@ function skinHistoryRestore(snapshot,label){
  skinHistoryUpdateButtons();
 }
 function undoSkinStudio(){
- if(!skinStudioUndoStack.length)return;
+ if(!skinSiteConfigLoaded||!skinBuilderConfig||!skinStudioUndoStack.length)return;
  skinStudioRedoStack.push(skinHistorySnapshot());
  const snapshot=skinStudioUndoStack.pop();
  skinHistoryRestore(snapshot,'Previous edit');
 }
 function redoSkinStudio(){
- if(!skinStudioRedoStack.length)return;
+ if(!skinSiteConfigLoaded||!skinBuilderConfig||!skinStudioRedoStack.length)return;
  skinStudioUndoStack.push(skinHistorySnapshot());
  const snapshot=skinStudioRedoStack.pop();
  skinHistoryRestore(snapshot,'Redo edit');
@@ -2847,6 +2932,9 @@ function skinMarkDirty(message='Draft updated. Publish when you are ready.'){
  writeSkinStudioRecovery();skinBuilderMessage(message,'info');queueSkinDraftAutosave();syncSkinPreviewActionbar();
 }
 async function saveSkinStudioChangeImmediately(successMessage){
+ // Preview actions and other immediate-save controls must not race a server-side
+ // discard. The discard finalizer will queue the preserved editor state afterwards.
+ if(window.__nuvoraSkinDiscardInProgress){skinBuilderMessage('Draft discard is in progress. Your edit is being kept in the editor and will be saved when discard finishes.','warning');return false;}
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
  if(!skinSiteConfigLoaded||!skinBuilderConfig){skinBuilderMessage('This change is not saved because the page draft has not loaded. Reload Skin Studio before retrying.','error');return false;}
  skinBuilderMessage('Saving this change to your page draft…','info');
@@ -2960,6 +3048,8 @@ async function loadSkinSiteConfig(){
    if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
   }
  }catch(e){
+  // Never allow history from a previously loaded site config to mutate the recovery fallback.
+  skinStudioUndoStack=[];skinStudioRedoStack=[];skinStudioHistoryLastCapture=0;skinStudioHistoryApplying=false;skinHistoryUpdateButtons();
   skinSiteDraftExists=false;
   skinBuilderConfig=mergeSkinConfigForRecovery();
   fillSkinConfigFields();
@@ -3035,13 +3125,55 @@ function updateSkinStudioPageTitle(){
  select.value=pages.some(page=>page.value===selected)?selected:'home';
 }
 function switchSkinStudioTab(tab){
- skinStudioTab=['outline','products','pages','categories','media'].includes(tab)?tab:'outline';
- ['outline','products','pages','categories','media'].forEach(key=>{const b=document.getElementById('skinTab'+key.charAt(0).toUpperCase()+key.slice(1));if(b)b.classList.toggle('active',skinStudioTab===key);});
+ skinStudioTab=['outline','products','pages','categories','media','settings'].includes(tab)?tab:'outline';
+ ['outline','products','pages','categories','media'].forEach(key=>{
+  const b=document.getElementById('skinTab'+key.charAt(0).toUpperCase()+key.slice(1));
+  if(b){const active=skinStudioTab===key;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');}
+ });
  const outline=document.getElementById('skinBuilderSections'),library=document.getElementById('skinLibraryItems');
  if(outline)outline.hidden=skinStudioTab!=='outline';
- if(library)library.hidden=skinStudioTab==='outline';
+ if(library)library.hidden=skinStudioTab==='outline'||skinStudioTab==='settings';
+ const panel=document.getElementById('skinQuickAddPanel');if(panel&&skinStudioTab!=='pages'&&skinStudioTab!=='categories')panel.hidden=true;
+ const settingsNav=document.getElementById('skinStudioGlobalDesignNav');
+ if(settingsNav){const active=skinStudioTab==='settings';settingsNav.classList.toggle('active',active);if(active)settingsNav.setAttribute('aria-current','page');else settingsNav.removeAttribute('aria-current');}
+ const right=document.querySelector('.studio-right-panel'),settings=document.querySelector('.studio-site-settings'),left=document.querySelector('.studio-left-panel');
+ if(right)right.classList.toggle('is-settings-workspace',skinStudioTab==='settings');
+ if(left)left.classList.toggle('is-settings-workspace',skinStudioTab==='settings');
+ if(settings){settings.open=skinStudioTab==='settings';}
+ if(skinStudioTab==='settings'){const addMenu=document.getElementById('skinStudioAddMenu');if(addMenu)addMenu.hidden=true;}
+ const title=document.getElementById('skinWorkspaceHeading');
+ const helper=document.getElementById('skinWorkspaceHelper');
+ const kicker=document.getElementById('skinWorkspaceKicker');
+ const addButton=document.getElementById('skinWorkspaceAddButton');
+ const workspaceMeta={
+  outline:{kicker:'PAGE CONTENT',title:'Page layout',helper:'Select a section to edit it. Drag to reorder, use ↑/↓, or press Alt + ↑/↓ when a section is focused.',action:'+ Add',actionMode:'menu'},
+  products:{kicker:'CATALOG',title:'Product library',helper:'Manage affiliate products here. Product placement on a page is a separate action.',action:'+ Add product',actionMode:'product'},
+  pages:{kicker:'STOREFRONT',title:'Pages',helper:'Create and manage storefront pages. Page content stays separate from the product catalogue.',action:'+ Add page',actionMode:'page'},
+  categories:{kicker:'CATALOG',title:'Categories & brands',helper:'Organize product discovery and brand identity separately from product records.',action:'+ Add category',actionMode:'category'},
+  media:{kicker:'CONTENT',title:'Media library',helper:'Browse and reuse uploaded store imagery. Removing a page reference never deletes the stored source file.',action:'',actionMode:'hidden'},
+  settings:{kicker:'DESIGN',title:'Design & navigation',helper:'Configure shared brand styling, typography, navigation, announcement bar and footer.',action:'',actionMode:'hidden'}
+ };
+ const meta=workspaceMeta[skinStudioTab]||workspaceMeta.outline;
+ if(title)title.textContent=meta.title;
+ if(helper)helper.textContent=meta.helper;
+ if(kicker)kicker.textContent=meta.kicker;
+ if(addButton){
+  addButton.hidden=meta.actionMode==='hidden';
+  addButton.textContent=meta.action;
+  addButton.onclick=meta.actionMode==='menu'?toggleSkinAddMenu:meta.actionMode==='product'?openSkinManualProduct:()=>openSkinAdd(meta.actionMode);
+ }
+ const addMenu=document.getElementById('skinStudioAddMenu');
+ if(addMenu&&skinStudioTab!=='outline')addMenu.hidden=true;
  renderSkinLibrary();
  if(skinStudioTab==='outline')renderSkinBuilderSections();
+}
+function openSkinStudioSettingsWorkspace(){
+ const details=document.querySelector('.studio-site-settings');
+ if(!details){skinBuilderMessage('Global design settings are not available in this editor view.','error');return;}
+ switchSkinStudioTab('settings');
+ details.open=true;
+ details.scrollIntoView({behavior:'smooth',block:'start'});
+ skinBuilderMessage('Design workspace opened. These shared settings apply across the storefront; section-specific settings remain in the theme editor.','info');
 }
 function setSkinStudioProductPage(page){
  window.skinStudioProductPage=Math.max(1,Number(page)||1);
@@ -3144,8 +3276,8 @@ function renderSkinLibrary(){
  const root=document.getElementById('skinLibraryItems');if(!root)return;
  const outline=document.getElementById('skinBuilderSections');
  if(outline)outline.hidden=skinStudioTab!=='outline';
- root.hidden=skinStudioTab==='outline';
- if(skinStudioTab==='outline'){root.innerHTML='';return;}
+ root.hidden=skinStudioTab==='outline'||skinStudioTab==='settings';
+ if(skinStudioTab==='outline'||skinStudioTab==='settings'){root.innerHTML='';return;}
  if(!skinBuilderConfig){root.innerHTML='<div class="studio-library-empty">Loading your site content…</div>';return;}
  if(skinStudioTab==='media'){renderSkinMediaLibrary(root);return;}
  if(skinStudioTab==='products'){
@@ -3204,14 +3336,46 @@ function renderSkinBuilderSections(){
  const root=document.getElementById('skinBuilderSections');if(!root||!skinBuilderConfig)return;
  const sections=skinSectionsFor();
  const typeLabels={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Featured products','category-grid':'Category browse','journal-grid':'Journal cards','routine-finder':'Skin routine finder','image-block':'Image block','text-block':'Text block','brand-grid':'Brand directory'};
- root.innerHTML=sections.map((sec,index)=>{
+ const needle=String(window.skinStudioSectionSearch||'').trim().toLowerCase();
+ root.innerHTML='<div class="studio-outline-tools"><label><span>Find a section</span><input id="skinStudioSectionSearch" type="search" value="'+esc(needle)+'" placeholder="Search sections…" aria-label="Search page sections" oninput="filterSkinSectionOutline(this.value)"></label><span id="skinStudioSectionCount" class="studio-outline-count">'+sections.length+' sections</span></div>'+ (sections.map((sec,index)=>{
   const selected=skinStudioSelection?.type==='section'&&String(skinStudioSelection.id)===String(sec.id);
   const visible=sec.visible!==false;
-  return '<article class="studio-section-outline '+(selected?'is-selected':'')+'" data-section-index="'+index+'" draggable="true" ondragstart="skinSectionDragStart(event,'+index+')" ondragover="skinSectionDragOver(event,' +index+ ')" ondrop="skinSectionDrop(event,' +index+ ')" ondragend="skinSectionDragEnd(event)" onclick="selectSkinItem(\'section\','+esc(JSON.stringify(String(sec.id)))+')">'+
+  return '<article class="studio-section-outline '+(selected?'is-selected':'')+'" data-search="'+esc(String(sec.title||typeLabels[sec.type]||sec.type||'Section')+' '+String(typeLabels[sec.type]||'Section')).toLowerCase()+'" data-section-index="'+index+'" tabindex="0" aria-label="Section '+(index+1)+': '+esc(sec.title||typeLabels[sec.type]||'Section')+'. Press Enter to select; use Alt plus arrow keys to reorder." draggable="true" onkeydown="skinSectionOutlineKeydown(event,'+index+','+esc(JSON.stringify(String(sec.id)))+')" ondragstart="skinSectionDragStart(event,'+index+')" ondragover="skinSectionDragOver(event,' +index+ ')" ondrop="skinSectionDrop(event,' +index+ ')" ondragend="skinSectionDragEnd(event)" onclick="selectSkinItem(\'section\','+esc(JSON.stringify(String(sec.id)))+')">'+
    '<span class="studio-outline-grip studio-outline-number" aria-hidden="true">'+(index+1)+'</span><div class="studio-section-outline-copy"><b>'+esc(sec.title||typeLabels[sec.type]||sec.type||'Section')+(sec.locked?' 🔒':'')+'</b><small>'+esc(typeLabels[sec.type]||'Section')+' · '+(visible?'Visible':'Hidden')+(sec.locked?' · Locked':'')+'</small></div>'+
    '<div class="studio-section-outline-actions"><button type="button" title="Move up" '+(index===0||sec.locked?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',-1)">↑</button><button type="button" title="Move down" '+(index===sections.length-1||sec.locked?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',1)">↓</button><button type="button" title="Duplicate section" '+(sec.locked?'disabled':'')+' onclick="event.stopPropagation();duplicateSkinSection('+index+')">⧉</button><button type="button" title="'+(sec.locked?'Unlock layout':'Lock layout')+'" aria-pressed="'+String(!!sec.locked)+'" onclick="event.stopPropagation();toggleSkinSectionLock('+index+')">'+(sec.locked?'🔒':'🔓')+'</button><button type="button" title="'+(visible?'Hide':'Show')+'" '+(sec.locked?'disabled':'')+' onclick="event.stopPropagation();toggleSkinSectionVisibility('+index+')">'+(visible?'◉':'○')+'</button><button type="button" title="Delete section" aria-label="Delete '+esc(sec.title||typeLabels[sec.type]||'section')+'" '+(sec.locked?'disabled':'')+' style="color:#a33d31!important;border:1px solid #f0d7d2;border-radius:6px;background:#fff7f5" onclick="event.stopPropagation();deleteSkinSectionImmediately('+index+')">×</button></div></article>';
- }).join('')||'<div class="studio-library-empty">This page has no sections yet. Use + Add → Section to start building it.</div>';
+ }).join('')||'<div class="studio-library-empty">This page has no sections yet. Use + Add → Section to start building it.</div>');
+ filterSkinSectionOutline(needle);
  renderSkinLibrary();
+}
+function skinSectionOutlineKeydown(event,index,id){
+ if(event.target!==event.currentTarget)return;
+ if(event.key==='Enter'||event.key===' '){event.preventDefault();selectSkinItem('section',id);return;}
+ if(event.altKey&&event.key==='ArrowUp'){event.preventDefault();moveSkinSection(index,-1);return;}
+ if(event.altKey&&event.key==='ArrowDown'){event.preventDefault();moveSkinSection(index,1);}
+}
+function filterSkinSectionOutline(value){
+ window.skinStudioSectionSearch=String(value||'');
+ const needle=window.skinStudioSectionSearch.trim().toLowerCase();
+ const rows=[...document.querySelectorAll('#skinBuilderSections .studio-section-outline')];
+ let shown=0;
+ rows.forEach(row=>{const match=!needle||String(row.dataset.search||'').includes(needle);row.hidden=!match;if(match)shown++;});
+ const count=document.getElementById('skinStudioSectionCount');
+ if(count)count.textContent=needle?shown+' of '+rows.length+' sections':rows.length+' sections';
+}
+
+function groupSkinInspectorSettings(root){
+ if(!root)return;
+ const headings=[...root.querySelectorAll('.studio-inspector-subheading')];
+ headings.forEach((heading,index)=>{
+  const parent=heading.parentNode;if(!parent)return;
+  const group=document.createElement('details');group.className='studio-inspector-group';group.open=index<2;
+  const summary=document.createElement('summary');summary.textContent=heading.textContent.trim();group.appendChild(summary);
+  parent.insertBefore(group,heading);
+  let node=heading.nextSibling;heading.remove();
+  while(node&&!(node.nodeType===1&&(node.classList.contains('studio-inspector-subheading')||node.classList.contains('studio-inspector-actions')))){
+   const next=node.nextSibling;group.appendChild(node);node=next;
+  }
+ });
 }
 function renderSkinSelectedInspector(){
  const root=document.getElementById('skinSelectedInspector');if(!root)return;
@@ -3225,7 +3389,13 @@ function renderSkinSelectedInspector(){
   const types={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Featured products','category-grid':'Category browse','journal-grid':'Journal cards','routine-finder':'Skin routine finder','image-block':'Image block','text-block':'Text block','brand-grid':'Brand directory'};
   const field=(label,key,value,kind='text',max='180')=>'<label class="studio-inspector-field"><span>'+label+'</span>'+(kind==='textarea'?'<textarea maxlength="'+max+'" oninput="updateSkinSection('+index+',\''+key+'\',this.value)">'+esc(value||'')+'</textarea>':'<input type="'+kind+'" maxlength="'+(kind==='color'?'7':max)+'" value="'+esc(value||'')+'" oninput="updateSkinSection('+index+',\''+key+'\',this.value)">')+'</label>';
   let html='<label class="studio-inspector-field"><span>Section type</span><select onchange="updateSkinSection('+index+',\'type\',this.value)">'+Object.entries(types).map(([val,label])=>'<option value="'+val+'" '+(sec.type===val?'selected':'')+'>'+label+'</option>').join('')+'</select></label>';
+  html+='<div class="studio-inspector-subheading">Content</div>';
   html+=field('Section title','title',sec.title,'text','180')+field('Small heading / eyebrow','eyebrow',sec.eyebrow,'text','100')+field('Supporting text','text',sec.text,'textarea','3000');
+  if(['hero','editorial'].includes(sec.type)){
+   html+=field('Primary button label','buttonLabel',sec.buttonLabel||'','text','80')+field('Primary button link','buttonHref',sec.buttonHref||'','url','1600');
+   html+=field('Secondary button label','secondaryButtonLabel',sec.secondaryButtonLabel||'','text','80')+field('Secondary button link','secondaryButtonHref',sec.secondaryButtonHref||'','url','1600');
+  }
+  html+='<div class="studio-inspector-subheading">Appearance</div>';
   html+=field('Section background','backgroundColor',sec.backgroundColor||'#ffffff','color','7');
   html+='<label class="studio-inspector-field"><span>Colour scheme</span><select onchange="updateSkinSection('+index+',\'colorScheme\',this.value)">'+[['theme','Theme default'],['light','Light surface'],['soft','Soft background'],['dark','Dark / ink'],['accent','Accent colour']].map(([v,l])=>'<option value="'+v+'" '+((sec.colorScheme||'theme')===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
   html+='<label class="studio-inspector-field"><span>Text alignment</span><select onchange="updateSkinSection('+index+',\'textAlignment\',this.value)">'+[['left','Left'],['center','Center'],['right','Right']].map(([v,l])=>'<option value="'+v+'" '+((sec.textAlignment||'left')===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
@@ -3263,7 +3433,9 @@ function renderSkinSelectedInspector(){
     }
     html+='<label class="studio-inspector-field"><span>Image width</span><select onchange="updateSkinSection('+index+',\'imageWidth\',Number(this.value))">'+[20,30,40,50,60,70,80,90,100].map(n=>'<option value="'+n+'" '+(Number(sec.imageWidth||70)===n?'selected':'')+'>'+n+'%</option>').join('')+'</select></label>';
    }
+  html+='<div class="studio-inspector-subheading">Section behaviour</div>';
   html+='<label class="studio-inspector-check"><input type="checkbox" '+(sec.visible!==false?'checked':'')+' onchange="updateSkinSection('+index+',\'visible\',this.checked)"> Show this section on the published page</label>';
+  html+='<label class="studio-inspector-check"><input type="checkbox" '+(sec.locked===true?'checked':'')+' onchange="toggleSkinSectionLock('+index+')"> Lock section position</label>';
   if(sec.type==='product-grid'||sec.type==='featured-products'){
    const activeIds=new Set((sec.product_ids||[]).map(String));
    html+='<label class="studio-inspector-field"><span>Product filter</span><select onchange="updateSkinSection('+index+',\'filter\',this.value)">'+[['all','All eligible skincare products'],['featured','Featured picks'],['top_pick','Top picks'],['trending','Trending picks']].map(([v,l])=>'<option value="'+v+'" '+(sec.filter===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
@@ -3277,7 +3449,9 @@ function renderSkinSelectedInspector(){
   }
   html+='<div class="studio-inspector-actions"><button class="btn" type="button" onclick="duplicateSkinSection('+index+')">Duplicate</button><button class="btn danger" type="button" onclick="removeSkinSection('+index+')">Delete section</button></div>';
   setHead(types[sec.type]||'Section settings',skinPageLabel()+' · Section '+(index+1));
-  root.innerHTML=html;return;
+  root.innerHTML=html;
+  groupSkinInspectorSettings(root);
+  return;
  }
  if(selection.type==='product'){
   const p=adminProducts.find(x=>String(x.id)===String(selection.id));
@@ -3349,6 +3523,12 @@ function setSkinStudioPage(pageId){
  renderSkinStudioAll();
  const frame=document.getElementById('skinStudioPreview');
  if(frame){
+  // A page switch navigates the iframe. Do not let the previous page's ready
+  // signal make the new document look connected before it answers.
+  window.__nuvoraSkinPreviewReady=false;
+  if(window.__nuvoraSkinPreviewTimeout){clearTimeout(window.__nuvoraSkinPreviewTimeout);window.__nuvoraSkinPreviewTimeout=null;}
+  const notice=document.getElementById('skinStudioPreviewNotice');
+  if(notice){notice.hidden=false;notice.innerHTML='<b>Loading '+String(skinPageLabel()).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]))+' preview…</b><span>Waiting for the storefront to reconnect.</span>';}
   frame.src=skinStudioPreviewUrl();
  }
  skinBuilderMessage('Editing '+skinPageLabel()+'. Changes remain in your draft until published.','info');
@@ -3500,8 +3680,9 @@ function skinSelectedCategoryValue(id){
 }
 function selectSkinPreviewDevice(device,button){
  const root=document.getElementById('skinPreviewFrameOuter');if(root)root.dataset.device=device;
- document.querySelectorAll('.studio-device-controls button').forEach(b=>b.classList.remove('active'));
- if(button)button.classList.add('active');
+ document.querySelectorAll('.studio-device-controls button[onclick^="setSkinPreviewDevice"]').forEach(b=>{
+  const active=b===button;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));
+ });
  reloadSkinStudioPreview();
 }
 function setSkinPreviewDevice(device,button){selectSkinPreviewDevice(device,button);}
@@ -3550,7 +3731,9 @@ document.addEventListener('keydown',event=>{
  const editorOpen=document.body.classList.contains('skin-studio-fullpage');
  const target=event.target;
  const typing=target instanceof HTMLElement&&(target.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
- if(editorOpen&&!typing&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){
+ if(editorOpen&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='s'){
+  // Ctrl/Cmd+S must save the private storefront draft even when focus is inside a form field.
+  // Prevent the browser's unrelated "Save page" dialog and never publish implicitly.
   event.preventDefault();saveSkinSiteDraft();
  }else if(editorOpen&&!typing&&(event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){
   event.preventDefault();
@@ -3593,6 +3776,17 @@ document.addEventListener('focusin',event=>{
 function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();syncSkinPreviewActionbar();}
 function updateSkinSection(index,key,value,fromPreview=false){
  const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;
+ // Enforce section locks at the mutation boundary as well as in the UI. This
+ // protects preview callbacks and stale controls from bypassing the inspector guard.
+ if(sec.locked){skinBuilderMessage('This section is locked. Unlock it in the page outline before editing its settings.','warning');return;}
+ // The home page must retain at least one visible product grid. Block destructive
+ // changes at the point of interaction instead of allowing an unsavable draft.
+ if(skinStudioPageId==='home'&&['type','visible'].includes(key)&&sec.visible!==false&&['product-grid','featured-products'].includes(sec.type)){
+  const removesGrid=(key==='type'&&!['product-grid','featured-products'].includes(String(value)))||(key==='visible'&&value===false);
+  if(removesGrid&&!sections.some((item,itemIndex)=>itemIndex!==index&&item.visible!==false&&['product-grid','featured-products'].includes(item.type))){
+   skinBuilderMessage('Keep at least one visible product grid on the homepage. Add another product grid before changing or hiding this one.','warning');return;
+  }
+ }
  skinHistoryCapture();
  sec[key]=value;
  if(key==='type'){sec.product_ids=[];sec.category_id='';sec.filter=value==='featured-products'?'featured':'all';}
@@ -3621,7 +3815,7 @@ function updateSkinSection(index,key,value,fromPreview=false){
 }
 function selectFirstSkinSection(){const section=skinSectionsFor()[0];if(section)selectSkinItem('section',section.id);else openSkinAdd('section');}
 function focusSkinInspector(){const panel=document.querySelector('.studio-right-panel');if(panel)panel.scrollTo({top:0,behavior:'smooth'});const root=document.getElementById('skinSelectedInspector');if(root)root.scrollIntoView({block:'nearest',behavior:'smooth'});if(!skinStudioSelection||skinStudioSelection.type==='none')selectFirstSkinSection();}
-function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;skinHistoryCapture();let ids=new Set((sec.product_ids||[]).map(String).filter(id=>id!=='__nuvora_manual_empty__'));if(sec.product_selection!=='manual')ids=new Set(skinProductsForSection({...sec,product_selection:'automatic',product_ids:[]}).map(p=>String(p.id)));if(checked)ids.add(String(productId));else ids.delete(String(productId));sec.product_selection='manual';sec.product_ids=ids.size?[...ids]:['__nuvora_manual_empty__'];updateSkinSection(index,'product_ids',sec.product_ids);}
+function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;if(sec.locked){skinBuilderMessage('Unlock this section before changing its products.','warning');return;}skinHistoryCapture();let ids=new Set((sec.product_ids||[]).map(String).filter(id=>id!=='__nuvora_manual_empty__'));if(sec.product_selection!=='manual')ids=new Set(skinProductsForSection({...sec,product_selection:'automatic',product_ids:[]}).map(p=>String(p.id)));if(checked)ids.add(String(productId));else ids.delete(String(productId));sec.product_selection='manual';sec.product_ids=ids.size?[...ids]:['__nuvora_manual_empty__'];updateSkinSection(index,'product_ids',sec.product_ids);}
 function toggleSkinSectionLock(index){
  const sections=skinSectionsFor(),section=sections[index];if(!section)return;
  skinHistoryCapture();section.locked=!section.locked;
@@ -3629,7 +3823,9 @@ function toggleSkinSectionLock(index){
  renderSkinStudioAll();queueSkinStudioPreview();
 }
 function toggleSkinSectionVisibility(index){
- const sec=skinSectionsFor()[index];if(!sec)return;skinHistoryCapture();if(sec.locked){skinBuilderMessage('Unlock this section before changing visibility.','warning');return;}sec.visible=sec.visible===false;
+ const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;if(sec.locked){skinBuilderMessage('Unlock this section before changing visibility.','warning');return;}
+ if(skinStudioPageId==='home'&&sec.visible!==false&&['product-grid','featured-products'].includes(sec.type)&&!sections.some((item,itemIndex)=>itemIndex!==index&&item.visible!==false&&['product-grid','featured-products'].includes(item.type))){skinBuilderMessage('Keep at least one visible product grid on the homepage. Add another product grid before hiding this one.','warning');return;}
+ skinHistoryCapture();sec.visible=sec.visible===false;
  skinMarkDirty('Section visibility changed in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function skinBuilderDragStart(event,index){
@@ -3640,7 +3836,7 @@ function skinBuilderDrop(event,targetIndex){
  event.preventDefault();const source=event.dataTransfer?.getData('text/plain')||'';
  if(!source.startsWith('section:'))return;
  const id=source.slice(8),sections=skinSectionsFor(),from=sections.findIndex(s=>String(s.id)===id);
- if(from<0||targetIndex<0||from===targetIndex)return;
+ if(from<0||targetIndex<0||from===targetIndex||sections[from]?.locked||sections[targetIndex]?.locked)return;
  skinHistoryCapture();const [section]=sections.splice(from,1);sections.splice(targetIndex,0,section);
  skinStudioSelection={type:'section',id:String(section.id)};skinMarkDirty('Section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
@@ -3673,11 +3869,14 @@ function skinSectionDragEnd(){
 function duplicateSkinSection(index){
  const sections=skinSectionsFor(),original=sections[index];if(!original||original.locked)return;
  skinHistoryCapture();
- const clone=JSON.parse(JSON.stringify(original));clone.id='section-'+Date.now().toString(36);clone.title=(clone.title||'Section')+' copy';sections.splice(index+1,0,clone);
+ const clone=JSON.parse(JSON.stringify(original));clone.id='section-'+crypto.randomUUID();clone.title=(clone.title||'Section')+' copy';sections.splice(index+1,0,clone);
  skinStudioSelection={type:'section',id:String(clone.id)};skinMarkDirty('Section duplicated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function removeSkinSection(index,skipConfirm=false){
  const pageId=skinStudioPageId||'home',sections=skinSectionsFor(pageId),section=sections[index];if(!section||section.locked){if(section?.locked)skinBuilderMessage('Unlock this section before deleting it.','warning');return false;}
+ if(pageId==='home'&&section.visible!==false&&['product-grid','featured-products'].includes(section.type)&&!sections.some((item,itemIndex)=>itemIndex!==index&&item.visible!==false&&['product-grid','featured-products'].includes(item.type))){
+  skinBuilderMessage('Keep at least one visible product grid on the homepage. Add another product grid before deleting this one.','warning');return false;
+ }
  if(!skipConfirm&&!confirm('Remove the “'+(section.title||section.type||'section')+'” section from this page draft?'))return false;
  skinHistoryCapture();
  // Legacy sections can arrive without IDs. Give the target a stable ID before
@@ -3736,10 +3935,10 @@ function addSkinProductToSection(productId,targetId,pageId){
  const sections=skinSectionsFor(effectivePageId);
  const preferredIds=[pending?.pageId===effectivePageId?pending.sectionId:null,targetId,skinStudioSelection?.type==='section'?skinStudioSelection.id:null].filter(Boolean);
  let sec=null;
- for(const preferredId of preferredIds){const candidate=sections.find(s=>String(s.id)===String(preferredId));if(candidate&&candidate.visible!==false&&['product-grid','featured-products'].includes(candidate.type)){sec=candidate;break;}}
- if(!sec)sec=sections.find(s=>s.visible!==false&&['product-grid','featured-products'].includes(s.type));
+ for(const preferredId of preferredIds){const candidate=sections.find(s=>String(s.id)===String(preferredId));if(candidate&&candidate.visible!==false&&!candidate.locked&&['product-grid','featured-products'].includes(candidate.type)){sec=candidate;break;}}
+ if(!sec)sec=sections.find(s=>s.visible!==false&&!s.locked&&['product-grid','featured-products'].includes(s.type));
  if(!sec){
-  sec={id:'section-'+Date.now().toString(36),type:'product-grid',visible:true,title:'New skincare picks',eyebrow:'The edit',text:'',filter:'all',columns:3,product_ids:[]};
+  sec={id:'section-'+crypto.randomUUID(),type:'product-grid',visible:true,title:'New skincare picks',eyebrow:'The edit',text:'',filter:'all',columns:3,product_ids:[]};
   const anchorId=preferredIds[0]||preferredIds[1],anchorIndex=sections.findIndex(s=>String(s.id)===String(anchorId));
   const heroIndex=sections.findIndex(s=>s.type==='hero');
   const insertAt=anchorIndex>=0?anchorIndex+1:(heroIndex>=0?heroIndex+1:sections.length);
@@ -3759,7 +3958,7 @@ function addSkinProductToSection(productId,targetId,pageId){
 }
 function moveSkinProductInSection(productId,targetProductId,sectionId,pageId){
  const sections=skinSectionsFor(pageId),sec=sections.find(s=>String(s.id)===String(sectionId));
- if(!sec||!['product-grid','featured-products'].includes(sec.type))return;
+ if(!sec||!['product-grid','featured-products'].includes(sec.type))return;if(sec.locked){skinBuilderMessage('Unlock this section before reordering its products.','warning');return;}
  let ids=Array.isArray(sec.product_ids)?sec.product_ids.map(String):[];
  if(!ids.length)ids=skinProductsForSection(sec).map(p=>String(p.id));
  const from=ids.indexOf(String(productId)),to=ids.indexOf(String(targetProductId));
@@ -3805,6 +4004,10 @@ function refreshSkinStudioPreview(){
  collectSkinConfigFields();
  const frame=document.getElementById('skinStudioPreview');if(!frame)return;
  if(!String(frame.src||'').startsWith(SKIN_CLIENT_ORIGIN+'/')){
+  window.__nuvoraSkinPreviewReady=false;
+  if(window.__nuvoraSkinPreviewTimeout){clearTimeout(window.__nuvoraSkinPreviewTimeout);window.__nuvoraSkinPreviewTimeout=null;}
+  const notice=document.getElementById('skinStudioPreviewNotice');
+  if(notice){notice.hidden=false;notice.innerHTML='<b>Connecting to Nuvora Skin…</b><span>Waiting for the storefront preview to respond.</span>';}
   frame.src=skinStudioPreviewUrl();
   return;
  }
@@ -3819,14 +4022,15 @@ function syncSkinPreviewActionbar(){
  const selection=skinStudioSelection||{type:'none',id:''},isSection=selection.type==='section',sections=skinSectionsFor();
  const index=isSection?sections.findIndex(x=>String(x.id)===String(selection.id)):-1,section=index>=0?sections[index]:null;
  const product=selection.type==='product'?adminProducts.find(p=>String(p.id)===String(selection.id)):null;
- context.textContent=product?'Selected product: '+String(product.name||'Product'):(section?'Selected section: '+String(section.title||section.type):'Click a section or product in the preview to edit it here.');
+ const locked=!!section?.locked;
+ context.textContent=product?'Selected product: '+String(product.name||'Product'):(section?'Selected section: '+String(section.title||section.type)+(locked?' · Locked':''):'Click a section or product in the preview to edit it here.');
  context.dataset.status=document.getElementById('skinStudioSaveLabel')?.dataset.status||'';
- if(controls.moveUp)controls.moveUp.disabled=!section||index<=0;
- if(controls.moveDown)controls.moveDown.disabled=!section||index<0||index>=sections.length-1;
- if(controls.replace)controls.replace.disabled=!section||!['hero','editorial','category-grid','product-grid','featured-products','image-block'].includes(section.type);
- if(controls.remove)controls.remove.disabled=!section||!section.image;
+ if(controls.moveUp)controls.moveUp.disabled=!section||locked||index<=0;
+ if(controls.moveDown)controls.moveDown.disabled=!section||locked||index<0||index>=sections.length-1;
+ if(controls.replace)controls.replace.disabled=!section||locked||!['hero','editorial','category-grid','product-grid','featured-products','image-block'].includes(section.type);
+ if(controls.remove)controls.remove.disabled=!section||locked||!section.image;
  if(controls.edit)controls.edit.disabled=!product;
- if(controls.del)controls.del.disabled=!section;
+ if(controls.del)controls.del.disabled=!section||locked;
 }
 function skinPreviewAction(action){
  const selection=skinStudioSelection||{type:'none',id:''};
@@ -3834,6 +4038,9 @@ function skinPreviewAction(action){
  if(selection.type!=='section')return;
  const sections=skinSectionsFor(),index=sections.findIndex(x=>String(x.id)===String(selection.id)),section=sections[index];
  if(index<0||!section)return;
+ if(section.locked&&['move-up','move-down','replace-image','remove-image','delete'].includes(action)){
+  skinBuilderMessage('Unlock this section in the page outline before changing it.','warning');return;
+ }
  if(action==='move-up'){moveSkinSection(index,-1);return;}
  if(action==='move-down'){moveSkinSection(index,1);return;}
  if(action==='replace-image'){requestSkinSectionImageUpload(section.id,skinStudioPageId);return;}
@@ -3879,6 +4086,7 @@ function wireSkinStudioCanvas(){
     const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId||''));
     if(index<0)return skinBuilderMessage('That image section could not be found. Refresh the preview and try again.','error');
     const section=sections[index];
+    if(section.locked)return skinBuilderMessage('Unlock this section before removing its image.','warning');
     if(!section.image)return skinBuilderMessage('This section has no removable image.','info');
     if(!confirm('Remove the image from “'+String(section.title||section.type||'this section')+'”? The image file will remain in storage.'))return;
     skinStudioPageId=pageId;updateSkinSection(index,'image','',true);
@@ -3889,8 +4097,10 @@ function wireSkinStudioCanvas(){
     const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId||''));
     if(index<0)return skinBuilderMessage('That product section could not be found. Refresh the preview and try again.','error');
     const section=sections[index],product=adminProducts.find(item=>String(item.id)===String(data.productId||''));
+    if(section.locked)return skinBuilderMessage('Unlock this section before removing products from it.','warning');
     if(!product)return skinBuilderMessage('That product could not be found in the catalog. Refresh the product library and try again.','error');
     if(!confirm('Remove “'+String(product.name||'this product')+'” from this page section? The product itself will remain in your catalog.'))return;
+    skinHistoryCapture();
     const ids=new Set((Array.isArray(section.product_ids)?section.product_ids:[]).map(String).filter(id=>id!=='__nuvora_manual_empty__'));
     if(section.product_selection!=='manual'){
       for(const item of skinProductsForSection({...section,product_selection:'automatic',product_ids:[]}))ids.add(String(item.id));
@@ -3922,6 +4132,7 @@ function wireSkinStudioCanvas(){
     const sections=skinSectionsFor(skinStudioPageId),currentIndex=sections.findIndex(section=>String(section.id)===String(data.sectionId||''));
     const id='text-'+Date.now().toString(36);
     const section={id,type:'text-block',visible:true,title:'A new note',eyebrow:'',text:'Double-click to edit this text.',backgroundColor:'',textAlignment:'left',sectionPadding:48};
+    skinHistoryCapture();
     sections.splice(currentIndex>=0?currentIndex+1:sections.length,0,section);
     skinStudioSelection={type:'section',id};
     skinMarkDirty('Text block added after the selected section. Edit it directly in the preview or use the inspector.');
@@ -3936,19 +4147,23 @@ function wireSkinStudioCanvas(){
    if(data.type==='nuvora-skin-studio-drop-image'){
     const sections=skinSectionsFor(data.pageId||'home'),index=sections.findIndex(section=>String(section.id)===String(data.sectionId));
     if(index<0||!data.file)return skinBuilderMessage('Drop the image onto a visible page section.','error');
+    if(sections[index].locked)return skinBuilderMessage('Unlock this section before replacing its image.','warning');
     skinStudioPageId=data.pageId||'home';uploadSkinStudioImage(null,'section',index,data.file);return;
    }
    if(data.type==='nuvora-skin-studio-update-section-field'){
     skinStudioPageId=data.pageId||'home';
     const sections=skinSectionsFor(skinStudioPageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId));
     if(index<0||!['title','eyebrow','text'].includes(data.key))return;
+    if(sections[index].locked)return skinBuilderMessage('Unlock this section before editing it from the preview.','warning');
     updateSkinSection(index,data.key,String(data.value??''),true);return;
    }
    if(data.type==='nuvora-skin-studio-update-image-position'){
      const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId));
      if(index<0)return;
-     const sec=sections[index],canMove=sec.type==='image-block'?sec.imageFreePosition===true:['hero','editorial'].includes(sec.type);
+     const sec=sections[index];if(sec.locked)return skinBuilderMessage('Unlock this section before repositioning its image.','warning');
+     const canMove=sec.type==='image-block'?sec.imageFreePosition===true:['hero','editorial'].includes(sec.type);
      if(!canMove)return;
+     skinHistoryCapture();
      const clamp=value=>Math.max(0,Math.min(100,Number.isFinite(Number(value))?Number(value):50));
      const x=clamp(data.imagePositionX),y=clamp(data.imagePositionY);
      if(Math.abs(Number(sec.imagePositionX??50)-x)<1&&Math.abs(Number(sec.imagePositionY??50)-y)<1)return;
@@ -3968,12 +4183,14 @@ function wireSkinStudioCanvas(){
     return;
    }
    if(data.type==='nuvora-skin-studio-reorder'){
-    const sections=skinSectionsFor(data.pageId||'home');
+    const pageId=data.pageId||'home',sections=skinSectionsFor(pageId);
     const from=sections.findIndex(section=>String(section.id)===String(data.sourceId));
     const to=sections.findIndex(section=>String(section.id)===String(data.targetId));
     if(from<0||to<0||from===to)return;
+    if(sections[from]?.locked||sections[to]?.locked)return skinBuilderMessage('Unlock the section before moving it in the preview.','warning');
+    skinHistoryCapture();
     const [section]=sections.splice(from,1);sections.splice(to,0,section);
-    skinStudioPageId=data.pageId||'home';skinStudioSelection={type:'section',id:String(section.id)};
+    skinStudioPageId=pageId;skinStudioSelection={type:'section',id:String(section.id)};
     skinMarkDirty('Page section order updated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('Page section order saved and verified in the draft.');return;
    }
    if(data.type==='nuvora-skin-studio-add-product'){addSkinProductToSection(data.productId,data.targetId,data.pageId||'home');return;}
@@ -4086,6 +4303,8 @@ async function persistSkinSiteDraft(quiet=false){
  }
 }
 async function saveSkinSiteDraft(button){
+ if(window.__nuvoraSkinDiscardInProgress){skinBuilderMessage('Draft discard is in progress. Wait for it to finish before saving.','warning');return;}
+ if(skinSitePublishInProgress){skinBuilderMessage('Publishing is in progress. Wait for verification to finish before saving another draft.','warning');return;}
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
  const btn=button instanceof HTMLElement?button:document.querySelector('button[onclick="saveSkinSiteDraft(this)"]');if(btn){btn.disabled=true;btn.textContent='Saving…';}
  try{await persistSkinSiteDraft(false);}
@@ -4094,8 +4313,10 @@ async function saveSkinSiteDraft(button){
 }
 async function discardSkinSiteDraft(button){
  const btn=button instanceof HTMLElement?button:document.querySelector('button[onclick="discardSkinSiteDraft(this)"]');
- if(btn?.disabled)return;
+ if(btn?.disabled||window.__nuvoraSkinDiscardInProgress)return;
+ if(skinSitePublishInProgress){skinBuilderMessage('A publish is in progress. Wait for its verification to finish before discarding the draft.','warning');return;}
  if(!confirm('Discard the private Skin Care draft and restore the currently published storefront configuration? This permanently removes unpublished draft changes.'))return;
+ window.__nuvoraSkinDiscardInProgress=true;
  if(btn){btn.disabled=true;btn.textContent='Discarding…';}
  try{
   if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
@@ -4105,6 +4326,10 @@ async function discardSkinSiteDraft(button){
   const current=await api('/api/admin/settings');
   if(!current?.skin_site_config||typeof current.skin_site_config!=='object')throw new Error('The published configuration could not be loaded.');
   const published=mergeSkinSiteConfig(current.skin_site_config);
+  const publishedJson=stableSkinJson(published);
+  // Keep a snapshot boundary: edits made while the server clears the draft must
+  // survive locally and be written back as a fresh private draft afterwards.
+  const editorAtDiscardStart=stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig));
   const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_draft:null}});
   if(response?.skin_site_draft&&typeof response.skin_site_draft==='object')throw new Error('The server still reports a private draft.');
   const check=await api('/api/admin/settings');
@@ -4112,21 +4337,37 @@ async function discardSkinSiteDraft(button){
   const verified=mergeSkinSiteConfig(check.skin_site_config);
   if(stableSkinJson(verified)!==stableSkinJson(published))throw new Error('The published configuration changed during discard; reload and verify before editing again.');
   if(check.skin_site_draft&&typeof check.skin_site_draft==='object')throw new Error('The private draft still exists after discard.');
-  skinBuilderConfig=verified;skinSiteDraftExists=false;skinDraftLastSavedPayload=stableSkinJson(verified);
-  skinStudioPageId='home';skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||'hero'};
-  skinStudioUndoStack=[];skinStudioRedoStack=[];skinStudioHistoryLastCapture=0;skinHistoryUpdateButtons();
-  clearSkinStudioRecovery();fillSkinConfigFields();renderSkinStudioAll();sendSkinStudioPreview();skinSetSavedLabel('Published version restored');
-  skinBuilderMessage('Draft discarded. The editor now matches the verified published storefront.','success');
+  const newerEditsExist=stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig))!==editorAtDiscardStart;
+  skinSiteDraftExists=false;skinDraftLastSavedPayload=publishedJson;
+  if(newerEditsExist){
+   // Do not replace newer in-memory edits with the published snapshot. The
+   // server draft was cleared, so autosave these edits back as a new draft.
+   skinBuilderMessage('The previous draft was discarded. Newer edits made during that operation are being preserved as a fresh draft.','warning');
+   skinSetSavedLabel('Newer edits need saving');
+   sendSkinStudioPreview();
+  }else{
+   skinBuilderConfig=verified;
+   skinStudioPageId='home';skinStudioSelection={type:'section',id:skinBuilderConfig.sections[0]?.id||'hero'};
+   skinStudioUndoStack=[];skinStudioRedoStack=[];skinStudioHistoryLastCapture=0;skinHistoryUpdateButtons();
+   clearSkinStudioRecovery();fillSkinConfigFields();renderSkinStudioAll();sendSkinStudioPreview();skinSetSavedLabel('Published version restored');
+   skinBuilderMessage('Draft discarded. The editor now matches the verified published storefront.','success');
+  }
  }catch(error){
   skinBuilderMessage('Draft discard could not be verified: '+(error?.message||'unknown error')+'. Reload the workspace and check the saved draft before retrying.','error');
  }finally{
+  window.__nuvoraSkinDiscardInProgress=false;
+  if(stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig))!==skinDraftLastSavedPayload)queueSkinDraftAutosave();
   if(btn){btn.disabled=false;btn.textContent='Discard draft';}
  }
 }
 async function saveSkinSiteConfig(button){
+ let skinEditsChangedDuringPublish=false;
+ if(window.__nuvoraSkinDiscardInProgress){skinBuilderMessage('Draft discard is in progress. Wait for it to finish before publishing.','warning');return;}
+ if(skinSitePublishInProgress){skinBuilderMessage('A publish is already in progress. Wait for its read-back verification before retrying.','warning');return;}
  if(skinDraftAutosaveTimer){clearTimeout(skinDraftAutosaveTimer);skinDraftAutosaveTimer=null;}
  const btn=button instanceof HTMLElement?button:document.querySelector('button[onclick="saveSkinSiteConfig(this)"]');
  if(btn?.disabled)return;
+ skinSitePublishInProgress=true;
  if(btn){btn.disabled=true;btn.textContent='Publishing…';}
  skinBuilderMessage('Preparing the latest edits for publishing…','info');
  try{
@@ -4142,7 +4383,7 @@ async function saveSkinSiteConfig(button){
   if(validation){skinBuilderMessage(validation,'error');return;}
   const warnings=skinStudioPublishWarnings();
   if(warnings.length&&!confirm('Please review these publish checks before continuing:\n\n• '+warnings.join('\n• ')+'\n\nContinue publishing anyway? Draft products will remain hidden from public shoppers.'))return;
-  const payload=mergeSkinSiteConfig(skinBuilderConfig);
+  const payload=mergeSkinSiteConfig(skinBuilderConfig),payloadJson=stableSkinJson(payload);
   skinBuilderMessage('Publishing the current site draft…','info');
   const response=await api('/api/admin/settings',{method:'PATCH',body:{skin_site_config:payload,skin_site_draft:null}});
   if(!response?.skin_site_config||typeof response.skin_site_config!=='object')throw new Error('The server did not confirm the published site configuration.');
@@ -4152,14 +4393,27 @@ async function saveSkinSiteConfig(button){
   const verified=mergeSkinSiteConfig(check.skin_site_config);
   if(stableSkinJson(verified)!==stableSkinJson(published))throw new Error('The published configuration does not match the saved result. Reload the workspace before retrying.');
   if(check.skin_site_draft&&typeof check.skin_site_draft==='object')throw new Error('The site published, but a private draft is still present. Reload the workspace and verify the live page before retrying.');
-  skinBuilderConfig=verified;skinSiteDraftExists=false;skinDraftLastSavedPayload=stableSkinJson(verified);
-   clearSkinStudioRecovery();
-  fillSkinConfigFields();sendSkinStudioPreview();skinSetSavedLabel('All changes published');
-  skinBuilderMessage('Published and verified. The live Nuvora Skin site now uses this configuration, and the private draft is cleared.','success');
+  // The editor remains interactive while the network publish runs. Preserve any
+  // edits made after the publish payload was captured instead of overwriting them
+  // with the older server read-back.
+  skinEditsChangedDuringPublish=stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig))!==payloadJson;
+  if(!skinEditsChangedDuringPublish)skinBuilderConfig=verified;
+  skinSiteDraftExists=false;skinDraftLastSavedPayload=stableSkinJson(verified);
+  if(!skinEditsChangedDuringPublish)clearSkinStudioRecovery();
+  fillSkinConfigFields();sendSkinStudioPreview();
+  if(skinEditsChangedDuringPublish){
+   skinSetSavedLabel('Published; newer edits need saving');
+   skinBuilderMessage('Published and verified. Edits made while publishing were preserved and will be saved separately as a private draft.','warning');
+  }else{
+   skinSetSavedLabel('All changes published');
+   skinBuilderMessage('Published and verified. The live Nuvora Skin site now uses this configuration, and the private draft is cleared.','success');
+  }
  }catch(e){
   skinBuilderMessage('Publish could not be verified: '+(e.message||'unknown error')+'. Reload the workspace and check the live site before retrying.','error');
  }finally{
+  skinSitePublishInProgress=false;
   if(btn){btn.disabled=false;btn.textContent='Publish changes';}
+  if(skinEditsChangedDuringPublish)queueSkinDraftAutosave();
  }
 }
 function setSkinAdminFormMode(enabled){
