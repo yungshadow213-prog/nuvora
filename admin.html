@@ -3134,7 +3134,7 @@ function switchSkinStudioTab(tab){
  const kicker=document.getElementById('skinWorkspaceKicker');
  const addButton=document.getElementById('skinWorkspaceAddButton');
  const workspaceMeta={
-  outline:{kicker:'PAGE CONTENT',title:'Page layout',helper:'Select a section to edit it. Drag sections to reorder the storefront.',action:'+ Add',actionMode:'menu'},
+  outline:{kicker:'PAGE CONTENT',title:'Page layout',helper:'Select a section to edit it. Drag to reorder, use ↑/↓, or press Alt + ↑/↓ when a section is focused.',action:'+ Add',actionMode:'menu'},
   products:{kicker:'CATALOG',title:'Product library',helper:'Manage affiliate products here. Product placement on a page is a separate action.',action:'+ Add product',actionMode:'product'},
   pages:{kicker:'STOREFRONT',title:'Pages',helper:'Create and manage storefront pages. Page content stays separate from the product catalogue.',action:'+ Add page',actionMode:'page'},
   categories:{kicker:'CATALOG',title:'Categories & brands',helper:'Organize product discovery and brand identity separately from product records.',action:'+ Add category',actionMode:'category'},
@@ -3328,12 +3328,18 @@ function renderSkinBuilderSections(){
  root.innerHTML='<div class="studio-outline-tools"><label><span>Find a section</span><input id="skinStudioSectionSearch" type="search" value="'+esc(needle)+'" placeholder="Search sections…" aria-label="Search page sections" oninput="filterSkinSectionOutline(this.value)"></label><span id="skinStudioSectionCount" class="studio-outline-count">'+sections.length+' sections</span></div>'+ (sections.map((sec,index)=>{
   const selected=skinStudioSelection?.type==='section'&&String(skinStudioSelection.id)===String(sec.id);
   const visible=sec.visible!==false;
-  return '<article class="studio-section-outline '+(selected?'is-selected':'')+'" data-search="'+esc(String(sec.title||typeLabels[sec.type]||sec.type||'Section')+' '+String(typeLabels[sec.type]||'Section')).toLowerCase()+'" data-section-index="'+index+'" draggable="true" ondragstart="skinSectionDragStart(event,'+index+')" ondragover="skinSectionDragOver(event,' +index+ ')" ondrop="skinSectionDrop(event,' +index+ ')" ondragend="skinSectionDragEnd(event)" onclick="selectSkinItem(\'section\','+esc(JSON.stringify(String(sec.id)))+')">'+
+  return '<article class="studio-section-outline '+(selected?'is-selected':'')+'" data-search="'+esc(String(sec.title||typeLabels[sec.type]||sec.type||'Section')+' '+String(typeLabels[sec.type]||'Section')).toLowerCase()+'" data-section-index="'+index+'" tabindex="0" aria-label="Section '+(index+1)+': '+esc(sec.title||typeLabels[sec.type]||'Section')+'. Press Enter to select; use Alt plus arrow keys to reorder." draggable="true" onkeydown="skinSectionOutlineKeydown(event,'+index+','+esc(JSON.stringify(String(sec.id)))+')" ondragstart="skinSectionDragStart(event,'+index+')" ondragover="skinSectionDragOver(event,' +index+ ')" ondrop="skinSectionDrop(event,' +index+ ')" ondragend="skinSectionDragEnd(event)" onclick="selectSkinItem(\'section\','+esc(JSON.stringify(String(sec.id)))+')">'+
    '<span class="studio-outline-grip studio-outline-number" aria-hidden="true">'+(index+1)+'</span><div class="studio-section-outline-copy"><b>'+esc(sec.title||typeLabels[sec.type]||sec.type||'Section')+(sec.locked?' 🔒':'')+'</b><small>'+esc(typeLabels[sec.type]||'Section')+' · '+(visible?'Visible':'Hidden')+(sec.locked?' · Locked':'')+'</small></div>'+
    '<div class="studio-section-outline-actions"><button type="button" title="Move up" '+(index===0||sec.locked?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',-1)">↑</button><button type="button" title="Move down" '+(index===sections.length-1||sec.locked?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',1)">↓</button><button type="button" title="Duplicate section" '+(sec.locked?'disabled':'')+' onclick="event.stopPropagation();duplicateSkinSection('+index+')">⧉</button><button type="button" title="'+(sec.locked?'Unlock layout':'Lock layout')+'" aria-pressed="'+String(!!sec.locked)+'" onclick="event.stopPropagation();toggleSkinSectionLock('+index+')">'+(sec.locked?'🔒':'🔓')+'</button><button type="button" title="'+(visible?'Hide':'Show')+'" '+(sec.locked?'disabled':'')+' onclick="event.stopPropagation();toggleSkinSectionVisibility('+index+')">'+(visible?'◉':'○')+'</button><button type="button" title="Delete section" aria-label="Delete '+esc(sec.title||typeLabels[sec.type]||'section')+'" '+(sec.locked?'disabled':'')+' style="color:#a33d31!important;border:1px solid #f0d7d2;border-radius:6px;background:#fff7f5" onclick="event.stopPropagation();deleteSkinSectionImmediately('+index+')">×</button></div></article>';
  }).join('')||'<div class="studio-library-empty">This page has no sections yet. Use + Add → Section to start building it.</div>');
  filterSkinSectionOutline(needle);
  renderSkinLibrary();
+}
+function skinSectionOutlineKeydown(event,index,id){
+ if(event.target!==event.currentTarget)return;
+ if(event.key==='Enter'||event.key===' '){event.preventDefault();selectSkinItem('section',id);return;}
+ if(event.altKey&&event.key==='ArrowUp'){event.preventDefault();moveSkinSection(index,-1);return;}
+ if(event.altKey&&event.key==='ArrowDown'){event.preventDefault();moveSkinSection(index,1);}
 }
 function filterSkinSectionOutline(value){
  window.skinStudioSectionSearch=String(value||'');
