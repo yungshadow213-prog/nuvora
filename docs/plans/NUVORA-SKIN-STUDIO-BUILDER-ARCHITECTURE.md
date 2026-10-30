@@ -216,3 +216,11 @@ This is an incremental UI-architecture slice, not completion of the full specifi
 - Added lock checks to the alternate canvas drag/drop reorder path, matching the outline drag/drop and move controls.
 - Blocked preview-driven immediate saves while draft discard is active; the discard finalizer preserves and schedules the latest editor state afterwards.
 - Validation on 2026-10-30: the `admin.html` inline script compiles successfully; five targeted source assertions confirm the visibility, deletion, inspector, alternate drag/drop, and discard-save guards. Browser interaction tests remain outstanding.
+
+
+## Implementation log — locked product-section consistency
+
+- Product selection changes now refuse to mutate a locked product grid.
+- Product reordering now refuses to mutate a locked product grid.
+- Product placement skips locked grids when resolving the preview-selected target or fallback grid; if no editable visible grid exists, the builder creates a new editable grid with a unique ID.
+- Validation on 2026-10-30: `admin.html` inline JavaScript compiles successfully and five targeted source assertions confirm these lock and target-selection safeguards. Authenticated interaction tests remain outstanding.
