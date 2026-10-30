@@ -4087,18 +4087,21 @@ function wireSkinStudioCanvas(){
    if(data.type==='nuvora-skin-studio-drop-image'){
     const sections=skinSectionsFor(data.pageId||'home'),index=sections.findIndex(section=>String(section.id)===String(data.sectionId));
     if(index<0||!data.file)return skinBuilderMessage('Drop the image onto a visible page section.','error');
+    if(sections[index].locked)return skinBuilderMessage('Unlock this section before replacing its image.','warning');
     skinStudioPageId=data.pageId||'home';uploadSkinStudioImage(null,'section',index,data.file);return;
    }
    if(data.type==='nuvora-skin-studio-update-section-field'){
     skinStudioPageId=data.pageId||'home';
     const sections=skinSectionsFor(skinStudioPageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId));
     if(index<0||!['title','eyebrow','text'].includes(data.key))return;
+    if(sections[index].locked)return skinBuilderMessage('Unlock this section before editing it from the preview.','warning');
     updateSkinSection(index,data.key,String(data.value??''),true);return;
    }
    if(data.type==='nuvora-skin-studio-update-image-position'){
      const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId));
      if(index<0)return;
-     const sec=sections[index],canMove=sec.type==='image-block'?sec.imageFreePosition===true:['hero','editorial'].includes(sec.type);
+     const sec=sections[index];if(sec.locked)return skinBuilderMessage('Unlock this section before repositioning its image.','warning');
+     const canMove=sec.type==='image-block'?sec.imageFreePosition===true:['hero','editorial'].includes(sec.type);
      if(!canMove)return;
      skinHistoryCapture();
      const clamp=value=>Math.max(0,Math.min(100,Number.isFinite(Number(value))?Number(value):50));
