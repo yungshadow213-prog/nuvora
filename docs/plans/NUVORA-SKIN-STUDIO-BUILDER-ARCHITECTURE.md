@@ -239,3 +239,10 @@ This is an incremental UI-architecture slice, not completion of the full specifi
 - Renamed the navigation entry to **Categories & brands** and clarified its separation from product records.
 - Switching workspaces now closes the generic Theme editor Add menu, preventing stale actions from remaining open in a different workspace.
 - Validation: fetched the updated branch file and compiled its complete inline JavaScript successfully. Targeted assertions confirm each workspace action mode and the hide/show behavior. This remains static validation; authenticated browser verification is still outstanding.
+
+## Implementation log — editor interaction and protection pass (30 October 2026)
+
+- The preview action bar now reflects section lock state: move, replace image, remove image and delete actions are disabled for locked sections. The action handler also enforces the lock, so a stale or manually triggered control cannot bypass the protection.
+- Section outline rows can now receive keyboard focus and be selected with Enter or Space. Alt + Arrow Up / Alt + Arrow Down reorders the focused section, alongside the existing drag-and-drop and visible move buttons. The panel helper text documents the alternatives, which are useful on touch devices where drag-and-drop is less reliable.
+- Automated source validation: the complete inline JavaScript compiles, and targeted checks pass for workspace-specific actions, context-aware headings, lock enforcement, keyboard selection/reordering and responsive layout rules.
+- Browser acceptance limitation: the live admin dashboard session was authenticated, but opening Skin Studio prompted a separate Google re-authentication modal. No credentials were submitted and no data was changed. Visual desktop/mobile inspection remains pending an authorized sign-in to the Skin Studio profile.
