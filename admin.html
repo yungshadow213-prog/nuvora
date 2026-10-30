@@ -930,7 +930,7 @@ body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field inp
   <div id="skinBuilderStatus" class="studio-status notice" role="status" aria-live="polite">Loading your saved Skin Care site…</div>
     <div class="skin-builder-layout studio-layout">
     <aside class="studio-left-panel">
-      <div class="studio-panel-head"><div><span class="section-kicker">PAGE CONTENT</span><h3>Page layout</h3><small class="studio-panel-helper">Click a section to edit it. Use ↑ and ↓ to move it.</small></div><button class="btn primary studio-add-button" type="button" onclick="toggleSkinAddMenu()">+ Add</button></div>
+      <div class="studio-panel-head"><div><span id="skinWorkspaceKicker" class="section-kicker">PAGE CONTENT</span><h3 id="skinWorkspaceHeading">Page layout</h3><small id="skinWorkspaceHelper" class="studio-panel-helper">Click a section to edit it. Use ↑ and ↓ to move it.</small></div><button id="skinWorkspaceAddButton" class="btn primary studio-add-button" type="button" onclick="toggleSkinAddMenu()">+ Add</button></div>
       <div id="skinStudioAddMenu" class="studio-add-menu" hidden>
         <button type="button" onclick="openSkinAdd('product')"><span>＋</span><span><b>Product</b><small>Import an Amazon link or add a product</small></span></button>
         <button type="button" onclick="openSkinAdd('page')"><span>▤</span><span><b>Page</b><small>Create a new storefront page</small></span></button>
@@ -946,7 +946,7 @@ body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field inp
         <div class="studio-workspace-group">
           <span class="studio-workspace-label">CATALOG</span>
           <button id="skinTabProducts" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('products')"><span class="studio-workspace-icon" aria-hidden="true">□</span><span><b>Products</b><small>Affiliate product library</small></span></button>
-          <button id="skinTabCategories" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('categories')"><span class="studio-workspace-icon" aria-hidden="true">▧</span><span><b>Categories</b><small>Organize product discovery</small></span></button>
+          <button id="skinTabCategories" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('categories')"><span class="studio-workspace-icon" aria-hidden="true">▧</span><span><b>Categories &amp; brands</b><small>Organize product discovery</small></span></button>
         </div>
         <div class="studio-workspace-group">
           <span class="studio-workspace-label">CONTENT</span>
@@ -3129,11 +3129,29 @@ function switchSkinStudioTab(tab){
  if(left)left.classList.toggle('is-settings-workspace',skinStudioTab==='settings');
  if(settings){settings.open=skinStudioTab==='settings';}
  if(skinStudioTab==='settings'){const addMenu=document.getElementById('skinStudioAddMenu');if(addMenu)addMenu.hidden=true;}
- const title=document.querySelector('.studio-panel-head h3');
- const helper=document.querySelector('.studio-panel-helper');
- const labels={outline:['Page layout','Select a section to edit it. Drag sections to reorder the storefront.'],products:['Product library','Manage affiliate products here; placement on a page is a separate action.'],pages:['Pages','Create and switch between storefront pages without mixing page settings with the catalog.'],categories:['Categories & brands','Organize product discovery separately from product records.'],media:['Media library','Reuse uploaded images without deleting the stored source file.'],settings:['Design & navigation','Configure the shared brand system, header, menus, announcement bar and footer.']};
- if(title&&labels[skinStudioTab])title.textContent=labels[skinStudioTab][0];
- if(helper&&labels[skinStudioTab])helper.textContent=labels[skinStudioTab][1];
+ const title=document.getElementById('skinWorkspaceHeading');
+ const helper=document.getElementById('skinWorkspaceHelper');
+ const kicker=document.getElementById('skinWorkspaceKicker');
+ const addButton=document.getElementById('skinWorkspaceAddButton');
+ const workspaceMeta={
+  outline:{kicker:'PAGE CONTENT',title:'Page layout',helper:'Select a section to edit it. Drag sections to reorder the storefront.',action:'+ Add',actionMode:'menu'},
+  products:{kicker:'CATALOG',title:'Product library',helper:'Manage affiliate products here. Product placement on a page is a separate action.',action:'+ Add product',actionMode:'product'},
+  pages:{kicker:'STOREFRONT',title:'Pages',helper:'Create and manage storefront pages. Page content stays separate from the product catalogue.',action:'+ Add page',actionMode:'page'},
+  categories:{kicker:'CATALOG',title:'Categories & brands',helper:'Organize product discovery and brand identity separately from product records.',action:'+ Add category',actionMode:'category'},
+  media:{kicker:'CONTENT',title:'Media library',helper:'Browse and reuse uploaded store imagery. Removing a page reference never deletes the stored source file.',action:'',actionMode:'hidden'},
+  settings:{kicker:'DESIGN',title:'Design & navigation',helper:'Configure shared brand styling, typography, navigation, announcement bar and footer.',action:'',actionMode:'hidden'}
+ };
+ const meta=workspaceMeta[skinStudioTab]||workspaceMeta.outline;
+ if(title)title.textContent=meta.title;
+ if(helper)helper.textContent=meta.helper;
+ if(kicker)kicker.textContent=meta.kicker;
+ if(addButton){
+  addButton.hidden=meta.actionMode==='hidden';
+  addButton.textContent=meta.action;
+  addButton.onclick=meta.actionMode==='menu'?toggleSkinAddMenu:meta.actionMode==='product'?openSkinManualProduct:()=>openSkinAdd(meta.actionMode);
+ }
+ const addMenu=document.getElementById('skinStudioAddMenu');
+ if(addMenu&&skinStudioTab!=='outline')addMenu.hidden=true;
  renderSkinLibrary();
  if(skinStudioTab==='outline')renderSkinBuilderSections();
 }
