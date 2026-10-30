@@ -630,6 +630,18 @@ body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field tex
 body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field input:focus-visible,body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field textarea:focus-visible,body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field select:focus-visible{outline:2px solid #728b65;outline-offset:2px}
 @media(max-width:700px){body.skin-studio-fullpage .studio-selected-inspector .studio-inspector-field{margin-bottom:10px}}
 </style>
+<style id="skin-studio-inspector-groups">
+body.skin-studio-fullpage .studio-inspector-group{margin:10px 0;border:1px solid #e4ebe1;border-radius:10px;background:#fff;overflow:hidden}
+body.skin-studio-fullpage .studio-inspector-group>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;background:#f7f9f5;color:#435746;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;list-style:none}
+body.skin-studio-fullpage .studio-inspector-group>summary::-webkit-details-marker{display:none}
+body.skin-studio-fullpage .studio-inspector-group>summary::after{content:'＋';font-size:13px;color:#718571}
+body.skin-studio-fullpage .studio-inspector-group[open]>summary::after{content:'−'}
+body.skin-studio-fullpage .studio-inspector-group[open]>summary{border-bottom:1px solid #e8eee5}
+body.skin-studio-fullpage .studio-inspector-group>*:not(summary){margin-left:12px;margin-right:12px}
+body.skin-studio-fullpage .studio-inspector-group>.studio-inspector-field:first-of-type{margin-top:12px}
+body.skin-studio-fullpage .studio-inspector-group>.studio-inline-help:last-child{margin-bottom:12px}
+body.skin-studio-fullpage .studio-inspector-group>summary:focus-visible{outline:2px solid #477b55;outline-offset:-2px}
+</style>
 </head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
   <div class="nav-group">
     <span class="nav-group-label">Workspace</span>
@@ -3351,6 +3363,20 @@ function filterSkinSectionOutline(value){
  if(count)count.textContent=needle?shown+' of '+rows.length+' sections':rows.length+' sections';
 }
 
+function groupSkinInspectorSettings(root){
+ if(!root)return;
+ const headings=[...root.querySelectorAll('.studio-inspector-subheading')];
+ headings.forEach((heading,index)=>{
+  const parent=heading.parentNode;if(!parent)return;
+  const group=document.createElement('details');group.className='studio-inspector-group';group.open=index<2;
+  const summary=document.createElement('summary');summary.textContent=heading.textContent.trim();group.appendChild(summary);
+  parent.insertBefore(group,heading);
+  let node=heading.nextSibling;heading.remove();
+  while(node&&!(node.nodeType===1&&(node.classList.contains('studio-inspector-subheading')||node.classList.contains('studio-inspector-actions')))){
+   const next=node.nextSibling;group.appendChild(node);node=next;
+  }
+ });
+}
 function renderSkinSelectedInspector(){
  const root=document.getElementById('skinSelectedInspector');if(!root)return;
  const title=document.getElementById('skinInspectorTitle'),subtitle=document.getElementById('skinInspectorSubtitle');
@@ -3423,7 +3449,9 @@ function renderSkinSelectedInspector(){
   }
   html+='<div class="studio-inspector-actions"><button class="btn" type="button" onclick="duplicateSkinSection('+index+')">Duplicate</button><button class="btn danger" type="button" onclick="removeSkinSection('+index+')">Delete section</button></div>';
   setHead(types[sec.type]||'Section settings',skinPageLabel()+' · Section '+(index+1));
-  root.innerHTML=html;return;
+  root.innerHTML=html;
+  groupSkinInspectorSettings(root);
+  return;
  }
  if(selection.type==='product'){
   const p=adminProducts.find(x=>String(x.id)===String(selection.id));
