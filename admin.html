@@ -3720,6 +3720,14 @@ document.addEventListener('focusin',event=>{
 function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();syncSkinPreviewActionbar();}
 function updateSkinSection(index,key,value,fromPreview=false){
  const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;
+ // The home page must retain at least one visible product grid. Block destructive
+ // changes at the point of interaction instead of allowing an unsavable draft.
+ if(skinStudioPageId==='home'&&['type','visible'].includes(key)&&sec.visible!==false&&['product-grid','featured-products'].includes(sec.type)){
+  const removesGrid=(key==='type'&&!['product-grid','featured-products'].includes(String(value)))||(key==='visible'&&value===false);
+  if(removesGrid&&!sections.some((item,itemIndex)=>itemIndex!==index&&item.visible!==false&&['product-grid','featured-products'].includes(item.type))){
+   skinBuilderMessage('Keep at least one visible product grid on the homepage. Add another product grid before changing or hiding this one.','warning');return;
+  }
+ }
  skinHistoryCapture();
  sec[key]=value;
  if(key==='type'){sec.product_ids=[];sec.category_id='';sec.filter=value==='featured-products'?'featured':'all';}
@@ -3800,11 +3808,14 @@ function skinSectionDragEnd(){
 function duplicateSkinSection(index){
  const sections=skinSectionsFor(),original=sections[index];if(!original||original.locked)return;
  skinHistoryCapture();
- const clone=JSON.parse(JSON.stringify(original));clone.id='section-'+Date.now().toString(36);clone.title=(clone.title||'Section')+' copy';sections.splice(index+1,0,clone);
+ const clone=JSON.parse(JSON.stringify(original));clone.id='section-'+crypto.randomUUID();clone.title=(clone.title||'Section')+' copy';sections.splice(index+1,0,clone);
  skinStudioSelection={type:'section',id:String(clone.id)};skinMarkDirty('Section duplicated in the draft.');renderSkinStudioAll();queueSkinStudioPreview();
 }
 function removeSkinSection(index,skipConfirm=false){
  const pageId=skinStudioPageId||'home',sections=skinSectionsFor(pageId),section=sections[index];if(!section||section.locked){if(section?.locked)skinBuilderMessage('Unlock this section before deleting it.','warning');return false;}
+ if(pageId==='home'&&section.visible!==false&&['product-grid','featured-products'].includes(section.type)&&!sections.some((item,itemIndex)=>itemIndex!==index&&item.visible!==false&&['product-grid','featured-products'].includes(item.type))){
+  skinBuilderMessage('Keep at least one visible product grid on the homepage. Add another product grid before deleting this one.','warning');return false;
+ }
  if(!skipConfirm&&!confirm('Remove the “'+(section.title||section.type||'section')+'” section from this page draft?'))return false;
  skinHistoryCapture();
  // Legacy sections can arrive without IDs. Give the target a stable ID before
