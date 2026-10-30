@@ -3776,6 +3776,9 @@ document.addEventListener('focusin',event=>{
 function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();syncSkinPreviewActionbar();}
 function updateSkinSection(index,key,value,fromPreview=false){
  const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;
+ // Enforce section locks at the mutation boundary as well as in the UI. This
+ // protects preview callbacks and stale controls from bypassing the inspector guard.
+ if(sec.locked){skinBuilderMessage('This section is locked. Unlock it in the page outline before editing its settings.','warning');return;}
  // The home page must retain at least one visible product grid. Block destructive
  // changes at the point of interaction instead of allowing an unsavable draft.
  if(skinStudioPageId==='home'&&['type','visible'].includes(key)&&sec.visible!==false&&['product-grid','featured-products'].includes(sec.type)){
