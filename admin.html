@@ -4026,6 +4026,7 @@ function wireSkinStudioCanvas(){
     const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId||''));
     if(index<0)return skinBuilderMessage('That image section could not be found. Refresh the preview and try again.','error');
     const section=sections[index];
+    if(section.locked)return skinBuilderMessage('Unlock this section before removing its image.','warning');
     if(!section.image)return skinBuilderMessage('This section has no removable image.','info');
     if(!confirm('Remove the image from “'+String(section.title||section.type||'this section')+'”? The image file will remain in storage.'))return;
     skinStudioPageId=pageId;updateSkinSection(index,'image','',true);
@@ -4036,6 +4037,7 @@ function wireSkinStudioCanvas(){
     const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId||''));
     if(index<0)return skinBuilderMessage('That product section could not be found. Refresh the preview and try again.','error');
     const section=sections[index],product=adminProducts.find(item=>String(item.id)===String(data.productId||''));
+    if(section.locked)return skinBuilderMessage('Unlock this section before removing products from it.','warning');
     if(!product)return skinBuilderMessage('That product could not be found in the catalog. Refresh the product library and try again.','error');
     if(!confirm('Remove “'+String(product.name||'this product')+'” from this page section? The product itself will remain in your catalog.'))return;
     skinHistoryCapture();
