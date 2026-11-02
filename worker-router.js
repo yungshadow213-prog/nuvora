@@ -35,7 +35,7 @@ async function publicStorefront(request, env, key) {
   if (!response.ok) return json({ error: "The " + key + " storefront configuration is not available yet." }, 503);
   const rows = await response.json();
   const row = Array.isArray(rows) ? rows[0] || {} : {};
-  const products = Array.isArray(row[store.products]) ? row[store.products].filter(p => p && p.status === "published") : [];
+  const products = Array.isArray(row[store.products]) ? row[store.products].filter(p => p && String(p.status || "published").toLowerCase() === "published") : [];
   return json({ config: row[store.config] && typeof row[store.config] === "object" ? row[store.config] : {}, products });
 }
 export default {
