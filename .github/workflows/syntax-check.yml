@@ -156,8 +156,8 @@ jobs:
                   failures.append(f"worker-router.js: {store_key} storefront mapping is missing or crossed")
           if "request.method !== \"GET\"" not in router:
               failures.append("worker-router.js: public storefront endpoint must be read-only")
-          if 'p.status === "published"' not in router:
-              failures.append("worker-router.js: public storefront endpoint must exclude unpublished products")
+          if 'String(p.status || "published").toLowerCase() === "published"' not in router:
+              failures.append("worker-router.js: public storefront endpoint must preserve legacy published rows while excluding drafts")
           if "store.config" not in router or "store.products" not in router:
               failures.append("worker-router.js: public response must use the selected store's isolated config and catalogue")
           if re.search(r"async\s+async\s+function", worker):
