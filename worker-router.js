@@ -41,13 +41,14 @@ async function publicStorefront(request, env, key) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    const studioRoute = url.pathname.match(/^\/admin\/(gaming|home|clothing)-studio\/?$/);
+    // Route all studio aliases to the same maintained builder.
+    const studioRoute = url.pathname.match(/^\\/admin\\/(gaming|games|home|clothing)-studio\\/?$/);
     if (url.pathname === "/admin/studios" || url.pathname === "/admin/studios/") {
-      return worker.fetch(new Request(new URL("/multi-store-studio.html", request.url), { method: "GET", headers: request.headers }), env, ctx);
+      return worker.fetch(new Request(new URL("/storefront-studio.html?store=all", request.url), { method: "GET", headers: request.headers }), env, ctx);
     }
     if (studioRoute) {
       const storeKey = studioRoute[1] === "gaming" ? "games" : studioRoute[1];
-      return worker.fetch(new Request(new URL("/multi-store-studio.html?store=" + storeKey, request.url), { method: "GET", headers: request.headers }), env, ctx);
+      return worker.fetch(new Request(new URL("/storefront-studio.html?store=" + storeKey, request.url), { method: "GET", headers: request.headers }), env, ctx);
     }
     const match = url.pathname.match(/^\/api\/(games|home|clothing)-storefront\/?$/);
     if (request.method === "OPTIONS" && match) return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, OPTIONS", "access-control-allow-headers": "content-type", "access-control-max-age": "86400" } });
