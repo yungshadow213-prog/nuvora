@@ -2146,7 +2146,7 @@ async function saveProductDraft(){
   let skinCategory=null;
   try{if(window.skinCareImportMode)skinCategory=await ensureSkinCategory(false);}
   catch(e){productSaveMessage('Could not verify the Skin Care category. The product was not saved: '+(e.message||e),'error');releaseSave();return;}
-  const images=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  const images=Array.from(new Set(document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)));
   const ratingSource=document.getElementById('pfSource').value;
   const ratingRaw=document.getElementById('pfRating').value.trim(),retailerRating=ratingRaw===''?null:Number(ratingRaw);
   const reviewCountRaw=document.getElementById('pfReviews').value.trim(),retailerReviewCount=reviewCountRaw===''?null:Number(reviewCountRaw);
