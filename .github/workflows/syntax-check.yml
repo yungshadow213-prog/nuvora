@@ -104,6 +104,7 @@ jobs:
                   failures.append(f"backend/schema.sql must persist Skin Studio guide field {column}")
               if not guide_migration.exists() or not re.search(r"add column if not exists " + re.escape(column) + r"\s+", guide_migration.read_text(encoding="utf-8").lower()):
                   failures.append(f"Skin Studio guide migration must add {column} idempotently")
+          admin=Path("admin.html").read_text(encoding="utf-8")
           skin_save_start = admin.find("async function saveProductDraft(){")
           skin_save_end = admin.find("async function saveSkinProductAndPublish()", skin_save_start)
           skin_save_block = admin[skin_save_start:skin_save_end]
