@@ -35,6 +35,11 @@ create table if not exists public.products (
 );
 
 alter table public.products add column if not exists product_type text;
+alter table public.products add column if not exists benefits text;
+alter table public.products add column if not exists skin_types text;
+alter table public.products add column if not exists skin_concerns text;
+alter table public.products add column if not exists recommended_product_ids jsonb not null default '[]'::jsonb;
+alter table public.products add column if not exists recommendation_reason text;
 alter table public.products add column if not exists features text;
 alter table public.products add column if not exists ingredients text;
 alter table public.products add column if not exists usage_instructions text;

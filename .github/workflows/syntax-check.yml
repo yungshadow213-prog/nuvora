@@ -91,6 +91,45 @@ jobs:
               failures.append("backend/schema.sql must define products.product_type for Skin Studio")
           if not migration.exists() or "add column if not exists product_type text" not in migration.read_text(encoding="utf-8").lower():
               failures.append("Skin Studio product_type migration must exist and be idempotent")
+          guide_columns = {
+              "benefits": r"benefits\s+text",
+              "skin_types": r"skin_types\s+text",
+              "skin_concerns": r"skin_concerns\s+text",
+              "recommended_product_ids": r"recommended_product_ids\s+jsonb",
+              "recommendation_reason": r"recommendation_reason\s+text",
+          }
+          guide_migration = Path("backend/migrations/2026-11-02-skin-studio-guide-fields.sql")
+          for column, pattern in guide_columns.items():
+              if not re.search(pattern, schema):
+                  failures.append(f"backend/schema.sql must persist Skin Studio guide field {column}")
+              if not guide_migration.exists() or not re.search(r"add column if not exists " + re.escape(column) + r"\s+", guide_migration.read_text(encoding="utf-8").lower()):
+                  failures.append(f"Skin Studio guide migration must add {column} idempotently")
+          admin=Path("admin.html").read_text(encoding="utf-8")
+          skin_save_start = admin.find("async function saveProductDraft(){")
+          skin_save_end = admin.find("async function saveSkinProductAndPublish()", skin_save_start)
+          skin_save_block = admin[skin_save_start:skin_save_end]
+          for field in ["benefits:", "skin_types:", "skin_concerns:", "recommended_product_ids:", "recommendation_reason:", "ingredients:", "usage_instructions:", "product_warnings:"]:
+              if field not in skin_save_block:
+                  failures.append(f"Skin Studio product save payload missing {field[:-1]}")
+          for token in ["display_price:null", "amazon_list_price:null", "amazon_discount_percent:null"]:
+              if token not in skin_save_block:
+                  failures.append(f"Skin Studio affiliate product save must remain price-free: {token}")
+          if "priceIds=['pfPrice','pfListPrice','pfDiscount','pfCurrency','pfDeal']" not in admin:
+              failures.append("Skin Studio product editor must hide all price/deal inputs")
+          if "const write={...patch,published:true" not in worker or "supabaseProductWrite(env,'PATCH',write" not in worker:
+              failures.append("Product publish path must persist edited guide fields with publication changes")
+          if "Array.from(new Set(document.getElementById('pfImages').value.split" not in admin:
+              failures.append("Skin Studio product editor must deduplicate gallery images before saving")
+          public_products_start = worker.find("if(url.pathname==='/api/products'&&request.method==='GET')")
+          public_products_end = worker.find("async function supabaseProductWrite", public_products_start)
+          public_products_block = worker[public_products_start:public_products_end]
+          if "amazon_review_count:isAmazonSource?(source.amazon_review_count??normalized.review_count??null):null" not in public_products_block:
+              failures.append("Public product catalog must preserve retailer review counts for Amazon products")
+          if "if(storefront==='beauty')" not in public_products_block or "delete publicProduct[field]" not in public_products_block:
+              failures.append("Skin Care public catalog must omit affiliate product price/deal fields")
+          for price_field in ["display_price","amazon_list_price","amazon_discount_percent","amazon_deal_text"]:
+              if price_field not in public_products_block:
+                  failures.append(f"Skin Care price-free public contract must explicitly remove {price_field}")
           if "'product_size','product_type','benefits'" not in worker:
               failures.append("worker.js optional-column compatibility must include product_type")
           router=Path("worker-router.js").read_text(encoding="utf-8")
@@ -252,7 +291,7 @@ jobs:
           failures=[]
           forbidden=[
               r"async\s+async\s+function",
-              r"re\.replace\(/\\b\(\[A-Za-z\]\)\\s\+",
+              r"re\.replace\(/\\b\(\[A-Za-z\]\)\s\+",
           ]
           for pat in forbidden:
               if re.search(pat,worker):
@@ -368,19 +407,37 @@ jobs:
                   failures.append("Skin Studio local recovery contract missing "+recovery_token)
           if "document.addEventListener('focusin',event=>" not in admin or "document.addEventListener('input',event=>" in admin[admin.find("function skinHistoryCapture"):admin.find("function renderSkinStudioAll")]:
               failures.append("Skin Studio history must capture pre-edit state, not post-input state")
-          history_mutation_checks = [
-              ("function toggleSkinSectionVisibility(index){\n const sec=skinSectionsFor()[index];if(!sec)return;skinHistoryCapture();", "Section visibility must capture history before changing visibility"),
-              ("function toggleSkinSectionProduct(index,productId,checked){const sections=skinSectionsFor(),sec=sections[index];if(!sec)return;skinHistoryCapture();", "Product selection must capture history before mutating selected IDs"),
-              ("if(from<0||targetIndex<0||from===targetIndex)return;\n skinHistoryCapture();const [section]=sections.splice(from,1);", "Drag-and-drop reorder must capture history before changing order"),
-          ]
-          for needle, message in history_mutation_checks:
-              if needle not in admin:
-                  failures.append(message)
+          visibility_start=admin.find("function toggleSkinSectionVisibility(index){")
+          visibility_end=admin.find("function skinBuilderDragStart",visibility_start)
+          visibility_block=admin[visibility_start:visibility_end]
+          visibility_history=visibility_block.find("skinHistoryCapture()")
+          visibility_mutation=visibility_block.find("sec.visible=")
+          if visibility_history < 0 or visibility_mutation < 0 or visibility_history > visibility_mutation:
+              failures.append("Section visibility must capture history before changing visibility")
+          selection_start=admin.find("function toggleSkinSectionProduct(index,productId,checked){")
+          selection_end=admin.find("function toggleSkinSectionLock",selection_start)
+          selection_block=admin[selection_start:selection_end]
+          selection_history=selection_block.find("skinHistoryCapture()")
+          selection_mutation=selection_block.find("sec.product_selection=")
+          if selection_history < 0 or selection_mutation < 0 or selection_history > selection_mutation:
+              failures.append("Product selection must capture history before mutating selected IDs")
+          reorder_start=admin.find("function skinSectionDrop(event,index){")
+          reorder_end=admin.find("function skinSectionDragEnd",reorder_start)
+          reorder_block=admin[reorder_start:reorder_end]
+          reorder_history=reorder_block.find("skinHistoryCapture()")
+          reorder_mutation=reorder_block.find("sections.splice(")
+          if reorder_history < 0 or reorder_mutation < 0 or reorder_history > reorder_mutation:
+              failures.append("Drag-and-drop reorder must capture history before changing order")
+          update_section_start=admin.find("function updateSkinSection(index,key,value,fromPreview=false){")
+          update_section_end=admin.find("function selectFirstSkinSection",update_section_start)
+          update_section_block=admin[update_section_start:update_section_end]
+          if "if(sec.locked)" not in update_section_block or "Unlock it in the page outline before editing its settings." not in update_section_block:
+              failures.append("Section settings mutation must enforce the locked-section guard")
           placement_start=admin.find("function addSkinProductToSection")
           placement_end=admin.find("function moveSkinProductInSection",placement_start)
           placement_block=admin[placement_start:placement_end]
-          if "candidate.visible!==false&&['product-grid','featured-products'].includes(candidate.type)" not in placement_block:
-              failures.append("Place on Page must not silently target a hidden product section")
+          if "candidate.visible!==false" not in placement_block or "s.visible!==false" not in placement_block or "!candidate.locked" not in placement_block:
+              failures.append("Place on Page must only target visible, unlocked product sections")
           open_skin_start=admin.find("async function openSkinProduct(){")
           open_skin_end=admin.find("function productReviewFlags",open_skin_start)
           open_skin_block=admin[open_skin_start:open_skin_end]

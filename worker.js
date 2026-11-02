@@ -1974,13 +1974,20 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             amazon_deal_text:safeText(normalized.deal),amazon_list_price:isAmazonSource?source.amazon_list_price??null:null,
             amazon_discount_percent:isAmazonSource?source.amazon_discount_percent??null:null,amazon_shipping_text:isAmazonSource?source.amazon_shipping_text??null:null,
             amazon_tax_text:isAmazonSource?source.amazon_tax_text??null:null,amazon_variations:isAmazonSource&&Array.isArray(source.amazon_variations)?source.amazon_variations:[],
-            amazon_rating:isAmazonSource?(source.amazon_rating??normalized.rating??null):null,amazon_review_count:isAmazonSource?null:normalized.review_count,
+            amazon_rating:isAmazonSource?(source.amazon_rating??normalized.rating??null):null,amazon_review_count:isAmazonSource?(source.amazon_review_count??normalized.review_count??null):null,
             rating:isAmazonSource?null:source.rating,review_count:isAmazonSource?null:source.review_count,
             temu_deal_text:safeText(source.temu_deal_text),temu_list_price:source.temu_list_price??null,temu_discount_percent:source.temu_discount_percent??null,
             temu_rating:source.temu_rating??null,temu_review_count:source.temu_review_count??null,
             shopify_product_id:source.shopify_product_id||null,shopify_variant_id:source.shopify_variant_id||null,
             shopify_variants:Array.isArray(source.shopify_variants)?source.shopify_variants:[],
           };
+          // Skin Care is affiliate-only: never expose price/deal fields through its
+          // public catalog contract, even if an imported retailer row contains them.
+          if(storefront==='beauty'){
+            for(const field of ['display_price','currency','deal_text','amazon_deal_text','amazon_list_price','amazon_discount_percent','temu_deal_text','temu_list_price','temu_discount_percent']){
+              delete publicProduct[field];
+            }
+          }
           return publicProduct;
         }),200,{
           'cache-control':'no-store, no-cache, must-revalidate, max-age=0',
