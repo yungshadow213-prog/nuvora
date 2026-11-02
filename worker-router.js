@@ -42,7 +42,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     // Route all studio aliases to the same maintained builder.
-    const studioRoute = url.pathname.match(/^\\/admin\\/(gaming|games|home|clothing)-studio\\/?$/);
+    const studioRoute = url.pathname.match(/^\/admin\/(gaming|games|home|clothing)-studio\/?$/);
     if (url.pathname === "/admin/studios" || url.pathname === "/admin/studios/") {
       return worker.fetch(new Request(new URL("/storefront-studio.html?store=all", request.url), { method: "GET", headers: request.headers }), env, ctx);
     }
