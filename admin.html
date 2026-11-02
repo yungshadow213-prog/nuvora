@@ -3307,17 +3307,33 @@ async function copySkinStudioMediaUrl(url){
 }
 async function useSkinStudioMedia(url){
  const selection=skinStudioSelection||{};
- if(!skinBuilderConfig||!url){skinBuilderMessage('Choose an editable section or category before applying an image.','warning');return;}
+ if(!skinBuilderConfig||!url){skinBuilderMessage('Choose an editable section, product or category before applying an image.','warning');return;}
  if(selection.type==='section'){
   const sections=skinSectionsFor(),index=sections.findIndex(section=>String(section.id)===String(selection.id));
   if(index<0){skinBuilderMessage('The selected section is no longer available.','error');return;}
   updateSkinSection(index,'image',String(url));
  }else if(selection.type==='category'){
   updateSkinCategory(String(selection.id),'image',String(url));
+ }else if(selection.type==='product'){
+  const product=adminProducts.find(item=>String(item.id)===String(selection.id));
+  if(!product){skinBuilderMessage('The selected product is no longer in the catalog. Refresh the product library and try again.','error');return;}
+  if(product.published&&!window.confirm('This product is already published. Applying this image will update its live product listing immediately. Keep the existing gallery images and continue?'))return;
+  const previousImages=[
+   ...(Array.isArray(product.image_urls)?product.image_urls:[]),
+   product.image_url,product.image,product.imageUrl
+  ];
+  const images=Array.from(new Set([String(url),...previousImages].filter(value=>typeof value==='string'&&value.trim()))).slice(0,30);
+  const saved=await api('/api/admin/products/'+encodeURIComponent(String(product.id)),{method:'PATCH',body:{image_url:String(url),image_urls:images}});
+  if(!saved||String(saved.id||'')!==String(product.id))throw new Error('The product image change was not confirmed by the server.');
+  adminProducts=adminProducts.map(item=>String(item.id)===String(product.id)?{...item,...saved}:item);
+  renderProducts();renderSkinProducts();fillSocialProducts();renderSkinStudioAll();
+  reloadSkinStudioPreview();
+  skinBuilderMessage('Product image saved. Existing gallery images were preserved; the product remains '+(saved.published?'published':'a draft')+'.','success');
+  return;
  }else if(selection.type==='default-category'){
   skinBuilderMessage('Default categories are managed by the storefront. Choose a custom category or section to replace its image.','warning');return;
  }else{
-  skinBuilderMessage('Select a section or custom category to use this image.','warning');return;
+  skinBuilderMessage('Select a section, product or custom category to use this image.','warning');return;
  }
  await saveSkinStudioChangeImmediately('Image applied and saved to the page draft. Publish when ready.');
  renderSkinStudioAll();
