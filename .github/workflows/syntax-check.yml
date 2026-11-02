@@ -91,6 +91,32 @@ jobs:
               failures.append("backend/schema.sql must define products.product_type for Skin Studio")
           if not migration.exists() or "add column if not exists product_type text" not in migration.read_text(encoding="utf-8").lower():
               failures.append("Skin Studio product_type migration must exist and be idempotent")
+          guide_columns = {
+              "benefits": r"benefits\\s+text",
+              "skin_types": r"skin_types\\s+text",
+              "skin_concerns": r"skin_concerns\\s+text",
+              "recommended_product_ids": r"recommended_product_ids\\s+jsonb",
+              "recommendation_reason": r"recommendation_reason\\s+text",
+          }
+          guide_migration = Path("backend/migrations/2026-11-02-skin-studio-guide-fields.sql")
+          for column, pattern in guide_columns.items():
+              if not re.search(pattern, schema):
+                  failures.append(f"backend/schema.sql must persist Skin Studio guide field {column}")
+              if not guide_migration.exists() or not re.search(r"add column if not exists " + re.escape(column) + r"\\s+", guide_migration.read_text(encoding="utf-8").lower()):
+                  failures.append(f"Skin Studio guide migration must add {column} idempotently")
+          skin_save_start = admin.find("async function saveProductDraft(){")
+          skin_save_end = admin.find("async function saveSkinProductAndPublish()", skin_save_start)
+          skin_save_block = admin[skin_save_start:skin_save_end]
+          for field in ["benefits:", "skin_types:", "skin_concerns:", "recommended_product_ids:", "recommendation_reason:", "ingredients:", "usage_instructions:", "product_warnings:"]:
+              if field not in skin_save_block:
+                  failures.append(f"Skin Studio product save payload missing {field[:-1]}")
+          for token in ["display_price:null", "amazon_list_price:null", "amazon_discount_percent:null"]:
+              if token not in skin_save_block:
+                  failures.append(f"Skin Studio affiliate product save must remain price-free: {token}")
+          if "priceIds=['pfPrice','pfListPrice','pfDiscount','pfCurrency','pfDeal']" not in admin:
+              failures.append("Skin Studio product editor must hide all price/deal inputs")
+          if "const write={...patch,published:true" not in worker or "supabaseProductWrite(env,'PATCH',write" not in worker:
+              failures.append("Product publish path must persist edited guide fields with publication changes")
           if "'product_size','product_type','benefits'" not in worker:
               failures.append("worker.js optional-column compatibility must include product_type")
           router=Path("worker-router.js").read_text(encoding="utf-8")
