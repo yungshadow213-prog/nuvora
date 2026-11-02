@@ -118,6 +118,18 @@ jobs:
               failures.append("Skin Studio product editor must hide all price/deal inputs")
           if "const write={...patch,published:true" not in worker or "supabaseProductWrite(env,'PATCH',write" not in worker:
               failures.append("Product publish path must persist edited guide fields with publication changes")
+          if "Array.from(new Set(document.getElementById('pfImages').value.split" not in admin:
+              failures.append("Skin Studio product editor must deduplicate gallery images before saving")
+          public_products_start = worker.find("if(url.pathname==='/api/products'&&request.method==='GET')")
+          public_products_end = worker.find("async function supabaseProductWrite", public_products_start)
+          public_products_block = worker[public_products_start:public_products_end]
+          if "amazon_review_count:isAmazonSource?(source.amazon_review_count??normalized.review_count??null):null" not in public_products_block:
+              failures.append("Public product catalog must preserve retailer review counts for Amazon products")
+          if "if(storefront==='beauty')" not in public_products_block or "delete publicProduct[field]" not in public_products_block:
+              failures.append("Skin Care public catalog must omit affiliate product price/deal fields")
+          for price_field in ["display_price","amazon_list_price","amazon_discount_percent","amazon_deal_text"]:
+              if price_field not in public_products_block:
+                  failures.append(f"Skin Care price-free public contract must explicitly remove {price_field}")
           if "'product_size','product_type','benefits'" not in worker:
               failures.append("worker.js optional-column compatibility must include product_type")
           router=Path("worker-router.js").read_text(encoding="utf-8")
