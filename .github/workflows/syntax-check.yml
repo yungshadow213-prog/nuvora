@@ -135,6 +135,15 @@ jobs:
           router=Path("worker-router.js").read_text(encoding="utf-8")
           if "(games|home|clothing)-storefront" not in router:
               failures.append("worker-router.js: one or more isolated storefront endpoints are missing")
+          # All studio entry points must open the same maintained builder.
+          if 'new URL("/storefront-studio.html?store=all"' not in router:
+              failures.append("worker-router.js: /admin/studios must open the maintained studio hub")
+          if 'new URL("/storefront-studio.html?store=" + storeKey' not in router:
+              failures.append("worker-router.js: individual studio routes must open the maintained builder")
+          if "(gaming|games|home|clothing)-studio" not in router:
+              failures.append("worker-router.js: all studio aliases must be routed")
+          if '"/multi-store-studio.html' in router:
+              failures.append("worker-router.js: legacy studio page must not be served by active routes")
           # Keep each specialist storefront bound to its own settings and product
           # catalogue, and never leak unpublished catalogue rows through public APIs.
           store_contracts = {
