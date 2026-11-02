@@ -92,17 +92,17 @@ jobs:
           if not migration.exists() or "add column if not exists product_type text" not in migration.read_text(encoding="utf-8").lower():
               failures.append("Skin Studio product_type migration must exist and be idempotent")
           guide_columns = {
-              "benefits": r"benefits\\s+text",
-              "skin_types": r"skin_types\\s+text",
-              "skin_concerns": r"skin_concerns\\s+text",
-              "recommended_product_ids": r"recommended_product_ids\\s+jsonb",
-              "recommendation_reason": r"recommendation_reason\\s+text",
+              "benefits": r"benefits\s+text",
+              "skin_types": r"skin_types\s+text",
+              "skin_concerns": r"skin_concerns\s+text",
+              "recommended_product_ids": r"recommended_product_ids\s+jsonb",
+              "recommendation_reason": r"recommendation_reason\s+text",
           }
           guide_migration = Path("backend/migrations/2026-11-02-skin-studio-guide-fields.sql")
           for column, pattern in guide_columns.items():
               if not re.search(pattern, schema):
                   failures.append(f"backend/schema.sql must persist Skin Studio guide field {column}")
-              if not guide_migration.exists() or not re.search(r"add column if not exists " + re.escape(column) + r"\\s+", guide_migration.read_text(encoding="utf-8").lower()):
+              if not guide_migration.exists() or not re.search(r"add column if not exists " + re.escape(column) + r"\s+", guide_migration.read_text(encoding="utf-8").lower()):
                   failures.append(f"Skin Studio guide migration must add {column} idempotently")
           skin_save_start = admin.find("async function saveProductDraft(){")
           skin_save_end = admin.find("async function saveSkinProductAndPublish()", skin_save_start)
@@ -278,7 +278,7 @@ jobs:
           failures=[]
           forbidden=[
               r"async\s+async\s+function",
-              r"re\.replace\(/\\b\(\[A-Za-z\]\)\\s\+",
+              r"re\.replace\(/\\b\(\[A-Za-z\]\)\s\+",
           ]
           for pat in forbidden:
               if re.search(pat,worker):
