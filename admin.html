@@ -642,7 +642,19 @@ body.skin-studio-fullpage .studio-inspector-group>.studio-inspector-field:first-
 body.skin-studio-fullpage .studio-inspector-group>.studio-inline-help:last-child{margin-bottom:12px}
 body.skin-studio-fullpage .studio-inspector-group>summary:focus-visible{outline:2px solid #477b55;outline-offset:-2px}
 </style>
-</head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
+<style id="skin-studio-media-library-finish">
+body.skin-studio-fullpage .studio-media-upload{display:grid;gap:10px;margin:0 0 15px;padding:13px;border:1px solid #dce7d9;border-radius:12px;background:linear-gradient(145deg,#f8fbf6,#fff)}
+body.skin-studio-fullpage .studio-media-upload-copy{display:grid;gap:4px}
+body.skin-studio-fullpage .studio-media-upload-copy b{font-size:11px;font-weight:800;color:#304a35}
+body.skin-studio-fullpage .studio-media-upload-copy small{font-size:9px;line-height:1.5;color:#7c897d}
+body.skin-studio-fullpage .studio-media-upload-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+body.skin-studio-fullpage .studio-media-upload-actions .btn{min-height:36px}
+body.skin-studio-fullpage .studio-media-choose{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:5px;overflow:hidden}
+body.skin-studio-fullpage .studio-media-choose input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+body.skin-studio-fullpage .studio-media-upload-selection{margin:0;min-height:14px}
+body.skin-studio-fullpage #skinStudioMediaUploadButton:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:600px){body.skin-studio-fullpage .studio-media-upload-actions>*{flex:1 1 auto}body.skin-studio-fullpage .studio-media-upload-copy small{font-size:10px}}
+</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
   <div class="nav-group">
     <span class="nav-group-label">Workspace</span>
     <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
@@ -3216,12 +3228,50 @@ async function renderSkinMediaLibrary(root,forceRefresh=false){
   const {data,error}=await adminSB.storage.from('product-images').list('skin-site',{limit:1000,offset:0,sortBy:{column:'created_at',order:'desc'}});
   if(error)throw error;
   if(requestId!==window.skinStudioMediaRequestId)return;
-  const files=(data||[]).filter(item=>item?.name&&!item.name.endsWith('/')&&/\.(jpe?g|png|webp|gif)$/i.test(item.name));
+  const files=(data||[]).filter(item=>item?.name&&!item.name.endsWith('/')&&/\.(jpe?g|png|webp|avif|gif)$/i.test(item.name));
   window.skinStudioMediaItems=files.map(item=>({name:item.name,createdAt:item.created_at||item.updated_at||'',url:adminSB.storage.from('product-images').getPublicUrl('skin-site/'+item.name).data?.publicUrl||''})).filter(item=>item.url);
   paintSkinStudioMediaLibrary(root);
  }catch(error){
   if(requestId!==window.skinStudioMediaRequestId)return;
   root.innerHTML='<div class="studio-library-empty">Could not load media: '+esc(error?.message||'Storage request failed')+'. Check storage access and try Refresh.</div>';
+ }
+}
+function updateSkinStudioMediaUploadSelection(input){
+ const files=Array.from(input?.files||[]);
+ const label=document.getElementById('skinStudioMediaUploadSelection');
+ const button=document.getElementById('skinStudioMediaUploadButton');
+ if(label)label.textContent=files.length?files.length+' image'+(files.length===1?'':'s')+' selected. Each image must be 6 MB or smaller.':'JPG, PNG, WebP, AVIF or GIF · Up to 6 MB per image';
+ if(button)button.disabled=!files.length;
+}
+async function uploadSkinStudioMediaFiles(){
+ const input=document.getElementById('skinStudioMediaUploadInput');
+ const button=document.getElementById('skinStudioMediaUploadButton');
+ const files=Array.from(input?.files||[]);
+ if(!files.length){skinBuilderMessage('Choose one or more images before uploading.','warning');return;}
+ if(!adminSB){skinBuilderMessage('Image storage is not connected. Sign in again and retry.','error');return;}
+ const extensions={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/avif':'avif','image/gif':'gif'};
+ const invalid=files.find(file=>!extensions[file.type]||file.size>6*1024*1024);
+ if(invalid){skinBuilderMessage(invalid.size>6*1024*1024?invalid.name+' exceeds the 6 MB limit.':'Unsupported image type for '+invalid.name+'. Choose JPG, PNG, WebP, AVIF or GIF.','error');return;}
+ if(button){button.disabled=true;button.textContent='Uploading…';}
+ let uploaded=0;
+ try{
+  for(const file of files){
+   const base=String(file.name||'image').replace(/\.[^.]+$/,'').toLowerCase().replace(/[^a-z0-9_-]+/g,'-').replace(/^-+|-+$/g,'').slice(0,48)||'image';
+   const path='skin-site/library-'+base+'-'+crypto.randomUUID()+'.'+extensions[file.type];
+   const {error}=await adminSB.storage.from('product-images').upload(path,file,{cacheControl:'31536000',contentType:file.type,upsert:false});
+   if(error)throw new Error(file.name+': '+(error.message||'storage upload failed'));
+   const {data}=adminSB.storage.from('product-images').getPublicUrl(path);
+   if(!data?.publicUrl)throw new Error('Uploaded '+file.name+' but could not create its public URL.');
+   uploaded++;
+  }
+  input.value='';
+  updateSkinStudioMediaUploadSelection(input);
+  await renderSkinMediaLibrary(document.getElementById('skinLibraryItems'),true);
+  skinBuilderMessage(uploaded+' image'+(uploaded===1?'':'s')+' uploaded to the media library. They are available to use in your page drafts.','success');
+ }catch(error){
+  skinBuilderMessage((uploaded?'Uploaded '+uploaded+' image'+(uploaded===1?'':'s')+'. ':'')+'Media upload stopped: '+(error?.message||'unknown storage error')+'. Any uploaded files remain safely in the media library.','error');
+ }finally{
+  if(button){button.textContent='Upload images';button.disabled=!input?.files?.length;}
  }
 }
 function paintSkinStudioMediaLibrary(root){
@@ -3232,7 +3282,8 @@ function paintSkinStudioMediaLibrary(root){
  const pageSize=24,pageCount=Math.max(1,Math.ceil(filtered.length/pageSize));
  window.skinStudioMediaPage=Math.min(Math.max(1,Number(window.skinStudioMediaPage)||1),pageCount);
  const page=window.skinStudioMediaPage,visible=filtered.slice((page-1)*pageSize,page*pageSize);
- root.innerHTML='<p class="studio-inline-help">Uploaded Skin Studio images. Choose “Use selected” to apply an image to the current section or custom category. Removing an image from a page does not delete the stored file.</p>'+
+ root.innerHTML='<div class="studio-media-upload"><div class="studio-media-upload-copy"><b>Upload to your media library</b><small>Choose several images at once. Files are added to Nuvora storage; removing a page image never deletes the original.</small></div><div class="studio-media-upload-actions"><label class="btn studio-media-choose" for="skinStudioMediaUploadInput">＋ Choose images<input id="skinStudioMediaUploadInput" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" multiple onchange="updateSkinStudioMediaUploadSelection(this)"></label><button type="button" class="btn primary" id="skinStudioMediaUploadButton" onclick="uploadSkinStudioMediaFiles()" disabled>Upload images</button></div><p class="studio-inline-help studio-media-upload-selection" id="skinStudioMediaUploadSelection" aria-live="polite">JPG, PNG, WebP, AVIF or GIF · Up to 6 MB per image</p></div>'+
+  '<p class="studio-inline-help">Uploaded Skin Studio images. Choose “Use selected” to apply an image to the current section or custom category. Removing an image from a page does not delete the stored file.</p>'+
   '<div class="studio-media-toolbar"><input aria-label="Search media files" placeholder="Search uploaded images" value="'+esc(window.skinStudioMediaSearch||'')+'" oninput="setSkinStudioMediaSearch(this.value)"><button type="button" class="btn" onclick="renderSkinMediaLibrary(document.getElementById(\'skinLibraryItems\'),true)">Refresh</button></div>'+
   (visible.length?'<div class="studio-media-grid">'+visible.map(item=>'<article class="studio-media-card"><div class="studio-media-thumb"><img loading="lazy" src="'+esc(item.url)+'" alt=""></div><div class="studio-media-meta"><div class="studio-media-name">'+esc(item.name)+'</div><div class="studio-media-actions"><button type="button" onclick="useSkinStudioMedia('+esc(JSON.stringify(item.url))+')">Use selected</button><button type="button" onclick="copySkinStudioMediaUrl('+esc(JSON.stringify(item.url))+')">Copy URL</button></div></div></article>').join('')+'</div>':'<div class="studio-library-empty">No matching uploaded images found in the Skin Studio media folder.</div>')+
   (pageCount>1?'<nav aria-label="Media pages" style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:12px"><button type="button" class="btn" '+(page===1?'disabled':'')+' onclick="setSkinStudioMediaPage('+(page-1)+')">Previous</button><span class="studio-inline-help">Page '+page+' of '+pageCount+'</span><button type="button" class="btn" '+(page===pageCount?'disabled':'')+' onclick="setSkinStudioMediaPage('+(page+1)+')">Next</button></nav>':'')+
@@ -4236,12 +4287,12 @@ function skinConfigValidationMessage(requireProductGrid=true){
 }
 async function uploadSkinStudioImage(input,type,id,explicitFile=null){
  const file=explicitFile||input?.files?.[0];if(!file)return;
- const allowed=new Set(['image/jpeg','image/png','image/webp','image/gif']);
- if(!allowed.has(file.type)||file.size>6*1024*1024){skinBuilderMessage(file.size>6*1024*1024?'Image must be 6 MB or smaller.':'Choose a JPG, PNG, WEBP or GIF image.','error');if(input)input.value='';return;}
+ const allowed=new Set(['image/jpeg','image/png','image/webp','image/avif','image/gif']);
+ if(!allowed.has(file.type)||file.size>6*1024*1024){skinBuilderMessage(file.size>6*1024*1024?'Image must be 6 MB or smaller.':'Choose a JPG, PNG, WEBP, AVIF or GIF image.','error');if(input)input.value='';return;}
  if(!adminSB){skinBuilderMessage('Image storage is not connected. Sign in again and retry.','error');return;}
  const label=input?.closest('label')?.querySelector('span');const original=label?.textContent;if(label)label.textContent='Uploading image…';
  try{
-  const ext=({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'})[file.type];
+  const ext=({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/avif':'avif','image/gif':'gif'})[file.type];
   const path='skin-site/'+String(type)+'-'+crypto.randomUUID()+'.'+ext;
   const {error}=await adminSB.storage.from('product-images').upload(path,file,{cacheControl:'31536000',contentType:file.type,upsert:false});
   if(error)throw error;
