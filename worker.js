@@ -2578,7 +2578,7 @@ function validateSkinSiteConfig(value,options={}){
         if(!Array.isArray(section.product_ids)||section.product_ids.length>60)return 'A '+label.toLowerCase()+' section can place up to 60 products.';
         if(section.product_ids.some(id=>!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id))))return 'A placed product has an invalid product ID.';
       }
-      if(section.columns!==undefined&&!([2,3,4].includes(Number(section.columns))))return label+' grid columns must be 2, 3, or 4.';
+      if(section.columns!==undefined&&!([2,3,4,5].includes(Number(section.columns))))return label+' grid columns must be 2, 3, 4, or 5.';
       if(section.filter!==undefined&&!['all','featured','top_pick','trending'].includes(String(section.filter)))return 'A '+label.toLowerCase()+' product filter is invalid.';
     }
     return null;
