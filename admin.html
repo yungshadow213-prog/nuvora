@@ -1824,11 +1824,82 @@ async function importSelectedShopify(){
 function openSourcinBoxImport(){document.body.classList.add('admin-workspace-open');document.getElementById('aiStudioModal')?.classList.remove('open');document.getElementById('productModal')?.classList.remove('open');document.getElementById('shopifyModal')?.classList.remove('open');const page=document.getElementById('sourcinBoxModal');page.classList.add('open');page.scrollIntoView({behavior:'smooth',block:'start'});}
 function closeSourcinBoxImport(){document.getElementById('sourcinBoxModal').classList.remove('open');document.body.classList.remove('admin-workspace-open');}
 function startSourcinBoxDraft(){closeSourcinBoxImport();resetProductForm();document.body.classList.add('admin-workspace-open');document.getElementById('productModalTitle').textContent='Import SourcinBox product';document.getElementById('productModalSub').textContent='Paste the SourcinBox Marketplace product URL and add the supplier listing details.';document.getElementById('importStatus').textContent='SourcinBox products are supplier/fulfillment listings. Nuvora will keep the supplier reference so automated fulfillment can be added later.';document.getElementById('amazonUrlInput').placeholder='Optional Amazon/Temu link field';document.getElementById('pfSource').value='sourcinbox';document.getElementById('pfKind').value='shop';document.getElementById('pfRetailer').value='SourcinBox';document.getElementById('pfSourcinboxUrl').focus();document.getElementById('productModal').classList.add('open');document.getElementById('productModal').scrollIntoView({behavior:'smooth',block:'start'});}
+function productCategoryGroup(name){
+ const value=String(name||'').toLowerCase();
+ if(/cleanser|cleanse|moistur|hydrate|serum|treat|toner|essence|mask|exfoliat|sunscreen|spf|skin|eye care|lip care/.test(value))return 'Skincare routine';
+ if(/beauty device|tool|nail|manicure|pedicure|makeup|cosmetic|accessor/.test(value))return 'Beauty tools & finishing touches';
+ if(/hair|body|bath|shower|fragrance|perfume|oral|shav/.test(value))return 'Hair, body & daily care';
+ return 'More to explore';
+}
+function prepareProductEntryWorkspace(){
+ const modal=document.getElementById('productModal'),body=modal?.querySelector('.modal-body'),grid=body?.querySelector('.formgrid');
+ if(!body||!grid||body.dataset.productEntryPrepared==='true')return;
+ const steps=[
+  {id:'identity',title:'Source & identity',summary:'Import a listing or enter the product’s basic identity.',fields:['pfName','pfKind','pfSource','pfBrand','pfProductType','pfRetailer','pfDestination','pfAsin','pfSourcinboxUrl','pfSourcinboxId']},
+  {id:'organize',title:'Organize & recommend',summary:'Give the product a clear category, collection and merchandising role.',fields:['pfCategory','pfCollection','pfSkinFeatured','pfSkinTopPick','pfSkinTrending','pfRecommendedProducts','pfRecommendationReason']},
+  {id:'guide',title:'Product information',summary:'Add useful, source-backed details customers can use to make a decision.',fields:['pfDescription','pfFeatures','pfBenefits','pfSkinTypes','pfSkinConcerns','pfSkinAvoid','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','skinGeminiFillBtn','skinGeminiReplaceExisting','skinGeminiStatus']},
+  {id:'media',title:'Images & retailer details',summary:'Choose the main product image, complete retailer facts and review the draft.',fields:['pfImages','pfUpload','uploadStatus','pfImageStrip','pfPrice','pfListPrice','pfDiscount','pfCurrency','pfDeal','pfRating','pfAvailability','pfReviews','pfBought','pfShipping','pfTax','pfSupplierCost']}
+ ];
+ const sourcePanel=document.createElement('section');sourcePanel.className='product-entry-source-card';
+ sourcePanel.innerHTML='<div class="product-entry-source-head"><span class="product-entry-step-kicker">START HERE</span><h3>Bring in the product</h3><p>Paste a retailer product link to prefill what Nuvora can capture, or enter the details manually below. Everything stays a draft until you publish it.</p></div>';
+ const controls=[
+  document.getElementById('amazonUrlInput')?.closest('.importbar'),
+  document.getElementById('amazonSearchUrlInput')?.closest('.importbar'),
+  document.getElementById('amazonDiscoveryStatus'),
+  body.querySelector('.notice[style*="margin-top:10px"]')
+ ].filter(Boolean);
+ controls.forEach(node=>sourcePanel.appendChild(node));
+ const aiButton=body.querySelector('button[onclick="openAIStudio()"]')?.parentElement||null;
+ const shell=document.createElement('div');shell.className='product-entry-workspace';
+ const rail=document.createElement('aside');rail.className='product-entry-rail';
+ rail.innerHTML='<div class="product-entry-rail-top"><span class="product-entry-step-kicker">PRODUCT WORKSPACE</span><b>Build a better listing</b><small>Work through each stage. You can save a private draft at any point.</small></div><nav class="product-entry-step-list" aria-label="Product entry steps">'+steps.map((step,index)=>'<button type="button" class="product-entry-step-button'+(index===0?' active':'')+'" data-entry-step="'+index+'" aria-current="'+(index===0?'step':'false')+'"><span class="product-entry-step-number">'+String(index+1).padStart(2,'0')+'</span><span><b>'+step.title+'</b><small>'+step.summary+'</small></span><i>›</i></button>').join('')+'</nav><div class="product-entry-rail-note"><b>Not ready to publish?</b><span>Save a draft. It remains private until you publish it.</span></div>';
+ const main=document.createElement('div');main.className='product-entry-main';
+ steps.forEach((step,index)=>{
+  const panel=document.createElement('section');panel.className='product-entry-step-panel'+(index===0?' active':'');panel.dataset.entryPanel=String(index);
+  panel.innerHTML='<div class="product-entry-panel-head"><div><span class="product-entry-step-kicker">STEP '+String(index+1).padStart(2,'0')+' / '+String(steps.length).padStart(2,'0')+'</span><h3>'+step.title+'</h3><p>'+step.summary+'</p></div><span class="product-entry-panel-count">'+String(index+1).padStart(2,'0')+'</span></div>';
+  if(index===0)panel.appendChild(sourcePanel);
+  const form=document.createElement('div');form.className='formgrid product-entry-fields';panel.appendChild(form);
+  main.appendChild(panel);
+ });
+ if(aiButton){const target=main.querySelector('[data-entry-panel="2"] .product-entry-panel-head');if(target){aiButton.className='product-entry-ai-action';target.appendChild(aiButton);}}
+ const actions=body.querySelector('.modal-actions');
+ const navigation=document.createElement('div');navigation.className='product-entry-navigation';
+ navigation.innerHTML='<button class="btn" type="button" id="productEntryPrevious" onclick="setProductEntryStep((window.productEntryStep||0)-1)">← Previous</button><span id="productEntryProgress">Step 1 of 4</span><button class="btn primary" type="button" id="productEntryNext" onclick="setProductEntryStep((window.productEntryStep||0)+1)">Next step →</button>';
+ const content=document.createElement('div');content.className='product-entry-content';content.appendChild(main);content.appendChild(navigation);
+ shell.appendChild(rail);shell.appendChild(content);
+ body.insertBefore(shell,grid);
+ const fieldIds=new Map();steps.forEach((step,index)=>step.fields.forEach(id=>fieldIds.set(id,index)));
+ const fields=Array.from(grid.querySelectorAll(':scope > .field'));
+ fields.forEach(field=>{
+  const control=field.querySelector('input,textarea,select,button'),id=control?.id||'';
+  const index=fieldIds.has(id)?fieldIds.get(id):2;
+  main.querySelector('[data-entry-panel="'+index+'"] .product-entry-fields').appendChild(field);
+ });
+ grid.remove();
+ body.dataset.productEntryPrepared='true';
+ rail.querySelectorAll('[data-entry-step]').forEach(button=>button.addEventListener('click',()=>setProductEntryStep(Number(button.dataset.entryStep))));
+ if(actions){actions.classList.add('product-entry-footer');actions.insertBefore(navigation,actions.firstChild);}
+ setProductEntryStep(0);
+}
+function setProductEntryStep(index){
+ const shell=document.querySelector('#productModal .product-entry-workspace');
+ if(!shell)return;
+ const buttons=[...shell.querySelectorAll('[data-entry-step]')],panels=[...shell.querySelectorAll('[data-entry-panel]')];
+ const next=Math.max(0,Math.min(panels.length-1,Number(index)||0));window.productEntryStep=next;
+ buttons.forEach((button,i)=>{button.classList.toggle('active',i===next);button.setAttribute('aria-current',i===next?'step':'false');button.classList.toggle('complete',i<next);});
+ panels.forEach((panel,i)=>panel.classList.toggle('active',i===next));
+ const progress=document.getElementById('productEntryProgress');if(progress)progress.textContent='Step '+(next+1)+' of '+panels.length;
+ const previous=document.getElementById('productEntryPrevious'),forward=document.getElementById('productEntryNext');
+ if(previous)previous.disabled=next===0;
+ if(forward){forward.disabled=next===panels.length-1;forward.textContent=next===panels.length-1?'Last step':'Next step →';}
+ const active=panels[next];if(active)active.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
 function renderProductTaxonomy(){
   const cat=document.getElementById('pfCategory'),col=document.getElementById('pfCollection');
   if(cat){
-    const current=cat.value;
-    cat.innerHTML='<option value="">No category</option>'+categories.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');
+    const current=cat.value,groups=new Map();
+    categories.forEach(item=>{const key=productCategoryGroup(item.name);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(item);});
+    cat.innerHTML='<option value="">Choose a category</option>'+[...groups.entries()].map(([label,items])=>'<optgroup label="'+esc(label)+'">'+items.sort((a,b)=>a.name.localeCompare(b.name)).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('')+'</optgroup>').join('');
     if(current)cat.value=current;
   }
   if(col){
@@ -1859,6 +1930,7 @@ function openProductModal(importMode=false){
   document.getElementById('pfSource').value='amazon';
   document.getElementById('pfRetailer').value='Amazon';
   document.getElementById('amazonUrlInput').placeholder='Paste your Amazon product or affiliate link';
+  prepareProductEntryWorkspace();setProductEntryStep(0);
   document.getElementById('amazonUrlInput').focus();
 }
 function closeProductModal(){document.getElementById('productModal').classList.remove('open');document.body.classList.remove('admin-workspace-open');window.skinCareImportMode=false;setSkinAdminFormMode(false);}
@@ -5312,4 +5384,101 @@ body.skin-studio-fullpage .studio-inspector-check{display:flex;align-items:cente
 body.skin-studio-fullpage .studio-inspector-check input{width:15px;height:15px;accent-color:#5f7c59}
 
 </style>
+
+<style id="nuvora-product-entry-workspace">
+#productModal .modal{width:min(1440px,calc(100vw - 30px));max-height:calc(100vh - 30px);display:flex;flex-direction:column;overflow:hidden;border-radius:22px;background:#0b1728}
+#productModal .modal-head{flex:0 0 auto;padding:20px 24px;background:rgba(11,23,40,.97);backdrop-filter:blur(18px)}
+#productModal .modal-body{min-height:0;overflow:auto;padding:20px 24px 24px}
+#productModal .workspace-note{margin-bottom:14px;padding:13px 16px;border:1px solid rgba(111,217,255,.15);border-radius:13px;background:linear-gradient(120deg,rgba(111,217,255,.06),rgba(156,123,255,.06));color:#bdcddd;line-height:1.55}
+#productModal .product-entry-workspace{display:grid;grid-template-columns:245px minmax(0,1fr);gap:22px;align-items:start}
+#productModal .product-entry-rail{position:sticky;top:8px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(180deg,rgba(24,39,61,.94),rgba(9,20,34,.96));padding:17px 13px}
+#productModal .product-entry-rail-top{padding:5px 7px 17px;border-bottom:1px solid var(--line);display:grid;gap:7px}
+#productModal .product-entry-step-kicker{display:block;font-size:9px;text-transform:uppercase;letter-spacing:.16em;font-weight:850;color:#8ea8bd}
+#productModal .product-entry-rail-top>b{font-size:17px;letter-spacing:-.025em;color:#f7fbff}
+#productModal .product-entry-rail-top>small{font-size:11px;line-height:1.55;color:#91a5b8}
+#productModal .product-entry-step-list{display:grid;gap:7px;padding-top:13px}
+#productModal .product-entry-step-button{display:grid;grid-template-columns:29px minmax(0,1fr) 12px;align-items:start;gap:9px;width:100%;padding:12px 9px;border:1px solid transparent;border-radius:12px;background:transparent;text-align:left;color:#afc0cf;cursor:pointer}
+#productModal .product-entry-step-button:hover{background:rgba(255,255,255,.04);border-color:var(--line)}
+#productModal .product-entry-step-button.active{background:linear-gradient(110deg,rgba(111,217,255,.1),rgba(156,123,255,.12));border-color:rgba(156,123,255,.35);color:#fff}
+#productModal .product-entry-step-button.complete .product-entry-step-number{background:#1d5b42;color:#c8f6dc}
+#productModal .product-entry-step-number{width:27px;height:27px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.13);border-radius:9px;color:#9eafc0;font-size:10px;font-weight:850}
+#productModal .product-entry-step-button.active .product-entry-step-number{background:#8d78ff;border-color:#8d78ff;color:#fff}
+#productModal .product-entry-step-button>span:nth-child(2){display:grid;gap:4px;min-width:0}
+#productModal .product-entry-step-button b{font-size:11px;line-height:1.35;color:inherit}
+#productModal .product-entry-step-button small{font-size:9px;line-height:1.45;color:#879db0}
+#productModal .product-entry-step-button i{font-style:normal;font-size:18px;color:#7890a4}
+#productModal .product-entry-rail-note{display:grid;gap:5px;margin:17px 4px 3px;padding:12px;border:1px solid rgba(111,217,255,.14);border-radius:12px;background:rgba(111,217,255,.045)}
+#productModal .product-entry-rail-note b{font-size:10px;color:#dbe8f2}
+#productModal .product-entry-rail-note span{font-size:9px;line-height:1.5;color:#8fa5b8}
+#productModal .product-entry-content{min-width:0}
+#productModal .product-entry-step-panel{display:none;min-width:0;animation:productStepIn .2s ease}
+#productModal .product-entry-step-panel.active{display:block}
+#productModal .product-entry-panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:15px;margin:2px 0 18px;padding:2px 2px 14px;border-bottom:1px solid var(--line)}
+#productModal .product-entry-panel-head h3{margin:5px 0 5px;font-size:21px;letter-spacing:-.04em;color:#f7fbff}
+#productModal .product-entry-panel-head p{margin:0;max-width:570px;color:#90a4b8;font-size:11px;line-height:1.6}
+#productModal .product-entry-panel-count{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;border-radius:13px;background:rgba(156,123,255,.12);color:#b7aaff;font-size:13px;font-weight:850}
+#productModal .product-entry-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+#productModal .product-entry-fields .field{min-width:0;margin-top:0;padding:13px;border:1px solid rgba(255,255,255,.07);border-radius:13px;background:rgba(16,30,48,.52)}
+#productModal .product-entry-fields .field.full{grid-column:1/-1}
+#productModal .product-entry-fields .field label{font-size:10px;line-height:1.4;color:#bac9d6}
+#productModal .product-entry-fields .field input,#productModal .product-entry-fields .field textarea,#productModal .product-entry-fields .field select{background:#081321;border-color:rgba(255,255,255,.12);border-radius:9px;font-size:12px}
+#productModal .product-entry-fields .field textarea{min-height:96px}
+#productModal .product-entry-fields .field input:focus,#productModal .product-entry-fields .field textarea:focus,#productModal .product-entry-fields .field select:focus{border-color:rgba(156,123,255,.72);box-shadow:0 0 0 3px rgba(156,123,255,.09)}
+#productModal .product-entry-source-card{margin:0 0 15px;padding:17px;border:1px solid rgba(111,217,255,.2);border-radius:16px;background:linear-gradient(130deg,rgba(111,217,255,.07),rgba(156,123,255,.09))}
+#productModal .product-entry-source-head h3{margin:6px 0;font-size:15px;color:#f5f9ff}
+#productModal .product-entry-source-head p{margin:0 0 14px;color:#9eb2c5;font-size:10px;line-height:1.6;max-width:680px}
+#productModal .product-entry-source-card .importbar{display:grid;grid-template-columns:minmax(0,1fr) auto;margin:8px 0 0}
+#productModal .product-entry-source-card .importbar input{min-width:0;background:#081321;border-color:rgba(255,255,255,.13)}
+#productModal .product-entry-source-card .notice{background:rgba(5,14,25,.4);border-color:rgba(255,255,255,.08);color:#9fb2c4;font-size:10px;line-height:1.6}
+#productModal .product-entry-ai-action{margin:0 0 0 auto!important;align-self:center}
+#productModal .product-entry-ai-action .btn{white-space:nowrap}
+#productModal .product-entry-navigation{order:-1;flex:0 0 100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0 15px;margin-bottom:8px;border-bottom:1px solid var(--line)}
+#productModal #productEntryProgress{font-size:10px;color:#9eb0c1;letter-spacing:.08em;font-weight:800}
+#productModal .product-entry-footer{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:9px;align-items:center;padding-top:14px}
+#productModal .product-entry-footer .product-entry-navigation{margin-right:0}
+#productModal #productEntryPrevious:disabled,#productModal #productEntryNext:disabled{opacity:.35;cursor:not-allowed}
+#productModal .product-entry-footer>#productSaveBtn{min-width:140px}
+#productModal .product-entry-footer>#skinProductPublishBtn{min-width:150px}
+#productModal .image-strip{grid-template-columns:repeat(5,minmax(0,1fr))}
+#productModal .product-entry-fields .skin-flag-row{display:flex;gap:10px;flex-wrap:wrap}
+#productModal .product-entry-fields .skin-flag-row label{display:flex;align-items:center;gap:6px;border:1px solid var(--line);padding:9px 10px;border-radius:9px;background:rgba(255,255,255,.04)}
+@keyframes productStepIn{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media(max-width:1050px){
+ #productModal .product-entry-workspace{grid-template-columns:205px minmax(0,1fr);gap:14px}
+ #productModal .product-entry-rail{padding:12px 8px}
+ #productModal .product-entry-step-button{grid-template-columns:26px minmax(0,1fr);gap:8px;padding:10px 7px}
+ #productModal .product-entry-step-button i{display:none}
+}
+@media(max-width:760px){
+ #productModal .modal{width:100%;height:100dvh;max-height:100dvh;border-radius:19px 19px 0 0}
+ #productModal .modal-head{padding:15px 14px}
+ #productModal .modal-head h2{font-size:18px}
+ #productModal .modal-body{padding:13px 12px 20px}
+ #productModal .product-entry-workspace{grid-template-columns:1fr;gap:12px}
+ #productModal .product-entry-rail{position:static;padding:10px;border-radius:14px}
+ #productModal .product-entry-rail-top{padding:3px 4px 10px}
+ #productModal .product-entry-rail-top>b{font-size:14px}
+ #productModal .product-entry-rail-top>small{font-size:9px}
+ #productModal .product-entry-step-list{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-top:9px}
+ #productModal .product-entry-step-list::-webkit-scrollbar{display:none}
+ #productModal .product-entry-step-button{flex:0 0 150px;grid-template-columns:24px minmax(0,1fr);gap:7px;padding:8px 7px}
+ #productModal .product-entry-step-button small{display:none}
+ #productModal .product-entry-step-number{width:23px;height:23px}
+ #productModal .product-entry-rail-note{display:none}
+ #productModal .product-entry-panel-head{margin-bottom:12px}
+ #productModal .product-entry-panel-head h3{font-size:18px}
+ #productModal .product-entry-fields{grid-template-columns:1fr;gap:9px}
+ #productModal .product-entry-fields .field.full{grid-column:auto}
+ #productModal .product-entry-fields .field{padding:11px}
+ #productModal .product-entry-source-card{padding:12px}
+ #productModal .product-entry-source-card .importbar{grid-template-columns:1fr}
+ #productModal .product-entry-source-card .importbar button{width:100%}
+ #productModal .product-entry-footer{gap:7px}
+ #productModal .product-entry-navigation{padding-bottom:10px}
+ #productModal .product-entry-navigation .btn{flex:1}
+ #productModal .product-entry-footer>#productSaveBtn,#productModal .product-entry-footer>#skinProductPublishBtn{min-width:0;flex:1}
+ #productModal .image-strip{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+</style>
+
 </body></html>
