@@ -654,6 +654,11 @@ body.skin-studio-fullpage .studio-media-choose input{position:absolute;inset:0;w
 body.skin-studio-fullpage .studio-media-upload-selection{margin:0;min-height:14px}
 body.skin-studio-fullpage #skinStudioMediaUploadButton:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:600px){body.skin-studio-fullpage .studio-media-upload-actions>*{flex:1 1 auto}body.skin-studio-fullpage .studio-media-upload-copy small{font-size:10px}}
+</style><style id="skin-studio-page-management-finish">
+body.skin-studio-fullpage .studio-page-row-actions{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+body.skin-studio-fullpage .studio-page-row-actions button{display:grid;place-items:center;min-width:30px;min-height:30px;padding:4px 7px;border:1px solid #e2e9df;border-radius:7px;background:#fff;color:#526b55;font-size:12px}
+body.skin-studio-fullpage .studio-page-row-actions button:hover{background:#eff5ec;border-color:#cfdfca}
+body.skin-studio-fullpage #skinQuickTemplate{width:100%;min-height:38px;padding:9px 10px;border:1px solid #dce6da;border-radius:9px;background:#fff;color:#2d4231;font-size:12px}
 </style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
   <div class="nav-group">
     <span class="nav-group-label">Workspace</span>
@@ -3388,7 +3393,7 @@ function renderSkinLibrary(){
   const pages=skinBuilderConfig.pages||[];
   root.innerHTML='<button type="button" class="studio-outline-add" onclick="openSkinAdd(\'page\')">＋ Add a page</button><p class="studio-inline-help">Pages use the same section styles as the current Nuvora Skin storefront.</p>'+
    '<div class="studio-page-row '+(skinStudioPageId==='home'?'active':'')+'"><button type="button" onclick="setSkinStudioPage(\'home\')"><b>Home page</b><small> / · Main storefront</small></button><span>⌂</span></div>'+
-   (pages.length?pages.map(p=>'<div class="studio-page-row '+(String(skinStudioPageId)===String(p.slug)?'active':'')+'"><button type="button" onclick="setSkinStudioPage('+esc(JSON.stringify(String(p.slug)))+')"><b>'+esc(p.title)+'</b><small>/pages/'+esc(p.slug)+(p.visible?'':' · Hidden')+'</small></button><button type="button" title="Edit page settings" onclick="selectSkinItem(\'page\','+esc(JSON.stringify(String(p.slug)))+')">✎</button></div>').join(''):'<div class="studio-library-empty">No extra pages yet. Use Add → Page to create one.</div>');
+   (pages.length?pages.map(p=>'<div class="studio-page-row '+(String(skinStudioPageId)===String(p.slug)?'active':'')+'"><button type="button" onclick="setSkinStudioPage('+esc(JSON.stringify(String(p.slug)))+')"><b>'+esc(p.title)+'</b><small>/pages/'+esc(p.slug)+' · '+esc(({basic:'Simple content',editorial:'Editorial',shop:'Shop landing',brands:'Brand directory'}[p.template]||'Custom layout'))+(p.visible?'':' · Hidden')+'</small></button><div class="studio-page-row-actions"><button type="button" title="Duplicate page" aria-label="Duplicate '+esc(p.title)+'" onclick="duplicateSkinPage('+esc(JSON.stringify(String(p.slug)))+')">⧉</button><button type="button" title="Edit page settings" aria-label="Edit '+esc(p.title)+' settings" onclick="selectSkinItem(\'page\','+esc(JSON.stringify(String(p.slug)))+')">✎</button></div></div>').join(''):'<div class="studio-library-empty">No extra pages yet. Use Add → Page to create one.</div>');
   return;
  }
  if(skinStudioTab==='categories'){
@@ -3540,10 +3545,10 @@ function renderSkinSelectedInspector(){
   if(!page){setHead('Home page','Choose a section in the outline to edit the homepage.');root.innerHTML='<div class="studio-empty-inspector"><b>Home page</b><p>The homepage sections can be selected from the Outline tab.</p></div>';return;}
   setHead('Page settings',String(page.title||'Page'));
   root.innerHTML='<label class="studio-inspector-field"><span>Page title</span><input maxlength="120" value="'+esc(page.title)+'" oninput="updateSkinPage('+esc(JSON.stringify(String(page.slug)))+',\'title\',this.value)"></label>'+
-   '<label class="studio-inspector-field"><span>Page address</span><input value="/pages/'+esc(page.slug)+'" readonly></label>'+
+   '<label class="studio-inspector-field"><span>Page URL handle</span><input maxlength="80" value="'+esc(page.slug)+'" aria-label="Page URL handle" onchange="updateSkinPage('+esc(JSON.stringify(String(page.slug)))+',\'slug\',this.value)"><small class="studio-inline-help">Changing the handle also updates Nuvora page-menu links.</small></label>'+
    '<label class="studio-inspector-field"><span>Search description</span><textarea maxlength="1200" oninput="updateSkinPage('+esc(JSON.stringify(String(page.slug)))+',\'description\',this.value)">'+esc(page.description||'')+'</textarea></label>'+
    '<label class="studio-inspector-check"><input type="checkbox" '+(page.visible!==false?'checked':'')+' onchange="updateSkinPage('+esc(JSON.stringify(String(page.slug)))+',\'visible\',this.checked)"> Published / visible to shoppers</label>'+
-   '<div class="studio-inspector-actions"><button class="btn primary" type="button" onclick="setSkinStudioPage('+esc(JSON.stringify(String(page.slug)))+');switchSkinStudioTab(\'outline\')">Edit page layout</button><button class="btn danger" type="button" onclick="deleteSkinPage('+esc(JSON.stringify(String(page.slug)))+')">Delete page</button></div>';
+   '<div class="studio-inspector-actions"><button class="btn primary" type="button" onclick="setSkinStudioPage('+esc(JSON.stringify(String(page.slug)))+');switchSkinStudioTab(\'outline\')">Edit page layout</button><button class="btn" type="button" onclick="duplicateSkinPage('+esc(JSON.stringify(String(page.slug)))+')">Duplicate page</button><button class="btn danger" type="button" onclick="deleteSkinPage('+esc(JSON.stringify(String(page.slug)))+')">Delete page</button></div>';
   return;
  }
  if(selection.type==='default-category'){
@@ -3620,7 +3625,7 @@ function openSkinAdd(type){
  const panel=document.getElementById('skinQuickAddPanel');if(!panel)return;
  panel.hidden=false;
  if(type==='page'){
-  panel.innerHTML='<h4>Create a page</h4><p>Build a new page using the same storefront sections and visual styles.</p><label>Page title<input id="skinQuickTitle" maxlength="120" placeholder="e.g. About Nuvora Skin"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="about-nuvora-skin"></label><label>Search description<textarea id="skinQuickDescription" maxlength="1200" placeholder="A short description for this page"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create page</button></div>';
+  panel.innerHTML='<h4>Create a page</h4><p>Choose a starting layout. You can change every section after the page is created.</p><label>Page title<input id="skinQuickTitle" maxlength="120" placeholder="e.g. About Nuvora Skin"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="about-nuvora-skin"></label><label>Starting layout<select id="skinQuickTemplate"><option value="basic">Simple content page</option><option value="editorial">Editorial story</option><option value="shop">Shop landing page</option><option value="brands">Brand directory</option></select></label><label>Search description<textarea id="skinQuickDescription" maxlength="1200" placeholder="A short description for this page"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create page</button></div>';
  }else if(type==='category'){
   panel.innerHTML='<h4>Create a category</h4><p>Categories organize products while keeping the existing storefront card style.</p><label>Category name<input id="skinQuickTitle" maxlength="100" placeholder="e.g. Serums"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="serums"></label><label>Description<textarea id="skinQuickDescription" maxlength="1000" placeholder="What shoppers will find here"></textarea></label><label>Category image URL (optional)<input id="skinQuickImage" type="url" maxlength="1600" placeholder="https://…"></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create category</button></div>';
  }else{
@@ -3669,14 +3674,34 @@ function createSkinQuickItem(){
  if(skinQuickAddType==='page'){
   const slug=skinSlug(rawSlug||title);
   if(slug==='home'||slug==='shop'||slug==='saved'||slug==='journal'||slug.startsWith('product-')||skinBuilderConfig.pages.some(p=>p.slug===slug))return skinBuilderMessage('That page address is already used or reserved. Choose another slug.','error');
-  const page={id:slug,slug,title,description:String(document.getElementById('skinQuickDescription')?.value||''),visible:true,sections:[
-   {id:slug+'-hero',type:'hero',visible:true,title,eyebrow:'',text:'',image:'',columns:4,product_ids:[]},
-   {id:slug+'-products',type:'product-grid',visible:true,title:'Explore '+title,eyebrow:'The Nuvora Skin edit',text:'Browse the products selected for this page.',filter:'all',columns:3,product_ids:[]}
-  ]};
+  const template=String(document.getElementById('skinQuickTemplate')?.value||'basic');
+  const section=(suffix,type,sectionTitle,eyebrow,text,extra={})=>({id:slug+'-'+suffix,type,visible:true,title:sectionTitle,eyebrow,text,image:'',columns:3,product_ids:[],...extra});
+  const layouts={
+   basic:[
+    section('hero','hero',title,'','',{}),
+    section('intro','text-block','More about '+title,'A NOTE FROM NUVORA','Add the information visitors need on this page.',{textAlignment:'left'})
+   ],
+   editorial:[
+    section('hero','hero',title,'THE NUVORA SKIN JOURNAL','',{}),
+    section('story','editorial','Our approach','THOUGHTFULLY CONSIDERED','Tell your story with an image and supporting copy.',{imageAlignment:'left',imageWidth:55}),
+    section('details','text-block','A little more detail','','Add supporting information, links or practical guidance.',{textAlignment:'left'})
+   ],
+   shop:[
+    section('hero','hero',title,'THE NUVORA SKIN EDIT','',{}),
+    section('featured','featured-products','Featured picks','CURATED FOR YOU','A hand-picked selection to start exploring.',{filter:'featured',columns:3}),
+    section('products','product-grid','Explore '+title,'THE FULL EDIT','Browse the products selected for this page.',{filter:'all',columns:3,productsPerPage:8})
+   ],
+   brands:[
+    section('hero','hero',title,'DISCOVER THE BRANDS','',{}),
+    section('brands','brand-grid','Explore by brand','THE BRANDS WE FEATURE','Browse skincare by brand.',{columns:4}),
+    section('categories','category-grid','Browse categories','FIND YOUR NEXT STEP','Explore the Skin Care categories.',{columns:3})
+   ]
+  };
+  const page={id:slug,slug,title,template:layouts[template]?template:'basic',description:String(document.getElementById('skinQuickDescription')?.value||''),visible:true,sections:layouts[template]||layouts.basic};
   skinHistoryCapture();skinBuilderConfig.pages.push(page);
   if(Array.isArray(skinBuilderConfig.navigationItems)&&!skinBuilderConfig.navigationItems.some(link=>String(link.url||'')==='/pages/'+slug))skinBuilderConfig.navigationItems.push({id:'page-'+slug,label:title,url:'/pages/'+slug,visible:true});
   renderSkinSiteLinkEditor('navigationItems');
-  skinStudioPageId=slug;skinStudioSelection={type:'section',id:page.sections[0].id};closeSkinQuickAdd();skinMarkDirty('Page created in draft. Add and arrange its content, then publish when it is ready.');setSkinStudioPage(slug);return;
+  skinStudioPageId=slug;skinStudioSelection={type:'section',id:page.sections[0].id};closeSkinQuickAdd();skinMarkDirty('Page created from the '+page.template+' layout preset. Customize its sections and publish when ready.');setSkinStudioPage(slug);return;
  }
  if(skinQuickAddType==='category'){
   const slug=skinSlug(rawSlug||title);
@@ -3728,10 +3753,45 @@ function deleteSkinCategory(slug){
 }
 function updateSkinPage(slug,key,value){
  const page=(skinBuilderConfig.pages||[]).find(p=>String(p.slug)===String(slug));if(!page)return;
+ const oldSlug=String(page.slug||'');
+ let nextValue=key==='visible'?!!value:String(value??'');
+ if(key==='slug'){
+  nextValue=skinSlug(nextValue);
+  const reserved=new Set(['home','shop','saved','journal','about','contact','search','cart','account','pages','products','collections']);
+  if(reserved.has(nextValue)||nextValue.startsWith('product-')||(skinBuilderConfig.pages||[]).some(other=>other!==page&&String(other.slug)===nextValue)){
+   skinBuilderMessage('That URL handle is reserved or already used. Choose a different handle.','error');renderSkinSelectedInspector();return;
+  }
+  if(nextValue===oldSlug)return;
+ }
  skinHistoryCapture();
- page[key]=key==='visible'?!!value:String(value??'');
+ page[key]=nextValue;
+ if(key==='slug'){
+  (skinBuilderConfig.navigationItems||[]).forEach(link=>{if(String(link.url||'')==='/pages/'+oldSlug)link.url='/pages/'+nextValue;});
+  if(String(skinStudioPageId)===oldSlug)skinStudioPageId=nextValue;
+  if(skinStudioSelection?.type==='page'&&String(skinStudioSelection.id)===oldSlug)skinStudioSelection.id=nextValue;
+ }
  skinMarkDirty('Page settings changed in the draft.');
  updateSkinStudioPageTitle();renderSkinLibrary();renderSkinSelectedInspector();queueSkinStudioPreview();
+ if(key==='slug'&&skinStudioPageId===nextValue){const frame=document.getElementById('skinStudioPreview');if(frame)frame.src=skinStudioPreviewUrl();}
+}
+function duplicateSkinPage(slug){
+ const source=skinCurrentPage(slug);if(!source||!skinBuilderConfig)return;
+ const base=skinSlug(String(source.slug||source.title||'page')+'-copy');
+ let nextSlug=base,suffix=2;
+ const used=()=>nextSlug==='home'||nextSlug==='shop'||nextSlug==='saved'||nextSlug==='journal'||nextSlug.startsWith('product-')||(skinBuilderConfig.pages||[]).some(page=>String(page.slug)===nextSlug);
+ while(used()&&suffix<1000){nextSlug=skinSlug(base+'-'+suffix);suffix++;}
+ if(used()){skinBuilderMessage('Could not find a unique page URL handle for this copy.','error');return;}
+ const clone=JSON.parse(JSON.stringify(source));
+ clone.id=nextSlug;clone.slug=nextSlug;clone.title=String(source.title||'Untitled page')+' (Copy)';clone.visible=false;
+ clone.sections=(Array.isArray(source.sections)?source.sections:[]).map((section,index)=>({...section,id:nextSlug+'-section-'+(index+1)+'-'+skinSlug(section.type||'block')}));
+ skinHistoryCapture();
+ skinBuilderConfig.pages.push(clone);
+ const navigation=Array.isArray(skinBuilderConfig.navigationItems)?skinBuilderConfig.navigationItems:(skinBuilderConfig.navigationItems=[]);
+ const originalLink=navigation.find(link=>String(link.url||'')==='/pages/'+String(source.slug));
+ navigation.push({...(originalLink||{}),id:'page-'+nextSlug,label:clone.title,url:'/pages/'+nextSlug,visible:false});
+ skinStudioPageId=nextSlug;skinStudioSelection={type:'section',id:clone.sections[0]?.id||''};
+ skinMarkDirty('A hidden page copy was created. Review its layout and enable visibility when it is ready.');
+ renderSkinSiteLinkEditor('navigationItems');renderSkinStudioAll();setSkinStudioPage(nextSlug);
 }
 function deleteSkinPage(slug){
  const page=skinCurrentPage(slug);if(!page)return;
