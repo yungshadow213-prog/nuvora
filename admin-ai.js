@@ -99,7 +99,7 @@
       '</header>',
       '<div class="nuvora-ai-status" role="status" aria-live="polite" data-state="idle">Checking Claude connection…</div>',
       '<div class="nuvora-ai-messages" aria-live="polite">',
-      '<div class="nuvora-ai-welcome">I can help you work through Nuvora\\'s admin, storefront structure, product organization and editor workflows. I use the workspace context visible on this page, and I will distinguish recommendations from changes that have actually been saved.</div>',
+      '<div class="nuvora-ai-welcome">I can help you work through Nuvora\'s admin, storefront structure, product organization and editor workflows. I use the workspace context visible on this page, and I will distinguish recommendations from changes that have actually been saved.</div>',
       '<div class="nuvora-ai-suggestions"></div>',
       '</div>',
       '<form class="nuvora-ai-compose">',
@@ -215,7 +215,7 @@
       const fill = (id, value) => {
         const element = get(id);
         if (!element || value == null) return false;
-        const next = Array.isArray(value) ? value.join("\\n") : String(value);
+        const next = Array.isArray(value) ? value.join("\n") : String(value);
         if (!next.trim()) return false;
         if (element instanceof HTMLSelectElement && element.multiple) {
           const values = Array.isArray(value) ? value.map(String) : [];
@@ -247,7 +247,7 @@
       if (destination && !destination.value.trim()) destination.value = url;
       const images = get("pfImages");
       if (images && (!String(images.value || "").trim() || replace) && Array.isArray(product.images) && product.images.length) {
-        images.value = product.images.join("\\n");
+        images.value = product.images.join("\n");
         images.dispatchEvent(new Event("input", { bubbles: true }));
         filled++;
         if (typeof window.renderProductImages === "function") window.renderProductImages();
