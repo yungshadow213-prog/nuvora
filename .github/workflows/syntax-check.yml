@@ -245,7 +245,7 @@ jobs:
               "Primary button destination · internal path",
               "Secondary button destination · internal path",
               "columns:[2,3,4,5].includes(Number(x.columns))",
-              "[2,3,4,5].map(n=>",
+              "<span>Columns</span>",
               "type:'concern-grid'",
               "type:'quiz-banner'",
               "buttonHref:type==='quiz-banner'?'/shop?q=skin+concerns':''"
