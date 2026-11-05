@@ -3575,12 +3575,23 @@ function renderSkinBuilderSections(){
  filterSkinSectionOutline(needle);
  renderSkinLibrary();
 }
+function skinSectionOutlineKeydown(event,index,id){
+ if(event.target!==event.currentTarget)return;
+ if(event.key==='Enter'||event.key===' '){event.preventDefault();selectSkinItem('section',id);return;}
+ if(event.altKey&&event.key==='ArrowUp'){event.preventDefault();moveSkinSection(index,-1);return;}
+ if(event.altKey&&event.key==='ArrowDown'){event.preventDefault();moveSkinSection(index,1);}
+}
 function filterSkinSectionOutline(value){
  window.skinStudioSectionSearch=String(value||'');
  const needle=window.skinStudioSectionSearch.trim().toLowerCase();
- const rows=[...document.querySelectorAll('#skinBuilderSections .studio-section-outline')];
+ const root=document.getElementById('skinBuilderSections');
+ const rows=[...(root?.querySelectorAll('.studio-section-outline')||[])];
  let shown=0;
  rows.forEach(row=>{const match=!needle||String(row.dataset.search||'').includes(needle);row.hidden=!match;if(match)shown++;});
+ const globals=[...(root?.querySelectorAll('.studio-outline-global-item')||[])];
+ globals.forEach(row=>{row.hidden=!!needle&&!String(row.dataset.search||'').includes(needle);});
+ const groups=[...(root?.querySelectorAll('.studio-outline-group')||[])];
+ groups.forEach(group=>{group.hidden=!!needle&&!group.querySelector('.studio-section-outline:not([hidden]),.studio-outline-global-item:not([hidden])');});
  const count=document.getElementById('skinStudioSectionCount');
  if(count)count.textContent=needle?shown+' of '+rows.length+' sections':rows.length+' sections';
 }
