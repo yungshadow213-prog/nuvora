@@ -55,6 +55,7 @@
 <div class="field"><label for="pBrand">Brand / label</label><input id="pBrand" maxlength="120"></div>
 <div class="field wide"><label for="pDescription">Product description</label><textarea id="pDescription" maxlength="12000"></textarea></div>
 <div class="field wide"><label for="pShort">Short description</label><textarea id="pShort" maxlength="2000"></textarea></div>
+<div class="field wide"><label>Claude listing assistant</label><div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap"><button class="btn" id="storeClaudeCopyBtn" type="button" onclick="generateStoreClaudeCopy()">✦ Polish product with Claude</button><span id="storeClaudeStatus" class="muted" role="status" aria-live="polite">Uses only the product details in this form. Review the result before saving.</span></div></div>
 <div class="field wide"><label for="pImage">Main image URL (HTTPS)</label><input id="pImage" type="url"></div>
 <div class="field wide"><label for="pFiles">Upload image(s) from your device</label><input id="pFiles" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" multiple><button type="button" class="btn" id="uploadImages">Upload selected images</button><small class="muted">Uploads use Nuvora’s existing product-images storage bucket. JPG, PNG, WebP, AVIF or GIF; maximum 6 MB per file.</small></div>
 <div class="field wide"><label for="pGallery">Additional gallery image URLs (one per line)</label><textarea id="pGallery" placeholder="https://…"></textarea></div>
