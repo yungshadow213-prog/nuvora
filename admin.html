@@ -2890,7 +2890,7 @@ function mergeSkinSiteConfig(raw){
   backgroundColor:/^#[0-9a-f]{6}$/i.test(String(x.backgroundColor||''))?String(x.backgroundColor):'',
   colorScheme:['theme','light','soft','dark','accent'].includes(x.colorScheme)?x.colorScheme:'theme',
   filter:['all','featured','top_pick','trending'].includes(x.filter)?x.filter:'all',
-  columns:[2,3,4].includes(Number(x.columns))?Number(x.columns):4,
+  columns:[2,3,4,5].includes(Number(x.columns))?Number(x.columns):4,
   product_ids:Array.isArray(x.product_ids)?x.product_ids.map(String).slice(0,60):[],
   product_selection:x.product_selection==='manual'?'manual':'automatic',
   productsPerPage:[4,6,8,9,12].includes(Number(x.productsPerPage))?Number(x.productsPerPage):8,
