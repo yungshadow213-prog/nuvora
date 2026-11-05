@@ -2886,6 +2886,8 @@ function mergeSkinSiteConfig(raw){
   image:String(x.image||'').slice(0,1600),
   buttonLabel:String(x.buttonLabel||'').slice(0,80),
   buttonHref:String(x.buttonHref||'').slice(0,1600),
+  secondaryButtonLabel:String(x.secondaryButtonLabel||'').slice(0,80),
+  secondaryButtonHref:String(x.secondaryButtonHref||'').slice(0,1600),
   itemsText:String(x.itemsText||'').replace(/\\\\n/g,'\n').slice(0,2000),
   backgroundColor:/^#[0-9a-f]{6}$/i.test(String(x.backgroundColor||''))?String(x.backgroundColor):'',
   colorScheme:['theme','light','soft','dark','accent'].includes(x.colorScheme)?x.colorScheme:'theme',
@@ -3692,8 +3694,8 @@ function renderSkinSelectedInspector(){
   html+=field('Section title','title',sec.title,'text','180')+field('Small heading / eyebrow','eyebrow',sec.eyebrow,'text','100')+field('Supporting text','text',sec.text,'textarea','3000');
   if(sec.type==='concern-grid')html+=field('Concern topics · one per line','itemsText',sec.itemsText||'Acne & Blemishes\nAnti-Aging\nDryness & Dehydration\nRedness & Sensitivity\nDark Spots & Hyperpigmentation\nLarge Pores\nUneven Skin Tone\nDullness & Glow','textarea','2000');
   if(['hero','editorial','quiz-banner'].includes(sec.type)){
-   html+=field('Primary button label','buttonLabel',sec.buttonLabel||'','text','80')+field('Primary button link','buttonHref',sec.buttonHref||'','url','1600');
-   html+=field('Secondary button label','secondaryButtonLabel',sec.secondaryButtonLabel||'','text','80')+field('Secondary button link','secondaryButtonHref',sec.secondaryButtonHref||'','url','1600');
+   html+=field('Primary button label','buttonLabel',sec.buttonLabel||'','text','80')+field('Primary button destination · internal path','buttonHref',sec.buttonHref||'','text','1600');
+   html+=field('Secondary button label','secondaryButtonLabel',sec.secondaryButtonLabel||'','text','80')+field('Secondary button destination · internal path','secondaryButtonHref',sec.secondaryButtonHref||'','text','1600');
   }
   html+='<div class="studio-inspector-subheading">Appearance</div>';
   html+=field('Section background','backgroundColor',sec.backgroundColor||'#ffffff','color','7');
