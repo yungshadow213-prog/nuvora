@@ -2417,6 +2417,44 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         }catch(e){return json({error:'Claude product research failed: '+String(e?.message||e).slice(0,400)},502);}
       }
 
+
+      if(url.pathname==='/api/admin/ai/claude-copy'&&request.method==='POST'){
+        const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        const wait=rateLimit(request,'claude-copy',12,60000);
+        if(wait)return json({error:'Claude copywriting limit reached. Please wait before trying again.'},429,{'retry-after':String(wait)});
+        const input=await body(request,64*1024),raw=input.product&&typeof input.product==='object'?input.product:{};
+        const safeList=value=>Array.isArray(value)?value.map(item=>cleanText(item,350)).filter(Boolean).slice(0,20):cleanMultilineText(value||'',4000).split(/\r?\n/).map(item=>cleanText(item,350)).filter(Boolean).slice(0,20);
+        const product={
+          name:cleanText(raw.name,200),
+          brand:cleanText(raw.brand,140),
+          description:cleanMultilineText(raw.description,6000),
+          features:safeList(raw.features),
+          category:cleanText(raw.category,140),
+          product_type:cleanText(raw.product_type,140),
+          ingredients:safeList(raw.ingredients),
+          benefits:safeList(raw.benefits),
+          skin_types:safeList(raw.skin_types),
+          skin_concerns:safeList(raw.skin_concerns),
+          usage_instructions:cleanMultilineText(raw.usage_instructions,3000),
+          warnings:cleanMultilineText(raw.warnings,3000)
+        };
+        if(!product.name)return json({error:'Add the product title before asking Claude to polish the listing.'},400);
+        const system='You are the Nuvora ecommerce copy editor. Rewrite only from the product facts provided. Do not invent specifications, ingredients, results, certifications, guarantees, suitability, medical claims, discounts, availability or shipping promises. Keep factual detail intact and omit unsupported claims. Skin Care copy must not include a price or imply medical advice. Return exactly one valid JSON object and no markdown.';
+        const schema={title:'string',description:'string',features:['string']};
+        const prompt='Polish the following Nuvora product listing for clarity, useful customer language and search readability. Keep the title accurate and concise; description easy to scan; features short, non-repetitive and source-backed. Return JSON with this exact shape: '+JSON.stringify(schema)+'. Product facts: '+JSON.stringify(product);
+        try{
+          const result=await askClaude(env,system,[{role:'user',content:prompt}],1800);
+          let parsedResult;
+          try{parsedResult=parseClaudeJson(result.text);}catch{return json({error:'Claude returned invalid listing copy. Please try again.'},502);}
+          return json({
+            ok:true,provider:'claude',model:result.model,
+            title:cleanText(parsedResult.title,200),
+            description:cleanMultilineText(parsedResult.description,10000),
+            features:Array.isArray(parsedResult.features)?parsedResult.features.map(item=>cleanText(item,450)).filter(Boolean).slice(0,20):[]
+          });
+        }catch(e){return json({error:'Claude listing copy failed: '+String(e?.message||e).slice(0,400)},502);}
+      }
+
       if(url.pathname==='/api/admin/ai/copy'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         if(!env.GEMINI_API_KEY)return json({error:'Gemini copy generation is not configured yet. Add GEMINI_API_KEY as a Cloudflare Worker secret.'},503);
