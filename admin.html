@@ -796,6 +796,11 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-right-panel .skin-builder-con
  body.skin-studio-fullpage:not(.skin-studio-hide-outline) #skinSiteBuilder .studio-left-panel{transform:translateX(0)!important}
  body.skin-studio-fullpage #skinSiteBuilder .studio-layout.is-inspecting .studio-left-panel .studio-right-panel{height:100dvh!important}
 }
+@media(min-width:981px){
+ body.skin-studio-fullpage.skin-studio-hide-outline #skinSiteBuilder .studio-layout.studio-shopify-workspace{grid-template-columns:minmax(0,1fr)!important}
+ body.skin-studio-fullpage.skin-studio-hide-outline #skinSiteBuilder .studio-left-panel{display:none!important}
+ body.skin-studio-fullpage.skin-studio-hide-inspector #skinSiteBuilder .studio-layout.is-inspecting .studio-right-panel{display:none!important}
+}
 @media(max-width:600px){
  body.skin-studio-fullpage #skinSiteBuilder .studio-canvas-head{align-items:flex-start!important}
  body.skin-studio-fullpage #skinSiteBuilder .studio-device-controls{justify-content:flex-start!important}
@@ -3745,6 +3750,13 @@ function prepareSkinStudioShopifyLayout(){
 function skinStudioShowInspector(show){
  const layout=document.querySelector('#skinSiteBuilder .studio-layout');
  if(layout)layout.classList.toggle('is-inspecting',!!show);
+ if(show&&document.body.classList.contains('skin-studio-fullpage')){
+  document.body.classList.remove('skin-studio-hide-outline','skin-studio-hide-inspector');
+  document.querySelectorAll('.studio-view-controls button').forEach(button=>{
+   const label=button.getAttribute('aria-label')||'';
+   if(label==='Toggle page outline'||label==='Toggle settings inspector')button.setAttribute('aria-pressed','false');
+  });
+ }
 }
 function returnSkinStudioToList(){
  skinStudioShowInspector(false);
@@ -4023,6 +4035,7 @@ function toggleSkinStudioPanel(which,button){
  const className=which==='outline'?'skin-studio-hide-outline':'skin-studio-hide-inspector';
  body.classList.toggle(className);
  const hidden=body.classList.contains(className);
+ if(which==='inspector')skinStudioShowInspector(!hidden);
  if(button){button.setAttribute('aria-pressed',String(hidden));button.title=(hidden?'Show ':'Hide ')+(which==='outline'?'page outline':'settings inspector');}
  const focus=document.querySelector('.studio-view-controls button[aria-label="Expand preview canvas"]');
  if(focus){focus.setAttribute('aria-pressed',String(body.classList.contains('skin-studio-hide-outline')&&body.classList.contains('skin-studio-hide-inspector')));}
