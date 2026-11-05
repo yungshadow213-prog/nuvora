@@ -13,6 +13,7 @@
 .section-row.dragging{opacity:.48}
 .section-row.drag-over{border-color:#73956b;background:#f2f8ef;box-shadow:0 0 0 2px #e3efde}
 </style>
+<link rel="stylesheet" href="/admin-experience.css">
 </head>
 <body>
 <div id="auth" class="auth"><div class="auth-card"><div class="brand">NUVORA <span>ADMIN</span></div><h1>Storefront Studios</h1><p>Sign in with the Google account that has Nuvora administrator permissions. These studios save drafts privately and publish only when you choose Publish.</p><button id="signIn" class="btn primary">Continue with Google</button><button id="switchAccount" class="btn">Sign out / switch account</button><p id="authError" class="notice error hidden"></p></div></div>
@@ -366,6 +367,8 @@ function onPreviewMessage(event){
  }
 }
 window.addEventListener("beforeunload",e=>{if(draftDirty){e.preventDefault();e.returnValue="";}});
+window.NuvoraAIRequest=(path,options={})=>request(path,options);
 boot();
 </script>
+<script src="/admin-ai.js"></script>
 </body></html>
