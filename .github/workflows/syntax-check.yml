@@ -232,7 +232,7 @@ jobs:
               failures.append("admin.html: selecting a preview section must open the contextual inspector")
           if 'function renderSkinSectionLibraryPicker()' not in admin_html:
               failures.append("admin.html: section picker library must remain available")
-          if 'function renderSkinMediaLibrary(root)' not in admin_html:
+          if 'function renderSkinMediaLibrary(root,' not in admin_html:
               failures.append("admin.html: media library must remain available in Skin Studio")
           if 'product_selection:type==="product-grid"?"manual":undefined' not in studio:
               failures.append("storefront-studio.html: newly created product grids must use explicit manual selection")
