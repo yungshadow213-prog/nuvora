@@ -2545,7 +2545,7 @@ function validateSkinSiteConfig(value,options={}){
     if(!value.productGuideFields||typeof value.productGuideFields!=='object'||Array.isArray(value.productGuideFields))return 'Skin Studio product guide visibility settings must be an object.';
     if(keys.some(key=>value.productGuideFields[key]!==undefined&&typeof value.productGuideFields[key]!=='boolean'))return 'Skin Studio product guide visibility values must be true or false.';
   }
-  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block','brand-grid']);
+  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block','brand-grid','concern-grid','quiz-banner']);
   const checkSections=(sections,label)=>{
     if(!Array.isArray(sections))return label+' sections must be an array.';
     if(sections.length>40)return label+' supports up to 40 sections.';
@@ -2560,6 +2560,15 @@ function validateSkinSiteConfig(value,options={}){
       if(section.title!==undefined&&String(section.title).length>180)return label+' section titles are limited to 180 characters.';
       if(section.text!==undefined&&String(section.text).length>3000)return label+' section text is too long.';
       if(section.eyebrow!==undefined&&String(section.eyebrow).length>100)return label+' section eyebrows are limited to 100 characters.';
+      if(section.itemsText!==undefined&&(typeof section.itemsText!=='string'||section.itemsText.length>2000))return label+' concern topics must be text no longer than 2000 characters.';
+      if(section.buttonLabel!==undefined&&(typeof section.buttonLabel!=='string'||section.buttonLabel.length>80))return label+' button labels are limited to 80 characters.';
+      if(section.buttonHref!==undefined&&(typeof section.buttonHref!=='string'||section.buttonHref.length>1600))return label+' primary button destinations must be text no longer than 1600 characters.';
+      if(section.secondaryButtonLabel!==undefined&&(typeof section.secondaryButtonLabel!=='string'||section.secondaryButtonLabel.length>80))return label+' secondary button labels are limited to 80 characters.';
+      if(section.secondaryButtonHref!==undefined&&(typeof section.secondaryButtonHref!=='string'||section.secondaryButtonHref.length>1600))return label+' secondary button destinations must be text no longer than 1600 characters.';
+      for(const key of ['buttonHref','secondaryButtonHref']){
+        const path=String(section[key]||'');
+        if(path&&(!path.startsWith('/')||path.startsWith('//')||path.includes(String.fromCharCode(10))||path.includes(String.fromCharCode(13))))return label+' section buttons must use safe internal Nuvora paths.';
+      }
       if(section.image){try{if(new URL(section.image).protocol!=='https:')return label+' section image must use HTTPS.';}catch{return label+' section image URL is invalid.';}}
       if(section.backgroundColor!==undefined&&section.backgroundColor!==''&&!/^#[0-9a-f]{6}$/i.test(String(section.backgroundColor)))return label+' section background color is invalid.';
       if(section.textAlignment!==undefined&&!['left','center','right'].includes(String(section.textAlignment)))return label+' text alignment must be left, center, or right.';
@@ -2574,7 +2583,7 @@ function validateSkinSiteConfig(value,options={}){
         if(!Array.isArray(section.product_ids)||section.product_ids.length>60)return 'A '+label.toLowerCase()+' section can place up to 60 products.';
         if(section.product_ids.some(id=>!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(id))))return 'A placed product has an invalid product ID.';
       }
-      if(section.columns!==undefined&&!([2,3,4].includes(Number(section.columns))))return label+' grid columns must be 2, 3, or 4.';
+      if(section.columns!==undefined&&!([2,3,4,5].includes(Number(section.columns))))return label+' grid columns must be 2, 3, 4, or 5.';
       if(section.filter!==undefined&&!['all','featured','top_pick','trending'].includes(String(section.filter)))return 'A '+label.toLowerCase()+' product filter is invalid.';
     }
     return null;

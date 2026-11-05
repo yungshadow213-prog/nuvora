@@ -2819,17 +2819,18 @@ const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
 let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinSiteDraftExists=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='',skinStudioPendingProductTarget=null;
 let skinStudioUndoStack=[],skinStudioRedoStack=[],skinStudioHistoryLastCapture=0,skinStudioHistoryApplying=false,skinSitePublishInProgress=false;
 const defaultSkinSiteConfig=()=>({
-  version:5,homeLayoutVersion:0,template:'soft-editorial',accentColor:'#66745f',
+  version:8,homeLayoutVersion:2,template:'soft-editorial',accentColor:'#66745f',
   designSettings:{backgroundColor:'#f7f4ee',surfaceColor:'#fffdf9',textColor:'#342f2b',mutedColor:'#77756c',borderColor:'#e4dfd5',successColor:'#3d7d57',errorColor:'#b24b42',saleColor:'#c77d5b',headingFont:'Playfair Display',bodyFont:'DM Sans',pageMaxWidth:1280,sideGutters:24,sectionSpacing:64,gridGap:22,cornerRadius:14,shadowStyle:'soft',productImageRatio:'4:5',productHoverEffect:'none'},
   announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
   brandName:'nuvora',brandSuffix:'skin',headerTagline:'YOUR EVERYDAY SKIN EDIT',
   announcementAside:'A LITTLE MORE CONSIDERED',headerCtaLabel:'Explore the edit',
   showSearch:true,showSaved:true,showHeaderCta:true,
   navigationItems:[
-   {id:'shop-all',label:'Shop all',url:'/shop',visible:true},
-   {id:'categories',label:'Categories',url:'/shop',visible:true},
+   {id:'home',label:'Home',url:'/',visible:true},
+   {id:'shop',label:'Shop',url:'/shop',visible:true},
+   {id:'concerns',label:'Skin Concerns',url:'/shop?q=skin+concerns',visible:true},
    {id:'brands',label:'Brands',url:'/brands',visible:true},
-   {id:'journal',label:'Journal',url:'/journal',visible:true}
+   {id:'guides',label:'Guides',url:'/journal',visible:true}
   ],
   footerIntro:'Skincare feels less complicated when you know what to look for. We collect approachable finds and thoughtful notes to help you browse with more intention.',
   footerStamp:'A little care, every day.',footerExploreHeading:'Explore',footerReadHeading:'Read',
@@ -2867,29 +2868,34 @@ const defaultSkinSiteConfig=()=>({
   productCategoryMap:{},
   pages:[],
   sections:[
-    {id:'hero',type:'hero',visible:true,title:'Care that feels like you.'},
-    {id:'home-categories',type:'category-grid',visible:true,title:'Shop by product type',eyebrow:'FIND YOUR KIND OF CARE',text:'Browse by what you are shopping for, from skincare and masks to beauty tools, nail care and everyday essentials.'},
-    {id:'edit',type:'product-grid',visible:true,title:'Shop the edit',eyebrow:'CURATED, NOT CROWDED',text:'Explore the products we have selected. Open any item for the full product guide, image gallery and retailer link.',filter:'all',columns:4,productsPerPage:8,product_ids:[]},
-    {id:'home-brands',type:'brand-grid',visible:true,title:'Shop by brand',eyebrow:'THE BRANDS BEHIND THE FINDS',text:'Explore the brands in our catalog, then browse every product we carry from each one.'},
-    {id:'approach',type:'editorial',visible:true,title:'Good finds. Clear choices.',eyebrow:'A GENTLER WAY TO DISCOVER',text:'Nuvora Skin brings together useful product details so you can compare the information that matters before checking the current price on the retailer listing.'},
-    {id:'journal',type:'journal-grid',visible:true,title:'Useful notes for everyday care.',eyebrow:'THE JOURNAL',text:'Practical notes to help you understand products and build a routine at your own pace.',columns:3,product_ids:[]}
+    {id:'hero',type:'hero',visible:true,title:'Skincare, without the noise.',eyebrow:'THE NUVORA SKIN EDIT',text:'Explore product details, ingredients, skin guidance and retailer links before you decide.',image:'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?auto=format&fit=crop&w=1800&q=85',buttonLabel:'Explore products',buttonHref:'/shop'},
+    {id:'home-categories',type:'category-grid',visible:true,title:'Shop by category',eyebrow:'FIND WHAT YOU NEED',text:'Browse product types and discover the details behind each pick.'},
+    {id:'best-sellers',type:'featured-products',visible:true,title:'Best sellers',eyebrow:'THE NUVORA EDIT',text:'Explore published products and open each guide for the full details.',filter:'all',columns:5,productsPerPage:8,product_ids:[]},
+    {id:'skin-concerns',type:'concern-grid',visible:true,title:'Explore by concern',eyebrow:'A ROUTINE THAT STARTS WITH YOU',text:'Use these topics to discover relevant product guides.',itemsText:'Acne & Blemishes\\nAnti-Aging\\nDryness & Dehydration\\nRedness & Sensitivity\\nDark Spots & Hyperpigmentation\\nLarge Pores\\nUneven Skin Tone\\nDullness & Glow'},
+    {id:'skin-guide-banner',type:'quiz-banner',visible:true,title:'Explore your skin goals',eyebrow:'NOT SURE WHERE TO START?',text:'Browse helpful guides and product details at your own pace.',image:'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=85',buttonLabel:'Explore concerns',buttonHref:'/shop?q=skin+concerns'},
+    {id:'journal',type:'journal-grid',visible:true,title:'Featured guides',eyebrow:'THE JOURNAL',text:'Useful notes for comparing products and understanding everyday care.',columns:4,product_ids:[]}
   ]
 });
 function mergeSkinSiteConfig(raw){
  const base=defaultSkinSiteConfig(),src=raw&&typeof raw==='object'?raw:{},cfg={...base,...src};
  const cleanSections=(items,fallback=[])=>Array.isArray(items)?items.slice(0,40).map((x,i)=>({
   id:String(x.id||('section-'+(i+1))).slice(0,80),
-  type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block','brand-grid'].includes(x.type)?x.type:'product-grid',
+  type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block','brand-grid','concern-grid','quiz-banner'].includes(x.type)?x.type:'product-grid',
   visible:x.visible!==false,title:String(x.title||'New section').slice(0,180),
   eyebrow:String(x.eyebrow||'').slice(0,100),text:String(x.text||'').slice(0,3000),
   image:String(x.image||'').slice(0,1600),
+  buttonLabel:String(x.buttonLabel||'').slice(0,80),
+  buttonHref:String(x.buttonHref||'').slice(0,1600),
+  secondaryButtonLabel:String(x.secondaryButtonLabel||'').slice(0,80),
+  secondaryButtonHref:String(x.secondaryButtonHref||'').slice(0,1600),
+  itemsText:String(x.itemsText||'').replace(/\\\\n/g,'\n').slice(0,2000),
   backgroundColor:/^#[0-9a-f]{6}$/i.test(String(x.backgroundColor||''))?String(x.backgroundColor):'',
   colorScheme:['theme','light','soft','dark','accent'].includes(x.colorScheme)?x.colorScheme:'theme',
   filter:['all','featured','top_pick','trending'].includes(x.filter)?x.filter:'all',
-  columns:[2,3,4].includes(Number(x.columns))?Number(x.columns):4,
+  columns:[2,3,4,5].includes(Number(x.columns))?Number(x.columns):4,
   product_ids:Array.isArray(x.product_ids)?x.product_ids.map(String).slice(0,60):[],
   product_selection:x.product_selection==='manual'?'manual':'automatic',
-  productsPerPage:[4,6,8,9,12].includes(Number(x.productsPerPage))?Number(x.productsPerPage):8,
+  productsPerPage:[4,5,6,8,9,12].includes(Number(x.productsPerPage))?Number(x.productsPerPage):8,
   category_id:({cleanse:'cleansers-makeup-removers',treat:'serums-treatments',hydrate:'moisturisers-barrier-care',protect:'sunscreen-spf','body-lips':'body-care'}[String(x.category_id||'')]||String(x.category_id||'')).slice(0,100),
   imageAlignment:['left','center','right'].includes(x.imageAlignment)?x.imageAlignment:'center',
   imageWidth:[20,30,40,50,60,70,80,90,100].includes(Number(x.imageWidth))?Number(x.imageWidth):70,
@@ -2911,7 +2917,7 @@ function mergeSkinSiteConfig(raw){
    backgroundImage:String(x.backgroundImage||'').slice(0,1600),
    backgroundOverlay:x.backgroundOverlay!==undefined&&Number.isFinite(Number(x.backgroundOverlay))?Math.max(0,Math.min(80,Number(x.backgroundOverlay))):0,
    showDesktop:x.showDesktop!==false,showMobile:x.showMobile!==false,locked:x.locked===true
- })):fallback;
+ })):fallback.map(item=>({...item,...(typeof item?.itemsText==='string'?{itemsText:item.itemsText.replace(/\\\\n/g,'\n')}:{})}));
  const cleanLinks=(items,fallback,max=20)=>Array.isArray(items)?items.slice(0,max).map((item,i)=>({
   id:String(item.id||('site-link-'+(i+1))).slice(0,80),
   label:String(item.label||'Link').trim().slice(0,80),
@@ -3214,20 +3220,39 @@ function collectSkinConfigFields(){
  if(editorial){editorial.title=skinBuilderConfig.approachTitle;editorial.eyebrow=skinBuilderConfig.approachEyebrow;editorial.text=skinBuilderConfig.approachBody;}
 }
 function migrateSkinHomeLayout(config){
- if(!config||Number(config.homeLayoutVersion)>=1)return {changed:false,removedRoutine:false};
+ if(!config)return {changed:false,removedRoutine:false};
+ const version=Math.max(0,Number(config.homeLayoutVersion)||0);
+ if(version>=2)return {changed:false,removedRoutine:false};
  const original=Array.isArray(config.sections)?config.sections:[];
  const removedRoutine=original.some(section=>String(section?.type||'')==='routine-finder');
  let sections=original.filter(section=>String(section?.type||'')!=='routine-finder');
  const uniqueSectionId=base=>{let id=base,suffix=2;while(sections.some(section=>String(section.id||'')===id)){id=base+'-'+suffix++;}return id;};
- if(!sections.some(section=>section.type==='hero'))sections.unshift({id:uniqueSectionId('home-hero'),type:'hero',visible:true,title:'Care that feels like you.'});
- if(!sections.some(section=>section.type==='category-grid'))sections.push({id:uniqueSectionId('home-categories'),type:'category-grid',visible:true,title:'Shop by product type',eyebrow:'FIND YOUR KIND OF CARE',text:'Browse by what you are shopping for, from skincare and masks to beauty tools, nail care and everyday essentials.'});
- if(!sections.some(section=>section.type==='product-grid'||section.type==='featured-products'))sections.push({id:uniqueSectionId('home-products'),type:'product-grid',visible:true,title:'Shop the edit',eyebrow:'CURATED, NOT CROWDED',text:'Open any product for the full guide, image gallery and retailer link.',filter:'all',columns:4,productsPerPage:8,product_ids:[]});
- if(!sections.some(section=>section.type==='brand-grid'))sections.push({id:uniqueSectionId('home-brands'),type:'brand-grid',visible:true,title:'Shop by brand',eyebrow:'THE BRANDS BEHIND THE FINDS',text:'Explore the brands in our catalog, then browse every product we carry from each one.'});
- const rank=type=>({'hero':0,'category-grid':10,'featured-products':20,'product-grid':21,'brand-grid':30,'text-block':35,'image-block':36,'editorial':40,'journal-grid':50}[type]??38);
+ const addIfMissing=(type,base,section)=>{if(!sections.some(item=>item.type===type))sections.push({id:uniqueSectionId(base),visible:true,...section,type});};
+ addIfMissing('hero','home-hero',{title:'Skincare, without the noise.',eyebrow:'THE NUVORA SKIN EDIT',text:'Explore product details, ingredients, skin guidance and retailer links before you decide.',image:config.heroImage||'',buttonLabel:config.heroButtonLabel||'Explore products',buttonHref:'/shop'});
+ addIfMissing('category-grid','home-categories',{title:'Shop by category',eyebrow:'FIND WHAT YOU NEED',text:'Browse product types and discover the details behind each pick.'});
+ if(!sections.some(section=>section.visible!==false&&(section.type==='product-grid'||section.type==='featured-products'))){
+  addIfMissing('featured-products','best-sellers',{title:'Best sellers',eyebrow:'THE NUVORA EDIT',text:'Explore published products and open each guide for the full details.',filter:'all',columns:5,productsPerPage:8,product_ids:[]});
+ }
+ addIfMissing('concern-grid','skin-concerns',{title:'Explore by concern',eyebrow:'A ROUTINE THAT STARTS WITH YOU',text:'Use these topics to discover relevant product guides.',itemsText:'Acne & Blemishes\nAnti-Aging\nDryness & Dehydration\nRedness & Sensitivity\nDark Spots & Hyperpigmentation\nLarge Pores\nUneven Skin Tone\nDullness & Glow'});
+ addIfMissing('quiz-banner','skin-guide-banner',{title:'Explore your skin goals',eyebrow:'NOT SURE WHERE TO START?',text:'Browse helpful guides and product details at your own pace.',image:'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=85',buttonLabel:'Explore concerns',buttonHref:'/shop?q=skin+concerns'});
+ addIfMissing('journal-grid','home-journal',{title:'Featured guides',eyebrow:'THE JOURNAL',text:'Useful notes for comparing products and understanding everyday care.',columns:4});
+ const rank=type=>({'hero':0,'category-grid':10,'featured-products':20,'product-grid':21,'concern-grid':30,'quiz-banner':40,'brand-grid':45,'editorial':50,'text-block':52,'image-block':54,'journal-grid':60}[type]??38);
  sections=sections.map((section,index)=>({section,index})).sort((a,b)=>rank(a.section.type)-rank(b.section.type)||a.index-b.index).map(item=>item.section);
- config.sections=sections;config.homeLayoutVersion=1;
+ config.sections=sections;config.homeLayoutVersion=2;config.version=Math.max(8,Number(config.version)||0);
+ const nav=Array.isArray(config.navigationItems)?config.navigationItems:[];
+ const legacyNav=nav.map(item=>String(item?.id||'')).join(',')==='shop-all,categories,brands,journal';
+ if(legacyNav){
+  config.navigationItems=[
+   {id:'home',label:'Home',url:'/',visible:true},
+   {id:'shop',label:'Shop',url:'/shop',visible:true},
+   {id:'concerns',label:'Skin Concerns',url:'/shop?q=skin+concerns',visible:true},
+   {id:'brands',label:'Brands',url:'/brands',visible:true},
+   {id:'guides',label:'Guides',url:'/journal',visible:true}
+  ];
+ }
  return {changed:true,removedRoutine};
 }
+
 async function loadSkinSiteConfig(){
  skinSiteConfigLoaded=false;
  try{
@@ -3598,7 +3623,7 @@ function renderSkinLibrary(){
 function renderSkinBuilderSections(){
  const root=document.getElementById('skinBuilderSections');if(!root||!skinBuilderConfig)return;
  const sections=skinSectionsFor();
- const typeLabels={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Featured products','category-grid':'Category browse','journal-grid':'Journal cards','routine-finder':'Skin routine finder','image-block':'Image block','text-block':'Text block','brand-grid':'Brand directory'};
+ const typeLabels={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Best sellers','category-grid':'Category browse', 'concern-grid':'Skin concerns','quiz-banner':'Editorial banner','journal-grid':'Journal cards','routine-finder':'Skin routine finder','image-block':'Image block','text-block':'Text block','brand-grid':'Brand directory'};
  const needle=String(window.skinStudioSectionSearch||'').trim().toLowerCase();
  const headerItems='<button type="button" class="studio-outline-global-item" data-search="announcement bar header" onclick="openSkinStudioGlobalSettings(\'header\')"><span class="studio-outline-global-icon">▤</span><span><b>Announcement bar</b><small>Store message and promotion</small></span><span class="studio-outline-chevron">›</span></button>'+
   '<button type="button" class="studio-outline-global-item" data-search="header logo navigation menu" onclick="openSkinStudioGlobalSettings(\'header\')"><span class="studio-outline-global-icon">☷</span><span><b>Header</b><small>Logo, navigation and layout</small></span><span class="studio-outline-chevron">›</span></button>';
@@ -3662,14 +3687,15 @@ function renderSkinSelectedInspector(){
  if(selection.type==='section'){
   const index=sections.findIndex(s=>String(s.id)===String(selection.id)),sec=sections[index];
   if(!sec){setHead('Select an item','Choose a section, product, page or category.');root.innerHTML='<div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b><p>Select an item in the left panel.</p></div>';return;}
-  const types={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Featured products','category-grid':'Category browse','journal-grid':'Journal cards','routine-finder':'Skin routine finder','image-block':'Image block','text-block':'Text block','brand-grid':'Brand directory'};
+  const types={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Best sellers','category-grid':'Category browse', 'concern-grid':'Skin concerns','quiz-banner':'Editorial banner','journal-grid':'Journal cards','routine-finder':'Skin routine finder','image-block':'Image block','text-block':'Text block','brand-grid':'Brand directory'};
   const field=(label,key,value,kind='text',max='180')=>'<label class="studio-inspector-field"><span>'+label+'</span>'+(kind==='textarea'?'<textarea maxlength="'+max+'" oninput="updateSkinSection('+index+',\''+key+'\',this.value)">'+esc(value||'')+'</textarea>':'<input type="'+kind+'" maxlength="'+(kind==='color'?'7':max)+'" value="'+esc(value||'')+'" oninput="updateSkinSection('+index+',\''+key+'\',this.value)">')+'</label>';
   let html='<label class="studio-inspector-field"><span>Section type</span><select onchange="updateSkinSection('+index+',\'type\',this.value)">'+Object.entries(types).map(([val,label])=>'<option value="'+val+'" '+(sec.type===val?'selected':'')+'>'+label+'</option>').join('')+'</select></label>';
   html+='<div class="studio-inspector-subheading">Content</div>';
   html+=field('Section title','title',sec.title,'text','180')+field('Small heading / eyebrow','eyebrow',sec.eyebrow,'text','100')+field('Supporting text','text',sec.text,'textarea','3000');
-  if(['hero','editorial'].includes(sec.type)){
-   html+=field('Primary button label','buttonLabel',sec.buttonLabel||'','text','80')+field('Primary button link','buttonHref',sec.buttonHref||'','url','1600');
-   html+=field('Secondary button label','secondaryButtonLabel',sec.secondaryButtonLabel||'','text','80')+field('Secondary button link','secondaryButtonHref',sec.secondaryButtonHref||'','url','1600');
+  if(sec.type==='concern-grid')html+=field('Concern topics · one per line','itemsText',sec.itemsText||'Acne & Blemishes\nAnti-Aging\nDryness & Dehydration\nRedness & Sensitivity\nDark Spots & Hyperpigmentation\nLarge Pores\nUneven Skin Tone\nDullness & Glow','textarea','2000');
+  if(['hero','editorial','quiz-banner'].includes(sec.type)){
+   html+=field('Primary button label','buttonLabel',sec.buttonLabel||'','text','80')+field('Primary button destination · internal path','buttonHref',sec.buttonHref||'','text','1600');
+   html+=field('Secondary button label','secondaryButtonLabel',sec.secondaryButtonLabel||'','text','80')+field('Secondary button destination · internal path','secondaryButtonHref',sec.secondaryButtonHref||'','text','1600');
   }
   html+='<div class="studio-inspector-subheading">Appearance</div>';
   html+=field('Section background','backgroundColor',sec.backgroundColor||'#ffffff','color','7');
@@ -3693,7 +3719,7 @@ function renderSkinSelectedInspector(){
   html+='<label class="studio-inspector-field"><span>Background overlay · '+Number(sec.backgroundOverlay||0)+'%</span><input type="range" min="0" max="80" step="5" value="'+Number(sec.backgroundOverlay||0)+'" onchange="updateSkinSection('+index+',\'backgroundOverlay\',Number(this.value))"></label>';
 
 
-  if(['hero','editorial','image-block'].includes(sec.type))html+=field('Section image URL','image',sec.image||'','url','1600')+'<label class="studio-inspector-field"><span>Upload section image from your device</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'section\','+index+')"><small class="studio-inline-help">JPG, PNG, WEBP or GIF · up to 6 MB. You can also drag an image file directly onto this section in the preview.</small></label>';
+  if(['hero','editorial','image-block','quiz-banner'].includes(sec.type))html+=field('Section image URL','image',sec.image||'','url','1600')+'<label class="studio-inspector-field"><span>Upload section image from your device</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'section\','+index+')"><small class="studio-inline-help">JPG, PNG, WEBP or GIF · up to 6 MB. You can also drag an image file directly onto this section in the preview.</small></label>';
    if(['hero','editorial'].includes(sec.type)){
     html+='<div class="studio-inline-help">Drag the image in the preview to adjust its focal point, or use these controls for precision.</div>';
     html+='<label class="studio-inspector-field"><span>Image focus · horizontal '+Number(sec.imagePositionX??50)+'%</span><input type="range" min="0" max="100" step="1" value="'+Number(sec.imagePositionX??50)+'" onchange="updateSkinSection('+index+',\'imagePositionX\',Number(this.value))"></label>';
@@ -3716,8 +3742,8 @@ function renderSkinSelectedInspector(){
    const activeIds=new Set((sec.product_ids||[]).map(String));
    html+='<label class="studio-inspector-field"><span>Product filter</span><select onchange="updateSkinSection('+index+',\'filter\',this.value)">'+[['all','All eligible skincare products'],['featured','Featured picks'],['top_pick','Top picks'],['trending','Trending picks']].map(([v,l])=>'<option value="'+v+'" '+(sec.filter===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
    html+='<label class="studio-inspector-field"><span>Category filter</span><select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+skinStoreCategoryOptions().map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
-   html+='<label class="studio-inspector-field"><span>Columns</span><select onchange="updateSkinSection('+index+',\'columns\',Number(this.value))">'+[2,3,4].map(n=>'<option value="'+n+'" '+(Number(sec.columns||4)===n?'selected':'')+'>'+n+' columns</option>').join('')+'</select></label>';
-   if(['product-grid','featured-products'].includes(sec.type))html+='<label class="studio-inspector-field"><span>Products per page</span><select onchange="updateSkinSection('+index+',\'productsPerPage\',Number(this.value))">'+[4,6,8,9,12].map(n=>'<option value="'+n+'" '+(Number(sec.productsPerPage||8)===n?'selected':'')+'>'+n+' products</option>').join('')+'</select><small class="studio-inline-help">The storefront and live preview show this many products before page numbers appear.</small></label>';
+   html+='<label class="studio-inspector-field"><span>Columns</span><select onchange="updateSkinSection('+index+',\'columns\',Number(this.value))">'+[2,3,4,5].map(n=>'<option value="'+n+'" '+(Number(sec.columns||4)===n?'selected':'')+'>'+n+' columns</option>').join('')+'</select></label>';
+   if(['product-grid','featured-products'].includes(sec.type))html+='<label class="studio-inspector-field"><span>Products per page</span><select onchange="updateSkinSection('+index+',\'productsPerPage\',Number(this.value))">'+[4,5,6,8,9,12].map(n=>'<option value="'+n+'" '+(Number(sec.productsPerPage||8)===n?'selected':'')+'>'+n+' products</option>').join('')+'</select><small class="studio-inline-help">The storefront and live preview show this many products before page numbers appear.</small></label>';
    html+='<div class="studio-inspector-field"><span>Choose products to show</span><p class="studio-inline-help">Tick the products you want to appear in this section. Untick to remove them.</p><div class="studio-product-checklist">'+(skinProductOptions().length?skinProductOptions().map(p=>'<label class="studio-product-check"><input type="checkbox" '+(activeIds.has(String(p.id))?'checked':'')+' onchange="toggleSkinSectionProduct('+index+','+esc(JSON.stringify(String(p.id)))+',this.checked)"><span>'+esc(p.name)+'</span></label>').join(''):'<p class="studio-inline-help">No skincare products yet. Use + Add → Product first.</p>')+'</div></div>';
   }
   if(sec.type==='category-grid'){
@@ -3866,16 +3892,18 @@ function openSkinAdd(type){
  }else if(type==='category'){
   panel.innerHTML='<h4>Create a category</h4><p>Categories organize products while keeping the existing storefront card style.</p><label>Category name<input id="skinQuickTitle" maxlength="100" placeholder="e.g. Serums"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="serums"></label><label>Description<textarea id="skinQuickDescription" maxlength="1000" placeholder="What shoppers will find here"></textarea></label><label>Category image URL (optional)<input id="skinQuickImage" type="url" maxlength="1600" placeholder="https://…"></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create category</button></div>';
  }else{
-  panel.innerHTML='<h4>Add a section</h4><p>Choose a section type. Search or filter the library, then select a visual tile to configure it.</p><div class="studio-section-library-tools"><input id="skinSectionLibrarySearch" type="search" placeholder="Search sections…" aria-label="Search section library" oninput="filterSkinSectionLibrary(this.value)"><div class="studio-section-library-categories" role="group" aria-label="Section categories"><button type="button" class="is-active" data-library-category="all" onclick="filterSkinSectionLibraryCategory(&quot;all&quot;,this)">All</button><button type="button" data-library-category="shop" onclick="filterSkinSectionLibraryCategory(&quot;shop&quot;,this)">Shop &amp; products</button><button type="button" data-library-category="content" onclick="filterSkinSectionLibraryCategory(&quot;content&quot;,this)">Editorial &amp; content</button></div><div id="skinSectionLibraryGrid" class="studio-section-library-grid" aria-label="Available sections"></div></div><label>Section type<select id="skinQuickType" onchange="syncSkinSectionLibrarySelection()"><optgroup label="Shop &amp; product display"><option value="product-grid">Product grid</option><option value="featured-products">Featured products</option><option value="category-grid">Category browse</option><option value="brand-grid">Brand directory</option></optgroup><optgroup label="Editorial &amp; content"><option value="hero">Hero / banner</option><option value="editorial">Image and text</option><option value="journal-grid">Journal cards</option><option value="text-block">Text block</option><option value="image-block">Image block</option></optgroup></select></label><label>Section title<input id="skinQuickTitle" maxlength="180" placeholder="Section title"></label><label>Small heading<input id="skinQuickEyebrow" maxlength="100" placeholder="Optional eyebrow"></label><label>Supporting text<textarea id="skinQuickDescription" maxlength="3000" placeholder="Optional supporting text"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Add section</button></div>';renderSkinSectionLibraryPicker();
+  panel.innerHTML='<h4>Add a section</h4><p>Choose a section type. Search or filter the library, then select a visual tile to configure it.</p><div class="studio-section-library-tools"><input id="skinSectionLibrarySearch" type="search" placeholder="Search sections…" aria-label="Search section library" oninput="filterSkinSectionLibrary(this.value)"><div class="studio-section-library-categories" role="group" aria-label="Section categories"><button type="button" class="is-active" data-library-category="all" onclick="filterSkinSectionLibraryCategory(&quot;all&quot;,this)">All</button><button type="button" data-library-category="shop" onclick="filterSkinSectionLibraryCategory(&quot;shop&quot;,this)">Shop &amp; products</button><button type="button" data-library-category="content" onclick="filterSkinSectionLibraryCategory(&quot;content&quot;,this)">Editorial &amp; content</button></div><div id="skinSectionLibraryGrid" class="studio-section-library-grid" aria-label="Available sections"></div></div><label>Section type<select id="skinQuickType" onchange="syncSkinSectionLibrarySelection()"><optgroup label="Shop &amp; product display"><option value="product-grid">Product grid</option><option value="featured-products">Featured products</option><option value="category-grid">Category browse</option><option value="brand-grid">Brand directory</option><option value="concern-grid">Skin concerns</option></optgroup><optgroup label="Editorial &amp; content"><option value="hero">Hero / banner</option><option value="editorial">Image and text</option><option value="journal-grid">Journal cards</option><option value="text-block">Text block</option><option value="image-block">Image block</option><option value="quiz-banner">Editorial banner</option></optgroup></select></label><label>Section title<input id="skinQuickTitle" maxlength="180" placeholder="Section title"></label><label>Small heading<input id="skinQuickEyebrow" maxlength="100" placeholder="Optional eyebrow"></label><label>Supporting text<textarea id="skinQuickDescription" maxlength="3000" placeholder="Optional supporting text"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Add section</button></div>';renderSkinSectionLibraryPicker();
  }
 }
 let skinSectionLibraryCategory='all';
 const skinSectionLibraryItems=[
  {type:'product-grid',title:'Product grid',category:'shop',icon:'▦',description:'A browsable skincare product collection'},
- {type:'featured-products',title:'Featured products',category:'shop',icon:'✳',description:'Highlight selected products'},
- {type:'category-grid',title:'Category browse',category:'shop',icon:'▧',description:'Tiles for skincare categories'},
+ {type:'featured-products',title:'Best sellers',category:'shop',icon:'✳',description:'Feature published product picks'},
+ {type:'category-grid',title:'Category browse',category:'shop',icon:'▧',description:'Browse product categories'},
+ {type:'concern-grid',title:'Skin concerns',category:'shop',icon:'◉',description:'Browse by concern and skin goals'},
  {type:'brand-grid',title:'Brand directory',category:'shop',icon:'◈',description:'Browse by product brand'},
- {type:'hero',title:'Hero / banner',category:'content',icon:'▱',description:'Lead with a headline and image'},
+ {type:'hero',title:'Hero / banner',category:'content',icon:'▱',description:'Lead with a headline, image and button'},
+ {type:'quiz-banner',title:'Editorial banner',category:'content',icon:'▣',description:'Feature a visual callout and destination'},
  {type:'editorial',title:'Image and text',category:'content',icon:'▥',description:'Pair editorial copy with imagery'},
  {type:'journal-grid',title:'Journal cards',category:'content',icon:'▤',description:'Feature skincare articles'},
  {type:'text-block',title:'Text block',category:'content',icon:'¶',description:'Introduce a topic with copy'},
@@ -3953,7 +3981,7 @@ function createSkinQuickItem(){
  if(skinQuickAddType==='section'){
   const type=document.getElementById('skinQuickType')?.value||'product-grid';
   const id='section-'+Date.now().toString(36);
-  const section={id,type,visible:true,title,eyebrow:String(document.getElementById('skinQuickEyebrow')?.value||''),text:String(document.getElementById('skinQuickDescription')?.value||''),image:'',imageAlignment:'center',imageWidth:70,backgroundColor:'',textAlignment:'left',filter:type==='featured-products'?'featured':'all',columns:3,productsPerPage:8,product_ids:[],category_id:''};
+  const section={id,type,visible:true,title,eyebrow:String(document.getElementById('skinQuickEyebrow')?.value||''),text:String(document.getElementById('skinQuickDescription')?.value||''),image:type==='quiz-banner'?'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=85':'',buttonLabel:type==='quiz-banner'?'Explore concerns':'',buttonHref:type==='quiz-banner'?'/shop?q=skin+concerns':'',itemsText:type==='concern-grid'?'Acne & Blemishes\nAnti-Aging\nDryness & Dehydration\nRedness & Sensitivity\nDark Spots & Hyperpigmentation\nLarge Pores\nUneven Skin Tone\nDullness & Glow':'',imageAlignment:'center',imageWidth:70,backgroundColor:'',textAlignment:'left',filter:type==='featured-products'?'all':'all',columns:type==='featured-products'?5:3,productsPerPage:type==='featured-products'?8:8,product_ids:[],category_id:''};
   skinHistoryCapture();skinSectionsFor().push(section);skinStudioSelection={type:'section',id};closeSkinQuickAdd();skinMarkDirty('Section added to the current page. Drag it in the outline or canvas to arrange it.');switchSkinStudioTab('outline');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('New section added and saved to the page draft.');
  }
 }
