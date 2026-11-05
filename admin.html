@@ -895,7 +895,7 @@ body.skin-studio-fullpage #skinQuickTemplate{width:100%;min-height:38px;padding:
   </div>
 
   <div class="skin-studio-section-head">
-    <div><span class="section-kicker">Workspace</span><h3>Skincare admin tools</h3><p>One Skin Care workspace under Nuvora Admin, with its own focused tools and future builder controls.</p></div>
+    <div><span class="section-kicker">Workspace</span><h3>Skincare admin tools</h3><p>The full-page Store Editor is ready, with a section outline, responsive storefront preview, page management and a dedicated settings inspector.</p></div>
   </div>
   <div class="skin-studio-tools">
     <article class="skin-tool-card">
@@ -915,13 +915,13 @@ body.skin-studio-fullpage #skinQuickTemplate{width:100%;min-height:38px;padding:
     </article>
     <article class="skin-tool-card">
       <div class="skin-tool-icon">04</div><span class="skin-tool-state is-current">Available now</span>
-      <h4>Visual storefront builder</h4><p>Edit the hero, announcement, editorial copy, reusable section types, visibility, ordering, product filters, and exact product placements.</p>
-      <button class="skin-tool-link" onclick="document.getElementById('skinSiteBuilder').scrollIntoView({behavior:'smooth',block:'start'})">Open site builder ↘</button>
+      <h4>Shopify-style Store Editor</h4><p>Edit pages, section order, storefront content, reusable layouts, responsive previews and global design settings in one focused workspace.</p>
+      <button class="skin-tool-link" onclick="window.location.href='/admin/skin-studio'">Open Store Editor ↗</button>
     </article>
     <article class="skin-tool-card">
       <div class="skin-tool-icon">05</div><span class="skin-tool-state is-current">Available now</span>
-      <h4>Product imagery & placement</h4><p>Upload your own image files, preview image arrangements, and feature selected products in the Skin storefront sections.</p>
-      <button class="skin-tool-link" onclick="document.getElementById('skinProductRows').scrollIntoView({behavior:'smooth',block:'start'})">Manage images ↘</button>
+      <h4>Media library & product imagery</h4><p>Bulk-upload JPG, PNG, WebP, AVIF and GIF images, reuse existing assets, and apply media to sections, categories or product galleries.</p>
+      <button class="skin-tool-link" onclick="window.location.href='/admin/skin-studio?workspace=media'">Open Media Library ↗</button>
     </article>
     <article class="skin-tool-card">
       <div class="skin-tool-icon">06</div><span class="skin-tool-state is-current">Available now</span>
@@ -2585,6 +2585,8 @@ async function adminBoot(){
       document.body.classList.add('skin-studio-fullpage');
       const skinNav=document.querySelector('.nav button[onclick*="/admin/skin-studio"]')||document.querySelector('.nav button[data-icon="✿"]');
       show('skin-care',skinNav||null);
+      const requestedWorkspace=new URLSearchParams(window.location.search).get('workspace');
+      if(['outline','products','pages','categories','media','settings'].includes(requestedWorkspace))switchSkinStudioTab(requestedWorkspace);
     };
     // Establish the requested workspace before ancillary health checks so a
     // transient diagnostics failure cannot strand the user on the dashboard.
