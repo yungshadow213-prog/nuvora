@@ -1382,7 +1382,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
       </div>
       <div class="ai-studio">
         <div class="ai-studio-head"><div><h3>AI listing polish</h3><div class="muted">Refine the title, description, key features, SEO copy and social caption using the product information already in this form.</div></div></div>
-        <div class="ai-actions"><button class="btn primary" id="aiCopyBtn" onclick="generateAIProductCopy()">Polish product listing</button></div>
+        <div class="ai-actions"><button class="btn primary" id="aiCopyBtn" onclick="generateAIProductCopy()">Polish with Gemini</button><button class="btn" id="claudeCopyBtn" type="button" onclick="generateClaudeProductCopy()">✦ Polish with Claude</button></div><div id="claudeCopyStatus" class="ai-status"></div>
         <div id="aiCopyStatus" class="ai-status"></div>
       </div>
     </div>
@@ -2662,8 +2662,8 @@ async function healthCheck(){
   if(box)box.innerHTML='<div class="health-loading"><i></i>Checking live Nuvora connections…</div>';
   try{
     const j=await api('/api/admin/diagnostics');
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Core product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Legacy Cloudflare AI binding',gemini:'Gemini API key',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
-    const optional=new Set(['workersAI','gemini','shopifyStorefront','shopifyEnvironment','shopifyAuth','analytics']);
+    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Core product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Legacy Cloudflare AI binding',gemini:'Gemini API key',claude:'Claude API key',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
+    const optional=new Set(['workersAI','gemini','claude','shopifyStorefront','shopifyEnvironment','shopifyAuth','analytics']);
     const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
     window.__nuvoraSchemaState={
       missingProductColumns:Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[],
