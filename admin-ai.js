@@ -285,6 +285,8 @@
       for (const [id, value] of entries) if (fill(id, value)) filled++;
       const destination = get("pfDestination");
       if (destination && !destination.value.trim()) destination.value = url;
+      if (get("pfSource")) get("pfSource").value = "amazon";
+      if (get("pfRetailer")) get("pfRetailer").value = "Amazon";
       const images = get("pfImages");
       if (images && (!String(images.value || "").trim() || replace) && Array.isArray(product.images) && product.images.length) {
         images.value = product.images.join("\n");
