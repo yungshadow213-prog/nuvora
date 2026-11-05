@@ -195,6 +195,46 @@
     }
   }
 
+
+  window.generateClaudeProductCopy = async function () {
+    const get = id => document.getElementById(id);
+    const button = get("claudeCopyBtn"), statusNode = get("claudeCopyStatus");
+    const product = {
+      name: get("pfName")?.value || "",
+      brand: get("pfBrand")?.value || "",
+      description: get("pfDescription")?.value || "",
+      features: get("pfFeatures")?.value || "",
+      category: get("pfCategory")?.selectedOptions?.[0]?.textContent || "",
+      product_type: get("pfProductType")?.value || "",
+      ingredients: get("pfIngredients")?.value || "",
+      benefits: get("pfBenefits")?.value || "",
+      skin_types: get("pfSkinTypes")?.value || "",
+      skin_concerns: get("pfSkinConcerns")?.value || "",
+      usage_instructions: get("pfUsage")?.value || "",
+      warnings: get("pfWarnings")?.value || ""
+    };
+    if (!String(product.name).trim()) { if(statusNode)statusNode.textContent="Add a product title first."; return; }
+    const original=button?.textContent;
+    if(button){button.disabled=true;button.textContent="Polishing with Claude…";}
+    if(statusNode)statusNode.textContent="Rewriting from the facts already in this product form. Nothing will be saved automatically.";
+    try {
+      const result=await request("/api/admin/ai/claude-copy",{method:"POST",body:{product}});
+      if(!result?.ok)throw new Error("Claude did not return listing copy.");
+      if(result.title&&get("pfName"))get("pfName").value=result.title;
+      if(result.description&&get("pfDescription"))get("pfDescription").value=result.description;
+      if(Array.isArray(result.features)&&result.features.length&&get("pfFeatures"))get("pfFeatures").value=result.features.join("\n");
+      ["pfName","pfDescription","pfFeatures"].forEach(id=>get(id)?.dispatchEvent(new Event("input",{bubbles:true})));
+      if(statusNode)statusNode.textContent="Claude rewrote the title, description and key features. Review the result before saving.";
+      if(typeof window.productSaveMessage==="function")window.productSaveMessage("Claude prepared revised listing copy. Review it and save when ready.","success");
+    } catch(error) {
+      const message=error.message||"Claude could not polish this listing.";
+      if(statusNode)statusNode.textContent=message;
+      if(typeof window.productSaveMessage==="function")window.productSaveMessage(message,"error");
+    } finally {
+      if(button){button.disabled=false;button.textContent=original||"✦ Polish with Claude";}
+    }
+  };
+
   window.generateSkinProductWithClaude = async function () {
     const get = id => document.getElementById(id);
     const url = String(get("pfDestination")?.value || "").trim();
