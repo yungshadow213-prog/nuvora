@@ -1824,11 +1824,82 @@ async function importSelectedShopify(){
 function openSourcinBoxImport(){document.body.classList.add('admin-workspace-open');document.getElementById('aiStudioModal')?.classList.remove('open');document.getElementById('productModal')?.classList.remove('open');document.getElementById('shopifyModal')?.classList.remove('open');const page=document.getElementById('sourcinBoxModal');page.classList.add('open');page.scrollIntoView({behavior:'smooth',block:'start'});}
 function closeSourcinBoxImport(){document.getElementById('sourcinBoxModal').classList.remove('open');document.body.classList.remove('admin-workspace-open');}
 function startSourcinBoxDraft(){closeSourcinBoxImport();resetProductForm();document.body.classList.add('admin-workspace-open');document.getElementById('productModalTitle').textContent='Import SourcinBox product';document.getElementById('productModalSub').textContent='Paste the SourcinBox Marketplace product URL and add the supplier listing details.';document.getElementById('importStatus').textContent='SourcinBox products are supplier/fulfillment listings. Nuvora will keep the supplier reference so automated fulfillment can be added later.';document.getElementById('amazonUrlInput').placeholder='Optional Amazon/Temu link field';document.getElementById('pfSource').value='sourcinbox';document.getElementById('pfKind').value='shop';document.getElementById('pfRetailer').value='SourcinBox';document.getElementById('pfSourcinboxUrl').focus();document.getElementById('productModal').classList.add('open');document.getElementById('productModal').scrollIntoView({behavior:'smooth',block:'start'});}
+function productCategoryGroup(name){
+ const value=String(name||'').toLowerCase();
+ if(/cleanser|cleanse|moistur|hydrate|serum|treat|toner|essence|mask|exfoliat|sunscreen|spf|skin|eye care|lip care/.test(value))return 'Skincare routine';
+ if(/beauty device|tool|nail|manicure|pedicure|makeup|cosmetic|accessor/.test(value))return 'Beauty tools & finishing touches';
+ if(/hair|body|bath|shower|fragrance|perfume|oral|shav/.test(value))return 'Hair, body & daily care';
+ return 'More to explore';
+}
+function prepareProductEntryWorkspace(){
+ const modal=document.getElementById('productModal'),body=modal?.querySelector('.modal-body'),grid=body?.querySelector('.formgrid');
+ if(!body||!grid||body.dataset.productEntryPrepared==='true')return;
+ const steps=[
+  {id:'identity',title:'Source & identity',summary:'Import a listing or enter the product’s basic identity.',fields:['pfName','pfKind','pfSource','pfBrand','pfProductType','pfRetailer','pfDestination','pfAsin','pfSourcinboxUrl','pfSourcinboxId']},
+  {id:'organize',title:'Organize & recommend',summary:'Give the product a clear category, collection and merchandising role.',fields:['pfCategory','pfCollection','pfSkinFeatured','pfSkinTopPick','pfSkinTrending','pfRecommendedProducts','pfRecommendationReason']},
+  {id:'guide',title:'Product information',summary:'Add useful, source-backed details customers can use to make a decision.',fields:['pfDescription','pfFeatures','pfBenefits','pfSkinTypes','pfSkinConcerns','pfSkinAvoid','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','skinGeminiFillBtn','skinGeminiReplaceExisting','skinGeminiStatus']},
+  {id:'media',title:'Images & retailer details',summary:'Choose the main product image, complete retailer facts and review the draft.',fields:['pfImages','pfUpload','uploadStatus','pfImageStrip','pfPrice','pfListPrice','pfDiscount','pfCurrency','pfDeal','pfRating','pfAvailability','pfReviews','pfBought','pfShipping','pfTax','pfSupplierCost']}
+ ];
+ const sourcePanel=document.createElement('section');sourcePanel.className='product-entry-source-card';
+ sourcePanel.innerHTML='<div class="product-entry-source-head"><span class="product-entry-step-kicker">START HERE</span><h3>Bring in the product</h3><p>Paste a retailer product link to prefill what Nuvora can capture, or enter the details manually below. Everything stays a draft until you publish it.</p></div>';
+ const controls=[
+  document.getElementById('amazonUrlInput')?.closest('.importbar'),
+  document.getElementById('amazonSearchUrlInput')?.closest('.importbar'),
+  document.getElementById('amazonDiscoveryStatus'),
+  body.querySelector('.notice[style*="margin-top:10px"]')
+ ].filter(Boolean);
+ controls.forEach(node=>sourcePanel.appendChild(node));
+ const aiButton=body.querySelector('button[onclick="openAIStudio()"]')?.parentElement||null;
+ const shell=document.createElement('div');shell.className='product-entry-workspace';
+ const rail=document.createElement('aside');rail.className='product-entry-rail';
+ rail.innerHTML='<div class="product-entry-rail-top"><span class="product-entry-step-kicker">PRODUCT WORKSPACE</span><b>Build a better listing</b><small>Work through each stage. You can save a private draft at any point.</small></div><nav class="product-entry-step-list" aria-label="Product entry steps">'+steps.map((step,index)=>'<button type="button" class="product-entry-step-button'+(index===0?' active':'')+'" data-entry-step="'+index+'" aria-current="'+(index===0?'step':'false')+'"><span class="product-entry-step-number">'+String(index+1).padStart(2,'0')+'</span><span><b>'+step.title+'</b><small>'+step.summary+'</small></span><i>›</i></button>').join('')+'</nav><div class="product-entry-rail-note"><b>Not ready to publish?</b><span>Save a draft. It remains private until you publish it.</span></div>';
+ const main=document.createElement('div');main.className='product-entry-main';
+ steps.forEach((step,index)=>{
+  const panel=document.createElement('section');panel.className='product-entry-step-panel'+(index===0?' active':'');panel.dataset.entryPanel=String(index);
+  panel.innerHTML='<div class="product-entry-panel-head"><div><span class="product-entry-step-kicker">STEP '+String(index+1).padStart(2,'0')+' / '+String(steps.length).padStart(2,'0')+'</span><h3>'+step.title+'</h3><p>'+step.summary+'</p></div><span class="product-entry-panel-count">'+String(index+1).padStart(2,'0')+'</span></div>';
+  if(index===0)panel.appendChild(sourcePanel);
+  const form=document.createElement('div');form.className='formgrid product-entry-fields';panel.appendChild(form);
+  main.appendChild(panel);
+ });
+ if(aiButton){const target=main.querySelector('[data-entry-panel="2"] .product-entry-panel-head');if(target){aiButton.className='product-entry-ai-action';target.appendChild(aiButton);}}
+ const actions=body.querySelector('.modal-actions');
+ const navigation=document.createElement('div');navigation.className='product-entry-navigation';
+ navigation.innerHTML='<button class="btn" type="button" id="productEntryPrevious" onclick="setProductEntryStep((window.productEntryStep||0)-1)">← Previous</button><span id="productEntryProgress">Step 1 of 4</span><button class="btn primary" type="button" id="productEntryNext" onclick="setProductEntryStep((window.productEntryStep||0)+1)">Next step →</button>';
+ const content=document.createElement('div');content.className='product-entry-content';content.appendChild(main);content.appendChild(navigation);
+ shell.appendChild(rail);shell.appendChild(content);
+ body.insertBefore(shell,grid);
+ const fieldIds=new Map();steps.forEach((step,index)=>step.fields.forEach(id=>fieldIds.set(id,index)));
+ const fields=Array.from(grid.querySelectorAll(':scope > .field'));
+ fields.forEach(field=>{
+  const control=field.querySelector('input,textarea,select,button'),id=control?.id||'';
+  const index=fieldIds.has(id)?fieldIds.get(id):2;
+  main.querySelector('[data-entry-panel="'+index+'"] .product-entry-fields').appendChild(field);
+ });
+ grid.remove();
+ body.dataset.productEntryPrepared='true';
+ rail.querySelectorAll('[data-entry-step]').forEach(button=>button.addEventListener('click',()=>setProductEntryStep(Number(button.dataset.entryStep))));
+ if(actions){actions.classList.add('product-entry-footer');actions.insertBefore(navigation,actions.firstChild);}
+ setProductEntryStep(0);
+}
+function setProductEntryStep(index){
+ const shell=document.querySelector('#productModal .product-entry-workspace');
+ if(!shell)return;
+ const buttons=[...shell.querySelectorAll('[data-entry-step]')],panels=[...shell.querySelectorAll('[data-entry-panel]')];
+ const next=Math.max(0,Math.min(panels.length-1,Number(index)||0));window.productEntryStep=next;
+ buttons.forEach((button,i)=>{button.classList.toggle('active',i===next);button.setAttribute('aria-current',i===next?'step':'false');button.classList.toggle('complete',i<next);});
+ panels.forEach((panel,i)=>panel.classList.toggle('active',i===next));
+ const progress=document.getElementById('productEntryProgress');if(progress)progress.textContent='Step '+(next+1)+' of '+panels.length;
+ const previous=document.getElementById('productEntryPrevious'),forward=document.getElementById('productEntryNext');
+ if(previous)previous.disabled=next===0;
+ if(forward){forward.disabled=next===panels.length-1;forward.textContent=next===panels.length-1?'Last step':'Next step →';}
+ const active=panels[next];if(active)active.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
 function renderProductTaxonomy(){
   const cat=document.getElementById('pfCategory'),col=document.getElementById('pfCollection');
   if(cat){
-    const current=cat.value;
-    cat.innerHTML='<option value="">No category</option>'+categories.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');
+    const current=cat.value,groups=new Map();
+    categories.forEach(item=>{const key=productCategoryGroup(item.name);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(item);});
+    cat.innerHTML='<option value="">Choose a category</option>'+[...groups.entries()].map(([label,items])=>'<optgroup label="'+esc(label)+'">'+items.sort((a,b)=>a.name.localeCompare(b.name)).map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('')+'</optgroup>').join('');
     if(current)cat.value=current;
   }
   if(col){
@@ -1859,6 +1930,7 @@ function openProductModal(importMode=false){
   document.getElementById('pfSource').value='amazon';
   document.getElementById('pfRetailer').value='Amazon';
   document.getElementById('amazonUrlInput').placeholder='Paste your Amazon product or affiliate link';
+  prepareProductEntryWorkspace();setProductEntryStep(0);
   document.getElementById('amazonUrlInput').focus();
 }
 function closeProductModal(){document.getElementById('productModal').classList.remove('open');document.body.classList.remove('admin-workspace-open');window.skinCareImportMode=false;setSkinAdminFormMode(false);}
