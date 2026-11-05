@@ -234,7 +234,8 @@ jobs:
               'onclick="saveSkinSiteConfig(this)"',
               'homeLayoutVersion:2',
               "type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block','brand-grid','concern-grid','quiz-banner']",
-              "itemsText:String(x.itemsText||'').slice(0,2000)",
+              "itemsText:String(x.itemsText||'').replace(",
+
               "type:'concern-grid'",
               "type:'quiz-banner'",
               "buttonHref:type==='quiz-banner'?'/shop?q=skin+concerns':''"
