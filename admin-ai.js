@@ -196,6 +196,37 @@
   }
 
 
+
+  window.generateStoreClaudeCopy = async function () {
+    const get = id => document.getElementById(id);
+    const button=get("storeClaudeCopyBtn"),statusNode=get("storeClaudeStatus");
+    const product={
+      name:get("pName")?.value||"",
+      brand:get("pBrand")?.value||"",
+      description:get("pDescription")?.value||"",
+      features:get("pShort")?.value||"",
+      category:get("pCategory")?.value||"",
+      product_type:get("pType")?.value||"",
+      store:get("storeTitle")?.textContent||""
+    };
+    if(!String(product.name).trim()){if(statusNode)statusNode.textContent="Add the product name first.";return;}
+    const original=button?.textContent;
+    if(button){button.disabled=true;button.textContent="Polishing with Claude…";}
+    if(statusNode)statusNode.textContent="Claude is improving this listing from the details in the form. Nothing will be saved automatically.";
+    try{
+      const result=await request("/api/admin/ai/claude-copy",{method:"POST",body:{product}});
+      if(!result?.ok)throw new Error("Claude did not return listing copy.");
+      if(result.title&&get("pName"))get("pName").value=result.title;
+      if(result.description&&get("pDescription"))get("pDescription").value=result.description;
+      if(Array.isArray(result.features)&&result.features.length&&get("pShort"))get("pShort").value=result.features.join("\n");
+      if(statusNode)statusNode.textContent="Claude prepared revised listing copy. Review the changes, then save the product when ready.";
+    }catch(error){
+      if(statusNode)statusNode.textContent=error.message||"Claude could not polish this product.";
+    }finally{
+      if(button){button.disabled=false;button.textContent=original||"Polish product with Claude";}
+    }
+  };
+
   window.generateClaudeProductCopy = async function () {
     const get = id => document.getElementById(id);
     const button = get("claudeCopyBtn"), statusNode = get("claudeCopyStatus");
