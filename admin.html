@@ -2819,7 +2819,7 @@ const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
 let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinSiteDraftExists=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='',skinStudioPendingProductTarget=null;
 let skinStudioUndoStack=[],skinStudioRedoStack=[],skinStudioHistoryLastCapture=0,skinStudioHistoryApplying=false,skinSitePublishInProgress=false;
 const defaultSkinSiteConfig=()=>({
-  version:6,homeLayoutVersion:2,template:'soft-editorial',accentColor:'#66745f',
+  version:8,homeLayoutVersion:2,template:'soft-editorial',accentColor:'#66745f',
   designSettings:{backgroundColor:'#f7f4ee',surfaceColor:'#fffdf9',textColor:'#342f2b',mutedColor:'#77756c',borderColor:'#e4dfd5',successColor:'#3d7d57',errorColor:'#b24b42',saleColor:'#c77d5b',headingFont:'Playfair Display',bodyFont:'DM Sans',pageMaxWidth:1280,sideGutters:24,sectionSpacing:64,gridGap:22,cornerRadius:14,shadowStyle:'soft',productImageRatio:'4:5',productHoverEffect:'none'},
   announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
   brandName:'nuvora',brandSuffix:'skin',headerTagline:'YOUR EVERYDAY SKIN EDIT',
@@ -3238,7 +3238,7 @@ function migrateSkinHomeLayout(config){
  addIfMissing('journal-grid','home-journal',{title:'Featured guides',eyebrow:'THE JOURNAL',text:'Useful notes for comparing products and understanding everyday care.',columns:4});
  const rank=type=>({'hero':0,'category-grid':10,'featured-products':20,'product-grid':21,'concern-grid':30,'quiz-banner':40,'brand-grid':45,'editorial':50,'text-block':52,'image-block':54,'journal-grid':60}[type]??38);
  sections=sections.map((section,index)=>({section,index})).sort((a,b)=>rank(a.section.type)-rank(b.section.type)||a.index-b.index).map(item=>item.section);
- config.sections=sections;config.homeLayoutVersion=2;config.version=Math.max(6,Number(config.version)||0);
+ config.sections=sections;config.homeLayoutVersion=2;config.version=Math.max(8,Number(config.version)||0);
  const nav=Array.isArray(config.navigationItems)?config.navigationItems:[];
  const legacyNav=nav.map(item=>String(item?.id||'')).join(',')==='shop-all,categories,brands,journal';
  if(legacyNav){
