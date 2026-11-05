@@ -2819,17 +2819,18 @@ const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
 let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinSiteDraftExists=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='',skinStudioPendingProductTarget=null;
 let skinStudioUndoStack=[],skinStudioRedoStack=[],skinStudioHistoryLastCapture=0,skinStudioHistoryApplying=false,skinSitePublishInProgress=false;
 const defaultSkinSiteConfig=()=>({
-  version:5,homeLayoutVersion:0,template:'soft-editorial',accentColor:'#66745f',
+  version:6,homeLayoutVersion:2,template:'soft-editorial',accentColor:'#66745f',
   designSettings:{backgroundColor:'#f7f4ee',surfaceColor:'#fffdf9',textColor:'#342f2b',mutedColor:'#77756c',borderColor:'#e4dfd5',successColor:'#3d7d57',errorColor:'#b24b42',saleColor:'#c77d5b',headingFont:'Playfair Display',bodyFont:'DM Sans',pageMaxWidth:1280,sideGutters:24,sectionSpacing:64,gridGap:22,cornerRadius:14,shadowStyle:'soft',productImageRatio:'4:5',productHoverEffect:'none'},
   announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
   brandName:'nuvora',brandSuffix:'skin',headerTagline:'YOUR EVERYDAY SKIN EDIT',
   announcementAside:'A LITTLE MORE CONSIDERED',headerCtaLabel:'Explore the edit',
   showSearch:true,showSaved:true,showHeaderCta:true,
   navigationItems:[
-   {id:'shop-all',label:'Shop all',url:'/shop',visible:true},
-   {id:'categories',label:'Categories',url:'/shop',visible:true},
+   {id:'home',label:'Home',url:'/',visible:true},
+   {id:'shop',label:'Shop',url:'/shop',visible:true},
+   {id:'concerns',label:'Skin Concerns',url:'/shop?q=skin+concerns',visible:true},
    {id:'brands',label:'Brands',url:'/brands',visible:true},
-   {id:'journal',label:'Journal',url:'/journal',visible:true}
+   {id:'guides',label:'Guides',url:'/journal',visible:true}
   ],
   footerIntro:'Skincare feels less complicated when you know what to look for. We collect approachable finds and thoughtful notes to help you browse with more intention.',
   footerStamp:'A little care, every day.',footerExploreHeading:'Explore',footerReadHeading:'Read',
@@ -2867,22 +2868,25 @@ const defaultSkinSiteConfig=()=>({
   productCategoryMap:{},
   pages:[],
   sections:[
-    {id:'hero',type:'hero',visible:true,title:'Care that feels like you.'},
-    {id:'home-categories',type:'category-grid',visible:true,title:'Shop by product type',eyebrow:'FIND YOUR KIND OF CARE',text:'Browse by what you are shopping for, from skincare and masks to beauty tools, nail care and everyday essentials.'},
-    {id:'edit',type:'product-grid',visible:true,title:'Shop the edit',eyebrow:'CURATED, NOT CROWDED',text:'Explore the products we have selected. Open any item for the full product guide, image gallery and retailer link.',filter:'all',columns:4,productsPerPage:8,product_ids:[]},
-    {id:'home-brands',type:'brand-grid',visible:true,title:'Shop by brand',eyebrow:'THE BRANDS BEHIND THE FINDS',text:'Explore the brands in our catalog, then browse every product we carry from each one.'},
-    {id:'approach',type:'editorial',visible:true,title:'Good finds. Clear choices.',eyebrow:'A GENTLER WAY TO DISCOVER',text:'Nuvora Skin brings together useful product details so you can compare the information that matters before checking the current price on the retailer listing.'},
-    {id:'journal',type:'journal-grid',visible:true,title:'Useful notes for everyday care.',eyebrow:'THE JOURNAL',text:'Practical notes to help you understand products and build a routine at your own pace.',columns:3,product_ids:[]}
+    {id:'hero',type:'hero',visible:true,title:'Skincare, without the noise.',eyebrow:'THE NUVORA SKIN EDIT',text:'Explore product details, ingredients, skin guidance and retailer links before you decide.',image:'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?auto=format&fit=crop&w=1800&q=85',buttonLabel:'Explore products',buttonHref:'/shop'},
+    {id:'home-categories',type:'category-grid',visible:true,title:'Shop by category',eyebrow:'FIND WHAT YOU NEED',text:'Browse product types and discover the details behind each pick.'},
+    {id:'best-sellers',type:'featured-products',visible:true,title:'Best sellers',eyebrow:'THE NUVORA EDIT',text:'Explore published products and open each guide for the full details.',filter:'all',columns:5,productsPerPage:8,product_ids:[]},
+    {id:'skin-concerns',type:'concern-grid',visible:true,title:'Explore by concern',eyebrow:'A ROUTINE THAT STARTS WITH YOU',text:'Use these topics to discover relevant product guides.',itemsText:'Acne & Blemishes\\nAnti-Aging\\nDryness & Dehydration\\nRedness & Sensitivity\\nDark Spots & Hyperpigmentation\\nLarge Pores\\nUneven Skin Tone\\nDullness & Glow'},
+    {id:'skin-guide-banner',type:'quiz-banner',visible:true,title:'Explore your skin goals',eyebrow:'NOT SURE WHERE TO START?',text:'Browse helpful guides and product details at your own pace.',image:'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=85',buttonLabel:'Explore concerns',buttonHref:'/shop?q=skin+concerns'},
+    {id:'journal',type:'journal-grid',visible:true,title:'Featured guides',eyebrow:'THE JOURNAL',text:'Useful notes for comparing products and understanding everyday care.',columns:4,product_ids:[]}
   ]
 });
 function mergeSkinSiteConfig(raw){
  const base=defaultSkinSiteConfig(),src=raw&&typeof raw==='object'?raw:{},cfg={...base,...src};
  const cleanSections=(items,fallback=[])=>Array.isArray(items)?items.slice(0,40).map((x,i)=>({
   id:String(x.id||('section-'+(i+1))).slice(0,80),
-  type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block','brand-grid'].includes(x.type)?x.type:'product-grid',
+  type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block','brand-grid','concern-grid','quiz-banner'].includes(x.type)?x.type:'product-grid',
   visible:x.visible!==false,title:String(x.title||'New section').slice(0,180),
   eyebrow:String(x.eyebrow||'').slice(0,100),text:String(x.text||'').slice(0,3000),
   image:String(x.image||'').slice(0,1600),
+  buttonLabel:String(x.buttonLabel||'').slice(0,80),
+  buttonHref:String(x.buttonHref||'').slice(0,1600),
+  itemsText:String(x.itemsText||'').slice(0,2000),
   backgroundColor:/^#[0-9a-f]{6}$/i.test(String(x.backgroundColor||''))?String(x.backgroundColor):'',
   colorScheme:['theme','light','soft','dark','accent'].includes(x.colorScheme)?x.colorScheme:'theme',
   filter:['all','featured','top_pick','trending'].includes(x.filter)?x.filter:'all',
