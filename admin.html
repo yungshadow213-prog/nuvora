@@ -840,7 +840,8 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
  body.skin-studio-fullpage #skinSiteBuilder .studio-toolbar{position:relative!important;align-items:flex-start!important;flex-wrap:wrap!important}
  body.skin-studio-fullpage #skinSiteBuilder .studio-toolbar-actions{width:100%!important;justify-content:flex-start!important}
 }
-</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
+</style><link rel="stylesheet" href="/admin-experience.css">
+</head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
   <div class="nav-group">
     <span class="nav-group-label">Workspace</span>
     <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
@@ -1381,7 +1382,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
       </div>
       <div class="ai-studio">
         <div class="ai-studio-head"><div><h3>AI listing polish</h3><div class="muted">Refine the title, description, key features, SEO copy and social caption using the product information already in this form.</div></div></div>
-        <div class="ai-actions"><button class="btn primary" id="aiCopyBtn" onclick="generateAIProductCopy()">Polish product listing</button></div>
+        <div class="ai-actions"><button class="btn primary" id="aiCopyBtn" onclick="generateAIProductCopy()">Polish with Gemini</button><button class="btn" id="claudeCopyBtn" type="button" onclick="generateClaudeProductCopy()">✦ Polish with Claude</button></div><div id="claudeCopyStatus" class="ai-status"></div>
         <div id="aiCopyStatus" class="ai-status"></div>
       </div>
     </div>
@@ -1446,6 +1447,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         <div class="field full"><label>Tax notice</label><input id="pfTax" placeholder="Sales taxes may apply at checkout"></div>
         <div class="field"><label>Category</label><select id="pfCategory"><option value="">No category</option></select></div>
         <div class="field"><label>Collection</label><select id="pfCollection"><option value="">No collection</option></select></div>
+        <div class="field full skin-only-field"><label>Claude product research assistant</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="skinClaudeFillBtn" type="button" class="btn" onclick="generateSkinProductWithClaude()">✦ Prepare guide with Claude</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input id="skinClaudeReplaceExisting" type="checkbox"> Replace populated fields</label></div><div id="skinClaudeStatus" class="muted" role="status" aria-live="polite" style="margin-top:8px">Claude can research the exact Amazon listing and prepare source-conscious guide fields. Review everything before saving; it never publishes automatically.</div></div>
         <div class="field full skin-only-field"><label>Gemini product assistant</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="skinGeminiFillBtn" type="button" class="btn" onclick="generateSkinProductWithGemini()">Fill product guide with Gemini</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input id="skinGeminiReplaceExisting" type="checkbox"> Replace existing text fields</label></div><div id="skinGeminiStatus" class="muted" role="status" aria-live="polite" style="margin-top:8px">Paste the exact Amazon link into Destination / affiliate URL. Gemini will fill supported fields for review; it will not save or publish the product.</div></div>
         <div class="field full"><label>Description</label><textarea id="pfDescription" placeholder="Product description"></textarea></div>
         <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div>
@@ -2732,8 +2734,8 @@ async function healthCheck(){
   if(box)box.innerHTML='<div class="health-loading"><i></i>Checking live Nuvora connections…</div>';
   try{
     const j=await api('/api/admin/diagnostics');
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Core product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Legacy Cloudflare AI binding',gemini:'Gemini API key',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
-    const optional=new Set(['workersAI','gemini','shopifyStorefront','shopifyEnvironment','shopifyAuth','analytics']);
+    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Core product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Legacy Cloudflare AI binding',gemini:'Gemini API key',claude:'Claude API key',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
+    const optional=new Set(['workersAI','gemini','claude','shopifyStorefront','shopifyEnvironment','shopifyAuth','analytics']);
     const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
     window.__nuvoraSchemaState={
       missingProductColumns:Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[],
@@ -5481,4 +5483,6 @@ body.skin-studio-fullpage .studio-inspector-check input{width:15px;height:15px;a
 }
 </style>
 
+<script>window.NuvoraAIRequest=(path,options={})=>api(path,options);</script>
+<script src="/admin-ai.js"></script>
 </body></html>
