@@ -76,7 +76,7 @@
   }
 
   function mount() {
-    const host = $(".studio-toolbar-actions") || $(".top-actions") || $(".topbar");
+    const host = document.body.classList.contains("skin-studio-fullpage") ? $(".studio-toolbar-actions") : $("#app .top-actions") || $(".app:not(.skin-studio-fullpage) .top-actions") || $(".top-actions") || $(".topbar");
     if (!host) return;
 
     const trigger = document.createElement("button");
