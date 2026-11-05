@@ -73,7 +73,7 @@ export default {
         const checks={
           environment:!!cfg.supabase,auth:false,admin:false,products:false,productSchema:false,
           settings:false,settingsSchema:false,social:false,analytics:false,
-          workersAI:!!cfg.workersAI,gemini:!!cfg.gemini,shopifyStorefront:!!cfg.shopifyStorefront,
+          workersAI:!!cfg.workersAI,gemini:!!cfg.gemini,claude:!!cfg.claude,shopifyStorefront:!!cfg.shopifyStorefront,
           shopifyEnvironment:!!cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false
         };
         // Keep all diagnostic state in one declared object. The admin consumes
@@ -87,6 +87,7 @@ export default {
           aiMissing:[]
         };
         if(!env.GEMINI_API_KEY)diagnosticsState.aiMissing.push('GEMINI_API_KEY secret');
+        if(!env.ANTHROPIC_API_KEY)diagnosticsState.aiMissing.push('ANTHROPIC_API_KEY secret');
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))diagnosticsState.shopifyMissing.push('SHOPIFY_SHOP');
         if(!env.SHOPIFY_CLIENT_ID)diagnosticsState.shopifyMissing.push('SHOPIFY_CLIENT_ID');
         if(!env.SHOPIFY_CLIENT_SECRET)diagnosticsState.shopifyMissing.push('SHOPIFY_CLIENT_SECRET');
@@ -227,6 +228,33 @@ async function inspectProductSchema(env){
   }
   return {ok:true,core:true,missing,message:firstOptionalError};
 }
+
+async function askClaude(env, system, messages, maxTokens = 1800) {
+  const apiKey = String(env && env.ANTHROPIC_API_KEY || "").trim();
+  if (!apiKey) throw new Error("Claude is not configured. Add ANTHROPIC_API_KEY as a Cloudflare Worker secret.");
+  const model = String(env.ANTHROPIC_MODEL || "claude-sonnet-5").trim().replace(/[^a-zA-Z0-9._-]/g, "");
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {"x-api-key":apiKey,"anthropic-version":"2023-06-01","content-type":"application/json"},
+    body: JSON.stringify({model,max_tokens:Math.max(256,Math.min(Number(maxTokens)||1800,4096)),system:String(system||""),messages})
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const detail = String(payload && payload.error && payload.error.message || payload.message || "").slice(0,260);
+    throw new Error("Claude API request failed ("+response.status+"). "+(detail || "Check the Anthropic API key, account access and model setting."));
+  }
+  const text = Array.isArray(payload.content) ? payload.content.filter(block=>block&&block.type==="text").map(block=>String(block.text||"")).join("\n").trim() : "";
+  if (!text) throw new Error("Claude returned an empty response.");
+  return {text,model,usage:payload.usage||null};
+}
+function parseClaudeJson(value) {
+  let text=String(value||"").trim();
+  text=text.replace(/^\x60{3}(?:json)?\s*/i,"").replace(/\s*\x60{3}$/,"").trim();
+  const start=text.indexOf("{"),end=text.lastIndexOf("}");
+  if(start>=0&&end>start)text=text.slice(start,end+1);
+  return JSON.parse(text);
+}
+
 function configured(env){
   const e=env||{};
   const shopDomain=String(e.SHOPIFY_SHOP||e.SHOPIFY_STORE_DOMAIN||'').trim();
@@ -237,7 +265,8 @@ function configured(env){
     shopifyAdmin:!!shopDomain&&!!e.SHOPIFY_ADMIN_ACCESS_TOKEN,
     amazon:!!e.AMAZON_CLIENT_ID&&!!e.AMAZON_CLIENT_SECRET&&!!e.AMAZON_PARTNER_TAG,
     workersAI:!!e.AI,
-    gemini:!!e.GEMINI_API_KEY
+    gemini:!!e.GEMINI_API_KEY,
+    claude:!!e.ANTHROPIC_API_KEY
   };
 }
 function randHex(length=6){const bytes=new Uint8Array(Math.max(1,Math.ceil(length/2)));crypto.getRandomValues(bytes);return [...bytes].map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,length);}
