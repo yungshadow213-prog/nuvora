@@ -809,6 +809,37 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-right-panel.is-settings-works
  body.skin-studio-fullpage #skinSiteBuilder .studio-canvas-viewport{padding:5px!important}
  body.skin-studio-fullpage #skinSiteBuilder .studio-preview-actionbar button{flex:1 1 auto!important}
 }
+</style><style id="skin-studio-shopify-toolbar">
+body.skin-studio-fullpage #skinSiteBuilder .studio-toolbar{
+ position:sticky!important;top:0!important;z-index:80!important;display:flex!important;align-items:center!important;
+ justify-content:space-between!important;gap:12px!important;padding:10px 16px!important;background:#fff!important;
+ border-bottom:1px solid #e2e8df!important;box-shadow:0 2px 10px rgba(35,57,38,.035)!important;
+}
+body.skin-studio-fullpage #skinSiteBuilder .studio-toolbar-actions{
+ display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:7px!important;flex-wrap:wrap!important;
+}
+body.skin-studio-fullpage #skinSiteBuilder .studio-toolbar-actions>.btn{
+ min-height:34px!important;padding:8px 12px!important;border-radius:8px!important;font-size:10px!important;
+}
+body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions{position:relative!important;z-index:90!important}
+body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions>summary{
+ display:flex!important;align-items:center!important;justify-content:center!important;list-style:none!important;cursor:pointer!important;
+}
+body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions>summary::-webkit-details-marker{display:none!important}
+body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu{
+ position:absolute!important;right:0!important;top:calc(100% + 8px)!important;display:grid!important;gap:5px!important;
+ width:205px!important;padding:8px!important;border:1px solid #e1e8df!important;border-radius:11px!important;
+ background:#fff!important;box-shadow:0 16px 42px rgba(25,48,31,.15)!important;
+}
+body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn{
+ width:100%!important;min-height:36px!important;text-align:left!important;justify-content:flex-start!important;
+ box-shadow:none!important;background:#fff!important;border-color:transparent!important;
+}
+body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{background:#f4f8f2!important;border-color:#e5ece1!important}
+@media(max-width:980px){
+ body.skin-studio-fullpage #skinSiteBuilder .studio-toolbar{position:relative!important;align-items:flex-start!important;flex-wrap:wrap!important}
+ body.skin-studio-fullpage #skinSiteBuilder .studio-toolbar-actions{width:100%!important;justify-content:flex-start!important}
+}
 </style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
   <div class="nav-group">
     <span class="nav-group-label">Workspace</span>
@@ -1098,12 +1129,17 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-right-panel.is-settings-works
         <button class="btn" id="skinStudioRedo" type="button" onclick="redoSkinStudio()" disabled aria-label="Redo editor change" title="Redo (Ctrl/⌘+Shift+Z)">↷ Redo</button>
       </div>
       <div class="studio-save-state"><span class="studio-save-dot"></span><span id="skinStudioSaveLabel">Saved version loaded</span></div>
-      <button class="btn" type="button" onclick="openSkinManualProduct()">+ Add product</button>
-      <button class="btn" type="button" onclick="openSkinSiteSettings()">Edit whole site</button>
-      <button class="btn" type="button" onclick="previewSkinSite()">Preview storefront ↗</button>
+      <details class="studio-more-actions">
+        <summary class="btn" aria-label="More editor actions">••• More</summary>
+        <div class="studio-more-actions-menu">
+          <button class="btn" type="button" onclick="openSkinManualProduct()">＋ Add product</button>
+          <button class="btn" type="button" onclick="openSkinSiteSettings()">Edit whole site</button>
+          <button class="btn" type="button" onclick="previewSkinSite()">Preview storefront ↗</button>
+          <button class="btn" type="button" onclick="discardSkinSiteDraft(this)" title="Discard the private draft and restore the currently published version">Discard draft</button>
+        </div>
+      </details>
       <button class="btn" type="button" onclick="saveSkinSiteDraft(this)">Save draft</button>
-      <button class="btn" type="button" onclick="discardSkinSiteDraft(this)" title="Discard the private draft and restore the currently published version">Discard draft</button>
-      <button class="btn primary studio-publish-button" type="button" onclick="saveSkinSiteConfig(this)">Publish changes</button>
+      <button class="btn primary studio-publish-button" type="button" onclick="saveSkinSiteConfig(this)">Publish</button>
     </div>
   </header>
   <div id="skinBuilderStatus" class="studio-status notice" role="status" aria-live="polite">Loading your saved Skin Care site…</div>
