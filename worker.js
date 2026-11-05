@@ -2545,7 +2545,7 @@ function validateSkinSiteConfig(value,options={}){
     if(!value.productGuideFields||typeof value.productGuideFields!=='object'||Array.isArray(value.productGuideFields))return 'Skin Studio product guide visibility settings must be an object.';
     if(keys.some(key=>value.productGuideFields[key]!==undefined&&typeof value.productGuideFields[key]!=='boolean'))return 'Skin Studio product guide visibility values must be true or false.';
   }
-  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block','brand-grid']);
+  const allowedTypes=new Set(['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block','brand-grid','concern-grid','quiz-banner']);
   const checkSections=(sections,label)=>{
     if(!Array.isArray(sections))return label+' sections must be an array.';
     if(sections.length>40)return label+' supports up to 40 sections.';
@@ -2560,6 +2560,10 @@ function validateSkinSiteConfig(value,options={}){
       if(section.title!==undefined&&String(section.title).length>180)return label+' section titles are limited to 180 characters.';
       if(section.text!==undefined&&String(section.text).length>3000)return label+' section text is too long.';
       if(section.eyebrow!==undefined&&String(section.eyebrow).length>100)return label+' section eyebrows are limited to 100 characters.';
+      if(section.itemsText!==undefined&&(typeof section.itemsText!=='string'||section.itemsText.length>2000))return label+' concern topics must be text no longer than 2000 characters.';
+      if(section.buttonLabel!==undefined&&(typeof section.buttonLabel!=='string'||section.buttonLabel.length>80))return label+' button labels are limited to 80 characters.';
+      if(section.buttonHref!==undefined&&(typeof section.buttonHref!=='string'||section.buttonHref.length>1600))return label+' button destinations must be text no longer than 1600 characters.';
+      if(section.type==='quiz-banner'&&section.buttonHref&&(!String(section.buttonHref).startsWith('/')||String(section.buttonHref).startsWith('//')||/[\\r\\n]/.test(String(section.buttonHref))))return 'Editorial banner buttons must use an internal Nuvora path.';
       if(section.image){try{if(new URL(section.image).protocol!=='https:')return label+' section image must use HTTPS.';}catch{return label+' section image URL is invalid.';}}
       if(section.backgroundColor!==undefined&&section.backgroundColor!==''&&!/^#[0-9a-f]{6}$/i.test(String(section.backgroundColor)))return label+' section background color is invalid.';
       if(section.textAlignment!==undefined&&!['left','center','right'].includes(String(section.textAlignment)))return label+' text alignment must be left, center, or right.';
