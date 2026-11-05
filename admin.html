@@ -3333,7 +3333,7 @@ function updateSkinStudioPageTitle(){
 }
 function switchSkinStudioTab(tab){
  skinStudioTab=['outline','products','pages','categories','media','settings'].includes(tab)?tab:'outline';
- if(skinStudioTab!=='settings')skinStudioShowInspector(false);
+ if(skinStudioTab==='settings')skinStudioShowInspector(true);else skinStudioShowInspector(false);
  ['outline','products','pages','categories','media'].forEach(key=>{
   const b=document.getElementById('skinTab'+key.charAt(0).toUpperCase()+key.slice(1));
   if(b){const active=skinStudioTab===key;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');}
