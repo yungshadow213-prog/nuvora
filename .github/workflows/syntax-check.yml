@@ -210,6 +210,7 @@ jobs:
               'function skinStudioShowInspector(show)',
               'function returnSkinStudioToList()',
               'function openSkinStudioGlobalSettings(area)',
+              "if(skinStudioTab==='settings')skinStudioShowInspector(true);else skinStudioShowInspector(false);",
               'aria-label="Header sections"',
               'aria-label="Template sections"',
               'aria-label="Footer sections"',
