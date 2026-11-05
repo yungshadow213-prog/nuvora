@@ -158,8 +158,9 @@ jobs:
           for worker_token in [
               "'concern-grid','quiz-banner'",
               "section.itemsText",
-              "section.type==='quiz-banner'",
-              "Editorial banner buttons must use an internal Nuvora path.",
+              "section.secondaryButtonLabel",
+              "section.secondaryButtonHref",
+              "section buttons must use safe internal Nuvora paths.",
               "grid columns must be 2, 3, 4, or 5."
           ]:
               if worker_token not in worker_source:
@@ -236,6 +237,10 @@ jobs:
               'homeLayoutVersion:2',
               "type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block','brand-grid','concern-grid','quiz-banner']",
               "itemsText:String(x.itemsText||'').replace(",
+              "secondaryButtonLabel:String(x.secondaryButtonLabel||'').slice(0,80)",
+              "secondaryButtonHref:String(x.secondaryButtonHref||'').slice(0,1600)",
+              "Primary button destination · internal path",
+              "Secondary button destination · internal path",
               "columns:[2,3,4,5].includes(Number(x.columns))",
               "numberSelect('Columns','columns',[2,3,4,5])",
               "type:'concern-grid'",
