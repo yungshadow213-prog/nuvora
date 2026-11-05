@@ -2915,7 +2915,7 @@ function mergeSkinSiteConfig(raw){
    backgroundImage:String(x.backgroundImage||'').slice(0,1600),
    backgroundOverlay:x.backgroundOverlay!==undefined&&Number.isFinite(Number(x.backgroundOverlay))?Math.max(0,Math.min(80,Number(x.backgroundOverlay))):0,
    showDesktop:x.showDesktop!==false,showMobile:x.showMobile!==false,locked:x.locked===true
- })):fallback;
+ })):fallback.map(item=>({...item,...(typeof item?.itemsText==='string'?{itemsText:item.itemsText.replace(/\\\\n/g,'\n')}:{})}));
  const cleanLinks=(items,fallback,max=20)=>Array.isArray(items)?items.slice(0,max).map((item,i)=>({
   id:String(item.id||('site-link-'+(i+1))).slice(0,80),
   label:String(item.label||'Link').trim().slice(0,80),
