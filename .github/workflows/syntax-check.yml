@@ -200,6 +200,40 @@ jobs:
           ]:
               if ui_token not in admin_html:
                   failures.append("admin.html: Skin Care redesign contract missing " + ui_token)
+          # Skin Studio must retain the Shopify-style editor architecture: a grouped
+          # section tree, a single dominant preview, and a contextual inspector in the
+          # editor sidebar. These checks prevent the previous three-column layout from
+          # quietly returning in a later admin cleanup.
+          skin_studio_builder_tokens = [
+              'id="skin-studio-shopify-workspace"',
+              'function prepareSkinStudioShopifyLayout()',
+              'function skinStudioShowInspector(show)',
+              'function returnSkinStudioToList()',
+              'function openSkinStudioGlobalSettings(area)',
+              'aria-label="Header sections"',
+              'aria-label="Template sections"',
+              'aria-label="Footer sections"',
+              'class="studio-more-actions"',
+              'id="skinStudioPageSelect"',
+              'id="skinPreviewFrameOuter"',
+              'id="skinStudioUndo"',
+              'id="skinStudioRedo"',
+              'function skinSectionOutlineKeydown(event,index,id)',
+              'function filterSkinSectionOutline(value)',
+              'onclick="saveSkinSiteDraft(this)"',
+              'onclick="saveSkinSiteConfig(this)"'
+          ]
+          for ui_token in skin_studio_builder_tokens:
+              if ui_token not in admin_html:
+                  failures.append("admin.html: Shopify-style Skin Studio builder contract missing " + ui_token)
+          if 'right.parentElement!==left)left.appendChild(right)' not in admin_html:
+              failures.append("admin.html: contextual inspector must live in the left editor sidebar")
+          if 'skinStudioShowInspector(true)' not in admin_html:
+              failures.append("admin.html: selecting a preview section must open the contextual inspector")
+          if 'function renderSkinSectionLibraryPicker()' not in admin_html:
+              failures.append("admin.html: section picker library must remain available")
+          if 'function renderSkinMediaLibrary(root,' not in admin_html:
+              failures.append("admin.html: media library must remain available in Skin Studio")
           if 'product_selection:type==="product-grid"?"manual":undefined' not in studio:
               failures.append("storefront-studio.html: newly created product grids must use explicit manual selection")
           for persistence_token in ["function stableJson(value)","stableJson(readback.draft)!==stableJson(result.draft)","stableJson({config:readback.config,products:readback.products})","Save not confirmed"]:
