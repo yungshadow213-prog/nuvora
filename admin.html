@@ -3316,7 +3316,7 @@ function collectSkinConfigFields(){
  skinBuilderConfig.productGuideFields=skinBuilderConfig.productGuideFields||{};
  Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig.productGuideFields[key]=!!el.checked;});
  const hero=skinBuilderConfig.sections.find(x=>x.type==='hero');
- if(hero){hero.title=skinBuilderConfig.heroTitle;hero.eyebrow=skinBuilderConfig.heroEyebrow;hero.text=skinBuilderConfig.heroDescription;hero.image=skinBuilderConfig.heroImage;}
+ if(hero){hero.title=skinBuilderConfig.heroTitle;hero.eyebrow=skinBuilderConfig.heroEyebrow;hero.text=skinBuilderConfig.heroDescription;hero.image=skinBuilderConfig.heroImage;hero.buttonLabel=skinBuilderConfig.heroButtonLabel;}
  const editorial=skinBuilderConfig.sections.find(x=>x.type==='editorial');
  if(editorial){editorial.title=skinBuilderConfig.approachTitle;editorial.eyebrow=skinBuilderConfig.approachEyebrow;editorial.text=skinBuilderConfig.approachBody;}
 }
@@ -4292,10 +4292,10 @@ function updateSkinSection(index,key,value,fromPreview=false){
  sec[key]=value;
  if(key==='type'){sec.product_ids=[];sec.category_id='';sec.filter=value==='featured-products'?'featured':'all';}
  if(skinStudioPageId==='home'&&sec.type==='hero'){
-  const map={title:'heroTitle',eyebrow:'heroEyebrow',text:'heroDescription'};
+  const map={title:'heroTitle',eyebrow:'heroEyebrow',text:'heroDescription',buttonLabel:'heroButtonLabel'};
   if(map[key])skinBuilderConfig[map[key]]=String(value??'');
   if(key==='image')skinBuilderConfig.heroImage=String(value??'');
-  const elementIds={title:'skinCfgHeroTitle',eyebrow:'skinCfgHeroEyebrow',text:'skinCfgHeroDescription',image:'skinCfgHeroImage'};
+  const elementIds={title:'skinCfgHeroTitle',eyebrow:'skinCfgHeroEyebrow',text:'skinCfgHeroDescription',image:'skinCfgHeroImage',buttonLabel:'skinCfgHeroButton'};
   if(elementIds[key]){const el=document.getElementById(elementIds[key]);if(el)el.value=String(value??'');}
  }
  if(skinStudioPageId==='home'&&sec.type==='editorial'){
