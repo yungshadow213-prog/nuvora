@@ -1860,6 +1860,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           return json({ok:true,action,draft});
         }
         if(action==='publish'){
+          const publishError=validatePublishedStorefrontProducts(products);
+          if(publishError)return json({error:publishError},400);
           const publishedConfig={...config,catalogVersion:1,version:Math.max(1,Number(config.version)||1),publishedAt:now};
           const publishedProducts=products.filter(p=>String(p.status||'published').toLowerCase()==='published');
           // Keep private draft products available in the editor after publishing.
@@ -2611,6 +2613,16 @@ function validateMultiStorefrontProducts(value){
       for(const image of product.images){try{if(new URL(String(image)).protocol!=='https:')return 'Gallery images must use HTTPS.';}catch{return 'A gallery image URL is invalid.';}}
     }
     if(product.status!==undefined&&!['draft','published'].includes(String(product.status).toLowerCase()))return 'Product status must be draft or published.';
+  }
+  return null;
+}
+function validatePublishedStorefrontProducts(products){
+  for(const product of products){
+    if(String(product?.status||"published").toLowerCase()!=="published")continue;
+    if(!String(product.category||"").trim())return "Published products need a category.";
+    if(!String(product.image||"").trim())return "Published products need a verified main image.";
+    if(!String(product.destinationUrl||"").trim())return "Published products need an exact retailer product link.";
+    try{if(new URL(product.destinationUrl).protocol!=="https:")return "Published retailer links must use HTTPS.";}catch{return "A published retailer product link is invalid.";}
   }
   return null;
 }
