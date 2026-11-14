@@ -63,7 +63,6 @@
 <div class="field wide"><label for="pFiles">Upload image(s) from your device</label><input id="pFiles" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" multiple><button type="button" class="btn" id="uploadImages">Upload selected images</button><small class="muted">JPG, PNG, WebP, AVIF or GIF; maximum 6 MB per file.</small></div>
 <div class="field wide"><label for="pGallery">Additional gallery image URLs (one per line)</label><textarea id="pGallery" placeholder="https://…"></textarea></div>
 <div class="field wide"><label for="pDestination">Retailer / product link</label><input id="pDestination" type="url" placeholder="Paste the exact product destination"></div>
-<div class="field"><label for="pPrice">Display price (optional)</label><input id="pPrice" type="text" maxlength="80"></div>
 <div class="field"><label for="pStatus">Publication status</label><select id="pStatus"><option value="draft">Draft</option><option value="published">Published</option></select></div>
 <div class="field wide"><label class="checkline"><input id="pFeatured" type="checkbox"> Feature on the storefront homepage</label></div>
 <div class="field wide"><div class="ai-product-row"><button type="button" class="btn" id="generateProductCopy">✦ Refine product copy with Nuvora AI</button><span class="muted" id="productAiStatus" role="status" aria-live="polite">Uses the details entered here. Review the result before saving.</span></div></div>
@@ -156,7 +155,7 @@ function openProduct(id=""){
  $("pName").value=p.name||"";$("pCategory").value=p.category||"";$("pType").value=p.productType||p.product_type||p.type||"";$("pBrand").value=p.brand||"";$("pDescription").value=p.description||"";$("pShort").value=p.shortDescription||"";
  $("pFeatures").value=Array.isArray(p.features)?p.features.join("\n"):String(p.features||"");
  $("pSpecifications").value=p.specifications&&typeof p.specifications==="object"?Object.entries(p.specifications).map(([key,value])=>key+": "+value).join("\n"):"";
- $("pImage").value=p.image||"";$("pGallery").value=(Array.isArray(p.images)?p.images.filter(url=>url&&url!==p.image):[]).join("\n");$("pFiles").value="";$("pDestination").value=p.destinationUrl||"";$("pPrice").value=p.price||"";$("pStatus").value=p.status||"draft";$("pFeatured").checked=p.featured===true;
+ $("pImage").value=p.image||"";$("pGallery").value=(Array.isArray(p.images)?p.images.filter(url=>url&&url!==p.image):[]).join("\n");$("pFiles").value="";$("pDestination").value=p.destinationUrl||"";$("pStatus").value=p.status||"draft";$("pFeatured").checked=p.featured===true;
  $("productAiStatus").textContent="Uses the details entered here. Review the result before saving.";
  updateProductImagePreview();
  $("productModal").classList.add("open");
@@ -181,7 +180,7 @@ function saveProduct(e){
   if(split<1||!line.slice(0,split).trim()||!line.slice(split+1).trim()){showNotice("Enter each specification as Label: value on its own line.",true);return;}
   specifications[line.slice(0,split).trim().slice(0,80)]=line.slice(split+1).trim().slice(0,500);
  }
- const item={...(existing||{}),id:existing?.id||makeId(selectedStore.key),name,category,categorySlug:categorySlugValue,...(categoryMatch?{customCategoryId:String(categoryMatch.id||categoryMatch.slug||"")}:{customCategoryId:""}),productType:$("pType").value.trim(),brand:$("pBrand").value.trim(),description:$("pDescription").value.trim(),shortDescription:$("pShort").value.trim(),features:$("pFeatures").value.split(/\r?\n/).map(value=>value.trim()).filter(Boolean).slice(0,30),specifications,image,images:[...new Set(gallery)],destinationUrl,price:$("pPrice").value.trim(),status,featured:$("pFeatured").checked};
+ const item={...(existing||{}),id:existing?.id||makeId(selectedStore.key),name,category,categorySlug:categorySlugValue,...(categoryMatch?{customCategoryId:String(categoryMatch.id||categoryMatch.slug||"")}:{customCategoryId:""}),productType:$("pType").value.trim(),brand:$("pBrand").value.trim(),description:$("pDescription").value.trim(),shortDescription:$("pShort").value.trim(),features:$("pFeatures").value.split(/\r?\n/).map(value=>value.trim()).filter(Boolean).slice(0,30),specifications,image,images:[...new Set(gallery)],destinationUrl,status,featured:$("pFeatured").checked};
  if(existing)products=products.map(x=>String(x.id)===String(existing.id)?item:x);else{products.unshift(item);productPage=1;productSearch="";$("productSearch").value="";}
  $("productModal").classList.remove("open");renderProducts();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");switchTab("products");
 }
@@ -238,6 +237,7 @@ function uploadProductImages(){
    uploaded.push(data.publicUrl);
   }
   if(!$("pImage").value.trim()&&uploaded.length)$("pImage").value=uploaded[0];
+  updateProductImagePreview();
   const current=$("pGallery").value.split(/\r?\n/).map(url=>url.trim()).filter(Boolean);
   $("pGallery").value=[...new Set([...current,...uploaded])].join("\n");
   input.value="";showNotice(uploaded.length+" image(s) uploaded and added to this product. Save the product, then save the draft."); 
