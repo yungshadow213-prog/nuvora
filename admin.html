@@ -1409,7 +1409,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
       </div>
       <div class="ai-studio">
         <div class="ai-studio-head"><div><h3>AI listing polish</h3><div class="muted">Refine the title, description, key features, SEO copy and social caption using the product information already in this form.</div></div></div>
-        <div class="ai-actions"><button class="btn primary" id="aiCopyBtn" onclick="generateAIProductCopy()">Polish product listing</button></div>
+        <div class="ai-actions"><button class="btn primary" id="aiCopyBtn" onclick="generateAIProductCopy()">Polish product listing with Gemini</button><button class="btn skin-only-field" id="aiClaudeCopyBtn" onclick="generateSkinProductCopyWithClaude()">✦ Polish skincare copy with Claude</button></div><div id="aiClaudeCopyStatus" class="ai-status skin-only-field" role="status" aria-live="polite"></div>
         <div id="aiCopyStatus" class="ai-status"></div>
       </div>
     </div>
@@ -1474,7 +1474,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         <div class="field full"><label>Tax notice</label><input id="pfTax" placeholder="Sales taxes may apply at checkout"></div>
         <div class="field"><label>Category</label><select id="pfCategory"><option value="">No category</option></select></div>
         <div class="field"><label>Collection</label><select id="pfCollection"><option value="">No collection</option></select></div>
-        <div class="field full skin-only-field"><label>Gemini product assistant</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="skinGeminiFillBtn" type="button" class="btn" onclick="generateSkinProductWithGemini()">Fill product guide with Gemini</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input id="skinGeminiReplaceExisting" type="checkbox"> Replace existing text fields</label></div><div id="skinGeminiStatus" class="muted" role="status" aria-live="polite" style="margin-top:8px">Paste the exact Amazon link into Destination / affiliate URL. Gemini will fill supported fields for review; it will not save or publish the product.</div></div>
+        <div class="field full skin-only-field"><label>AI product research assistant</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="skinGeminiFillBtn" type="button" class="btn" onclick="generateSkinProductWithGemini()">Fill guide with Gemini</button><button id="skinClaudeFillBtn" type="button" class="btn primary" onclick="generateSkinProductWithClaude()">✦ Fill guide with Claude</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input id="skinGeminiReplaceExisting" type="checkbox"> Replace existing text fields</label></div><div id="skinGeminiStatus" class="muted" role="status" aria-live="polite" style="margin-top:8px">Use Gemini or Claude to read the exact Amazon listing and prepare source-backed guide fields. Review everything; neither assistant saves or publishes.</div><div id="skinClaudeGuideStatus" class="muted" role="status" aria-live="polite" style="margin-top:5px"></div></div>
         <div class="field full"><label>Description</label><textarea id="pfDescription" placeholder="Product description"></textarea></div>
         <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div>
         <div class="field full skin-only-field"><label>Product benefits <span class="muted">(source-backed)</span></label><textarea id="pfBenefits" placeholder="What the product is intended to do, based on product information"></textarea></div>
@@ -2210,6 +2210,46 @@ async function generateSkinProductWithGemini(){
   if(status)status.textContent=message;
   productSaveMessage(message,'error');
  }finally{if(button){button.disabled=false;button.textContent=original||'Fill product guide with Gemini';}}
+}
+
+async function generateSkinProductWithClaude(){
+ const url=String(document.getElementById('pfDestination')?.value||document.getElementById('amazonUrlInput')?.value||'').trim();
+ const status=document.getElementById('skinClaudeGuideStatus'),button=document.getElementById('skinClaudeFillBtn');
+ if(!url){if(status)status.textContent='Paste the exact Amazon product link into Destination / affiliate URL first.';productSaveMessage('Paste the Amazon product link before asking Claude to prepare the guide.','error');return;}
+ const original=button?.textContent;if(button){button.disabled=true;button.textContent='Claude is researching…';}
+ if(status)status.textContent='Reading the Amazon listing and preparing a source-backed skincare guide…';
+ try{
+  const response=await api('/api/admin/ai/claude/skin-product',{method:'POST',body:{url}});
+  const p=response?.product;if(!response?.ok||!p)throw new Error('Claude did not return product fields.');
+  const replace=!!document.getElementById('skinGeminiReplaceExisting')?.checked;
+  const fill=(id,value)=>{
+   const el=document.getElementById(id);if(!el||value==null)return false;
+   if(el instanceof HTMLSelectElement&&el.multiple){const values=Array.isArray(value)?value.map(String).filter(Boolean):[];if(!values.length||(!replace&&el.selectedOptions.length))return false;const available=new Set(Array.from(el.options).map(option=>String(option.value))),selected=values.filter(item=>available.has(item));if(!selected.length)return false;Array.from(el.options).forEach(option=>option.selected=selected.includes(String(option.value)));el.dispatchEvent(new Event('change',{bubbles:true}));return true;}
+   const next=Array.isArray(value)?value.join('\n'):String(value);if(!next.trim()||(!replace&&String(el.value||'').trim()))return false;el.value=next;el.dispatchEvent(new Event('input',{bubbles:true}));return true;
+  };
+  let count=0;
+  const entries=[['pfName',p.name],['pfBrand',p.brand],['pfDescription',p.overview],['pfFeatures',p.benefits],['pfBenefits',p.benefits],['pfSkinTypes',p.skin_types],['pfSkinConcerns',p.skin_concerns],['pfIngredients',p.ingredients],['pfAvailability',p.availability],['pfUsage',p.usage_instructions],['pfSkinAvoid',p.product_warnings],['pfWarnings',p.product_warnings],['pfProductSize',p.size],['pfRating',p.rating],['pfAsin',p.asin]];
+  for(const [id,value] of entries)if(fill(id,value))count++;
+  const source=document.getElementById('pfSource');if(source)source.value='amazon';const retailer=document.getElementById('pfRetailer');if(retailer)retailer.value='Amazon';
+  const destination=document.getElementById('pfDestination');if(destination&&!destination.value.trim())destination.value=url;updateRetailerRatingPreview();
+  const notes=Array.isArray(p.confidence_notes)?p.confidence_notes.join(' · '):'';
+  if(status)status.textContent='Claude prepared '+count+' fields. '+(notes?'Source notes: '+notes:'Review every field for accuracy.')+' Nothing has been saved or published.';
+  productSaveMessage('Claude prepared the skincare guide. Review the fields and click Save Draft when ready.','success');
+ }catch(e){const message=e.message||'Claude could not prepare this product.';if(status)status.textContent=message;productSaveMessage(message,'error');}
+ finally{if(button){button.disabled=false;button.textContent=original||'✦ Fill guide with Claude';}}
+}
+async function generateSkinProductCopyWithClaude(){
+ const btn=document.getElementById('aiClaudeCopyBtn'),status=document.getElementById('aiClaudeCopyStatus');
+ const p=aiProductData();if(!p.name){if(status)status.textContent='Add the product title first.';return;}
+ btn.disabled=true;btn.textContent='Claude is polishing…';if(status)status.textContent='Refining skincare copy from the product facts already entered…';
+ try{
+  const j=await api('/api/admin/ai/claude/skin-copy',{method:'POST',body:{product:p}});
+  if(j.title)document.getElementById('pfName').value=j.title;
+  if(j.description)document.getElementById('pfDescription').value=j.description;
+  if(Array.isArray(j.features))document.getElementById('pfFeatures').value=j.features.join('\n');
+  if(status)status.textContent='Claude updated the form copy. Review it before saving; nothing has been saved or published.';
+ }catch(e){if(status)status.textContent='Claude copy polish failed: '+(e.message||'Unknown error.');}
+ finally{btn.disabled=false;btn.textContent='✦ Polish skincare copy with Claude';}
 }
 async function generateAIProductCopy(){
   const btn=document.getElementById('aiCopyBtn'),status=document.getElementById('aiCopyStatus');const p=aiProductData();if(!p.name){setAdminStatus('Add the product title first.','error');return;}
