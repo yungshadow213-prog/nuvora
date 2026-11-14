@@ -2185,7 +2185,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const imageData=String(payload?.output_image?.data||payload?.output?.find?.(item=>item?.type==='image')?.data||'');
           const mime=String(payload?.output_image?.mime_type||payload?.output?.find?.(item=>item?.type==='image')?.mime_type||'image/png');
           if(!imageData)return json({error:'Gemini returned no image. Try a simpler prompt or a different reference image.'},502);
-          return json({ok:true,provider:'cloudflare-workers-ai',model,image:'data:'+(mime.startsWith('image/')?mime:'image/png')+';base64,'+imageData});
+          return json({ok:true,provider:'gemini',model,image:'data:'+(mime.startsWith('image/')?mime:'image/png')+';base64,'+imageData});
         }catch(e){
           return json({error:'Gemini image generation failed: '+String(e?.message||e).slice(0,300)},502);
         }
@@ -2412,7 +2412,7 @@ leanMultilineText(typeof value==='string'?value:'',max);
           const model=ai.model;
           const result=parseNuvoraAIJson(ai.raw);
 return json({
-            ok:true,provider:'gemini',
+            ok:true,provider:'cloudflare-workers-ai',model,
             title:cleanText(result.title,180),
             description:cleanMultilineText(result.description,12000),
             features:Array.isArray(result.features)?result.features.map(item=>cleanText(item,500)).filter(Boolean).slice(0,20):[],
@@ -2420,7 +2420,7 @@ return json({
             seo_description:cleanText(result.seo_description,320),
             social_caption:cleanMultilineText(result.social_caption,2000)
           });
-        }catch(e){return json({error:'Gemini listing copy failed: '+String(e?.message||e).slice(0,300)},502);}
+        }catch(e){return json({error:'Nuvora AI listing copy failed: '+String(e?.message||e).slice(0,300)},502);}
       }
 
       // Unknown API routes must stay JSON 404s; only browser routes use the SPA shell.
