@@ -2193,6 +2193,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
 
       if(url.pathname==='/api/admin/ai/skin-product'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        const aiLimit=rateLimit(request,'nuvora-ai-skin-product',6,60000);
+        if(aiLimit)return json({error:'Nuvora AI product research is being used frequently. Try again in a minute.'},429,{'retry-after':String(aiLimit)});
         if(!env.AI)return json({error:'Cloudflare Workers AI is not connected. Add the Workers AI binding named AI to the nuvora Worker.'},503);
         const input=await body(request,64*1024);
         const sourceUrl=String(input.url||'').trim();
@@ -2391,6 +2393,8 @@ leanMultilineText(typeof value==='string'?value:'',max);
 
       if(url.pathname==='/api/admin/ai/copy'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        const aiLimit=rateLimit(request,'nuvora-ai-copy',10,60000);
+        if(aiLimit)return json({error:'Nuvora AI copywriting is being used frequently. Try again in a minute.'},429,{'retry-after':String(aiLimit)});
         if(!env.AI)return json({error:'Cloudflare Workers AI is not connected. Add the Workers AI binding named AI to the nuvora Worker.'},503);
         const input=await body(request,64*1024),product=input.product||{};
         const schema={
