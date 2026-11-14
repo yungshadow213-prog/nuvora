@@ -304,7 +304,7 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
 .skin-claude-proposal span{font-size:11px;line-height:1.4;color:#657264;white-space:pre-wrap;overflow-wrap:anywhere}
 #skinClaudeApply{width:100%;margin-top:10px}
 .skin-claude-composer{flex:0 0 auto;padding-top:12px;border-top:1px solid #e5ebe3}
-.skin-claude-composer textarea{display:block;width:100%;min-height:82px;resize:vertical;padding:12px;border:1px solid #dce5d9;border-radius:12px;background:#fff;color:#2e3c31;font:12px/1.55 inherit;outline:none}
+.skin-claude-composer textarea{display:block;width:100%;min-height:82px;resize:vertical;padding:12px;border:1px solid #dce5d9;border-radius:12px;background:#fff;color:#2e3c31;font:inherit;font-size:12px;line-height:1.55;outline:none}
 .skin-claude-composer textarea:focus{border-color:#89a27f;box-shadow:0 0 0 3px rgba(117,150,105,.12)}
 .skin-claude-composer-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:9px}
 .skin-claude-composer-foot span{max-width:275px;color:#879286;font-size:9px;line-height:1.4}
