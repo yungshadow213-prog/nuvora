@@ -152,7 +152,7 @@
     try {
       const health = await request("/api/health", { method: "GET" });
       if (health?.configured?.claude) setStatus("Claude is connected. Workspace context is included with your question.", "ready");
-      else setStatus("Claude is not connected yet. Add ANTHROPIC_API_KEY as a Cloudflare Worker secret, then reload.", "error");
+      else setStatus("Claude is not connected yet. configure the Anthropic Worker secret in Cloudflare, then reload.", "error");
     } catch (error) {
       setStatus(error.message || "Could not check the Claude connection. Sign in again if your session expired.", "error");
     }
