@@ -2104,7 +2104,7 @@ async function openAIStudio(){
 function closeAIStudio(){
   if(document.getElementById('productModal')?.classList.contains('open'))setProductEntryStep(3);
 }
-function aiProductData(){return {name:document.getElementById('pfName').value.trim(),brand:document.getElementById('pfBrand').value.trim(),description:document.getElementById('pfDescription').value.trim(),features:document.getElementById('pfFeatures').value.trim(),category:document.getElementById('pfCategory').value.trim(),price:document.getElementById('pfPrice').value,currency:document.getElementById('pfCurrency').value};}
+function aiProductData(){return {name:document.getElementById('pfName').value.trim(),brand:document.getElementById('pfBrand').value.trim(),description:(window.skinCareImportMode?document.getElementById('pfStoreDescription')?.value:document.getElementById('pfDescription').value)?.trim()||'',features:document.getElementById('pfFeatures').value.trim(),category:document.getElementById('pfSkinStoreCategory')?.value||document.getElementById('pfCategory').value.trim(),price:document.getElementById('pfPrice').value,currency:document.getElementById('pfCurrency').value};}
 async function getAIReferenceFile(){
   const manual=document.getElementById('aiReference').files?.[0];
   let file=manual||null;
@@ -2229,7 +2229,7 @@ async function generateAIProductCopy(){
   btn.disabled=true;btn.textContent='Polishing…';status.textContent='Writing publish-ready copy…';
   try{
     const j=await api('/api/admin/ai/copy',{method:'POST',body:{product:p}});
-    if(j.title)document.getElementById('pfName').value=j.title;if(j.description)document.getElementById('pfDescription').value=j.description;if(j.features)document.getElementById('pfFeatures').value=Array.isArray(j.features)?j.features.join('\n'):j.features;
+    if(j.title)document.getElementById('pfName').value=j.title;const descriptionTarget=window.skinCareImportMode?document.getElementById('pfStoreDescription'):document.getElementById('pfDescription');if(j.description&&descriptionTarget)descriptionTarget.value=j.description;if(j.features)document.getElementById('pfFeatures').value=Array.isArray(j.features)?j.features.join('\n'):j.features;
     status.textContent='Listing copy updated in the form. Review it before saving.';
   }catch(e){status.textContent='Copy generation failed: '+(e.message||'Unknown error.');setAdminStatus(e.message||'Nuvora AI copy generation failed.','error')}finally{btn.disabled=false;btn.textContent='Polish product listing with Nuvora AI';}
 }
