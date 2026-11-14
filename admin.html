@@ -2085,7 +2085,8 @@ function removeProductImage(i){
 }
 async function openAIStudio(){
   document.body.classList.add('admin-workspace-open');
-  document.getElementById('productModal')?.classList.remove('open');
+  // Keep the Add Product workspace open underneath AI Studio so generated
+  // copy and images return to the same unsaved product form for review.
   document.getElementById('shopifyModal')?.classList.remove('open');
   const page=document.getElementById('aiStudioModal');
   page.classList.add('open');
@@ -2098,7 +2099,10 @@ async function openAIStudio(){
   refreshGeminiConfigStatus();
   // AI generation is manual so merely opening the workspace never consumes an AI request.
 }
-function closeAIStudio(){document.getElementById('aiStudioModal').classList.remove('open');document.body.classList.remove('admin-workspace-open');}
+function closeAIStudio(){
+  document.getElementById('aiStudioModal').classList.remove('open');
+  if(!document.getElementById('productModal')?.classList.contains('open'))document.body.classList.remove('admin-workspace-open');
+}
 function aiProductData(){return {name:document.getElementById('pfName').value.trim(),brand:document.getElementById('pfBrand').value.trim(),description:document.getElementById('pfDescription').value.trim(),features:document.getElementById('pfFeatures').value.trim(),category:document.getElementById('pfCategory').value.trim(),price:document.getElementById('pfPrice').value,currency:document.getElementById('pfCurrency').value};}
 async function getAIReferenceFile(){
   const manual=document.getElementById('aiReference').files?.[0];
