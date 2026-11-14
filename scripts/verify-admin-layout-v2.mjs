@@ -1,11 +1,12 @@
 import { readFile } from "node:fs/promises";
 import assert from "node:assert/strict";
 
-const [html, css, js, worker] = await Promise.all([
+const [html, css, js, worker, studio] = await Promise.all([
   readFile(new URL("../admin.html", import.meta.url), "utf8"),
   readFile(new URL("../admin-layout-v2.css", import.meta.url), "utf8"),
   readFile(new URL("../admin-layout-v2.js", import.meta.url), "utf8"),
-  readFile(new URL("../worker.js", import.meta.url), "utf8")
+  readFile(new URL("../worker.js", import.meta.url), "utf8"),
+  readFile(new URL("../storefront-studio.html", import.meta.url), "utf8")
 ]);
 
 assert.ok(html.includes('/admin-layout-v2.css?v=1'), "Admin must load the new layout stylesheet");
@@ -85,5 +86,33 @@ for (const token of [
 
 assert.ok(!html.includes("sk-ant-api"), "No Anthropic API key may be embedded in the admin HTML");
 assert.ok(!js.includes("ANTHROPIC_API_KEY"), "No Anthropic API key may be embedded in admin layout JavaScript");
+
+for (const token of [
+  "nuvora-product-workspace-final-fix",
+  "height:100dvh!important",
+  "overflow-y:auto!important",
+  "product-entry-navigation",
+  "position:static!important",
+  "grid-template-columns:minmax(180px,220px) minmax(0,1fr) minmax(210px,260px)"
+]) assert.ok(html.includes(token), "Product editor scroll/overlap fix is missing: " + token);
+
+for (const token of [
+  "/api/admin/ai/store-product",
+  "nuvora-ai-store-product",
+  "ingestSourceProduct(sourceUrl,env)",
+  "Choose category only from this exact list",
+  "Verify every product detail before publishing"
+]) assert.ok(worker.includes(token), "Store product AI endpoint contract missing: " + token);
+
+for (const token of [
+  "fillProductFromSource()",
+  "generateStoreProductImage()",
+  "useStoreGeneratedImage()",
+  "pFeatures",
+  "pSpecs",
+  "storeProductAIStatus",
+  "storeImageGrade",
+  "storeImagePreview"
+]) assert.ok(studio.includes(token), "Multi-store editor AI workflow missing: " + token);
 
 console.log("Nuvora Admin layout and Cloudflare Workers AI contracts passed.");
