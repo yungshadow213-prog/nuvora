@@ -2385,7 +2385,7 @@ leanMultilineText(typeof value==='string'?value:'',max);
               }});
             }
           }
-          return json({ok:true,provider:'cloudflare-workers-ai',model,cleanMultilineText(result?.reply,2200)||'Here are the suggested updates.',changes});
+          return json({ok:true,provider:'cloudflare-workers-ai',model,reply:cleanMultilineText(result?.reply,2200)||'Here are the suggested updates.',changes});
         }catch(e){
           return json({error:'Nuvora AI Studio request failed: '+String(e?.message||e).slice(0,240)},502);
         }
