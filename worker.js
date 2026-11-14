@@ -2145,14 +2145,16 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
 
       if(url.pathname==='/api/admin/ai/image'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
-        if(!env.GEMINI_API_KEY)return json({error:'Gemini image generation is not configured yet. Add GEMINI_API_KEY as a Cloudflare Worker secret.'},503);
+        const imageLimit=rateLimit(request,'nuvora-ai-image',3,60000);
+        if(imageLimit)return json({error:'Nuvora AI image generation is being used frequently. Try again in a minute.'},429,{'retry-after':String(imageLimit)});
+        if(!env.AI)return json({error:'Cloudflare Workers AI is not connected. Add the Workers AI binding named AI to the nuvora Worker.'},503);
         const form=await request.formData();
         const prompt=cleanText(form.get('prompt'),5000);
         const size=String(form.get('size')||'1024x1024');
         const source=form.get('image');
         const imageUrl=String(form.get('image_url')||'').trim();
         if(!prompt)return json({error:'An image prompt is required.'},400);
-        const aspectRatio=({'1024x1024':'1:1','1536x1024':'3:2','1024x1536':'2:3'})[size]||'1:1';
+        const dimensions=({'1024x1024':[1024,1024],'1536x1024':[1536,1024],'1024x1536':[1024,1536]})[size]||[1024,1024];
         try{
           let referenceBytes=null,referenceMimeType='image/png';
           if(source&&typeof source.arrayBuffer==='function'&&source.size>0){
@@ -2162,32 +2164,27 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           }else if(imageUrl){
             let referenceResponse;
             try{referenceResponse=await fetch(imageUrl,{redirect:'follow',headers:{accept:'image/avif,image/webp,image/apng,image/*,*/*;q=0.8'}})}
-            catch(fetchError){return json({error:'Gemini could not fetch the product image. Upload the image to Nuvora first, then generate again.'},422)}
-            if(!referenceResponse.ok)return json({error:'Gemini could not fetch the product image (HTTP '+referenceResponse.status+'). Upload the image to Nuvora first, then generate again.'},422);
+            catch(fetchError){return json({error:'Nuvora AI could not fetch the product image. Upload the image to Nuvora first, then generate again.'},422)}
+            if(!referenceResponse.ok)return json({error:'Nuvora AI could not fetch the product image (HTTP '+referenceResponse.status+'). Upload the image to Nuvora first, then generate again.'},422);
             referenceMimeType=referenceResponse.headers.get('content-type')||'';
             if(!referenceMimeType.toLowerCase().startsWith('image/'))return json({error:'The product image URL did not return an image. Upload the image to Nuvora first, then generate again.'},422);
             referenceBytes=new Uint8Array(await referenceResponse.arrayBuffer());
           }
           if(referenceBytes&&referenceBytes.byteLength>6*1024*1024)return json({error:'Reference image must be 6 MB or smaller.'},400);
-          const input=[{type:'text',text:prompt}];
-          if(referenceBytes)input.push({type:'image',data:bytesToBase64(referenceBytes),mime_type:referenceMimeType});
-          const model=String(env.GEMINI_IMAGE_MODEL||'gemini-3.1-flash-image').replace(/[^a-zA-Z0-9._-]/g,'');
-          const response=await fetch('https://generativelanguage.googleapis.com/v1beta/interactions',{
-            method:'POST',
-            headers:{'x-goog-api-key':String(env.GEMINI_API_KEY),'content-type':'application/json'},
-            body:JSON.stringify({model,input,response_format:{type:'image',mime_type:'image/png',aspect_ratio:aspectRatio,image_size:'1K'}})
-          });
-          const payload=await response.json().catch(()=>({}));
-          if(!response.ok){
-            const providerMessage=String(payload?.error?.message||payload?.message||'').slice(0,240);
-            return json({error:'Gemini image generation failed ('+response.status+'). '+(providerMessage||'Check the Gemini API key and image-model access.')},502);
-          }
-          const imageData=String(payload?.output_image?.data||payload?.output?.find?.(item=>item?.type==='image')?.data||'');
-          const mime=String(payload?.output_image?.mime_type||payload?.output?.find?.(item=>item?.type==='image')?.mime_type||'image/png');
-          if(!imageData)return json({error:'Gemini returned no image. Try a simpler prompt or a different reference image.'},502);
-          return json({ok:true,provider:'gemini',model,image:'data:'+(mime.startsWith('image/')?mime:'image/png')+';base64,'+imageData});
+          const model='@cf/black-forest-labs/flux-2-klein-4b';
+          const aiForm=new FormData();
+          aiForm.append('prompt',prompt);
+          aiForm.append('width',String(dimensions[0]));
+          aiForm.append('height',String(dimensions[1]));
+          if(referenceBytes)aiForm.append('input_image_0',new Blob([referenceBytes],{type:referenceMimeType}), 'nuvora-reference');
+          const serialized=new Response(aiForm);
+          const contentType=serialized.headers.get('content-type');
+          const payload=await env.AI.run(model,{multipart:{body:serialized.body,contentType}});
+          const imageData=String(payload?.image||payload?.output?.image||'');
+          if(!imageData)return json({error:'Cloudflare image generation returned no image. Try a simpler prompt or a different reference image.'},502);
+          return json({ok:true,provider:'cloudflare-workers-ai',model,image:'data:image/png;base64,'+imageData});
         }catch(e){
-          return json({error:'Gemini image generation failed: '+String(e?.message||e).slice(0,300)},502);
+          return json({error:'Nuvora AI image generation failed: '+String(e?.message||e).slice(0,300)},502);
         }
       }
 
