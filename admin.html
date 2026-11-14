@@ -6010,4 +6010,200 @@ body.product-workspace-page #productModal .product-entry-footer>button{min-width
 }
 @media(prefers-reduced-motion:reduce){#productModal.product-entry-redesign .ai-prompt-suggestions button{transition:none}}
 </style>
+<style id="skin-product-workspace-normal-flow">
+/*
+ * Add Product is a dedicated page, not a floating modal.
+ * Keep the admin shell hidden while this page is open, and let the editor
+ * itself own the document scroll. No fixed/sticky rails or action bars.
+ */
+html:has(body.product-workspace-page){
+  height:auto!important;
+  min-height:100%!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:auto!important;
+}
+body.product-workspace-page{
+  position:static!important;
+  height:auto!important;
+  min-height:100vh!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:auto!important;
+}
+body.product-workspace-page>.app,
+body.product-workspace-page>footer{
+  display:none!important;
+}
+body.product-workspace-page #productModal{
+  position:static!important;
+  inset:auto!important;
+  display:block!important;
+  width:100%!important;
+  min-height:100vh!important;
+  height:auto!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+  z-index:auto!important;
+  background:var(--bg)!important;
+  backdrop-filter:none!important;
+}
+body.product-workspace-page #productModal>.modal{
+  position:static!important;
+  display:flex!important;
+  flex-direction:column!important;
+  width:100%!important;
+  max-width:none!important;
+  min-height:100vh!important;
+  height:auto!important;
+  max-height:none!important;
+  margin:0!important;
+  overflow:visible!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background:var(--bg)!important;
+}
+body.product-workspace-page #productModal .modal-head{
+  position:static!important;
+  flex:0 0 auto!important;
+  width:100%!important;
+}
+body.product-workspace-page #productModal .modal-body{
+  position:static!important;
+  flex:0 0 auto!important;
+  width:100%!important;
+  max-width:1440px!important;
+  min-height:0!important;
+  height:auto!important;
+  margin:0 auto!important;
+  overflow:visible!important;
+  overscroll-behavior:auto!important;
+  padding:24px clamp(14px,2.5vw,36px) 36px!important;
+  scrollbar-gutter:auto!important;
+}
+body.product-workspace-page #productModal .product-entry-workspace{
+  position:static!important;
+  display:grid!important;
+  min-height:0!important;
+  height:auto!important;
+  overflow:visible!important;
+  align-items:start!important;
+}
+body.product-workspace-page #productModal .product-entry-rail,
+body.product-workspace-page #productModal .product-entry-content,
+body.product-workspace-page #productModal .product-entry-preview,
+body.product-workspace-page #productModal .product-entry-step-panel{
+  position:static!important;
+  inset:auto!important;
+  float:none!important;
+  transform:none!important;
+  min-width:0!important;
+  max-height:none!important;
+  overflow:visible!important;
+}
+body.product-workspace-page #productModal .product-entry-rail{
+  align-self:start!important;
+  height:auto!important;
+}
+body.product-workspace-page #productModal .product-entry-footer,
+body.product-workspace-page #productModal .modal-actions{
+  position:static!important;
+  inset:auto!important;
+  z-index:auto!important;
+  display:flex!important;
+  flex:0 0 auto!important;
+  width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  flex-wrap:wrap!important;
+  gap:10px!important;
+  order:0!important;
+  margin:24px 0 0!important;
+  padding:16px 0 calc(16px + env(safe-area-inset-bottom))!important;
+  border-top:1px solid #dce4da!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;
+}
+body.product-workspace-page #productModal .product-entry-footer .product-entry-navigation{
+  position:static!important;
+  inset:auto!important;
+  display:grid!important;
+  flex:1 0 100%!important;
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+  align-items:center!important;
+  width:100%!important;
+  order:0!important;
+  margin:0 0 4px!important;
+  padding:0 0 12px!important;
+  border:0!important;
+  border-bottom:1px solid #e1e8df!important;
+}
+body.product-workspace-page #productModal .product-entry-footer #productEntryProgress{
+  text-align:center!important;
+}
+body.product-workspace-page #productModal .product-entry-footer>#productSaveBtn,
+body.product-workspace-page #productModal .product-entry-footer>#skinProductPublishBtn,
+body.product-workspace-page #productModal .product-entry-footer>button{
+  position:static!important;
+  inset:auto!important;
+  min-width:120px!important;
+  transform:none!important;
+  white-space:nowrap!important;
+}
+body.product-workspace-page #productModal .product-entry-footer>#productSaveBtn{
+  order:0!important;
+}
+body.product-workspace-page #productModal .product-entry-footer>#skinProductPublishBtn{
+  order:0!important;
+}
+@media(max-width:760px){
+  body.product-workspace-page #productModal .modal-body{
+    padding:14px 12px calc(22px + env(safe-area-inset-bottom))!important;
+  }
+  body.product-workspace-page #productModal .product-entry-workspace{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:12px!important;
+  }
+  body.product-workspace-page #productModal .product-entry-rail,
+  body.product-workspace-page #productModal .product-entry-content,
+  body.product-workspace-page #productModal .product-entry-preview{
+    grid-column:1!important;
+    grid-row:auto!important;
+    width:100%!important;
+  }
+  body.product-workspace-page #productModal .product-entry-step-list{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    width:100%!important;
+    overflow:visible!important;
+  }
+  body.product-workspace-page #productModal .product-entry-footer{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+  body.product-workspace-page #productModal .product-entry-footer .product-entry-navigation{
+    grid-column:1/-1!important;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)!important;
+    gap:6px!important;
+  }
+  body.product-workspace-page #productModal .product-entry-footer .product-entry-navigation .btn{
+    min-width:0!important;
+    padding:9px 8px!important;
+  }
+  body.product-workspace-page #productModal .product-entry-footer>#productSaveBtn,
+  body.product-workspace-page #productModal .product-entry-footer>#skinProductPublishBtn{
+    grid-column:auto!important;
+    min-width:0!important;
+    width:100%!important;
+  }
+}
+</style>
 </body></html>
