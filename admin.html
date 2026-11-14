@@ -1143,68 +1143,31 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
 <section id="skin-care" class="view skin-studio">
   <div class="skin-studio-hero">
     <div class="skin-studio-hero-copy">
-      <span class="eyebrow">Nuvora Admin / Dedicated workspace</span>
+      <span class="eyebrow">Nuvora Skin</span>
       <h2>Nuvora Skin <span>Studio</span></h2>
-      <p>A dedicated control center for the skincare storefront. Manage skincare products here without turning them into ordinary Nuvora listings.</p>
+      
       <div class="skin-studio-actions">
         <button class="btn primary" onclick="openSkinProduct()">+ Add skincare product</button>
         <button class="btn" onclick="ensureSkinCategory(true)">Set up Skin Care category</button>
         <button class="btn" onclick="window.open('/beauty','_blank')">Preview storefront ↗</button>
-        <button class="btn" onclick="window.location.href='/admin/skin-studio'">Open full-page drag builder ↗</button>
+        <button class="btn" onclick="window.location.href='/admin/skin-studio'">Open editor ↗</button>
       </div>
     </div>
     <div class="skin-studio-mark" aria-hidden="true"><span>NUVORA</span><b>SKIN</b><i>Care, considered.</i></div>
   </div>
 
   <div class="skin-studio-stats">
-    <article class="skin-studio-stat"><span>All skincare products</span><b id="skinTotal">0</b><small>Dedicated catalog</small></article>
-    <article class="skin-studio-stat"><span>Published</span><b id="skinPublished">0</b><small>Visible in the storefront</small></article>
-    <article class="skin-studio-stat"><span>Drafts</span><b id="skinDrafts">0</b><small>Still being reviewed</small></article>
-    <article class="skin-studio-stat"><span>With images</span><b id="skinImages">0</b><small>Product imagery added</small></article>
+    <article class="skin-studio-stat"><span>All skincare products</span><b id="skinTotal">0</b></article>
+    <article class="skin-studio-stat"><span>Published</span><b id="skinPublished">0</b></article>
+    <article class="skin-studio-stat"><span>Drafts</span><b id="skinDrafts">0</b></article>
+    <article class="skin-studio-stat"><span>With images</span><b id="skinImages">0</b></article>
   </div>
-
-  <div class="skin-studio-section-head">
-    <div><span class="section-kicker">Workspace</span><h3>Skincare admin tools</h3><p>The full-page Store Editor is ready, with a section outline, responsive storefront preview, page management and a dedicated settings inspector.</p></div>
-  </div>
-  <div class="skin-studio-tools">
-    <article class="skin-tool-card">
-      <div class="skin-tool-icon">01</div><span class="skin-tool-state is-current">Available now</span>
-      <h4>Product library</h4><p>Review skincare listings, open retailer links, edit product records, publish, unpublish, or remove products.</p>
-      <button class="skin-tool-link" onclick="document.getElementById('skinProductRows').scrollIntoView({behavior:'smooth',block:'start'})">Open product library ↘</button>
-    </article>
-    <article class="skin-tool-card">
-      <div class="skin-tool-icon">02</div><span class="skin-tool-state is-current">Existing Nuvora controls</span>
-      <h4>Categories & collections</h4><p>Organize products into the Skin Care category and use Nuvora’s existing collection controls.</p>
-      <div class="skin-tool-links"><button class="skin-tool-link" onclick="show('categories',document.querySelector('.nav button[onclick*=\'categories\']'))">Categories ↗</button><button class="skin-tool-link" onclick="show('collections',document.querySelector('.nav button[onclick*=\'collections\']'))">Collections ↗</button></div>
-    </article>
-    <article class="skin-tool-card">
-      <div class="skin-tool-icon">03</div><span class="skin-tool-state is-current">Available now</span>
-      <h4>Skincare product guides</h4><p>Benefits, skin types, skin concerns, ingredients, directions, cautions, product size, and careful recommendation notes live in the Skin Care editor.</p>
-      <button class="skin-tool-link" onclick="openSkinProduct()">Add a guided product ↗</button>
-    </article>
-    <article class="skin-tool-card">
-      <div class="skin-tool-icon">04</div><span class="skin-tool-state is-current">Available now</span>
-      <h4>Shopify-style Store Editor</h4><p>Edit pages, section order, storefront content, reusable layouts, responsive previews and global design settings in one focused workspace.</p>
-      <button class="skin-tool-link" onclick="window.location.href='/admin/skin-studio'">Open Store Editor ↗</button>
-    </article>
-    <article class="skin-tool-card">
-      <div class="skin-tool-icon">05</div><span class="skin-tool-state is-current">Available now</span>
-      <h4>Media library & product imagery</h4><p>Bulk-upload JPG, PNG, WebP, AVIF and GIF images, reuse existing assets, and apply media to sections, categories or product galleries.</p>
-      <button class="skin-tool-link" onclick="window.location.href='/admin/skin-studio?workspace=media'">Open Media Library ↗</button>
-    </article>
-    <article class="skin-tool-card">
-      <div class="skin-tool-icon">06</div><span class="skin-tool-state is-current">Available now</span>
-      <h4>Complementary recommendations</h4><p>Curate related products with a written rationale. Customer-facing guides distinguish selected companions from claims of guaranteed compatibility.</p>
-      <small>Recommendations are editorial guidance, not a medical suitability guarantee.</small>
-    </article>
-  </div>
-
 
   <div class="skin-site-builder studio-shell" id="skinSiteBuilder">
   <header class="studio-toolbar">
     <div class="studio-brandline">
       <a class="studio-back" href="/admin" aria-label="Back to Nuvora admin">←</a>
-      <div><span class="studio-overline">NUVORA ADMIN / WEBSITE BUILDER</span><div class="studio-page-line">Nuvora Skin <span>/</span> <select id="skinStudioPageSelect" aria-label="Choose page to edit" onchange="setSkinStudioPage(this.value)"><option value="home">Home page</option></select></div></div>
+      <div><span class="studio-overline">NUVORA SKIN</span><div class="studio-page-line">Nuvora Skin <span>/</span> <select id="skinStudioPageSelect" aria-label="Choose page to edit" onchange="setSkinStudioPage(this.value)"><option value="home">Home page</option></select></div></div>
     </div>
     <div class="studio-toolbar-actions">
       <div class="studio-view-controls" role="group" aria-label="Preview workspace layout">
@@ -1235,7 +1198,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
     <button class="skin-claude-backdrop" type="button" aria-label="Close Nuvora AI assistant" onclick="closeSkinClaudeAssistant()"></button>
     <section class="skin-claude-dialog" role="dialog" aria-modal="true" aria-labelledby="skinClaudeTitle">
       <header class="skin-claude-header">
-        <div><span class="skin-claude-kicker">NUVORA SKIN STUDIO</span><h2 id="skinClaudeTitle">Nuvora AI creative assistant</h2><p>Shape page layouts, refine copy and plan sections with your current draft as context.</p></div>
+        <div><span class="skin-claude-kicker">NUVORA SKIN STUDIO</span><h2 id="skinClaudeTitle">Nuvora AI</h2></div>
         <button type="button" class="skin-claude-close" aria-label="Close Nuvora AI assistant" onclick="closeSkinClaudeAssistant()">×</button>
       </header>
       <div class="skin-claude-status-row"><span class="skin-claude-status-dot"></span><span id="skinClaudeConnectionStatus">Checking Nuvora AI connection…</span></div>
@@ -1245,7 +1208,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         <button type="button" onclick="useSkinClaudePrompt('Suggest one useful section to add after the selected section and explain what it should contain.')">Suggest a section</button>
       </div>
       <div id="skinClaudeMessages" class="skin-claude-messages" aria-live="polite">
-        <div class="skin-claude-message assistant"><span class="skin-claude-message-label">NUVORA AI</span><p>Tell me what you want to improve. I can suggest copy edits or add a section to the page you are working on. Nothing changes until you review and apply the suggestions.</p></div>
+        <div class="skin-claude-message assistant"><span class="skin-claude-message-label">NUVORA AI</span><p>What would you like to change?</p></div>
       </div>
       <div id="skinClaudeProposals" class="skin-claude-proposals" hidden>
         <div class="skin-claude-proposals-heading"><b>Suggested draft changes</b><span>Review before applying</span></div>
@@ -1254,48 +1217,48 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
       </div>
       <form class="skin-claude-composer" onsubmit="event.preventDefault();sendSkinClaudePrompt()">
         <textarea id="skinClaudePrompt" rows="3" maxlength="8000" placeholder="Describe what you want Nuvora AI to change…" aria-label="Message Nuvora AI"></textarea>
-        <div class="skin-claude-composer-foot"><span>Nuvora AI suggestions are reviewed before they change your draft.</span><button type="submit" class="btn primary" id="skinClaudeSend">Ask Nuvora AI ↗</button></div>
+        <div class="skin-claude-composer-foot"><button type="submit" class="btn primary" id="skinClaudeSend">Ask Nuvora AI ↗</button></div>
       </form>
     </section>
   </div>
-  <div id="skinBuilderStatus" class="studio-status notice" role="status" aria-live="polite">Loading your saved Skin Care site…</div>
+  <div id="skinBuilderStatus" class="studio-status notice" role="status" aria-live="polite">Loading…</div>
     <div class="skin-builder-layout studio-layout">
     <aside class="studio-left-panel">
-      <div class="studio-panel-head"><div><span id="skinWorkspaceKicker" class="section-kicker">PAGE CONTENT</span><h3 id="skinWorkspaceHeading">Page layout</h3><small id="skinWorkspaceHelper" class="studio-panel-helper">Click a section to edit it. Use ↑ and ↓ to move it.</small></div><button id="skinWorkspaceAddButton" class="btn primary studio-add-button" type="button" onclick="toggleSkinAddMenu()">+ Add</button></div>
+      <div class="studio-panel-head"><div><span id="skinWorkspaceKicker" class="section-kicker">PAGE CONTENT</span><h3 id="skinWorkspaceHeading">Page layout</h3></div><button id="skinWorkspaceAddButton" class="btn primary studio-add-button" type="button" onclick="toggleSkinAddMenu()">+ Add</button></div>
       <div id="skinStudioAddMenu" class="studio-add-menu" hidden>
-        <button type="button" onclick="openSkinAdd('product')"><span>＋</span><span><b>Product</b><small>Import an Amazon link or add a product</small></span></button>
-        <button type="button" onclick="openSkinAdd('page')"><span>▤</span><span><b>Page</b><small>Create a new storefront page</small></span></button>
-        <button type="button" onclick="openSkinAdd('category')"><span>◫</span><span><b>Category</b><small>Group and organize skincare picks</small></span></button>
-        <button type="button" onclick="openSkinAdd('section')"><span>▦</span><span><b>Section</b><small>Add a block to the current page</small></span></button>
+        <button type="button" onclick="openSkinAdd('product')"><span>＋</span><span><b>Product</b></span></button>
+        <button type="button" onclick="openSkinAdd('page')"><span>▤</span><span><b>Page</b></span></button>
+        <button type="button" onclick="openSkinAdd('category')"><span>◫</span><span><b>Category</b></span></button>
+        <button type="button" onclick="openSkinAdd('section')"><span>▦</span><span><b>Section</b></span></button>
       </div>
       <nav class="studio-workspace-nav" aria-label="Store builder workspaces">
         <div class="studio-workspace-group">
           <span class="studio-workspace-label">STOREFRONT</span>
-          <button id="skinTabOutline" class="studio-workspace-item active" type="button" aria-current="page" onclick="switchSkinStudioTab('outline')"><span class="studio-workspace-icon" aria-hidden="true">▦</span><span><b>Theme editor</b><small>Sections and live layout</small></span></button>
-          <button id="skinTabPages" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('pages')"><span class="studio-workspace-icon" aria-hidden="true">▤</span><span><b>Pages</b><small>Page structure and content</small></span></button>
+          <button id="skinTabOutline" class="studio-workspace-item active" type="button" aria-current="page" onclick="switchSkinStudioTab('outline')"><span class="studio-workspace-icon" aria-hidden="true">▦</span><span><b>Theme editor</b></span></button>
+          <button id="skinTabPages" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('pages')"><span class="studio-workspace-icon" aria-hidden="true">▤</span><span><b>Pages</b></span></button>
         </div>
         <div class="studio-workspace-group">
           <span class="studio-workspace-label">CATALOG</span>
-          <button id="skinTabProducts" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('products')"><span class="studio-workspace-icon" aria-hidden="true">□</span><span><b>Products</b><small>Affiliate product library</small></span></button>
-          <button id="skinTabCategories" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('categories')"><span class="studio-workspace-icon" aria-hidden="true">▧</span><span><b>Categories &amp; brands</b><small>Organize product discovery</small></span></button>
+          <button id="skinTabProducts" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('products')"><span class="studio-workspace-icon" aria-hidden="true">□</span><span><b>Products</b></span></button>
+          <button id="skinTabCategories" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('categories')"><span class="studio-workspace-icon" aria-hidden="true">▧</span><span><b>Categories &amp; brands</b></span></button>
         </div>
         <div class="studio-workspace-group">
           <span class="studio-workspace-label">CONTENT</span>
-          <button id="skinTabMedia" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('media')"><span class="studio-workspace-icon" aria-hidden="true">▧</span><span><b>Media library</b><small>Uploaded store imagery</small></span></button>
+          <button id="skinTabMedia" class="studio-workspace-item" type="button" onclick="switchSkinStudioTab('media')"><span class="studio-workspace-icon" aria-hidden="true">▧</span><span><b>Media library</b></span></button>
         </div>
         <div class="studio-workspace-group">
           <span class="studio-workspace-label">DESIGN</span>
-          <button id="skinStudioGlobalDesignNav" class="studio-workspace-item" type="button" aria-label="Open global design and navigation settings" onclick="openSkinStudioSettingsWorkspace()"><span class="studio-workspace-icon" aria-hidden="true">⚙</span><span><b>Design & navigation</b><small>Brand, theme, header and footer</small></span></button>
+          <button id="skinStudioGlobalDesignNav" class="studio-workspace-item" type="button" aria-label="Open global design and navigation settings" onclick="openSkinStudioSettingsWorkspace()"><span class="studio-workspace-icon" aria-hidden="true">⚙</span><span><b>Design & navigation</b></span></button>
         </div>
       </nav>
       <div id="skinQuickAddPanel" class="studio-quick-add" hidden></div>
       <div id="skinLibraryItems" class="studio-library-items" hidden></div>
       <div id="skinBuilderSections" class="skin-builder-sections studio-outline-list" aria-label="Page section outline"></div>
-      <div class="studio-left-foot"><span>Drag to reorder. Double-click preview text to edit.</span><span>Changes auto-save privately; publish when ready.</span></div>
+      
     </aside>
     <section class="skin-builder-preview-panel studio-canvas-panel" aria-label="Live storefront canvas">
       <div class="skin-preview-head studio-canvas-head">
-        <div><b>Live page preview</b><small>Edit the page directly: double-click text, click sections to select them, drag sections or products to rearrange, and use the toolbar below to move, replace images, or delete.</small></div>
+        <div><b>Live page preview</b></div>
         <div class="studio-device-controls" aria-label="Preview size">
           <button type="button" class="active" aria-pressed="true" onclick="setSkinPreviewDevice('desktop',this)">Desktop</button>
           <button type="button" aria-pressed="false" onclick="setSkinPreviewDevice('tablet',this)">Tablet</button>
@@ -1311,7 +1274,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         </div>
       </div>
       <div class="studio-preview-actionbar" aria-label="Actions for selected preview item">
-        <span id="skinPreviewActionContext" class="preview-action-context">Click a section or product in the preview to edit it here.</span>
+        <span id="skinPreviewActionContext" class="preview-action-context"></span>
         <button type="button" onclick="skinPreviewAction('move-up')" id="skinPreviewMoveUp" disabled>↑ Move up</button>
         <button type="button" onclick="skinPreviewAction('move-down')" id="skinPreviewMoveDown" disabled>↓ Move down</button>
         <button type="button" onclick="skinPreviewAction('replace-image')" id="skinPreviewReplaceImage" disabled>Replace image</button>
@@ -1325,13 +1288,13 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
     </section>
     <aside class="studio-right-panel">
       <button type="button" class="studio-inspector-back" onclick="returnSkinStudioToList()">← Back to list</button>
-      <div class="studio-inspector-heading"><div><span class="section-kicker">PREVIEW ACTIONS</span><h3 id="skinInspectorTitle">Edit selected item</h3><p id="skinInspectorSubtitle">Choose a section on the left. Its settings will appear here.</p></div></div>
-      <div id="skinSelectedInspector" class="studio-selected-inspector"><div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b><p>Select an item in the left panel or click a section in the storefront preview.</p></div></div>
+      <div class="studio-inspector-heading"><div><span class="section-kicker">PREVIEW ACTIONS</span><h3 id="skinInspectorTitle">Edit selected item</h3></div></div>
+      <div id="skinSelectedInspector" class="studio-selected-inspector"><div class="studio-empty-inspector"><span>↖</span><b>Select an item</b></div></div>
       <details class="studio-site-settings">
-        <summary><span><b>Whole-site settings</b><small>Header, navigation, footer, brand and product pages</small></span><span class="studio-chevron">⌄</span></summary>
+        <summary><span><b>Whole-site settings</b></span><span class="studio-chevron">⌄</span></summary>
       <div class="skin-builder-controls">
         <section class="skin-builder-group">
-          <div class="skin-builder-group-heading"><span>01</span><div><h3>Brand & template</h3><p>Choose a visual direction and set the primary accent.</p></div></div>
+          <div class="skin-builder-group-heading"><span>01</span><div><h3>Brand & template</h3></div></div>
           <div class="skin-builder-fields">
             <div class="field"><label for="skinCfgTemplate">Template</label><select id="skinCfgTemplate"><option value="soft-editorial">Soft editorial</option><option value="clean-minimal">Clean minimal</option><option value="sage-botanical">Sage botanical</option></select></div>
             <div class="field"><label for="skinCfgAccent">Accent color</label><input id="skinCfgAccent" type="color" value="#66745f"></div>
@@ -1339,7 +1302,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
           </div>
         </section>
         <section class="skin-builder-group">
-          <div class="skin-builder-group-heading"><span>01A</span><div><h3>Global design system</h3><p>Set the shared palette, typography, spacing and card defaults used across the storefront. Product prices remain absent from Skin Care cards.</p></div></div>
+          <div class="skin-builder-group-heading"><span>01A</span><div><h3>Global design system</h3></div></div>
           <div class="skin-builder-fields">
             <div class="field"><label for="skinCfgDesignBackground">Page background</label><input id="skinCfgDesignBackground" type="color" value="#f7f4ee"></div>
             <div class="field"><label for="skinCfgDesignSurface">Surface / cards</label><input id="skinCfgDesignSurface" type="color" value="#fffdf9"></div>
@@ -1362,7 +1325,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
           </div>
         </section>
         <section class="skin-builder-group">
-          <div class="skin-builder-group-heading"><span>01B</span><div><h3>Header & navigation</h3><p>Edit the announcement, brand label, navigation links and header actions. The established visual styling remains unchanged.</p></div></div>
+          <div class="skin-builder-group-heading"><span>01B</span><div><h3>Header & navigation</h3></div></div>
           <div class="skin-builder-fields">
             <div class="field"><label for="skinCfgBrandName">Brand name</label><input id="skinCfgBrandName" maxlength="60"></div>
             <div class="field"><label for="skinCfgBrandSuffix">Brand suffix</label><input id="skinCfgBrandSuffix" maxlength="60"></div>
@@ -1377,12 +1340,12 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
           </div>
           <div class="studio-site-links-editor">
             <div class="studio-site-links-head"><b>Navigation links</b><button type="button" class="btn" onclick="addSkinSiteLink('navigationItems')">＋ Add link</button></div>
-            <p class="studio-inline-help">Edit labels, destinations, visibility and order in the storefront navigation.</p>
+            
             <div id="skinNavLinksEditor"></div>
           </div>
         </section>
         <section class="skin-builder-group">
-          <div class="skin-builder-group-heading"><span>02</span><div><h3>Hero section</h3><p>Edit the page headline, supporting copy, image, and call to action.</p></div></div>
+          <div class="skin-builder-group-heading"><span>02</span><div><h3>Hero section</h3></div></div>
           <div class="skin-builder-fields">
             <div class="field full"><label for="skinCfgHeroEyebrow">Eyebrow</label><input id="skinCfgHeroEyebrow" maxlength="100"></div>
             <div class="field full"><label for="skinCfgHeroTitle">Headline</label><input id="skinCfgHeroTitle" maxlength="180"></div>
@@ -1392,7 +1355,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
           </div>
         </section>
         <section class="skin-builder-group">
-          <div class="skin-builder-group-heading"><span>03</span><div><h3>Editorial section</h3><p>Edit the story and the buying/safety note customers read.</p></div></div>
+          <div class="skin-builder-group-heading"><span>03</span><div><h3>Editorial section</h3></div></div>
           <div class="skin-builder-fields">
             <div class="field full"><label for="skinCfgApproachEyebrow">Eyebrow</label><input id="skinCfgApproachEyebrow" maxlength="100"></div>
             <div class="field full"><label for="skinCfgApproachTitle">Headline</label><input id="skinCfgApproachTitle" maxlength="180"></div>
@@ -1401,7 +1364,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
           </div>
         </section>
         <section class="skin-builder-group">
-          <div class="skin-builder-group-heading"><span>03B</span><div><h3>Footer & site information</h3><p>Edit the footer copy and link groups without changing the existing footer layout.</p></div></div>
+          <div class="skin-builder-group-heading"><span>03B</span><div><h3>Footer & site information</h3></div></div>
           <div class="skin-builder-fields">
             <div class="field full"><label for="skinCfgFooterIntro">Footer introduction</label><textarea id="skinCfgFooterIntro" maxlength="1200"></textarea></div>
             <div class="field"><label for="skinCfgFooterStamp">Footer signature</label><input id="skinCfgFooterStamp" maxlength="120"></div>
@@ -1422,7 +1385,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
           </div>
         </section>
         <section class="skin-builder-group">
-          <div class="skin-builder-group-heading"><span>03C</span><div><h3>Shop, journal & saved pages</h3><p>Edit the introductions on the built-in pages. Their existing layouts and product-card design stay the same.</p></div></div>
+          <div class="skin-builder-group-heading"><span>03C</span><div><h3>Shop, journal & saved pages</h3></div></div>
           <div class="skin-builder-fields">
             <div class="field"><label for="skinCfgShopEyebrow">Shop eyebrow</label><input id="skinCfgShopEyebrow" maxlength="120"></div>
             <div class="field"><label for="skinCfgShopHeadline">Shop headline line 1</label><input id="skinCfgShopHeadline" maxlength="180"></div>
@@ -1439,7 +1402,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
           </div>
         </section>
         <section class="skin-builder-group">
-          <div class="skin-builder-group-heading"><span>04</span><div><h3>Product guide pages</h3><p>Control the product-detail presentation and which guide sections shoppers see.</p></div></div>
+          <div class="skin-builder-group-heading"><span>04</span><div><h3>Product guide pages</h3></div></div>
           <div class="skin-builder-fields">
             <div class="field full"><label for="skinCfgGuideTemplate">Product guide layout</label><select id="skinCfgGuideTemplate"><option value="editorial">Editorial — large image and full guide</option><option value="compact">Compact — balanced image and details</option><option value="minimal">Minimal — concise product facts</option></select></div>
             <div class="field full"><label>Customer-facing guide sections</label>
@@ -1462,8 +1425,8 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
   </div>
 </div>
 <div class="panel catalog-panel skin-studio-catalog">
-    <div class="catalog-panel-head"><div><span class="section-kicker">Dedicated catalog</span><h2>Skin Care products</h2><p class="muted">Skincare products stay grouped separately from the main Nuvora catalog.</p></div><span id="skinProductCount" class="library-note">0 products</span></div>
-    <div id="skinCategoryNotice" class="notice">Products are routed to Nuvora Skin by assigning them to the Skin Care category.</div>
+    <div class="catalog-panel-head"><div><h2>Skin Care products</h2></div><span id="skinProductCount" class="library-note">0 products</span></div>
+    
     <div id="skinProductRows" class="product-library"></div>
   </div>
 </section>
@@ -1478,28 +1441,28 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
 <div id="aiStudioModal" class="modal-backdrop" onclick="if(event.target===this)closeAIStudio()">
   <div class="modal">
     <div class="modal-head">
-      <div><div class="eyebrow">Nuvora AI Studio</div><h2>Make this product publish-ready</h2><div class="muted">Generate a polished advertising image and refined listing copy with Cloudflare Workers AI. Your API key stays on the server; review all generated content before saving.</div></div>
+      <div><div class="eyebrow">Nuvora AI Studio</div><h2>Make this product publish-ready</h2><div class="muted"></div></div>
       <button class="btn" onclick="closeAIStudio()">Close</button>
     </div>
     <div id="aiGeminiConfigStatus" role="status" aria-live="polite" style="margin:0 24px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;font-size:12px;line-height:1.5;color:var(--muted)">Checking Cloudflare Workers AI…</div>
     <div class="modal-body">
       <div class="ai-studio">
-        <div class="ai-studio-head"><div><h3>AI advertising image</h3><div class="muted">Use the product image as a reference for the strongest result. Nuvora AI generates a promotional concept; review the product details carefully before applying it.</div></div></div>
+        <div class="ai-studio-head"><div><h3>AI advertising image</h3><div class="muted"></div></div></div>
         <div class="ai-grid">
           <div class="field"><label>Creative style</label><select id="aiStyle"><option value="premium ecommerce">Premium ecommerce</option><option value="clean studio">Clean studio</option><option value="luxury editorial">Luxury editorial</option><option value="modern lifestyle">Modern lifestyle</option><option value="social media ad">Social media ad</option><option value="minimal catalog">Minimal catalog</option></select></div>
           <div class="field"><label>Format</label><select id="aiSize"><option value="1024x1024">Square · 1:1</option><option value="1536x1024">Landscape · 3:2</option><option value="1024x1536">Portrait · 2:3</option></select></div>
-          <div class="field full"><label>Reference image <span class="muted">(optional)</span></label><input id="aiReference" type="file" accept="image/*"><div class="muted">If you leave this empty, Nuvora AI automatically uses the first image already attached to the product. Upload one only when you want a different reference. Max 6 MB.</div></div>
+          <div class="field full"><label>Reference image <span class="muted">(optional)</span></label><input id="aiReference" type="file" accept="image/*"><div class="muted">Optional · Max 6 MB.</div></div>
           <div class="field"><label>Colour grading</label><select id="aiColorGrade"><option value="natural, accurate skincare colour with soft neutral whites">Natural &amp; true-to-product</option><option value="warm ivory highlights, soft honey warmth and gentle beige shadows">Warm ivory luxury</option><option value="cool clean whites, crisp soft-blue highlights and neutral shadows">Cool clean studio</option><option value="muted sage greens, warm botanical neutrals and earthy shadows">Botanical sage</option><option value="soft blush, muted rose undertones and creamy highlights">Soft blush editorial</option><option value="deep charcoal shadows, rich contrast and restrained champagne highlights">Dark luxury</option><option value="bright vibrant colour with controlled saturation and clean highlights">Bold vibrant</option><option value="soft pastel tones, low contrast and airy highlights">Soft pastel</option></select></div>
           <div class="field"><label>Custom colour notes <span class="muted">(optional)</span></label><input id="aiColorGradeCustom" type="text" placeholder="e.g. muted olive shadows with warm honey highlights"></div>
-          <div class="field full"><label>Image direction</label><textarea id="aiPrompt" placeholder="Describe the scene you want: background, surface, lighting, composition, props and mood…"></textarea><div class="muted">Tell Nuvora AI what to create. The product itself should remain recognisable and unchanged.</div></div>
+          <div class="field full"><label>Image direction</label><textarea id="aiPrompt" placeholder="Describe the scene you want: background, surface, lighting, composition, props and mood…"></textarea></div>
           <div class="field full"><label>Quick direction ideas</label><div class="ai-prompt-suggestions" role="group" aria-label="Image direction suggestions"><button type="button" onclick="setAIImageSuggestion('Create a premium skincare campaign on warm ivory stone with soft window light, gentle shadows and plenty of negative space.')">Ivory studio</button><button type="button" onclick="setAIImageSuggestion('Create a botanical skincare scene with subtle sage leaves, natural stone, diffused daylight and a calm editorial composition.')">Botanical</button><button type="button" onclick="setAIImageSuggestion('Create a luxury beauty editorial with sculptural lighting, deep neutral shadows and a refined champagne-toned background.')">Luxury editorial</button><button type="button" onclick="setAIImageSuggestion('Create a clean dermatologist-inspired studio scene with bright neutral lighting, a crisp white background and minimal props.')">Clinical clean</button><button type="button" onclick="setAIImageSuggestion('Create a soft blush beauty campaign with creamy textures, delicate highlights and an elegant minimal composition.')">Soft blush</button></div></div>
         </div>
         <div class="ai-actions"><button class="btn primary" id="aiGenerateBtn" onclick="generateAIProductImage()">Generate advertising image</button></div>
         <div id="aiImageStatus" class="ai-status"></div>
-        <div id="aiPreview" class="ai-preview" hidden><div class="ai-preview-frame"><img id="aiPreviewImg" alt="AI generated product advertisement"></div><div class="ai-preview-details"><span class="ai-preview-label">GENERATED IMAGE · REVIEW BEFORE APPLYING</span><h4>Your new image is ready</h4><p id="aiPreviewPrompt">This image is a new creative variation. Your original product image will remain untouched until you choose to use this one.</p><div class="ai-actions"><button class="btn primary" type="button" onclick="useAIImage()">Use this image</button><button class="btn" type="button" onclick="generateAIProductImage()">Generate another</button></div></div></div>
+        <div id="aiPreview" class="ai-preview" hidden><div class="ai-preview-frame"><img id="aiPreviewImg" alt="AI generated product advertisement"></div><div class="ai-preview-details"><span class="ai-preview-label">GENERATED IMAGE · REVIEW BEFORE APPLYING</span><h4>Your new image is ready</h4><div class="ai-actions"><button class="btn primary" type="button" onclick="useAIImage()">Use this image</button><button class="btn" type="button" onclick="generateAIProductImage()">Generate another</button></div></div></div>
       </div>
       <div class="ai-studio">
-        <div class="ai-studio-head"><div><h3>AI listing polish</h3><div class="muted">Refine the title, description, key features, SEO copy and social caption using the product information already in this form.</div></div></div>
+        <div class="ai-studio-head"><div><h3>AI listing polish</h3></div></div>
         <div class="ai-actions"><button class="btn primary" id="aiCopyBtn" onclick="generateAIProductCopy()">Polish product listing with Nuvora AI</button></div>
         <div id="aiCopyStatus" class="ai-status"></div>
       </div>
@@ -1531,59 +1494,59 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
 <div id="sourcinBoxModal" class="modal-backdrop" onclick="if(event.target===this)closeSourcinBoxImport()"><div class="modal"><div class="modal-head"><div><div class="eyebrow">Supplier workspace</div><h2>SourcinBox</h2><div class="muted">Find supplier products and bring their references into Nuvora.</div></div><button class="btn" onclick="closeSourcinBoxImport()">Close</button></div><div class="modal-body"><div class="workspace-note">SourcinBox currently documents integrations for Shopify, WooCommerce, Yampi, Nuvemshop, CartPanda, Shoplazza and Etsy. Nuvora is a custom Cloudflare/Supabase store, so this adds a safe supplier-reference workflow without pretending there is a native connector.</div><div class="quick-grid" style="margin-top:0"><button class="quick-card" onclick="window.open('https://app.sourcinbox.com/v2/product/Marketplace','_blank')"><span class="quick-icon">↗</span><span><b>Open Marketplace</b><small>Find a product and copy its Marketplace URL.</small></span><em>→</em></button><button class="quick-card" onclick="startSourcinBoxDraft()"><span class="quick-icon">+</span><span><b>Create Nuvora draft</b><small>Save the supplier URL and listing data.</small></span><em>→</em></button></div><div class="notice" style="margin-top:14px">Products are saved as drafts. Automatic order syncing to SourcinBox is not enabled yet.</div></div></div></div><div id="productModal" class="modal-backdrop" onclick="if(event.target===this)closeProductModal()">
   <div class="modal">
     <div class="modal-head">
-      <div><div class="eyebrow">Product workspace</div><h2 id="productModalTitle">Add product</h2><div class="muted" id="productModalSub">Create a draft and review it before publishing.</div></div>
+      <div><div class="eyebrow">Product workspace</div><h2 id="productModalTitle">Add product</h2><div class="muted" id="productModalSub"></div></div>
       <button class="btn" onclick="closeProductModal()">Close</button>
     </div>
     <div class="modal-body">
-      <div class="workspace-note" id="importStatus">You can enter a product manually or use the quick Amazon link workflow below. Nothing becomes public until you publish it.</div><div id="productSaveFeedback" class="notice" role="status" aria-live="polite" hidden style="margin:10px 0 14px"></div><div style="display:flex;justify-content:flex-end;margin:-4px 0 14px"><button type="button" class="btn primary" onclick="openAIStudio()">✦ Jump to AI image tools</button></div>
+      <div class="workspace-note" id="importStatus"></div><div id="productSaveFeedback" class="notice" role="status" aria-live="polite" hidden style="margin:10px 0 14px"></div><div style="display:flex;justify-content:flex-end;margin:-4px 0 14px"><button type="button" class="btn primary" onclick="openAIStudio()">✦ Jump to AI image tools</button></div>
       <div class="importbar">
-        <input id="amazonUrlInput" placeholder="Paste your Amazon affiliate/product link">
+        <input id="amazonUrlInput" placeholder="Paste Amazon product link">
         <button class="btn primary" onclick="useAmazonLink()">Use Amazon link</button>
       </div>
       <div class="importbar" style="margin-top:10px">
-        <input id="amazonSearchUrlInput" placeholder="Or paste an Amazon search/category URL to discover 20 products">
+        <input id="amazonSearchUrlInput" placeholder="Amazon search or category URL">
         <button class="btn primary" onclick="discoverAmazonProducts()">Discover 20</button>
       </div>
       <div id="amazonDiscoveryStatus" class="muted" style="margin-top:8px"></div>
-      <div class="notice" style="margin-top:10px">Quick Amazon fallback: paste a product link and Nuvora captures exposed product data automatically. For a search/category URL, Nuvora can discover up to 20 unique Amazon product links, then import them as drafts for review. No Amazon API is required for this discovery workflow.</div>
+      
       <div class="formgrid">
         <div class="field full"><label>Product title</label><input id="pfName" placeholder="Product title"></div>
         <div class="field"><label>Type</label><select id="pfKind"><option value="shop">Shop</option><option value="find">Find</option><option value="learn">Learn</option></select></div>
         <div class="field"><label>Product source</label><select id="pfSource"><option value="manual">Manual</option><option value="amazon">Amazon</option><option value="sourcinbox">SourcinBox</option><option value="temu">Temu</option><option value="shopify">Shopify</option></select></div>
         <div class="field"><label>Brand</label><input id="pfBrand" placeholder="Brand"></div>
-        <div class="field skin-only-field"><label>Product type <span class="muted">(suggested from listing — review)</span></label><input id="pfProductType" placeholder="Review or enter the product type"></div>
+        <div class="field skin-only-field"><label>Product type </label><input id="pfProductType" placeholder="Review or enter the product type"></div>
         <div class="field"><label>Current price</label><input id="pfPrice" type="number" step="0.01" placeholder="0.00"></div>
         <div class="field"><label>List / original price</label><input id="pfListPrice" type="number" step="0.01" placeholder="36.99"></div>
         <div class="field"><label>Discount %</label><input id="pfDiscount" type="number" step="1" placeholder="59"></div>
         <div class="field"><label>Currency</label><input id="pfCurrency" value="USD" placeholder="USD"></div>
         <div class="field"><label>Deal badge</label><input id="pfDeal" placeholder="Limited time deal"></div>
-        <div class="field"><label>Retailer rating (out of 5)</label><input id="pfRating" type="number" step="0.1" min="0" max="5" placeholder="3.5" oninput="updateRetailerRatingPreview()"><div id="pfRatingPreview" class="retailer-rating-preview">Enter the retailer’s original rating. This is separate from Nuvora customer reviews.</div></div>
-        <div class="field skin-only-field"><label>Availability (verified)</label><select id="pfAvailability"><option value="">Unknown — hide indicator</option><option value="available">Available · green dot</option><option value="unavailable">Unavailable · red dot</option></select><div class="muted">Set this only when the retailer’s current listing confirms the status. Unknown shows no dot.</div></div>
-        <div class="field"><label>Retailer review count (optional)</label><input id="pfReviews" type="number" step="1" min="0" placeholder="1934"><div class="muted">Retailer review counts are not Nuvora customer reviews.</div></div>
+        <div class="field"><label>Retailer rating (out of 5)</label><input id="pfRating" type="number" step="0.1" min="0" max="5" placeholder="3.5" oninput="updateRetailerRatingPreview()"><div id="pfRatingPreview" class="retailer-rating-preview"></div></div>
+        <div class="field skin-only-field"><label>Availability (verified)</label><select id="pfAvailability"><option value="">Unknown — hide indicator</option><option value="available">Available · green dot</option><option value="unavailable">Unavailable · red dot</option></select></div>
+        <div class="field"><label>Retailer review count (optional)</label><input id="pfReviews" type="number" step="1" min="0" placeholder="1934"></div>
         <div class="field"><label>Bought in past month</label><input id="pfBought" placeholder="9K+"></div>
         <div class="field full"><label>Shipping / import text</label><input id="pfShipping" placeholder="Shipping & Import Charges..."></div>
         <div class="field full"><label>Tax notice</label><input id="pfTax" placeholder="Sales taxes may apply at checkout"></div>
         <div class="field"><label>Category</label><select id="pfCategory"><option value="">No category</option></select></div>
         <div class="field"><label>Collection</label><select id="pfCollection"><option value="">No collection</option></select></div>
-        <div class="field full skin-only-field"><label>Storefront category</label><select id="pfSkinStoreCategory"><option value="">Choose a storefront category</option></select><div class="muted">AI suggests a category from the product listing. You can change it before saving.</div></div>
-        <div class="field full skin-only-field"><label>Nuvora AI product assistant</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="skinGeminiFillBtn" type="button" class="btn" onclick="generateSkinProductWithGemini()">Fill guide with Nuvora AI</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input id="skinGeminiReplaceExisting" type="checkbox"> Replace existing text fields</label></div><div id="skinGeminiStatus" class="muted" role="status" aria-live="polite" style="margin-top:8px">Paste the exact Amazon link into Destination / affiliate URL. Nuvora AI will fill supported fields for review; it will not save or publish the product.</div></div>
+        <div class="field full skin-only-field"><label>Storefront category</label><select id="pfSkinStoreCategory"><option value="">Choose a storefront category</option></select></div>
+        <div class="field full skin-only-field"><label>Nuvora AI</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="skinGeminiFillBtn" type="button" class="btn" onclick="generateSkinProductWithGemini()">Fill guide with Nuvora AI</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input id="skinGeminiReplaceExisting" type="checkbox"> Replace existing text fields</label></div><div id="skinGeminiStatus" class="muted" role="status" aria-live="polite" style="margin-top:8px">Ready</div></div>
         <div class="field full"><label>Retailer description / source copy</label><textarea id="pfDescription" placeholder="Product description captured from the retailer"></textarea></div>
-        <div class="field full skin-only-field"><label>Nuvora product overview (AI draft)</label><textarea id="pfStoreDescription" placeholder="A clear, customer-friendly overview based on verified product facts"></textarea><div class="muted">AI writes this separately from the retailer’s original description. Review before saving.</div></div>
+        <div class="field full skin-only-field"><label>Nuvora product overview (AI draft)</label><textarea id="pfStoreDescription" placeholder="A clear, customer-friendly overview based on verified product facts"></textarea></div>
         <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div>
-        <div class="field full skin-only-field"><label>Product benefits <span class="muted">(source-backed)</span></label><textarea id="pfBenefits" placeholder="What the product is intended to do, based on product information"></textarea></div>
-        <div class="field full skin-only-field"><label>Suitable skin types</label><textarea id="pfSkinTypes" placeholder="Oily, dry, combination, normal, sensitive — include only supported suitability information"></textarea></div>
-        <div class="field full skin-only-field"><label>Skin concerns / intended use</label><textarea id="pfSkinConcerns" placeholder="e.g. dryness, uneven texture, oiliness — avoid medical promises"></textarea></div>
-        <div class="field full skin-only-field"><label>When to avoid / compatibility cautions</label><textarea id="pfSkinAvoid" placeholder="Source-backed warnings, contraindications, or known incompatibilities"></textarea></div>
-        <div class="field full skin-only-field"><label>Complementary products</label><select id="pfRecommendedProducts" multiple size="5" aria-label="Select complementary skincare products" style="min-height:115px"></select><div class="muted">Nuvora AI suggests only suitable candidates from your existing published skincare catalog. Review every suggestion; no products are automatically linked without your approval.</div></div>
-        <div class="field full skin-only-field"><label>Why these products work together</label><textarea id="pfRecommendationReason" placeholder="Explain the intended routine role, sequencing, and any limitations. Keep product facts separate from general guidance."></textarea></div>
-        <div class="field full skin-only-field"><label>Storefront placement</label><div class="skin-flag-row"><label><input id="pfSkinFeatured" type="checkbox"> Feature on Skin homepage</label><label><input id="pfSkinTopPick" type="checkbox"> Mark as a top pick</label><label><input id="pfSkinTrending" type="checkbox"> Mark as trending</label></div></div><div class="field full"><label>Ingredients (source-verified)</label><textarea id="pfIngredients" placeholder="Only use ingredients confirmed by the source listing"></textarea></div><div class="field full"><label>Directions / how to use (source-verified)</label><textarea id="pfUsage" placeholder="Directions copied or summarized from the product source"></textarea></div><div class="field full"><label>Warnings / cautions (source-verified)</label><textarea id="pfWarnings" placeholder="Warnings stated by the manufacturer or source"></textarea></div><div class="field"><label>Product size / format</label><input id="pfProductSize" placeholder="e.g. 50 ml / 1.7 fl oz"></div><div class="field full"><label>Product options</label><textarea id="pfVariations" placeholder="Size: X-Small, Small, Medium, Large&#10;Color: Black, Grey, White"></textarea><div class="muted">Nuvora shows these as product options when the retailer provides them.</div></div>
+        <div class="field full skin-only-field"><label>Product benefits </label><textarea id="pfBenefits" placeholder="What the product is intended to do, based on product information"></textarea></div>
+        <div class="field full skin-only-field"><label>Suitable skin types</label><textarea id="pfSkinTypes" placeholder="Oily, dry, combination, sensitive"></textarea></div>
+        <div class="field full skin-only-field"><label>Skin concerns / intended use</label><textarea id="pfSkinConcerns" placeholder="e.g. dryness, uneven texture, oiliness"></textarea></div>
+        <div class="field full skin-only-field"><label>When to avoid / compatibility cautions</label><textarea id="pfSkinAvoid" placeholder="Warnings or compatibility cautions"></textarea></div>
+        <div class="field full skin-only-field"><label>Complementary products</label><select id="pfRecommendedProducts" multiple size="5" aria-label="Select complementary skincare products" style="min-height:115px"></select></div>
+        <div class="field full skin-only-field"><label>Why these products work together</label><textarea id="pfRecommendationReason" placeholder="Routine role and order"></textarea></div>
+        <div class="field full skin-only-field"><label>Storefront placement</label><div class="skin-flag-row"><label><input id="pfSkinFeatured" type="checkbox"> Feature on Skin homepage</label><label><input id="pfSkinTopPick" type="checkbox"> Mark as a top pick</label><label><input id="pfSkinTrending" type="checkbox"> Mark as trending</label></div></div><div class="field full"><label>Ingredients (source-verified)</label><textarea id="pfIngredients" placeholder="Only use ingredients confirmed by the source listing"></textarea></div><div class="field full"><label>Directions / how to use (source-verified)</label><textarea id="pfUsage" placeholder="Directions copied or summarized from the product source"></textarea></div><div class="field full"><label>Warnings / cautions (source-verified)</label><textarea id="pfWarnings" placeholder="Warnings stated by the manufacturer or source"></textarea></div><div class="field"><label>Product size / format</label><input id="pfProductSize" placeholder="e.g. 50 ml / 1.7 fl oz"></div><div class="field full"><label>Product options</label><textarea id="pfVariations" placeholder="Size: X-Small, Small, Medium, Large&#10;Color: Black, Grey, White"></textarea></div>
         <div class="field full"><label>Destination / affiliate URL</label><input id="pfDestination" placeholder="https://..."></div>
         <div class="field"><label>Amazon ASIN</label><input id="pfAsin" placeholder="B0XXXXXXXX"></div>
         <div class="field"><label>Retailer / supplier</label><input id="pfRetailer" value="Amazon"></div>
         <div class="field full"><label>SourcinBox product URL</label><input id="pfSourcinboxUrl" placeholder="https://app.sourcinbox.com/..."></div>
         <div class="field"><label>SourcinBox product ID</label><input id="pfSourcinboxId" placeholder="Optional marketplace product ID"></div>
         <div class="field"><label>Supplier cost</label><input id="pfSupplierCost" type="number" step="0.01" placeholder="0.00"></div>
-        <div class="field full"><label>Product images</label><div class="muted">The first image is the main image shown on product cards. Use “Set as main” or the arrows to choose/reorder it. Other images become the related-image gallery on the product page.</div><textarea id="pfImages" placeholder="One image URL per line — first URL is the displayed product image"></textarea></div><div class="field full"><label>Upload images from your device</label><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="pfUpload" type="file" accept="image/*" multiple style="flex:1"><button type="button" class="btn" onclick="uploadProductImages()">Upload selected images</button></div><div class="muted" id="uploadStatus" style="margin-top:6px">JPG, PNG, WEBP or GIF · max 6 MB each.</div></div>
+        <div class="field full"><label>Product images</label><textarea id="pfImages" placeholder="One image URL per line"></textarea></div><div class="field full"><label>Upload images from your device</label><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><input id="pfUpload" type="file" accept="image/*" multiple style="flex:1"><button type="button" class="btn" onclick="uploadProductImages()">Upload selected images</button></div><div class="muted" id="uploadStatus" style="margin-top:6px">JPG, PNG, WEBP or GIF · max 6 MB each.</div></div>
         <div class="field full"><label>Image preview</label><div id="pfImageStrip" class="image-strip"></div></div>
       </div>
       <div class="modal-actions">
@@ -1697,9 +1660,9 @@ function renderSkinProducts(){
   put('skinTotal',rows.length);put('skinPublished',rows.filter(p=>p.published).length);put('skinDrafts',rows.filter(p=>!p.published).length);put('skinImages',rows.filter(p=>Boolean(p.image_url||p.image||p.imageUrl||(Array.isArray(p.image_urls)&&p.image_urls.some(Boolean))||(Array.isArray(p.images)&&p.images.some(Boolean)))).length);
   const notice=document.getElementById('skinCategoryNotice');
   const cat=categories.find(x=>/^(skin-care|skincare|beauty)$/i.test(String(x.slug||''))||/skin care|skincare/i.test(String(x.name||'')));
-  if(notice)notice.textContent=cat?'Using category “'+cat.name+'”. Products assigned to this category are routed to Nuvora Skin.':'Create the Skin Care category first; the setup button will create it without changing existing products.';
+  if(notice)notice.textContent=cat?'Skin Care category: '+cat.name:'Create Skin Care category.';
   renderSkinBuilderSections();
-  if(!rows.length){el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No skincare products yet. Use “Add skincare product” to import an Amazon listing; Nuvora assigns the Skin Care category automatically.</div>';return;}
+  if(!rows.length){el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet.</div>';return;}
   el.innerHTML=rows.map(p=>{const dest=retailerDestination(p),label=retailerLabel(p);return '<div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+'</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" type="button" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+'<button class="btn" type="button" onclick="editSkinProduct('+esc(JSON.stringify(String(p.id)))+')">Edit</button><button class="btn" type="button" data-product-publish="'+esc(String(p.id))+'" onclick="togglePublish('+esc(JSON.stringify(String(p.id)))+')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" type="button" onclick="removeProduct('+esc(JSON.stringify(String(p.id)))+')">Delete</button></div></div>';}).join('');
 }
 async function ensureSkinCategory(openForm=false){
@@ -1726,7 +1689,7 @@ async function openSkinProduct(){
   window.skinCareImportMode=true;setSkinAdminFormMode(true);
   if(document.getElementById('pfProductType'))document.getElementById('pfProductType').value='';
   document.getElementById('productModalTitle').textContent='Import Amazon skincare';
-  document.getElementById('productModalSub').textContent='Paste an Amazon skincare link. Nuvora will assign the Skin Care category and capture available listing details automatically. Price is managed on Amazon.';
+  document.getElementById('productModalSub').textContent='';
   document.getElementById('amazonUrlInput').placeholder='Paste an Amazon skincare product or affiliate link';
   const saveButton=document.getElementById('productSaveBtn');if(saveButton)saveButton.textContent='Save skincare draft';
   populateSkinRecommendations();
@@ -1873,7 +1836,7 @@ function renderProducts(){
   if(!adminProducts.length){
     el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet.</div>';
   }else if(!visibleProducts.length){
-    el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products match this search and filter. Try another filter or clear the search.</div>';
+    el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No matching products.</div>';
   }else{
     el.innerHTML=visibleProducts.map(p=>{
       const dest=retailerDestination(p),label=retailerLabel(p),flags=productReviewFlags(p);
@@ -1956,13 +1919,13 @@ function prepareProductEntryWorkspace(){
  const modal=document.getElementById('productModal'),body=modal?.querySelector('.modal-body'),grid=body?.querySelector('.formgrid');
  if(!body||!grid||body.dataset.productEntryPrepared==='true')return;
  const steps=[
-  {id:'identity',title:'Source & identity',summary:'Import a listing or enter the product’s basic identity.',fields:['pfName','pfKind','pfSource','pfBrand','pfProductType','pfRetailer','pfDestination','pfAsin','pfSourcinboxUrl','pfSourcinboxId']},
-  {id:'organize',title:'Organize & recommend',summary:'Give the product a clear storefront category, collection and merchandising role.',fields:['pfCategory','pfCollection','pfSkinStoreCategory','pfSkinFeatured','pfSkinTopPick','pfSkinTrending','pfRecommendedProducts','pfRecommendationReason']},
-  {id:'guide',title:'Product information',summary:'Add useful, source-backed details customers can use to make a decision.',fields:['pfDescription','pfStoreDescription','pfFeatures','pfBenefits','pfSkinTypes','pfSkinConcerns','pfSkinAvoid','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','skinGeminiFillBtn','skinGeminiReplaceExisting','skinGeminiStatus']},
-  {id:'media',title:'Images & retailer details',summary:'Choose the main product image, complete retailer facts and review the draft.',fields:['pfImages','pfUpload','uploadStatus','pfImageStrip','pfPrice','pfListPrice','pfDiscount','pfCurrency','pfDeal','pfRating','pfAvailability','pfReviews','pfBought','pfShipping','pfTax','pfSupplierCost']}
+  {id:'identity',title:'Source & identity',summary:'',fields:['pfName','pfKind','pfSource','pfBrand','pfProductType','pfRetailer','pfDestination','pfAsin','pfSourcinboxUrl','pfSourcinboxId']},
+  {id:'organize',title:'Organize & recommend',summary:'',fields:['pfCategory','pfCollection','pfSkinStoreCategory','pfSkinFeatured','pfSkinTopPick','pfSkinTrending','pfRecommendedProducts','pfRecommendationReason']},
+  {id:'guide',title:'Product information',summary:'',fields:['pfDescription','pfStoreDescription','pfFeatures','pfBenefits','pfSkinTypes','pfSkinConcerns','pfSkinAvoid','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','skinGeminiFillBtn','skinGeminiReplaceExisting','skinGeminiStatus']},
+  {id:'media',title:'Images & retailer details',summary:'',fields:['pfImages','pfUpload','uploadStatus','pfImageStrip','pfPrice','pfListPrice','pfDiscount','pfCurrency','pfDeal','pfRating','pfAvailability','pfReviews','pfBought','pfShipping','pfTax','pfSupplierCost']}
  ];
  const sourcePanel=document.createElement('section');sourcePanel.className='product-entry-source-card';
- sourcePanel.innerHTML='<div class="product-entry-source-head"><span class="product-entry-step-kicker">START HERE</span><h3>Bring in the product</h3><p>Paste a retailer product link to prefill what Nuvora can capture, or enter the details manually below. Everything stays a draft until you publish it.</p></div>';
+ sourcePanel.innerHTML='<div class="product-entry-source-head"><h3>Bring in the product</h3></div>';
  const controls=[
   document.getElementById('amazonUrlInput')?.closest('.importbar'),
   document.getElementById('amazonSearchUrlInput')?.closest('.importbar'),
@@ -1971,16 +1934,16 @@ function prepareProductEntryWorkspace(){
  ].filter(Boolean);
  controls.forEach(node=>sourcePanel.appendChild(node));
  const bulkPanel=document.createElement('section');bulkPanel.className='product-entry-bulk-panel';
- bulkPanel.innerHTML='<div class="product-entry-bulk-heading"><span class="product-entry-step-kicker">MULTI-PRODUCT WORKSPACE</span><h3>Build your product queue</h3><p>Add each product as its own item. Review the links, then let Nuvora import and enrich the whole queue. Products remain private drafts until you approve them.</p></div><div class="skin-bulk-queue-toolbar"><span><b id="skinBulkQueueCount">1 product in queue</b><small>Up to 5 products per run to protect the free AI allowance.</small></span><button type="button" class="btn" onclick="addSkinBulkQueueRow()">＋ Add product</button></div><div id="skinBulkQueue" class="skin-bulk-queue"></div><div class="product-entry-bulk-actions"><button type="button" class="btn primary" id="skinBulkAiImportBtn" onclick="runSkinBulkAiImport()">Import queue &amp; enrich with AI</button></div><div id="skinBulkAiProgress" class="product-entry-bulk-progress" role="status" aria-live="polite">Add product links above to start your queue.</div><div id="skinBulkAiResults" class="product-entry-bulk-results"></div>';
+ bulkPanel.innerHTML='<div class="product-entry-bulk-heading"><h3>Product queue</h3></div><div class="skin-bulk-queue-toolbar"><span><b id="skinBulkQueueCount">1 product in queue</b></span><button type="button" class="btn" onclick="addSkinBulkQueueRow()">＋ Add product</button></div><div id="skinBulkQueue" class="skin-bulk-queue"></div><div class="product-entry-bulk-actions"><button type="button" class="btn primary" id="skinBulkAiImportBtn" onclick="runSkinBulkAiImport()">Import queue &amp; enrich with AI</button></div><div id="skinBulkAiProgress" class="product-entry-bulk-progress" role="status" aria-live="polite">Ready.</div><div id="skinBulkAiResults" class="product-entry-bulk-results"></div>';
  sourcePanel.appendChild(bulkPanel);
  const aiButton=body.querySelector('button[onclick="openAIStudio()"]')?.parentElement||null;
  const shell=document.createElement('div');shell.className='product-entry-workspace';
  const rail=document.createElement('aside');rail.className='product-entry-rail';
- rail.innerHTML='<div class="product-entry-rail-top"><span class="product-entry-step-kicker">PRODUCT WORKSPACE</span><b>Build a better listing</b><small>Work through each stage. You can save a private draft at any point.</small></div><nav class="product-entry-step-list" aria-label="Product entry steps">'+steps.map((step,index)=>'<button type="button" class="product-entry-step-button'+(index===0?' active':'')+'" data-entry-step="'+index+'" aria-current="'+(index===0?'step':'false')+'"><span class="product-entry-step-number">'+String(index+1).padStart(2,'0')+'</span><span><b>'+step.title+'</b><small>'+step.summary+'</small></span><i>›</i></button>').join('')+'</nav><div class="product-entry-rail-note"><b>Not ready to publish?</b><span>Save a draft. It remains private until you publish it.</span></div>';
+ rail.innerHTML='<div class="product-entry-rail-top"><span class="product-entry-step-kicker">PRODUCT WORKSPACE</span><b>Product setup</b></div><nav class="product-entry-step-list" aria-label="Product entry steps">'+steps.map((step,index)=>'<button type="button" class="product-entry-step-button'+(index===0?' active':'')+'" data-entry-step="'+index+'" aria-current="'+(index===0?'step':'false')+'"><span class="product-entry-step-number">'+String(index+1).padStart(2,'0')+'</span><span><b>'+step.title+'</b></span><i>›</i></button>').join('')+'</nav>';
  const main=document.createElement('div');main.className='product-entry-main';
  steps.forEach((step,index)=>{
   const panel=document.createElement('section');panel.className='product-entry-step-panel'+(index===0?' active':'');panel.dataset.entryPanel=String(index);
-  panel.innerHTML='<div class="product-entry-panel-head"><div><span class="product-entry-step-kicker">STEP '+String(index+1).padStart(2,'0')+' / '+String(steps.length).padStart(2,'0')+'</span><h3>'+step.title+'</h3><p>'+step.summary+'</p></div><span class="product-entry-panel-count">'+String(index+1).padStart(2,'0')+'</span></div>';
+  panel.innerHTML='<div class="product-entry-panel-head"><div><h3>'+step.title+'</h3></div></div>';
   if(index===0)panel.appendChild(sourcePanel);
   const form=document.createElement('div');form.className='formgrid product-entry-fields';panel.appendChild(form);
   main.appendChild(panel);
@@ -2009,7 +1972,7 @@ function prepareProductEntryWorkspace(){
  const aiFieldMap={pfName:'Product title',pfBrand:'Brand',pfProductType:'Product type',pfSkinStoreCategory:'Storefront category',pfStoreDescription:'Nuvora product overview',pfBenefits:'Product benefits',pfSkinTypes:'Suitable skin types',pfSkinConcerns:'Skin concerns',pfSkinAvoid:'Compatibility cautions',pfIngredients:'Ingredients',pfUsage:'How to use',pfWarnings:'Product warnings',pfProductSize:'Product size',pfRecommendedProducts:'Complementary products',pfRecommendationReason:'Recommendation reason'};
  Object.entries(aiFieldMap).forEach(([id,label])=>{const control=document.getElementById(id),field=control?.closest('.field'),fieldLabel=field?.querySelector('label');if(!field||!fieldLabel||field.querySelector('.skin-field-ai-action'))return;const action=document.createElement('button');action.type='button';action.className='skin-field-ai-action';action.textContent='✦ Generate with AI';action.title='Prepare this field from the source listing';action.addEventListener('click',()=>generateSkinFieldWithAI(id,action));fieldLabel.insertAdjacentElement('afterend',action);});
  const queue=document.getElementById('skinBulkQueue');if(queue&&!queue.children.length)addSkinBulkQueueRow();
- const preview=document.createElement('aside');preview.className='product-entry-preview';preview.innerHTML='<div class="product-entry-preview-kicker">LIVE PRODUCT PREVIEW</div><div class="product-entry-preview-image"><img id="productEntryPreviewImage" alt="Product preview" hidden><span id="productEntryPreviewPlaceholder">Your product image will appear here</span></div><div class="product-entry-preview-copy"><span id="productEntryPreviewBrand">YOUR BRAND</span><h3 id="productEntryPreviewName">New product</h3><p id="productEntryPreviewDescription">Your customer-facing overview will appear here as you build the listing.</p><div class="product-entry-preview-status"><i></i> Private draft</div></div><div class="product-entry-preview-note">Preview only · Changes are not saved until you save the draft.</div>';shell.appendChild(preview);body.querySelector('.product-entry-workspace')?.addEventListener('input',updateProductEntryPreview);updateProductEntryPreview();
+ const preview=document.createElement('aside');preview.className='product-entry-preview';preview.innerHTML='<div class="product-entry-preview-kicker">LIVE PRODUCT PREVIEW</div><div class="product-entry-preview-image"><img id="productEntryPreviewImage" alt="Product preview" hidden><span id="productEntryPreviewPlaceholder">Your product image will appear here</span></div><div class="product-entry-preview-copy"><span id="productEntryPreviewBrand">YOUR BRAND</span><h3 id="productEntryPreviewName">New product</h3><p id="productEntryPreviewDescription">Add a product overview.</p><div class="product-entry-preview-status"><i></i> Private draft</div></div>';shell.appendChild(preview);body.querySelector('.product-entry-workspace')?.addEventListener('input',updateProductEntryPreview);updateProductEntryPreview();
  rail.querySelectorAll('[data-entry-step]').forEach(button=>button.addEventListener('click',()=>setProductEntryStep(Number(button.dataset.entryStep))));
  if(actions){actions.classList.add('product-entry-footer');actions.insertBefore(navigation,actions.firstChild);}
  setProductEntryStep(0);
@@ -2017,7 +1980,7 @@ function prepareProductEntryWorkspace(){
 function updateProductEntryPreview(){
  const name=document.getElementById('pfName')?.value.trim()||'New product';
  const brand=document.getElementById('pfBrand')?.value.trim()||'YOUR BRAND';
- const description=document.getElementById('pfStoreDescription')?.value.trim()||document.getElementById('pfDescription')?.value.trim()||'Your customer-facing overview will appear here as you build the listing.';
+ const description=document.getElementById('pfStoreDescription')?.value.trim()||document.getElementById('pfDescription')?.value.trim()||'Add a product overview.';
  const titleNode=document.getElementById('productEntryPreviewName'),brandNode=document.getElementById('productEntryPreviewBrand'),descriptionNode=document.getElementById('productEntryPreviewDescription');
  if(titleNode)titleNode.textContent=name;
  if(brandNode)brandNode.textContent=brand.toUpperCase();
@@ -2067,7 +2030,7 @@ function resetProductForm(){
   ['pfSkinFeatured','pfSkinTopPick','pfSkinTrending'].forEach(id=>{const e=document.getElementById(id);if(e)e.checked=false;});
   document.getElementById('pfKind').value='shop'; document.getElementById('pfSource').value='manual'; document.getElementById('pfCurrency').value='NGN'; document.getElementById('pfRetailer').value='Amazon';
   document.getElementById('pfImageStrip').innerHTML='';const rec=document.getElementById('pfRecommendedProducts');if(rec){rec.innerHTML='';rec.disabled=false;}const bulkQueue=document.getElementById('skinBulkQueue');if(bulkQueue){bulkQueue.replaceChildren();addSkinBulkQueueRow();}const bulkResults=document.getElementById('skinBulkAiResults');if(bulkResults)bulkResults.replaceChildren();const bulkStatus=document.getElementById('skinBulkAiProgress');if(bulkStatus)bulkStatus.textContent='Each product is imported as a draft and processed one at a time.';
-  document.getElementById('importStatus').textContent='You can enter a product manually or fetch an Amazon product below. Imported data stays editable and nothing becomes public until you publish it.';
+  document.getElementById('importStatus').textContent='';
   window.editingProductId=null;
 }
 function openProductModal(importMode=false){
@@ -2089,7 +2052,7 @@ function openProductModal(importMode=false){
 function closeProductModal(){document.getElementById('productModal').classList.remove('open');document.body.classList.remove('admin-workspace-open','product-workspace-page');document.getElementById('productModal')?.classList.remove('product-entry-redesign');window.skinCareImportMode=false;setSkinAdminFormMode(false);}
 function updateRetailerRatingPreview(){
  const box=document.getElementById('pfRatingPreview'),input=document.getElementById('pfRating');if(!box||!input)return;
- const raw=input.value.trim();if(!raw){box.textContent='Enter the retailer’s original rating. This is separate from Nuvora customer reviews.';return;}
+ const raw=input.value.trim();if(!raw){box.textContent='';return;}
  const value=Number(raw);if(!Number.isFinite(value)||value<0||value>5){box.textContent='Use a retailer rating from 0 to 5, such as 3.5.';return;}
  const rating=value,stars=Array.from({length:5},(_,i)=>{const fill=Math.max(0,Math.min(1,rating-i)),kind=fill>=1?'full':fill<=0?'empty':'partial';return '<span class="nv-admin-star '+kind+'"'+(kind==='partial'?' style="background-image:linear-gradient(90deg,#c89a3b '+(fill*100)+'%,#d6ddd5 '+(fill*100)+'%)"':'')+' aria-hidden="true">★</span>';}).join('');
  box.innerHTML='<span class="nv-admin-stars">'+stars+'</span> <strong>'+rating.toFixed(1)+'/5</strong> <span>retailer rating preview · not Nuvora reviews</span>';
@@ -2304,9 +2267,9 @@ async function refreshGeminiConfigStatus(){
  const set=(message,ready)=>nodes.forEach(node=>{node.textContent=message;node.dataset.status=ready?'ready':'missing';node.style.color=ready?'var(--success,#2f855a)':'var(--muted)';node.style.borderColor=ready?'rgba(47,133,90,.35)':'var(--line)';});
  try{
   const health=await api('/api/health?verify=workers-ai-ui');
-  if(health?.configured?.workersAI===true)set('Nuvora AI is connected through Cloudflare Workers AI. Review generated product details before saving; nothing is published automatically.',true);
-  else set('Nuvora AI is not connected. In Cloudflare Dashboard → Workers & Pages → nuvora → Settings → Bindings, add a Workers AI binding named AI, then reload this page.',false);
- }catch{set('Could not verify the Cloudflare AI connection. Check the Worker health status before generating product content.',false);}
+  if(health?.configured?.workersAI===true)set('Nuvora AI connected.',true);
+  else set('Nuvora AI unavailable.',false);
+ }catch{set('Connection unavailable.',false);}
 }
 async function generateSkinFieldWithAI(fieldId,button){
  if(!button||button.disabled)return;
@@ -3316,13 +3279,13 @@ function openSkinSiteSettings(){
  if(details)details.open=true;
  const panel=document.querySelector('.studio-right-panel');
  if(panel&&details)panel.scrollTo({top:Math.max(0,details.offsetTop-panel.offsetTop),behavior:'smooth'});
- skinBuilderMessage('Whole-site settings are open. Changes remain in draft until published.','info');
+ skinBuilderMessage('Settings opened.','info');
 }
 function renderSkinSiteLinkEditor(key){
  const ids={navigationItems:'skinNavLinksEditor',footerExploreLinks:'skinFooterExploreLinksEditor',footerReadLinks:'skinFooterReadLinksEditor'};
  const root=document.getElementById(ids[key]);if(!root||!skinBuilderConfig)return;
  const items=Array.isArray(skinBuilderConfig[key])?skinBuilderConfig[key]:[];
- root.innerHTML=items.map((item,index)=>'<div class="studio-site-link-row"><div class="studio-site-link-fields"><label>Label<input maxlength="80" value="'+esc(item.label||'')+'" oninput="updateSkinSiteLink('+esc(JSON.stringify(key))+','+index+',\'label\',this.value)"></label><label>Destination<input maxlength="240" value="'+esc(item.url||'')+'" oninput="updateSkinSiteLink('+esc(JSON.stringify(key))+','+index+',\'url\',this.value)" placeholder="/shop or /journal"></label></div><div class="studio-site-link-actions"><label class="studio-site-link-visible"><input type="checkbox" '+(item.visible!==false?'checked':'')+' onchange="updateSkinSiteLink('+esc(JSON.stringify(key))+','+index+',\'visible\',this.checked)"> Visible</label><button type="button" title="Move up" '+(index===0?'disabled':'')+' onclick="moveSkinSiteLink('+esc(JSON.stringify(key))+','+index+',-1)">↑</button><button type="button" title="Move down" '+(index===items.length-1?'disabled':'')+' onclick="moveSkinSiteLink('+esc(JSON.stringify(key))+','+index+',1)">↓</button><button type="button" title="Remove link" onclick="removeSkinSiteLink('+esc(JSON.stringify(key))+','+index+')">×</button></div></div>').join('')||'<p class="studio-inline-help">No links yet. Use Add link to create one.</p>';
+ root.innerHTML=items.map((item,index)=>'<div class="studio-site-link-row"><div class="studio-site-link-fields"><label>Label<input maxlength="80" value="'+esc(item.label||'')+'" oninput="updateSkinSiteLink('+esc(JSON.stringify(key))+','+index+',\'label\',this.value)"></label><label>Destination<input maxlength="240" value="'+esc(item.url||'')+'" oninput="updateSkinSiteLink('+esc(JSON.stringify(key))+','+index+',\'url\',this.value)" placeholder="/shop or /journal"></label></div><div class="studio-site-link-actions"><label class="studio-site-link-visible"><input type="checkbox" '+(item.visible!==false?'checked':'')+' onchange="updateSkinSiteLink('+esc(JSON.stringify(key))+','+index+',\'visible\',this.checked)"> Visible</label><button type="button" title="Move up" '+(index===0?'disabled':'')+' onclick="moveSkinSiteLink('+esc(JSON.stringify(key))+','+index+',-1)">↑</button><button type="button" title="Move down" '+(index===items.length-1?'disabled':'')+' onclick="moveSkinSiteLink('+esc(JSON.stringify(key))+','+index+',1)">↓</button><button type="button" title="Remove link" onclick="removeSkinSiteLink('+esc(JSON.stringify(key))+','+index+')">×</button></div></div>').join('')||'';
 }
 function updateSkinSiteLink(key,index,field,value){
  const list=skinBuilderConfig?.[key];if(!Array.isArray(list)||!list[index])return;
@@ -3705,7 +3668,7 @@ function openSkinStudioSettingsWorkspace(){
  switchSkinStudioTab('settings');
  details.open=true;
  details.scrollIntoView({behavior:'smooth',block:'start'});
- skinBuilderMessage('Design workspace opened. These shared settings apply across the storefront; section-specific settings remain in the theme editor.','info');
+ skinBuilderMessage('Design settings opened.','info');
 }
 function setSkinStudioProductPage(page){
  window.skinStudioProductPage=Math.max(1,Number(page)||1);
@@ -3802,12 +3765,12 @@ function paintSkinStudioMediaLibrary(root){
  const pageSize=24,pageCount=Math.max(1,Math.ceil(filtered.length/pageSize));
  window.skinStudioMediaPage=Math.min(Math.max(1,Number(window.skinStudioMediaPage)||1),pageCount);
  const page=window.skinStudioMediaPage,visible=filtered.slice((page-1)*pageSize,page*pageSize);
- root.innerHTML='<div class="studio-media-upload"><div class="studio-media-upload-copy"><b>Upload to your media library</b><small>Choose several images at once. Files are added to Nuvora storage; removing a page image never deletes the original.</small></div><div class="studio-media-upload-actions"><label class="btn studio-media-choose" for="skinStudioMediaUploadInput">＋ Choose images<input id="skinStudioMediaUploadInput" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" multiple onchange="updateSkinStudioMediaUploadSelection(this)"></label><button type="button" class="btn primary" id="skinStudioMediaUploadButton" onclick="uploadSkinStudioMediaFiles()" disabled>Upload images</button></div><p class="studio-inline-help studio-media-upload-selection" id="skinStudioMediaUploadSelection" aria-live="polite">JPG, PNG, WebP, AVIF or GIF · Up to 6 MB per image</p></div>'+
-  '<p class="studio-inline-help">Uploaded Skin Studio images. Choose “Use selected” to apply an image to the current section or custom category. Removing an image from a page does not delete the stored file.</p>'+
+ root.innerHTML='<div class="studio-media-upload"><div class="studio-media-upload-copy"><b>Upload to your media library</b></div><div class="studio-media-upload-actions"><label class="btn studio-media-choose" for="skinStudioMediaUploadInput">＋ Choose images<input id="skinStudioMediaUploadInput" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" multiple onchange="updateSkinStudioMediaUploadSelection(this)"></label><button type="button" class="btn primary" id="skinStudioMediaUploadButton" onclick="uploadSkinStudioMediaFiles()" disabled>Upload images</button></div><p class="studio-inline-help studio-media-upload-selection" id="skinStudioMediaUploadSelection" aria-live="polite">JPG, PNG, WebP, AVIF or GIF · Up to 6 MB per image</p></div>'+
+  ''+
   '<div class="studio-media-toolbar"><input aria-label="Search media files" placeholder="Search uploaded images" value="'+esc(window.skinStudioMediaSearch||'')+'" oninput="setSkinStudioMediaSearch(this.value)"><button type="button" class="btn" onclick="renderSkinMediaLibrary(document.getElementById(\'skinLibraryItems\'),true)">Refresh</button></div>'+
-  (visible.length?'<div class="studio-media-grid">'+visible.map(item=>'<article class="studio-media-card"><div class="studio-media-thumb"><img loading="lazy" src="'+esc(item.url)+'" alt=""></div><div class="studio-media-meta"><div class="studio-media-name">'+esc(item.name)+'</div><div class="studio-media-actions"><button type="button" onclick="useSkinStudioMedia('+esc(JSON.stringify(item.url))+')">Use selected</button><button type="button" onclick="copySkinStudioMediaUrl('+esc(JSON.stringify(item.url))+')">Copy URL</button></div></div></article>').join('')+'</div>':'<div class="studio-library-empty">No matching uploaded images found in the Skin Studio media folder.</div>')+
+  (visible.length?'<div class="studio-media-grid">'+visible.map(item=>'<article class="studio-media-card"><div class="studio-media-thumb"><img loading="lazy" src="'+esc(item.url)+'" alt=""></div><div class="studio-media-meta"><div class="studio-media-name">'+esc(item.name)+'</div><div class="studio-media-actions"><button type="button" onclick="useSkinStudioMedia('+esc(JSON.stringify(item.url))+')">Use selected</button><button type="button" onclick="copySkinStudioMediaUrl('+esc(JSON.stringify(item.url))+')">Copy URL</button></div></div></article>').join('')+'</div>':'<div class="studio-library-empty">No matching images.</div>')+
   (pageCount>1?'<nav aria-label="Media pages" style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:12px"><button type="button" class="btn" '+(page===1?'disabled':'')+' onclick="setSkinStudioMediaPage('+(page-1)+')">Previous</button><span class="studio-inline-help">Page '+page+' of '+pageCount+'</span><button type="button" class="btn" '+(page===pageCount?'disabled':'')+' onclick="setSkinStudioMediaPage('+(page+1)+')">Next</button></nav>':'')+
-  '<p class="studio-inline-help">Showing '+(filtered.length?((page-1)*pageSize+1):0)+'–'+Math.min(page*pageSize,filtered.length)+' of '+filtered.length+' matching images ('+urls.length+' loaded; up to 1,000 storage entries).</p>';
+  '<p class="studio-inline-help">'+filtered.length+' images</p>';
 }
 function setSkinStudioMediaPage(page){
  window.skinStudioMediaPage=Math.max(1,Number(page)||1);
@@ -3830,7 +3793,7 @@ async function useSkinStudioMedia(url){
  if(!skinBuilderConfig||!url){skinBuilderMessage('Choose an editable section, product or category before applying an image.','warning');return;}
  if(selection.type==='section'){
   const sections=skinSectionsFor(),index=sections.findIndex(section=>String(section.id)===String(selection.id));
-  if(index<0){skinBuilderMessage('The selected section is no longer available.','error');return;}
+  if(index<0){skinBuilderMessage('Section not found.','error');return;}
   updateSkinSection(index,'image',String(url));
  }else if(selection.type==='category'){
   updateSkinCategory(String(selection.id),'image',String(url));
@@ -3892,7 +3855,7 @@ function renderSkinLibrary(){
    '<label>Category<select aria-label="Filter products by category" onchange="setSkinStudioProductFilter(\'category\',this.value)"><option value="all">All categories</option>'+categories.map(value=>'<option value="'+esc(value)+'" '+(filters.category===value?'selected':'')+'>'+esc(value)+'</option>').join('')+'</select></label>'+
    '<label>Publication<select aria-label="Filter products by publication status" onchange="setSkinStudioProductFilter(\'status\',this.value)"><option value="all">All statuses</option><option value="published" '+(filters.status==='published'?'selected':'')+'>Published</option><option value="draft" '+(filters.status==='draft'?'selected':'')+'>Draft</option></select></label>'+
    '<label>Availability<select aria-label="Filter products by known availability" onchange="setSkinStudioProductFilter(\'availability\',this.value)"><option value="all">All availability</option><option value="available" '+(filters.availability==='available'?'selected':'')+'>Available</option><option value="unavailable" '+(filters.availability==='unavailable'?'selected':'')+'>Unavailable</option><option value="unknown" '+(filters.availability==='unknown'?'selected':'')+'>Unknown</option></select></label>'+
-   '</div><p class="studio-inline-help">'+rows.length+' of '+allRows.length+' products · 10 products per page. Choose Edit details to change a product, or Place on page to add it to the selected product section.</p>'+
+   '</div><p class="studio-inline-help">'+rows.length+' of '+allRows.length+' products</p>'+
    (rows.length?'<div class="studio-products-grid">'+visibleRows.map(p=>{
     const id=String(p.id),image=skinImageOf(p),published=!!p.published;
     const selection=skinStudioSelection?.type==='product'&&String(skinStudioSelection.id)===id;
@@ -3900,23 +3863,23 @@ function renderSkinLibrary(){
      (image?'<img src="'+esc(image)+'" alt="" loading="lazy">':'<div class="studio-product-placeholder">◯</div>')+
      '<div class="studio-library-item-copy"><b>'+esc(p.name||'Untitled product')+'</b><small>'+esc(published?'Published':'Draft — not visible yet')+' · '+esc(retailerLabel(p))+'</small></div>'+
      '<div class="studio-library-item-actions"><button type="button" onclick="editSkinProduct('+esc(JSON.stringify(id))+');event.stopPropagation()">Edit details</button><button type="button" data-product-publish="'+esc(id)+'" onclick="togglePublish('+esc(JSON.stringify(id))+');event.stopPropagation()">'+(published?'Unpublish':'Publish')+'</button><button type="button" onclick="addSkinProductToSection('+esc(JSON.stringify(id))+',skinStudioSelection?.type===\'section\'?skinStudioSelection.id:null,skinStudioPageId);event.stopPropagation()">＋ Place on page</button></div></article>';
-   }).join('')+'</div>':'<div class="studio-library-empty">'+(needle?'No products match your search. Try a product name, brand, type, category or ASIN.':'No skincare products found yet. Add a product by pasting its Amazon link or create one manually.')+'</div>')+
+   }).join('')+'</div>':'<div class="studio-library-empty">'+(needle?'No matching products.':'No products yet.')+'</div>')+
    (rows.length>pageSize?'<nav aria-label="Product library pages" style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:6px;margin:18px 0;padding:12px 0;border-top:1px solid #e1e7df"><button type="button" style="padding:7px 10px;border:1px solid #d9e1d6;border-radius:7px;background:#fff" '+(currentPage===1?'disabled':'')+' onclick="setSkinStudioProductPage('+(currentPage-1)+')">Previous</button>'+Array.from({length:pageCount},(_,i)=>i+1).filter(page=>page===1||page===pageCount||Math.abs(page-currentPage)<=1).map((page,index,pages)=>((index>0&&page-pages[index-1]>1?'<span>…</span>':'')+'<button type="button" style="padding:7px 10px;border:1px solid '+(page===currentPage?'#718a69':'#d9e1d6')+';border-radius:7px;background:'+(page===currentPage?'#edf3e9':'#fff')+';font-weight:'+(page===currentPage?'700':'500')+'" aria-current="'+(page===currentPage?'page':'false')+'" onclick="setSkinStudioProductPage('+page+')">'+page+'</button>')).join('')+'<button type="button" style="padding:7px 10px;border:1px solid #d9e1d6;border-radius:7px;background:#fff" '+(currentPage===pageCount?'disabled':'')+' onclick="setSkinStudioProductPage('+(currentPage+1)+')">Next</button></nav>':'');
   return;
  }
  if(skinStudioTab==='pages'){
   const pages=skinBuilderConfig.pages||[];
-  root.innerHTML='<button type="button" class="studio-outline-add" onclick="openSkinAdd(\'page\')">＋ Add a page</button><p class="studio-inline-help">Pages use the same section styles as the current Nuvora Skin storefront.</p>'+
+  root.innerHTML='<button type="button" class="studio-outline-add" onclick="openSkinAdd(\'page\')">＋ Add a page</button>'+
    '<div class="studio-page-row '+(skinStudioPageId==='home'?'active':'')+'"><button type="button" onclick="setSkinStudioPage(\'home\')"><b>Home page</b><small> / · Main storefront</small></button><span>⌂</span></div>'+
-   (pages.length?pages.map(p=>'<div class="studio-page-row '+(String(skinStudioPageId)===String(p.slug)?'active':'')+'"><button type="button" onclick="setSkinStudioPage('+esc(JSON.stringify(String(p.slug)))+')"><b>'+esc(p.title)+'</b><small>/pages/'+esc(p.slug)+' · '+esc(({basic:'Simple content',editorial:'Editorial',shop:'Shop landing',brands:'Brand directory'}[p.template]||'Custom layout'))+(p.visible?'':' · Hidden')+'</small></button><div class="studio-page-row-actions"><button type="button" title="Duplicate page" aria-label="Duplicate '+esc(p.title)+'" onclick="duplicateSkinPage('+esc(JSON.stringify(String(p.slug)))+')">⧉</button><button type="button" title="Edit page settings" aria-label="Edit '+esc(p.title)+' settings" onclick="selectSkinItem(\'page\','+esc(JSON.stringify(String(p.slug)))+')">✎</button></div></div>').join(''):'<div class="studio-library-empty">No extra pages yet. Use Add → Page to create one.</div>');
+   (pages.length?pages.map(p=>'<div class="studio-page-row '+(String(skinStudioPageId)===String(p.slug)?'active':'')+'"><button type="button" onclick="setSkinStudioPage('+esc(JSON.stringify(String(p.slug)))+')"><b>'+esc(p.title)+'</b><small>/pages/'+esc(p.slug)+' · '+esc(({basic:'Simple content',editorial:'Editorial',shop:'Shop landing',brands:'Brand directory'}[p.template]||'Custom layout'))+(p.visible?'':' · Hidden')+'</small></button><div class="studio-page-row-actions"><button type="button" title="Duplicate page" aria-label="Duplicate '+esc(p.title)+'" onclick="duplicateSkinPage('+esc(JSON.stringify(String(p.slug)))+')">⧉</button><button type="button" title="Edit page settings" aria-label="Edit '+esc(p.title)+' settings" onclick="selectSkinItem(\'page\','+esc(JSON.stringify(String(p.slug)))+')">✎</button></div></div>').join(''):'<div class="studio-library-empty">No extra pages.</div>');
   return;
  }
  if(skinStudioTab==='categories'){
   const defaults=skinDefaultCategories(),custom=skinBuilderConfig.customCategories||[];
-  root.innerHTML='<button type="button" class="studio-outline-add" onclick="openSkinAdd(\'category\')">＋ Add a category</button><p class="studio-inline-help">Existing storefront categories keep their established card style. Create custom categories and assign products in the inspector.</p>'+
+  root.innerHTML='<button type="button" class="studio-outline-add" onclick="openSkinAdd(\'category\')">＋ Add a category</button>'+
    '<div class="studio-divider-label">Existing storefront categories</div>'+defaults.map(cat=>'<div class="studio-category-row"><div><b>'+esc(cat.name)+'</b><small>/shop?category='+esc(cat.name)+'</small></div><button type="button" class="btn" onclick="selectSkinItem(\'default-category\','+esc(JSON.stringify(String(cat.slug)))+')">View</button></div>').join('')+
    '<div class="studio-divider-label">Custom categories</div>'+
-   (custom.length?custom.map(cat=>'<div class="studio-category-row"><div><b>'+esc(cat.name)+'</b><small>/shop?category='+esc(cat.name)+' · '+esc(cat.slug)+'</small></div><div style="display:flex;gap:5px"><button type="button" class="btn" onclick="selectSkinItem(\'category\','+esc(JSON.stringify(String(cat.slug)))+')">Edit</button><button type="button" class="btn danger" onclick="deleteSkinCategory('+esc(JSON.stringify(String(cat.slug)))+')">Delete</button></div></div>').join(''):'<div class="studio-library-empty">No custom categories yet.</div>');
+   (custom.length?custom.map(cat=>'<div class="studio-category-row"><div><b>'+esc(cat.name)+'</b><small>/shop?category='+esc(cat.name)+' · '+esc(cat.slug)+'</small></div><div style="display:flex;gap:5px"><button type="button" class="btn" onclick="selectSkinItem(\'category\','+esc(JSON.stringify(String(cat.slug)))+')">Edit</button><button type="button" class="btn danger" onclick="deleteSkinCategory('+esc(JSON.stringify(String(cat.slug)))+')">Delete</button></div></div>').join(''):'<div class="studio-library-empty">No custom categories.</div>');
  }
 }
 function renderSkinBuilderSections(){
@@ -3924,17 +3887,17 @@ function renderSkinBuilderSections(){
  const sections=skinSectionsFor();
  const typeLabels={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Best sellers','category-grid':'Category browse', 'concern-grid':'Skin concerns','quiz-banner':'Editorial banner','journal-grid':'Journal cards','routine-finder':'Skin routine finder','image-block':'Image block','text-block':'Text block','brand-grid':'Brand directory'};
  const needle=String(window.skinStudioSectionSearch||'').trim().toLowerCase();
- const headerItems='<button type="button" class="studio-outline-global-item" data-search="announcement bar header" onclick="openSkinStudioGlobalSettings(\'header\')"><span class="studio-outline-global-icon">▤</span><span><b>Announcement bar</b><small>Store message and promotion</small></span><span class="studio-outline-chevron">›</span></button>'+
-  '<button type="button" class="studio-outline-global-item" data-search="header logo navigation menu" onclick="openSkinStudioGlobalSettings(\'header\')"><span class="studio-outline-global-icon">☷</span><span><b>Header</b><small>Logo, navigation and layout</small></span><span class="studio-outline-chevron">›</span></button>';
- const footerItems='<button type="button" class="studio-outline-global-item" data-search="footer" onclick="openSkinStudioGlobalSettings(\'footer\')"><span class="studio-outline-global-icon">▤</span><span><b>Footer</b><small>Links, information and newsletter</small></span><span class="studio-outline-chevron">›</span></button>'+
-  '<button type="button" class="studio-outline-global-item" data-search="utilities social payment" onclick="openSkinStudioGlobalSettings(\'footer\')"><span class="studio-outline-global-icon">⚙</span><span><b>Utilities</b><small>Social links and store details</small></span><span class="studio-outline-chevron">›</span></button>';
+ const headerItems='<button type="button" class="studio-outline-global-item" data-search="announcement bar header" onclick="openSkinStudioGlobalSettings(\'header\')"><span class="studio-outline-global-icon">▤</span><span><b>Announcement bar</b></span><span class="studio-outline-chevron">›</span></button>'+
+  '<button type="button" class="studio-outline-global-item" data-search="header logo navigation menu" onclick="openSkinStudioGlobalSettings(\'header\')"><span class="studio-outline-global-icon">☷</span><span><b>Header</b></span><span class="studio-outline-chevron">›</span></button>';
+ const footerItems='<button type="button" class="studio-outline-global-item" data-search="footer" onclick="openSkinStudioGlobalSettings(\'footer\')"><span class="studio-outline-global-icon">▤</span><span><b>Footer</b></span><span class="studio-outline-chevron">›</span></button>'+
+  '<button type="button" class="studio-outline-global-item" data-search="utilities social payment" onclick="openSkinStudioGlobalSettings(\'footer\')"><span class="studio-outline-global-icon">⚙</span><span><b>Utilities</b></span><span class="studio-outline-chevron">›</span></button>';
  const sectionRows=sections.map((sec,index)=>{
   const selected=skinStudioSelection?.type==='section'&&String(skinStudioSelection.id)===String(sec.id);
   const visible=sec.visible!==false;
   return '<article class="studio-section-outline '+(selected?'is-selected':'')+'" data-search="'+esc(String(sec.title||typeLabels[sec.type]||sec.type||'Section')+' '+String(typeLabels[sec.type]||'Section')).toLowerCase()+'" data-section-index="'+index+'" tabindex="0" aria-label="Section '+(index+1)+': '+esc(sec.title||typeLabels[sec.type]||'Section')+'. Press Enter to select; use Alt plus arrow keys to reorder." draggable="true" onkeydown="skinSectionOutlineKeydown(event,'+index+','+esc(JSON.stringify(String(sec.id)))+')" ondragstart="skinSectionDragStart(event,'+index+')" ondragover="skinSectionDragOver(event,'+index+')" ondrop="skinSectionDrop(event,'+index+')" ondragend="skinSectionDragEnd(event)" onclick="selectSkinItem(\'section\','+esc(JSON.stringify(String(sec.id)))+')">'+
    '<span class="studio-outline-grip studio-outline-number" aria-hidden="true">'+(index+1)+'</span><div class="studio-section-outline-copy"><b>'+esc(sec.title||typeLabels[sec.type]||sec.type||'Section')+(sec.locked?' 🔒':'')+'</b><small>'+esc(typeLabels[sec.type]||'Section')+' · '+(visible?'Visible':'Hidden')+(sec.locked?' · Locked':'')+'</small></div>'+
    '<div class="studio-section-outline-actions"><button type="button" title="Move up" '+(index===0||sec.locked?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',-1)">↑</button><button type="button" title="Move down" '+(index===sections.length-1||sec.locked?'disabled':'')+' onclick="event.stopPropagation();moveSkinSection('+index+',1)">↓</button><button type="button" title="Duplicate section" '+(sec.locked?'disabled':'')+' onclick="event.stopPropagation();duplicateSkinSection('+index+')">⧉</button><button type="button" title="'+(sec.locked?'Unlock layout':'Lock layout')+'" aria-pressed="'+String(!!sec.locked)+'" onclick="event.stopPropagation();toggleSkinSectionLock('+index+')">'+(sec.locked?'🔒':'🔓')+'</button><button type="button" title="'+(visible?'Hide':'Show')+'" '+(sec.locked?'disabled':'')+' onclick="event.stopPropagation();toggleSkinSectionVisibility('+index+')">'+(visible?'◉':'○')+'</button><button type="button" title="Delete section" aria-label="Delete '+esc(sec.title||typeLabels[sec.type]||'section')+'" '+(sec.locked?'disabled':'')+' style="color:#a33d31!important;border:1px solid #f0d7d2;border-radius:6px;background:#fff7f5" onclick="event.stopPropagation();deleteSkinSectionImmediately('+index+')">×</button></div></article>';
- }).join('')||'<div class="studio-library-empty">This page has no sections yet. Use + Add section to start building it.</div>';
+ }).join('')||'<div class="studio-library-empty">No sections yet.</div>';
  root.innerHTML='<div class="studio-outline-tools"><label><span>Find a section</span><input id="skinStudioSectionSearch" type="search" value="'+esc(needle)+'" placeholder="Search sections…" aria-label="Search page sections" oninput="filterSkinSectionOutline(this.value)"></label><span id="skinStudioSectionCount" class="studio-outline-count">'+sections.length+' sections</span></div>'+
   '<section class="studio-outline-group" aria-label="Header sections"><div class="studio-outline-group-heading"><h4>Header</h4><span>Store-wide</span></div>'+headerItems+'</section>'+
   '<section class="studio-outline-group studio-outline-template-group" aria-label="Template sections"><div class="studio-outline-group-heading"><h4>Template</h4><span>'+sections.length+' sections</span></div>'+sectionRows+'<button type="button" class="studio-outline-add" onclick="openSkinAdd(\'section\')">＋ Add section</button></section>'+
@@ -3985,7 +3948,7 @@ function renderSkinSelectedInspector(){
  const selection=skinStudioSelection||{type:'none'},sections=skinSectionsFor();
  if(selection.type==='section'){
   const index=sections.findIndex(s=>String(s.id)===String(selection.id)),sec=sections[index];
-  if(!sec){setHead('Select an item','Choose a section, product, page or category.');root.innerHTML='<div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b><p>Select an item in the left panel.</p></div>';return;}
+  if(!sec){setHead('Select an item','');root.innerHTML='<div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b></div>';return;}
   const types={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Best sellers','category-grid':'Category browse', 'concern-grid':'Skin concerns','quiz-banner':'Editorial banner','journal-grid':'Journal cards','routine-finder':'Skin routine finder','image-block':'Image block','text-block':'Text block','brand-grid':'Brand directory'};
   const field=(label,key,value,kind='text',max='180')=>'<label class="studio-inspector-field"><span>'+label+'</span>'+(kind==='textarea'?'<textarea maxlength="'+max+'" oninput="updateSkinSection('+index+',\''+key+'\',this.value)">'+esc(value||'')+'</textarea>':'<input type="'+kind+'" maxlength="'+(kind==='color'?'7':max)+'" value="'+esc(value||'')+'" oninput="updateSkinSection('+index+',\''+key+'\',this.value)">')+'</label>';
   let html='<label class="studio-inspector-field"><span>Section type</span><select onchange="updateSkinSection('+index+',\'type\',this.value)">'+Object.entries(types).map(([val,label])=>'<option value="'+val+'" '+(sec.type===val?'selected':'')+'>'+label+'</option>').join('')+'</select></label>';
@@ -4018,14 +3981,14 @@ function renderSkinSelectedInspector(){
   html+='<label class="studio-inspector-field"><span>Background overlay · '+Number(sec.backgroundOverlay||0)+'%</span><input type="range" min="0" max="80" step="5" value="'+Number(sec.backgroundOverlay||0)+'" onchange="updateSkinSection('+index+',\'backgroundOverlay\',Number(this.value))"></label>';
 
 
-  if(['hero','editorial','image-block','quiz-banner'].includes(sec.type))html+=field('Section image URL','image',sec.image||'','url','1600')+'<label class="studio-inspector-field"><span>Upload section image from your device</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'section\','+index+')"><small class="studio-inline-help">JPG, PNG, WEBP or GIF · up to 6 MB. You can also drag an image file directly onto this section in the preview.</small></label>';
+  if(['hero','editorial','image-block','quiz-banner'].includes(sec.type))html+=field('Section image URL','image',sec.image||'','url','1600')+'<label class="studio-inspector-field"><span>Upload section image from your device</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'section\','+index+')"><small class="studio-inline-help">JPG, PNG, WebP or GIF · Max 6 MB.</small></label>';
    if(['hero','editorial'].includes(sec.type)){
-    html+='<div class="studio-inline-help">Drag the image in the preview to adjust its focal point, or use these controls for precision.</div>';
+    html+='';
     html+='<label class="studio-inspector-field"><span>Image focus · horizontal '+Number(sec.imagePositionX??50)+'%</span><input type="range" min="0" max="100" step="1" value="'+Number(sec.imagePositionX??50)+'" onchange="updateSkinSection('+index+',\'imagePositionX\',Number(this.value))"></label>';
     html+='<label class="studio-inspector-field"><span>Image focus · vertical '+Number(sec.imagePositionY??50)+'%</span><input type="range" min="0" max="100" step="1" value="'+Number(sec.imagePositionY??50)+'" onchange="updateSkinSection('+index+',\'imagePositionY\',Number(this.value))"></label>';
    }
    if(sec.type==='image-block'){
-    html+='<label class="studio-inspector-check"><input type="checkbox" '+(sec.imageFreePosition===true?'checked':'')+' onchange="updateSkinSection('+index+',\'imageFreePosition\',this.checked)"> Enable free image positioning</label><small class="studio-inline-help">When enabled, drag the image inside the preview to place it anywhere within its frame.</small>';
+    html+='<label class="studio-inspector-check"><input type="checkbox" '+(sec.imageFreePosition===true?'checked':'')+' onchange="updateSkinSection('+index+',\'imageFreePosition\',this.checked)"> Enable free image positioning</label>';
     if(sec.imageFreePosition===true){
      html+='<label class="studio-inspector-field"><span>Horizontal position · '+Number(sec.imagePositionX??50)+'%</span><input type="range" min="0" max="100" step="1" value="'+Number(sec.imagePositionX??50)+'" onchange="updateSkinSection('+index+',\'imagePositionX\',Number(this.value))"></label>';
      html+='<label class="studio-inspector-field"><span>Vertical position · '+Number(sec.imagePositionY??50)+'%</span><input type="range" min="0" max="100" step="1" value="'+Number(sec.imagePositionY??50)+'" onchange="updateSkinSection('+index+',\'imagePositionY\',Number(this.value))"></label>';
@@ -4042,8 +4005,8 @@ function renderSkinSelectedInspector(){
    html+='<label class="studio-inspector-field"><span>Product filter</span><select onchange="updateSkinSection('+index+',\'filter\',this.value)">'+[['all','All eligible skincare products'],['featured','Featured picks'],['top_pick','Top picks'],['trending','Trending picks']].map(([v,l])=>'<option value="'+v+'" '+(sec.filter===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
    html+='<label class="studio-inspector-field"><span>Category filter</span><select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+skinStoreCategoryOptions().map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
    html+='<label class="studio-inspector-field"><span>Columns</span><select onchange="updateSkinSection('+index+',\'columns\',Number(this.value))">'+[2,3,4,5].map(n=>'<option value="'+n+'" '+(Number(sec.columns||4)===n?'selected':'')+'>'+n+' columns</option>').join('')+'</select></label>';
-   if(['product-grid','featured-products'].includes(sec.type))html+='<label class="studio-inspector-field"><span>Products per page</span><select onchange="updateSkinSection('+index+',\'productsPerPage\',Number(this.value))">'+[4,5,6,8,9,12].map(n=>'<option value="'+n+'" '+(Number(sec.productsPerPage||8)===n?'selected':'')+'>'+n+' products</option>').join('')+'</select><small class="studio-inline-help">The storefront and live preview show this many products before page numbers appear.</small></label>';
-   html+='<div class="studio-inspector-field"><span>Choose products to show</span><p class="studio-inline-help">Tick the products you want to appear in this section. Untick to remove them.</p><div class="studio-product-checklist">'+(skinProductOptions().length?skinProductOptions().map(p=>'<label class="studio-product-check"><input type="checkbox" '+(activeIds.has(String(p.id))?'checked':'')+' onchange="toggleSkinSectionProduct('+index+','+esc(JSON.stringify(String(p.id)))+',this.checked)"><span>'+esc(p.name)+'</span></label>').join(''):'<p class="studio-inline-help">No skincare products yet. Use + Add → Product first.</p>')+'</div></div>';
+   if(['product-grid','featured-products'].includes(sec.type))html+='<label class="studio-inspector-field"><span>Products per page</span><select onchange="updateSkinSection('+index+',\'productsPerPage\',Number(this.value))">'+[4,5,6,8,9,12].map(n=>'<option value="'+n+'" '+(Number(sec.productsPerPage||8)===n?'selected':'')+'>'+n+' products</option>').join('')+'</select></label>';
+   html+='<div class="studio-inspector-field"><span>Choose products to show</span><div class="studio-product-checklist">'+(skinProductOptions().length?skinProductOptions().map(p=>'<label class="studio-product-check"><input type="checkbox" '+(activeIds.has(String(p.id))?'checked':'')+' onchange="toggleSkinSectionProduct('+index+','+esc(JSON.stringify(String(p.id)))+',this.checked)"><span>'+esc(p.name)+'</span></label>').join(''):'<p class="studio-inline-help">No products yet.</p>')+'</div></div>';
   }
   if(sec.type==='category-grid'){
    html+='<label class="studio-inspector-field"><span>Show category</span><select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+skinStoreCategoryOptions().map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
@@ -4056,25 +4019,25 @@ function renderSkinSelectedInspector(){
  }
  if(selection.type==='product'){
   const p=adminProducts.find(x=>String(x.id)===String(selection.id));
-  if(!p){setHead('Product not found','Refresh the product library.');root.innerHTML='<div class="studio-library-empty">This product record is not available.</div>';return;}
+  if(!p){setHead('Product not found','Refresh the product library.');root.innerHTML='<div class="studio-library-empty">Product not available.</div>';return;}
   const id=String(p.id),image=skinImageOf(p),current=skinCategoryOfProduct(id),detectedCategory=skinDefaultCategories().find(cat=>cat.slug===inferSkinProductCategory(p));
   const dest=retailerDestination(p);
   const cats=skinStoreCategoryOptions();
   setHead('Product settings',String(p.name||'Skincare product'));
   root.innerHTML=(image?'<img src="'+esc(image)+'" alt="" style="display:block;width:100%;max-height:190px;object-fit:cover;border:1px solid #e3e9e1;border-radius:10px;margin-bottom:12px">':'')+
-   '<p class="studio-inline-help">'+esc(p.published?'Published product':'Draft product — publish before placing it in a live grid')+' · '+esc(retailerLabel(p))+'</p>'+
+   ''+
    '<label class="studio-inspector-field"><span>Storefront category</span><select onchange="assignSkinProductCategory('+esc(JSON.stringify(id))+',this.value)"><option value="">Automatic product type'+(detectedCategory?' · detected: '+esc(detectedCategory.name):' · review details')+'</option>'+cats.map(cat=>'<option value="'+esc(cat.slug)+'" '+(current===String(cat.slug)||current===String(cat.id)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>'+
-   '<p class="studio-inline-help">This category controls where the product appears in Nuvora Skin. It does not change the main Nuvora product taxonomy.</p>'+
-   (dest?'<a class="btn" style="display:inline-flex;margin:0 0 12px" href="'+esc(dest)+'" target="_blank" rel="noopener noreferrer">Check saved retailer link ↗</a>':'<div class="notice" style="font-size:10px">No specific retailer link is saved yet. Add the exact Amazon link in the product editor before publishing.</div>')+
+   ''+
+   (dest?'<a class="btn" style="display:inline-flex;margin:0 0 12px" href="'+esc(dest)+'" target="_blank" rel="noopener noreferrer">Check saved retailer link ↗</a>':'<div class="notice" style="font-size:10px">No retailer link saved.</div>')+
    '<div class="studio-inspector-actions"><button class="btn primary" type="button" onclick="editSkinProduct('+esc(JSON.stringify(id))+')">Edit product details</button><button class="btn" type="button" onclick="togglePublish('+esc(JSON.stringify(id))+')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" type="button" onclick="removeProduct('+esc(JSON.stringify(id))+');renderSkinLibrary()">Delete</button></div>';
   return;
  }
  if(selection.type==='page'){
   const page=skinCurrentPage(selection.id);
-  if(!page){setHead('Home page','Choose a section in the outline to edit the homepage.');root.innerHTML='<div class="studio-empty-inspector"><b>Home page</b><p>The homepage sections can be selected from the Outline tab.</p></div>';return;}
+  if(!page){setHead('Home page','Choose a section in the outline to edit the homepage.');root.innerHTML='<div class="studio-empty-inspector"><b>Home page</b></div>';return;}
   setHead('Page settings',String(page.title||'Page'));
   root.innerHTML='<label class="studio-inspector-field"><span>Page title</span><input maxlength="120" value="'+esc(page.title)+'" oninput="updateSkinPage('+esc(JSON.stringify(String(page.slug)))+',\'title\',this.value)"></label>'+
-   '<label class="studio-inspector-field"><span>Page URL handle</span><input maxlength="80" value="'+esc(page.slug)+'" aria-label="Page URL handle" onchange="updateSkinPage('+esc(JSON.stringify(String(page.slug)))+',\'slug\',this.value)"><small class="studio-inline-help">Changing the handle also updates Nuvora page-menu links.</small></label>'+
+   '<label class="studio-inspector-field"><span>Page URL handle</span><input maxlength="80" value="'+esc(page.slug)+'" aria-label="Page URL handle" onchange="updateSkinPage('+esc(JSON.stringify(String(page.slug)))+',\'slug\',this.value)"></label>'+
    '<label class="studio-inspector-field"><span>Search description</span><textarea maxlength="1200" oninput="updateSkinPage('+esc(JSON.stringify(String(page.slug)))+',\'description\',this.value)">'+esc(page.description||'')+'</textarea></label>'+
    '<label class="studio-inspector-check"><input type="checkbox" '+(page.visible!==false?'checked':'')+' onchange="updateSkinPage('+esc(JSON.stringify(String(page.slug)))+',\'visible\',this.checked)"> Published / visible to shoppers</label>'+
    '<div class="studio-inspector-actions"><button class="btn primary" type="button" onclick="setSkinStudioPage('+esc(JSON.stringify(String(page.slug)))+');switchSkinStudioTab(\'outline\')">Edit page layout</button><button class="btn" type="button" onclick="duplicateSkinPage('+esc(JSON.stringify(String(page.slug)))+')">Duplicate page</button><button class="btn danger" type="button" onclick="deleteSkinPage('+esc(JSON.stringify(String(page.slug)))+')">Delete page</button></div>';
@@ -4082,26 +4045,26 @@ function renderSkinSelectedInspector(){
  }
  if(selection.type==='default-category'){
   const cat=skinDefaultCategories().find(x=>String(x.slug)===String(selection.id));
-  if(!cat){setHead('Storefront category','Choose a category from the left panel.');root.innerHTML='<div class="studio-library-empty">Select an existing category.</div>';return;}
+  if(!cat){setHead('Storefront category','');root.innerHTML='<div class="studio-library-empty">Select an existing category.</div>';return;}
   setHead('Storefront category',String(cat.name));
-  root.innerHTML='<p class="studio-inline-help">This existing Nuvora Skin category keeps the established storefront card style. Select a product in the Products tab to assign it here, or filter a product section by this category.</p><div class="studio-inspector-actions"><button class="btn" type="button" onclick="switchSkinStudioTab(\'products\')">Open product library</button><button class="btn" type="button" onclick="openSkinAdd(\'category\')">Add a custom category</button></div>';
+  root.innerHTML='<div class="studio-inspector-actions"><button class="btn" type="button" onclick="switchSkinStudioTab(\'products\')">Open product library</button><button class="btn" type="button" onclick="openSkinAdd(\'category\')">Add a custom category</button></div>';
   return;
  }
  if(selection.type==='category'){
   const cat=(skinBuilderConfig.customCategories||[]).find(x=>String(x.slug)===String(selection.id)||String(x.id)===String(selection.id));
-  if(!cat){setHead('Category settings','Choose a category from the left panel.');root.innerHTML='<div class="studio-library-empty">Select a category to edit.</div>';return;}
+  if(!cat){setHead('Category settings','');root.innerHTML='<div class="studio-library-empty">Select a category to edit.</div>';return;}
   setHead('Category settings',String(cat.name||'Category'));
   root.innerHTML='<label class="studio-inspector-field"><span>Category name</span><input maxlength="100" value="'+esc(cat.name)+'" oninput="updateSkinCategory('+esc(JSON.stringify(String(cat.slug)))+',\'name\',this.value)"></label>'+
    '<label class="studio-inspector-field"><span>URL slug</span><input value="'+esc(cat.slug)+'" readonly></label>'+
    '<label class="studio-inspector-field"><span>Category description</span><textarea maxlength="1000" oninput="updateSkinCategory('+esc(JSON.stringify(String(cat.slug)))+',\'description\',this.value)">'+esc(cat.description||'')+'</textarea></label>'+
    '<label class="studio-inspector-field"><span>Category image URL</span><input type="url" maxlength="1600" value="'+esc(cat.image||'')+'" oninput="updateSkinCategory('+esc(JSON.stringify(String(cat.slug)))+',\'image\',this.value)"></label>'+
-   '<label class="studio-inspector-field"><span>Upload category image</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'category\','+esc(JSON.stringify(String(cat.slug)))+')"><small class="studio-inline-help">Choose an image from your device · up to 6 MB.</small></label>'+
+   '<label class="studio-inspector-field"><span>Upload category image</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'category\','+esc(JSON.stringify(String(cat.slug)))+')"><small class="studio-inline-help">Max 6 MB.</small></label>'+
    (cat.image?'<img src="'+esc(cat.image)+'" alt="" style="width:100%;max-height:140px;object-fit:cover;border-radius:9px;margin-bottom:10px">':'')+
    '<div class="studio-inspector-actions"><button class="btn danger" type="button" onclick="deleteSkinCategory('+esc(JSON.stringify(String(cat.slug)))+')">Delete category</button></div>';
   return;
  }
- setHead('Select an item','Sections, products, pages and categories can all be managed here.');
- root.innerHTML='<div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b><p>Select an item in the left panel or a page section in Outline.</p></div>';
+ setHead('Select an item','');
+ root.innerHTML='<div class="studio-empty-inspector"><span>↖</span><b>Select an item</b></div>';
 }
 function prepareSkinStudioShopifyLayout(){
  const layout=document.querySelector('#skinSiteBuilder .studio-layout'),left=layout?.querySelector('.studio-left-panel'),right=layout?.querySelector('.studio-right-panel');
@@ -4187,11 +4150,11 @@ function openSkinAdd(type){
  const panel=document.getElementById('skinQuickAddPanel');if(!panel)return;
  panel.hidden=false;
  if(type==='page'){
-  panel.innerHTML='<h4>Create a page</h4><p>Choose a starting layout. You can change every section after the page is created.</p><label>Page title<input id="skinQuickTitle" maxlength="120" placeholder="e.g. About Nuvora Skin"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="about-nuvora-skin"></label><label>Starting layout<select id="skinQuickTemplate"><option value="basic">Simple content page</option><option value="editorial">Editorial story</option><option value="shop">Shop landing page</option><option value="brands">Brand directory</option></select></label><label>Search description<textarea id="skinQuickDescription" maxlength="1200" placeholder="A short description for this page"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create page</button></div>';
+  panel.innerHTML='<h4>Create a page</h4><label>Page title<input id="skinQuickTitle" maxlength="120" placeholder="e.g. About Nuvora Skin"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="about-nuvora-skin"></label><label>Starting layout<select id="skinQuickTemplate"><option value="basic">Simple content page</option><option value="editorial">Editorial story</option><option value="shop">Shop landing page</option><option value="brands">Brand directory</option></select></label><label>Search description<textarea id="skinQuickDescription" maxlength="1200" placeholder="A short description for this page"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create page</button></div>';
  }else if(type==='category'){
-  panel.innerHTML='<h4>Create a category</h4><p>Categories organize products while keeping the existing storefront card style.</p><label>Category name<input id="skinQuickTitle" maxlength="100" placeholder="e.g. Serums"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="serums"></label><label>Description<textarea id="skinQuickDescription" maxlength="1000" placeholder="What shoppers will find here"></textarea></label><label>Category image URL (optional)<input id="skinQuickImage" type="url" maxlength="1600" placeholder="https://…"></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create category</button></div>';
+  panel.innerHTML='<h4>Create a category</h4><label>Category name<input id="skinQuickTitle" maxlength="100" placeholder="e.g. Serums"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="serums"></label><label>Description<textarea id="skinQuickDescription" maxlength="1000" placeholder="What shoppers will find here"></textarea></label><label>Category image URL (optional)<input id="skinQuickImage" type="url" maxlength="1600" placeholder="https://…"></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create category</button></div>';
  }else{
-  panel.innerHTML='<h4>Add a section</h4><p>Choose a section type. Search or filter the library, then select a visual tile to configure it.</p><div class="studio-section-library-tools"><input id="skinSectionLibrarySearch" type="search" placeholder="Search sections…" aria-label="Search section library" oninput="filterSkinSectionLibrary(this.value)"><div class="studio-section-library-categories" role="group" aria-label="Section categories"><button type="button" class="is-active" data-library-category="all" onclick="filterSkinSectionLibraryCategory(&quot;all&quot;,this)">All</button><button type="button" data-library-category="shop" onclick="filterSkinSectionLibraryCategory(&quot;shop&quot;,this)">Shop &amp; products</button><button type="button" data-library-category="content" onclick="filterSkinSectionLibraryCategory(&quot;content&quot;,this)">Editorial &amp; content</button></div><div id="skinSectionLibraryGrid" class="studio-section-library-grid" aria-label="Available sections"></div></div><label>Section type<select id="skinQuickType" onchange="syncSkinSectionLibrarySelection()"><optgroup label="Shop &amp; product display"><option value="product-grid">Product grid</option><option value="featured-products">Featured products</option><option value="category-grid">Category browse</option><option value="brand-grid">Brand directory</option><option value="concern-grid">Skin concerns</option></optgroup><optgroup label="Editorial &amp; content"><option value="hero">Hero / banner</option><option value="editorial">Image and text</option><option value="journal-grid">Journal cards</option><option value="text-block">Text block</option><option value="image-block">Image block</option><option value="quiz-banner">Editorial banner</option></optgroup></select></label><label>Section title<input id="skinQuickTitle" maxlength="180" placeholder="Section title"></label><label>Small heading<input id="skinQuickEyebrow" maxlength="100" placeholder="Optional eyebrow"></label><label>Supporting text<textarea id="skinQuickDescription" maxlength="3000" placeholder="Optional supporting text"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Add section</button></div>';renderSkinSectionLibraryPicker();
+  panel.innerHTML='<h4>Add a section</h4><div class="studio-section-library-tools"><input id="skinSectionLibrarySearch" type="search" placeholder="Search sections…" aria-label="Search section library" oninput="filterSkinSectionLibrary(this.value)"><div class="studio-section-library-categories" role="group" aria-label="Section categories"><button type="button" class="is-active" data-library-category="all" onclick="filterSkinSectionLibraryCategory(&quot;all&quot;,this)">All</button><button type="button" data-library-category="shop" onclick="filterSkinSectionLibraryCategory(&quot;shop&quot;,this)">Shop &amp; products</button><button type="button" data-library-category="content" onclick="filterSkinSectionLibraryCategory(&quot;content&quot;,this)">Editorial &amp; content</button></div><div id="skinSectionLibraryGrid" class="studio-section-library-grid" aria-label="Available sections"></div></div><label>Section type<select id="skinQuickType" onchange="syncSkinSectionLibrarySelection()"><optgroup label="Shop &amp; product display"><option value="product-grid">Product grid</option><option value="featured-products">Featured products</option><option value="category-grid">Category browse</option><option value="brand-grid">Brand directory</option><option value="concern-grid">Skin concerns</option></optgroup><optgroup label="Editorial &amp; content"><option value="hero">Hero / banner</option><option value="editorial">Image and text</option><option value="journal-grid">Journal cards</option><option value="text-block">Text block</option><option value="image-block">Image block</option><option value="quiz-banner">Editorial banner</option></optgroup></select></label><label>Section title<input id="skinQuickTitle" maxlength="180" placeholder="Section title"></label><label>Small heading<input id="skinQuickEyebrow" maxlength="100" placeholder="Optional eyebrow"></label><label>Supporting text<textarea id="skinQuickDescription" maxlength="3000" placeholder="Optional supporting text"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Add section</button></div>';renderSkinSectionLibraryPicker();
  }
 }
 let skinSectionLibraryCategory='all';
@@ -4212,7 +4175,7 @@ function renderSkinSectionLibraryPicker(){
  const grid=document.getElementById('skinSectionLibraryGrid');if(!grid)return;
  const query=String(document.getElementById('skinSectionLibrarySearch')?.value||'').trim().toLowerCase();
  const items=skinSectionLibraryItems.filter(item=>(skinSectionLibraryCategory==='all'||item.category===skinSectionLibraryCategory)&&(!query||(item.title+' '+item.description+' '+item.category).toLowerCase().includes(query)));
- grid.innerHTML=items.map(item=>'<button type="button" class="studio-section-library-card '+(document.getElementById('skinQuickType')?.value===item.type?'is-selected':'')+'" data-section-type="'+item.type+'" onclick="chooseSkinSectionLibraryItem(&quot;'+item.type+'&quot;)"><span class="studio-section-library-thumb studio-section-thumb-'+item.type+'"><b>'+item.icon+'</b><i></i><i></i></span><strong>'+item.title+'</strong><small>'+item.description+'</small></button>').join('')||'<p class="studio-section-library-empty">No sections match that search.</p>';
+ grid.innerHTML=items.map(item=>'<button type="button" class="studio-section-library-card '+(document.getElementById('skinQuickType')?.value===item.type?'is-selected':'')+'" data-section-type="'+item.type+'" onclick="chooseSkinSectionLibraryItem(&quot;'+item.type+'&quot;)"><span class="studio-section-library-thumb studio-section-thumb-'+item.type+'"><b>'+item.icon+'</b><i></i><i></i></span><strong>'+item.title+'</strong></button>').join('')||'<p class="studio-section-library-empty">No matching sections.</p>';
 }
 function chooseSkinSectionLibraryItem(type){
  const select=document.getElementById('skinQuickType');if(!select||!skinSectionLibraryItems.some(item=>item.type===type))return;
@@ -4733,7 +4696,7 @@ function syncSkinPreviewActionbar(){
  const index=isSection?sections.findIndex(x=>String(x.id)===String(selection.id)):-1,section=index>=0?sections[index]:null;
  const product=selection.type==='product'?adminProducts.find(p=>String(p.id)===String(selection.id)):null;
  const locked=!!section?.locked;
- context.textContent=product?'Selected product: '+String(product.name||'Product'):(section?'Selected section: '+String(section.title||section.type)+(locked?' · Locked':''):'Click a section or product in the preview to edit it here.');
+ context.textContent=product?'Selected product: '+String(product.name||'Product'):(section?'Selected section: '+String(section.title||section.type)+(locked?' · Locked':''):'');
  context.dataset.status=document.getElementById('skinStudioSaveLabel')?.dataset.status||'';
  if(controls.moveUp)controls.moveUp.disabled=!section||locked||index<=0;
  if(controls.moveDown)controls.moveDown.disabled=!section||locked||index<0||index>=sections.length-1;
@@ -4783,14 +4746,14 @@ function closeSkinClaudeAssistant(){
 }
 async function refreshSkinClaudeStatus(){
  const status=document.getElementById('skinClaudeConnectionStatus'),send=document.getElementById('skinClaudeSend');
- if(status)status.textContent='Checking Nuvora AI connection…';
+ if(status)status.textContent='Checking…';
  try{
   const health=await api('/api/health');
   skinClaudeConnectionReady=health?.configured?.workersAI===true;
-  if(status)status.textContent=skinClaudeConnectionReady?'Nuvora AI is connected through Cloudflare Workers AI. Your draft context is ready.':'Nuvora AI is not connected. Check that the Workers AI binding named AI is attached to the nuvora Worker.';
+  if(status)status.textContent=skinClaudeConnectionReady?'Connected':'Disconnected';
  }catch(error){
   skinClaudeConnectionReady=false;
-  if(status)status.textContent='Could not verify Nuvora AI status. Check your admin connection and try again.';
+  if(status)status.textContent='Connection unavailable.';
  }
  if(send)send.disabled=false;
 }
@@ -5129,7 +5092,7 @@ async function uploadSkinStudioImage(input,type,id,explicitFile=null){
   const {data}=adminSB.storage.from('product-images').getPublicUrl(path);
   if(!data?.publicUrl)throw new Error('Could not create a public image URL.');
   if(type==='section'){
-   const sections=skinSectionsFor(),section=sections[Number(id)];if(!section)throw new Error('The selected section is no longer available.');
+   const sections=skinSectionsFor(),section=sections[Number(id)];if(!section)throw new Error('Section not found.');
    updateSkinSection(Number(id),'image',data.publicUrl);
   }else if(type==='category'){
    updateSkinCategory(String(id),'image',data.publicUrl);
@@ -5315,7 +5278,7 @@ function populateSkinRecommendations(selectedIds=[]){
  const selected=new Set((selectedIds||[]).map(String)),current=String(window.editingProductId||'');
  const options=skinProductOptions().filter(p=>p.id!==current);
  el.disabled=!options.length;
- el.innerHTML=options.length?options.map(p=>'<option value="'+esc(p.id)+'" '+(selected.has(p.id)?'selected':'')+'>'+esc(p.name)+'</option>').join(''):'<option value="" disabled>No other skincare products are available yet. Add more products to enable complementary recommendations.</option>';
+ el.innerHTML=options.length?options.map(p=>'<option value="'+esc(p.id)+'" '+(selected.has(p.id)?'selected':'')+'>'+esc(p.name)+'</option>').join(''):'<option value="" disabled>No other products available.</option>';
 }
 function populateSkinStoreCategories(selected=''){
  const el=document.getElementById('pfSkinStoreCategory');if(!el)return;
@@ -5332,7 +5295,7 @@ async function openSkinManualProduct(){
   window.skinCareImportMode=true;
   setSkinAdminFormMode(true);
   document.getElementById('productModalTitle').textContent='Add skincare product manually';
-  document.getElementById('productModalSub').textContent='Enter the real product information and exact Amazon affiliate link. Nothing is published until you choose to publish it.';
+  document.getElementById('productModalSub').textContent='';
   document.getElementById('pfKind').value='find';
   if(document.getElementById('pfProductType'))document.getElementById('pfProductType').value='';
   document.getElementById('pfSource').value='amazon';
@@ -5342,7 +5305,7 @@ async function openSkinManualProduct(){
   document.getElementById('pfPrice').value='';
   document.getElementById('pfListPrice').value='';
   document.getElementById('pfDiscount').value='';
-  document.getElementById('pfDestination').placeholder='Paste the exact Amazon Associates product URL';
+  document.getElementById('pfDestination').placeholder='Amazon Associates product URL';
   document.getElementById('amazonUrlInput').placeholder='Optional: paste an Amazon product link to import details';
   if(!adminProducts.length){try{await liveAdminProducts();}catch(e){}}
   populateSkinStoreCategories();
@@ -5359,7 +5322,7 @@ async function editSkinProduct(id){
   if(!categories.length)await loadCategories();
   openProductModal(false);window.skinCareImportMode=true;window.editingProductId=String(id);setSkinAdminFormMode(true);
   document.getElementById('productModalTitle').textContent='Edit skincare product';
-  document.getElementById('productModalSub').textContent='Edit product details, image, skin guidance and the exact Amazon link. Nuvora Skin does not manage product prices.';
+  document.getElementById('productModalSub').textContent='';
   const saveButton=document.getElementById('productSaveBtn');if(saveButton)saveButton.textContent='Save changes';
   setProductForm(p);
   document.getElementById('pfBenefits').value=p.benefits||p.why_we_picked_it||'';
