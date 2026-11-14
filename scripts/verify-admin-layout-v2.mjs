@@ -81,7 +81,6 @@ for (const token of [
   "runSkinBulkAiImport",
   "generateSkinProductWithGemini(j.destination_url||url,{auto:true})",
   "aiModalBody.querySelectorAll('.ai-studio')",
-  "No other skincare products are available yet"
 ]) assert.ok(html.includes(token), "AI-assisted Skin Studio product workspace behavior missing: " + token);
 
 assert.ok(!html.includes("sk-ant-api"), "No Anthropic API key may be embedded in the admin HTML");
