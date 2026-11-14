@@ -115,4 +115,7 @@ for (const token of [
   "storeImagePreview"
 ]) assert.ok(studio.includes(token), "Multi-store editor AI workflow missing: " + token);
 
+assert.ok(studio.includes('products=seed.map(p=>({...p,status:"draft"}));'), "Starter products must load as private drafts, never public examples.");
+assert.ok(studio.includes("add a verified retailer link before publishing"), "Starter product warning must explain publication requirements.");
+
 console.log("Nuvora Admin layout and Cloudflare Workers AI contracts passed.");
