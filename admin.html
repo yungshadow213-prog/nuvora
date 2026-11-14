@@ -1489,11 +1489,14 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
           <div class="field"><label>Creative style</label><select id="aiStyle"><option value="premium ecommerce">Premium ecommerce</option><option value="clean studio">Clean studio</option><option value="luxury editorial">Luxury editorial</option><option value="modern lifestyle">Modern lifestyle</option><option value="social media ad">Social media ad</option><option value="minimal catalog">Minimal catalog</option></select></div>
           <div class="field"><label>Format</label><select id="aiSize"><option value="1024x1024">Square · 1:1</option><option value="1536x1024">Landscape · 3:2</option><option value="1024x1536">Portrait · 2:3</option></select></div>
           <div class="field full"><label>Reference image <span class="muted">(optional)</span></label><input id="aiReference" type="file" accept="image/*"><div class="muted">If you leave this empty, Nuvora AI automatically uses the first image already attached to the product. Upload one only when you want a different reference. Max 6 MB.</div></div>
-          <div class="field full"><label>Creative direction</label><textarea id="aiPrompt" placeholder="Optional: soft neutral background, subtle shadows, premium lighting…"></textarea></div>
+          <div class="field"><label>Colour grading</label><select id="aiColorGrade"><option value="natural, accurate skincare colour with soft neutral whites">Natural &amp; true-to-product</option><option value="warm ivory highlights, soft honey warmth and gentle beige shadows">Warm ivory luxury</option><option value="cool clean whites, crisp soft-blue highlights and neutral shadows">Cool clean studio</option><option value="muted sage greens, warm botanical neutrals and earthy shadows">Botanical sage</option><option value="soft blush, muted rose undertones and creamy highlights">Soft blush editorial</option><option value="deep charcoal shadows, rich contrast and restrained champagne highlights">Dark luxury</option><option value="bright vibrant colour with controlled saturation and clean highlights">Bold vibrant</option><option value="soft pastel tones, low contrast and airy highlights">Soft pastel</option></select></div>
+          <div class="field"><label>Custom colour notes <span class="muted">(optional)</span></label><input id="aiColorGradeCustom" type="text" placeholder="e.g. muted olive shadows with warm honey highlights"></div>
+          <div class="field full"><label>Image direction</label><textarea id="aiPrompt" placeholder="Describe the scene you want: background, surface, lighting, composition, props and mood…"></textarea><div class="muted">Tell Nuvora AI what to create. The product itself should remain recognisable and unchanged.</div></div>
+          <div class="field full"><label>Quick direction ideas</label><div class="ai-prompt-suggestions" role="group" aria-label="Image direction suggestions"><button type="button" onclick="setAIImageSuggestion('Create a premium skincare campaign on warm ivory stone with soft window light, gentle shadows and plenty of negative space.')">Ivory studio</button><button type="button" onclick="setAIImageSuggestion('Create a botanical skincare scene with subtle sage leaves, natural stone, diffused daylight and a calm editorial composition.')">Botanical</button><button type="button" onclick="setAIImageSuggestion('Create a luxury beauty editorial with sculptural lighting, deep neutral shadows and a refined champagne-toned background.')">Luxury editorial</button><button type="button" onclick="setAIImageSuggestion('Create a clean dermatologist-inspired studio scene with bright neutral lighting, a crisp white background and minimal props.')">Clinical clean</button><button type="button" onclick="setAIImageSuggestion('Create a soft blush beauty campaign with creamy textures, delicate highlights and an elegant minimal composition.')">Soft blush</button></div></div>
         </div>
         <div class="ai-actions"><button class="btn primary" id="aiGenerateBtn" onclick="generateAIProductImage()">Generate advertising image</button></div>
         <div id="aiImageStatus" class="ai-status"></div>
-        <div id="aiPreview" class="ai-preview"><img id="aiPreviewImg" alt="AI generated product advertisement"><div><div class="muted">Preview</div><div class="ai-actions"><button class="btn" onclick="useAIImage()">Use this image</button><button class="btn" onclick="generateAIProductImage()">Generate another</button></div></div></div>
+        <div id="aiPreview" class="ai-preview" hidden><div class="ai-preview-frame"><img id="aiPreviewImg" alt="AI generated product advertisement"></div><div class="ai-preview-details"><span class="ai-preview-label">GENERATED IMAGE · REVIEW BEFORE APPLYING</span><h4>Your new image is ready</h4><p id="aiPreviewPrompt">This image is a new creative variation. Your original product image will remain untouched until you choose to use this one.</p><div class="ai-actions"><button class="btn primary" type="button" onclick="useAIImage()">Use this image</button><button class="btn" type="button" onclick="generateAIProductImage()">Generate another</button></div></div></div>
       </div>
       <div class="ai-studio">
         <div class="ai-studio-head"><div><h3>AI listing polish</h3><div class="muted">Refine the title, description, key features, SEO copy and social caption using the product information already in this form.</div></div></div>
@@ -2011,7 +2014,26 @@ function prepareProductEntryWorkspace(){
  if(actions){actions.classList.add('product-entry-footer');actions.insertBefore(navigation,actions.firstChild);}
  setProductEntryStep(0);
 }
-function updateProductEntryPreview(){const name=document.getElementById('pfName')?.value.trim()||'New product',brand=document.getElementById('pfBrand')?.value.trim()||'YOUR BRAND',description=document.getElementById('pfStoreDescription')?.value.trim()||document.getElementById('pfDescription')?.value.trim()||'Your customer-facing overview will appear here as you build the listing.';const n=document.getElementById('productEntryPreviewName'),b=document.getElementById('productEntryPreviewBrand'),d=document.getElementById('productEntryPreviewDescription');if(n)n.textContent=name;if(b)b.textContent=brand.toUpperCase();if(d)d.textContent=description.slice(0,180)+(description.length>180?'…':'');const source=document.querySelector('#pfImageStrip img'),img=document.getElementById('productEntryPreviewImage'),placeholder=document.getElementById('productEntryPreviewPlaceholder');if(source?.src&&img){img.src=source.src;img.hidden=false;if(placeholder)placeholder.hidden=true;}else if(img){img.hidden=true;if(placeholder)placeholder.hidden=false;}}
+function updateProductEntryPreview(){
+ const name=document.getElementById('pfName')?.value.trim()||'New product';
+ const brand=document.getElementById('pfBrand')?.value.trim()||'YOUR BRAND';
+ const description=document.getElementById('pfStoreDescription')?.value.trim()||document.getElementById('pfDescription')?.value.trim()||'Your customer-facing overview will appear here as you build the listing.';
+ const titleNode=document.getElementById('productEntryPreviewName'),brandNode=document.getElementById('productEntryPreviewBrand'),descriptionNode=document.getElementById('productEntryPreviewDescription');
+ if(titleNode)titleNode.textContent=name;
+ if(brandNode)brandNode.textContent=brand.toUpperCase();
+ if(descriptionNode)descriptionNode.textContent=description.slice(0,180)+(description.length>180?'…':'');
+ const imageField=document.getElementById('pfImages'),url=String(imageField?.value||'').split(/\\r?\\n/).map(value=>value.trim()).filter(Boolean)[0]||'';
+ const image=document.getElementById('productEntryPreviewImage'),placeholder=document.getElementById('productEntryPreviewPlaceholder');
+ if(!image)return;
+ if(!url){image.hidden=true;image.removeAttribute('src');if(placeholder){placeholder.hidden=false;placeholder.textContent='Your product image will appear here';}image.dataset.previewSource='';return;}
+ if(image.dataset.previewSource!==url){
+  image.dataset.previewSource=url;image.hidden=true;
+  if(placeholder){placeholder.hidden=false;placeholder.textContent='Loading product image…';}
+  image.onload=()=>{image.hidden=false;if(placeholder)placeholder.hidden=true;};
+  image.onerror=()=>{image.hidden=true;if(placeholder){placeholder.hidden=false;placeholder.textContent='This image could not be loaded. Check the image URL.';}};
+  image.src=url;
+ }else if(image.complete&&image.naturalWidth>0){image.hidden=false;if(placeholder)placeholder.hidden=true;}
+}
 function setProductEntryStep(index){
  const shell=document.querySelector('#productModal .product-entry-workspace');
  if(!shell)return;
@@ -2169,6 +2191,7 @@ async function uploadProductImages(){
 function renderProductImages(){
   const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
   document.getElementById('pfImageStrip').innerHTML=urls.map((u,i)=>`<div class="image-item"><img src="${esc(u)}" alt="${i===0?'Main product image':'Related product image '+i}" onerror="this.style.opacity='.25'">${i===0?'<span class="image-main-badge">MAIN IMAGE</span>':''}<div class="image-item-actions"><button type="button" title="Move earlier" aria-label="Move image earlier" onclick="moveProductImage(${i},-1)" ${i===0?'disabled':''}>←</button><button type="button" class="image-set-main" onclick="setMainProductImage(${i})" ${i===0?'disabled':''}>${i===0?'Displayed image':'Set as main'}</button><button type="button" title="Move later" aria-label="Move image later" onclick="moveProductImage(${i},1)" ${i===urls.length-1?'disabled':''}>→</button><button type="button" title="Remove image" aria-label="Remove image" onclick="removeProductImage(${i})">×</button></div></div>`).join('');
+  updateProductEntryPreview();
 }
 function moveProductImage(i,delta){
   const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
@@ -2222,26 +2245,47 @@ async function getAIReferenceFile(){
     return new File([out],'nuvora-product-reference.png',{type:'image/png'});
   }finally{URL.revokeObjectURL(url);}
 }
+function setAIImageSuggestion(prompt){
+ const field=document.getElementById('aiPrompt');if(!field)return;
+ field.value=String(prompt||'');field.dispatchEvent(new Event('input',{bubbles:true}));field.focus();
+}
 async function generateAIProductImage(){
-  const btn=document.getElementById('aiGenerateBtn'),status=document.getElementById('aiImageStatus');
-  const p=aiProductData(); if(!p.name){setAdminStatus('Add the product title first.','error');return;}
-  btn.disabled=true;btn.textContent='Preparing…';status.textContent='Preparing the product reference image…';
-  try{
-    const manual=document.getElementById('aiReference').files?.[0]||null;
-    const sourceUrl=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)[0]||'';
-    if(!manual&&!sourceUrl)throw new Error('Add a product image from Amazon or upload a reference image first.');
-    const file=manual?await getAIReferenceFile():null;
-    if(file&&file.size>6*1024*1024)throw new Error('Reference image must be 6 MB or smaller.');
-    btn.textContent='Generating…';status.textContent='Creating your advertising image…';
-    const fd=new FormData();
-    const style=document.getElementById('aiStyle').value,size=document.getElementById('aiSize').value,custom=document.getElementById('aiPrompt').value.trim();
-    if(file)fd.append('image',file);else fd.append('image_url',sourceUrl);
-    fd.append('size',size);
-    fd.append('prompt',`Create a professional ecommerce advertising image for the exact product shown in the reference image. Preserve the product's identity, shape, materials, colors, branding and important physical details. Do not invent extra product features or change the product. Style: ${style}. Product name: ${p.name}. Brand: ${p.brand||'unknown'}. Place it in a polished, uncluttered commercial composition suitable for Nuvora product publishing. No fake logos, no misleading claims, no random text, no watermark. ${custom}`);
-    const j=await api('/api/admin/ai/image',{method:'POST',body:fd});
-    window.lastAIImage=j.image;document.getElementById('aiPreviewImg').src=j.image;document.getElementById('aiPreview').style.display='flex';status.textContent='Image ready. Review it before applying.';
-  }catch(e){status.textContent='Generation failed: '+(e.message||'Unknown error.');setAdminStatus(e.message||'Nuvora AI image generation failed.','error')}
-  finally{btn.disabled=false;btn.textContent='Generate advertising image';}
+ const btn=document.getElementById('aiGenerateBtn'),status=document.getElementById('aiImageStatus'),preview=document.getElementById('aiPreview'),previewImage=document.getElementById('aiPreviewImg');
+ const p=aiProductData();if(!p.name){setAdminStatus('Add the product title first.','error');return;}
+ btn.disabled=true;btn.textContent='Preparing…';status.textContent='Preparing the product reference image…';
+ if(preview){preview.hidden=true;preview.style.display='none';}
+ try{
+  const manual=document.getElementById('aiReference')?.files?.[0]||null;
+  const sourceUrl=String(document.getElementById('pfImages')?.value||'').split(/\\r?\\n/).map(x=>x.trim()).filter(Boolean)[0]||'';
+  if(!manual&&!sourceUrl)throw new Error('Add a product image from Amazon or upload a reference image first.');
+  const file=manual?await getAIReferenceFile():null;
+  if(file&&file.size>6*1024*1024)throw new Error('Reference image must be 6 MB or smaller.');
+  btn.textContent='Generating…';status.textContent='Creating your image with the product identity preserved…';
+  const fd=new FormData();
+  const style=document.getElementById('aiStyle')?.value||'premium ecommerce';
+  const size=document.getElementById('aiSize')?.value||'1024x1024';
+  const custom=document.getElementById('aiPrompt')?.value.trim()||'';
+  const grade=document.getElementById('aiColorGrade')?.value||'natural, accurate skincare colour with soft neutral whites';
+  const customGrade=document.getElementById('aiColorGradeCustom')?.value.trim()||'';
+  if(file)fd.append('image',file);else fd.append('image_url',sourceUrl);
+  fd.append('size',size);
+  fd.append('prompt',`Create a professional ecommerce advertising image for the exact product shown in the reference image. Preserve the product identity, packaging, silhouette, proportions, materials, label, brand marks and original product colours. Do not redesign, rename, distort or replace the product. Style: ${style}. Colour grading: ${grade}. ${customGrade?'Additional colour grading direction: '+customGrade+'.':''} Product name: ${p.name}. Brand: ${p.brand||'unknown'}. Creative direction: ${custom||'Create a polished, uncluttered commercial skincare composition with soft directional light and a refined background.'} Keep the product clearly visible, sharp and realistically proportioned. Any props must remain secondary. No fake logos, misleading claims, random text, extra packaging or watermark.`);
+  const result=await api('/api/admin/ai/image',{method:'POST',body:fd});
+  if(!result?.image)throw new Error('Nuvora AI did not return an image. Please try again.');
+  window.lastAIImage=result.image;
+  if(previewImage){
+   previewImage.onload=()=>{if(preview){preview.hidden=false;preview.style.display='grid';}};
+   previewImage.onerror=()=>{if(status)status.textContent='The image was generated but could not be previewed. Generate another image or retry.';};
+   previewImage.src=result.image;
+   if(previewImage.complete&&previewImage.naturalWidth){if(preview){preview.hidden=false;preview.style.display='grid';}}
+  }else if(preview){preview.hidden=false;preview.style.display='grid';}
+  const promptNote=document.getElementById('aiPreviewPrompt');
+  if(promptNote)promptNote.textContent='Style: '+style+' · Colour grade: '+(customGrade||grade)+'. Your original product image stays unchanged until you apply this result.';
+  status.textContent='Image ready. Review the preview, then choose whether to use it.';
+ }catch(error){
+  status.textContent='Generation failed: '+(error.message||'Unknown error.');
+  setAdminStatus(error.message||'Nuvora AI image generation failed.','error');
+ }finally{btn.disabled=false;btn.textContent='Generate advertising image';}
 }
 function dataUrlBlob(dataUrl){const [head,data]=dataUrl.split(',');const mime=(head.match(/data:([^;]+)/)||[])[1]||'image/png';const bin=atob(data);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime});}
 async function useAIImage(){
@@ -2251,7 +2295,7 @@ async function useAIImage(){
     const blob=dataUrlBlob(window.lastAIImage),path=`products/ai-${crypto.randomUUID()}.png`;
     const {error}=await adminSB.storage.from('product-images').upload(path,blob,{cacheControl:'31536000',contentType:'image/png',upsert:false});if(error)throw error;
     const {data}=adminSB.storage.from('product-images').getPublicUrl(path);const url=data?.publicUrl;if(!url)throw new Error('Could not create image URL.');
-    const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);document.getElementById('pfImages').value=[url,...urls].filter((x,i,a)=>a.indexOf(x)===i).join('\n');renderProductImages();status.textContent='AI image added to the product images.';closeAIStudio();
+    const urls=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);document.getElementById('pfImages').value=[url,...urls].filter((x,i,a)=>a.indexOf(x)===i).join('\n');renderProductImages();updateProductEntryPreview();status.textContent='AI image added to the product images and live preview.';closeAIStudio();
   }catch(e){status.textContent='Could not save the image: '+(e.message||'Unknown error.');setAdminStatus(e.message||'Could not save the image.','error')}
 }
 async function refreshGeminiConfigStatus(){
@@ -5897,5 +5941,73 @@ body.product-workspace-page #productModal .modal-actions{position:sticky;bottom:
  body.product-workspace-page #productModal .product-entry-step-button{min-width:180px}
  body.product-workspace-page #productModal .product-entry-navigation{position:sticky;bottom:0;background:var(--bg);padding:10px 0}
 }
+</style>
+<style id="skin-product-image-composer-and-footer">
+/* Image creation: guided creative brief, reliable preview and live product-image feedback. */
+#productModal.product-entry-redesign .ai-studio:has(#aiGenerateBtn){margin:18px 0;padding:20px;border:1px solid #dbe6dc;border-radius:17px;background:linear-gradient(145deg,#f7faf6 0%,#fff 72%);box-shadow:0 8px 24px rgba(35,67,43,.045)}
+#productModal.product-entry-redesign .ai-studio:has(#aiGenerateBtn) .ai-studio-head{align-items:flex-start}
+#productModal.product-entry-redesign .ai-studio:has(#aiGenerateBtn) .ai-studio-head h3{font-size:18px;color:#20372a}
+#productModal.product-entry-redesign .ai-studio:has(#aiGenerateBtn) .ai-studio-head .muted{max-width:720px;line-height:1.6}
+#productModal.product-entry-redesign .ai-studio:has(#aiGenerateBtn) .ai-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#productModal.product-entry-redesign .ai-studio:has(#aiGenerateBtn) .field{min-width:0;padding:12px;border:1px solid #e3eae1;border-radius:12px;background:#fff}
+#productModal.product-entry-redesign .ai-studio:has(#aiGenerateBtn) .field.full{grid-column:1/-1}
+#productModal.product-entry-redesign .ai-studio:has(#aiGenerateBtn) .field label{font-size:10px;font-weight:800;color:#536656}
+#productModal.product-entry-redesign .ai-studio:has(#aiGenerateBtn) textarea#aiPrompt{min-height:118px;resize:vertical;background:#fbfcfa!important;color:#26372c!important;border-color:#dce6da!important;font-size:12px;line-height:1.65}
+#productModal.product-entry-redesign .ai-studio:has(#aiGenerateBtn) input#aiColorGradeCustom,
+#productModal.product-entry-redesign .ai-studio:has(#aiGenerateBtn) select{width:100%;min-width:0;background:#fbfcfa!important;color:#26372c!important;border-color:#dce6da!important;font-size:12px}
+#productModal.product-entry-redesign .ai-prompt-suggestions{display:flex;flex-wrap:wrap;gap:7px}
+#productModal.product-entry-redesign .ai-prompt-suggestions button{border:1px solid #d8e5d8;border-radius:999px;background:#f5f9f3;color:#45634b;padding:8px 11px;font-size:10px;font-weight:750;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+#productModal.product-entry-redesign .ai-prompt-suggestions button:hover{background:#eaf3e8;border-color:#bcd2ba;transform:translateY(-1px)}
+#productModal.product-entry-redesign #aiGenerateBtn{min-height:42px;padding:11px 17px}
+#productModal.product-entry-redesign #aiImageStatus{min-height:20px;line-height:1.55;color:#657568}
+#productModal.product-entry-redesign #aiPreview{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(220px,.95fr);gap:18px;align-items:center;margin-top:16px;padding:14px;border:1px solid #dce6da;border-radius:15px;background:#fff}
+#productModal.product-entry-redesign #aiPreview[hidden]{display:none!important}
+#productModal.product-entry-redesign .ai-preview-frame{display:grid;place-items:center;min-width:0;min-height:240px;max-height:440px;overflow:hidden;border:1px solid #e4e9e2;border-radius:12px;background:repeating-conic-gradient(#f1f3ef 0% 25%,#fafbf9 0% 50%) 50% / 20px 20px}
+#productModal.product-entry-redesign #aiPreviewImg{display:block;width:100%;height:100%;max-height:440px;min-height:240px;object-fit:contain;object-position:center;border-radius:11px}
+#productModal.product-entry-redesign .ai-preview-details{min-width:0;padding:8px}
+#productModal.product-entry-redesign .ai-preview-label{font-size:9px;font-weight:850;letter-spacing:.13em;color:#65806b}
+#productModal.product-entry-redesign .ai-preview-details h4{margin:9px 0 6px;color:#23372a;font-size:17px}
+#productModal.product-entry-redesign .ai-preview-details p{margin:0;color:#718074;font-size:11px;line-height:1.65}
+#productModal.product-entry-redesign .ai-preview-details .ai-actions{margin-top:15px}
+#productModal.product-entry-redesign .product-entry-preview{display:block;position:sticky;top:12px;min-width:0;max-width:100%}
+#productModal.product-entry-redesign .product-entry-preview-image{position:relative;height:240px;padding:10px;background:#f6f7f3;border:1px solid #e8ece5}
+#productModal.product-entry-redesign .product-entry-preview-image img{display:block;width:100%;height:100%;object-fit:contain;object-position:center}
+#productModal.product-entry-redesign .product-entry-preview-image img[hidden]{display:none!important}
+#productModal.product-entry-redesign #productEntryPreviewPlaceholder{padding:14px;line-height:1.5}
+#productModal.product-entry-redesign .product-entry-preview-copy h3{overflow-wrap:anywhere}
+#productModal.product-entry-redesign .product-entry-preview-note{line-height:1.55}
+/* Keep the step rail in document flow and make the controls a real, non-overlapping sticky footer. */
+html:has(body.product-workspace-page),body.product-workspace-page{height:100%;overflow:hidden!important;overscroll-behavior:none!important}
+body.product-workspace-page #productModal .modal-body{overscroll-behavior:contain;overflow-x:hidden}
+body.product-workspace-page #productModal .product-entry-rail{position:relative!important;top:auto!important;align-self:start;z-index:0}
+body.product-workspace-page #productModal .product-entry-footer{position:sticky;bottom:0;z-index:20;display:grid!important;grid-template-columns:minmax(0,1fr) auto auto auto;align-items:center;gap:8px;margin:18px calc(-1 * clamp(16px,2.5vw,36px)) calc(-1 * clamp(16px,2.5vw,36px));padding:12px clamp(16px,2.5vw,36px) calc(12px + env(safe-area-inset-bottom));border-top:1px solid #dce4da;background:rgba(247,249,245,.97);box-shadow:0 -8px 24px rgba(28,51,34,.07);backdrop-filter:blur(14px)}
+body.product-workspace-page #productModal .product-entry-footer .product-entry-navigation{grid-column:1/-1;order:0;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;margin:0;padding:0 0 10px;border-bottom:1px solid #e1e8df}
+body.product-workspace-page #productModal .product-entry-footer #productEntryProgress{text-align:center;color:#627366;font-variant-numeric:tabular-nums}
+body.product-workspace-page #productModal .product-entry-footer>#productSaveBtn,
+body.product-workspace-page #productModal .product-entry-footer>#skinProductPublishBtn,
+body.product-workspace-page #productModal .product-entry-footer>button{min-width:0;white-space:nowrap}
+@media(max-width:1450px){
+ #productModal.product-entry-redesign .product-entry-workspace{grid-template-columns:minmax(0,190px) minmax(0,1fr)}
+ #productModal.product-entry-redesign .product-entry-preview{display:grid;position:relative;top:auto;grid-column:1/-1;grid-row:2;grid-template-columns:minmax(180px,260px) minmax(0,1fr);grid-template-rows:auto 1fr auto;gap:0 16px;align-items:center}
+ #productModal.product-entry-redesign .product-entry-preview-kicker{grid-column:1/-1}
+ #productModal.product-entry-redesign .product-entry-preview-image{grid-column:1;grid-row:2;height:220px}
+ #productModal.product-entry-redesign .product-entry-preview-copy{grid-column:2;grid-row:2}
+ #productModal.product-entry-redesign .product-entry-preview-note{grid-column:1/-1;grid-row:3}
+}
+@media(max-width:760px){
+ #productModal.product-entry-redesign .ai-studio:has(#aiGenerateBtn) .ai-grid{grid-template-columns:1fr}
+ #productModal.product-entry-redesign .ai-studio:has(#aiGenerateBtn) .field.full{grid-column:auto}
+ #productModal.product-entry-redesign #aiPreview{grid-template-columns:1fr}
+ #productModal.product-entry-redesign .ai-preview-frame{min-height:210px}
+ #productModal.product-entry-redesign #aiPreviewImg{min-height:210px}
+ #productModal.product-entry-redesign .product-entry-preview{display:block;grid-column:auto;grid-row:auto;margin-top:14px}
+ #productModal.product-entry-redesign .product-entry-preview-image{height:230px}
+ body.product-workspace-page #productModal .product-entry-footer{grid-template-columns:1fr 1fr;gap:7px;margin-right:-12px;margin-left:-12px;padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+ body.product-workspace-page #productModal .product-entry-footer .product-entry-navigation{grid-column:1/-1;grid-template-columns:auto minmax(0,1fr) auto;gap:6px}
+ body.product-workspace-page #productModal .product-entry-footer .product-entry-navigation .btn{padding:9px 10px!important}
+ body.product-workspace-page #productModal .product-entry-footer>#skinProductPublishBtn{grid-column:2}
+ body.product-workspace-page #productModal .product-entry-footer>#productSaveBtn{grid-column:1/-1}
+}
+@media(prefers-reduced-motion:reduce){#productModal.product-entry-redesign .ai-prompt-suggestions button{transition:none}}
 </style>
 </body></html>
