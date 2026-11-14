@@ -42,7 +42,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-11-14-skin-studio-cloudflare-ai-r62',
+          release:'nuvora-2026-11-14-skin-studio-cloudflare-ai-r63',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -2297,15 +2297,15 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
       }
 
 
-      if(url.pathname==='/api/admin/ai/claude/studio'&&request.method==='POST'){
+      if(url.pathname==='/api/admin/ai/studio'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
-        const limit=rateLimit(request,'claude-studio',6,60000);
+        const limit=rateLimit(request,'nuvora-ai-studio',6,60000);
         if(limit)return json({error:'Nuvora AI is being used frequently. Try again in a minute.'},429,{'retry-after':String(limit)});
         if(!env.AI)return json({error:'Cloudflare Workers AI is not connected. Add the Workers AI binding named AI to the nuvora Worker.'},503);
         let input;
-        try{input=await body(request,96*1024);}catch(e){return json({error:'The Claude Studio request was too large or invalid.'},400);}
+        try{input=await body(request,96*1024);}catch(e){return json({error:'The Nuvora AI Studio request was too large or invalid.'},400);}
         const prompt=cleanMultilineText(input.prompt,8000);
-        if(!prompt)return json({error:'Write a request for Claude first.'},400);
+        if(!prompt)return json({error:'Write a request for Nuvora AI first.'},400);
         const pageId=String(input.pageId||'home').slice(0,100);
         const pageTitle=cleanText(input.pageTitle||'Current page',120);
         const allowedSectionTypes=new Set(['product-grid','featured-products','category-grid','brand-grid','concern-grid','hero','editorial','journal-grid','text-block','image-block','quiz-banner']);
@@ -2337,7 +2337,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           template:cleanText(input.brand.template,80),
           designSettings:input.brand.designSettings&&typeof input.brand.designSettings==='object'?Object.fromEntries(Object.entries(input.brand.designSettings).slice(0,24).map(([key,value])=>[cleanText(key,60),cleanText(value,80)])):{}
         }:{};
-        const system='You are Claude, the creative and merchandising assistant inside Nuvora Skin Studio. Help improve the selected storefront page while respecting the supplied brand and current section structure. Return ONLY valid JSON with exactly this shape: {"reply":"brief helpful explanation","changes":[...]}. Allowed change objects are either {"op":"update_section","pageId":"'+pageId+'","sectionId":"existing-id","field":"allowed-field","value":"..."} or {"op":"add_section","pageId":"'+pageId+'","afterSectionId":"existing-id-or-empty","section":{"type":"allowed-section-type","title":"...","eyebrow":"...","text":"...","buttonLabel":"...","buttonHref":"/internal/path"}}. Allowed fields: title, eyebrow, text, buttonLabel, secondaryButtonLabel, buttonHref, secondaryButtonHref, backgroundColor, textAlignment, titleFontSize, bodyFontSize, sectionPadding, columns, productsPerPage, visible. Allowed section types: product-grid, featured-products, category-grid, brand-grid, concern-grid, hero, editorial, journal-grid, text-block, image-block, quiz-banner. Refer ONLY to section IDs in the supplied page context. Prefer editing existing content; add a section only when useful. Do not invent products, brands, retailer ratings, prices, product availability, ingredients, certifications, benefits, efficacy or medical claims. Preserve affiliate disclosure and the existing Nuvora product CTA rules. Do not write HTML, CSS, JavaScript, markdown fences, secrets or anything outside the JSON response. Keep reply concise and changes focused. If the user asks for advice only, return an empty changes array.';
+        const system='You are Nuvora AI, the creative and merchandising assistant inside Nuvora Skin Studio. Help improve the selected storefront page while respecting the supplied brand and current section structure. Return ONLY valid JSON with exactly this shape: {"reply":"brief helpful explanation","changes":[...]}. Allowed change objects are either {"op":"update_section","pageId":"'+pageId+'","sectionId":"existing-id","field":"allowed-field","value":"..."} or {"op":"add_section","pageId":"'+pageId+'","afterSectionId":"existing-id-or-empty","section":{"type":"allowed-section-type","title":"...","eyebrow":"...","text":"...","buttonLabel":"...","buttonHref":"/internal/path"}}. Allowed fields: title, eyebrow, text, buttonLabel, secondaryButtonLabel, buttonHref, secondaryButtonHref, backgroundColor, textAlignment, titleFontSize, bodyFontSize, sectionPadding, columns, productsPerPage, visible. Allowed section types: product-grid, featured-products, category-grid, brand-grid, concern-grid, hero, editorial, journal-grid, text-block, image-block, quiz-banner. Refer ONLY to section IDs in the supplied page context. Prefer editing existing content; add a section only when useful. Do not invent products, brands, retailer ratings, prices, product availability, ingredients, certifications, benefits, efficacy or medical claims. Preserve affiliate disclosure and the existing Nuvora product CTA rules. Do not write HTML, CSS, JavaScript, markdown fences, secrets or anything outside the JSON response. Keep reply concise and changes focused. If the user asks for advice only, return an empty changes array.';
         const userContext={
           page:{id:pageId,title:pageTitle,sections:[...sectionMap.values()]},
           selectedSection,brand,
