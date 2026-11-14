@@ -232,10 +232,10 @@ async function inspectProductSchema(env){
 async function askClaude(env, system, messages, maxTokens = 1800) {
   const apiKey = String(env && env.ANTHROPIC_API_KEY || "").trim();
   if (!apiKey) throw new Error("Claude is not configured. Add ANTHROPIC_API_KEY as a Cloudflare Worker secret.");
-  const model = String(env.ANTHROPIC_MODEL || "claude-sonnet-5").trim().replace(/[^a-zA-Z0-9._-]/g, "");
+  const model = String(env.ANTHROPIC_MODEL || "claude-sonnet-5-5").trim().replace(/[^a-zA-Z0-9._-]/g, "");
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
-    headers: {"x-api-key":apiKey,"anthropic-version":"2023-06-01","content-type":"application/json"},
+    headers: {"authorization":"Bearer "+apiKey,"anthropic-version":"2026-10-21","content-type":"application/json"},
     body: JSON.stringify({model,max_tokens:Math.max(256,Math.min(Number(maxTokens)||1800,4096)),system:String(system||""),messages})
   });
   const payload = await response.json().catch(() => ({}));
