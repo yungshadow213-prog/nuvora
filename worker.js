@@ -2677,6 +2677,12 @@ function validateMultiStorefrontProducts(value){
     for(const key of ['productType','product_type','type','categorySlug','customCategoryId']){
       if(product[key]!==undefined&&(typeof product[key]!=='string'||product[key].length>120))return 'Product '+key+' is invalid or too long.';
     }
+    if(product.features!==undefined&&(!Array.isArray(product.features)||product.features.length>30||product.features.some(value=>typeof value!=='string'||value.length>500)))return 'Product features must be a list of up to 30 short text items.';
+    if(product.specifications!==undefined){
+      if(!product.specifications||typeof product.specifications!=='object'||Array.isArray(product.specifications)||Object.keys(product.specifications).length>50)return 'Product specifications must be an object with at most 50 entries.';
+      for(const [label,value] of Object.entries(product.specifications))if(!String(label).trim()||label.length>80||typeof value!=='string'||value.length>500)return 'A product specification is invalid or too long.';
+    }
+    if(product.featured!==undefined&&typeof product.featured!=='boolean')return 'The product featured setting must be true or false.';
     if(product.image){try{if(new URL(product.image).protocol!=='https:')return 'Product images must use HTTPS.';}catch{return 'A product image URL is invalid.';}}
     if(product.destinationUrl){try{if(!['https:','http:'].includes(new URL(product.destinationUrl).protocol))return 'Product retailer links must use HTTP or HTTPS.';}catch{return 'A product retailer URL is invalid.';}}
     if(product.images!==undefined){
@@ -2690,6 +2696,7 @@ function validateMultiStorefrontProducts(value){
       if(!String(product.description||product.shortDescription||'').trim())return 'Published products need a useful description. Keep incomplete products as drafts.';
       if(!String(product.image||'').trim())return 'Published products need a main product image. Add an image or keep the product as a draft.';
       if(!String(product.destinationUrl||'').trim())return 'Published products need a verified retailer destination URL. Keep products without a confirmed link as drafts.';
+      try{if(new URL(product.destinationUrl).protocol!=='https:')return 'Published retailer destinations must use HTTPS.';}catch{return 'A published retailer destination URL is invalid.';}
     }
   }
   return null;
