@@ -1129,7 +1129,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         <button class="btn" id="skinStudioRedo" type="button" onclick="redoSkinStudio()" disabled aria-label="Redo editor change" title="Redo (Ctrl/⌘+Shift+Z)">↷ Redo</button>
       </div>
       <div class="studio-save-state"><span class="studio-save-dot"></span><span id="skinStudioSaveLabel">Saved version loaded</span></div>
-      <button class="btn studio-claude-trigger" type="button" onclick="openSkinClaudeAssistant()">✦ Claude AI</button>
+      <button class="btn studio-claude-trigger" type="button" onclick="openSkinClaudeAssistant()">✦ Nuvora AI</button>
       <details class="studio-more-actions">
         <summary class="btn" aria-label="More editor actions">••• More</summary>
         <div class="studio-more-actions-menu">
@@ -1144,20 +1144,20 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
     </div>
   </header>
   <div id="skinClaudeAssistant" class="skin-claude-overlay" hidden aria-hidden="true">
-    <button class="skin-claude-backdrop" type="button" aria-label="Close Claude assistant" onclick="closeSkinClaudeAssistant()"></button>
+    <button class="skin-claude-backdrop" type="button" aria-label="Close Nuvora AI assistant" onclick="closeSkinClaudeAssistant()"></button>
     <section class="skin-claude-dialog" role="dialog" aria-modal="true" aria-labelledby="skinClaudeTitle">
       <header class="skin-claude-header">
-        <div><span class="skin-claude-kicker">NUVORA SKIN STUDIO</span><h2 id="skinClaudeTitle">Claude creative assistant</h2><p>Shape page layouts, refine copy and plan sections with your current draft as context.</p></div>
-        <button type="button" class="skin-claude-close" aria-label="Close Claude assistant" onclick="closeSkinClaudeAssistant()">×</button>
+        <div><span class="skin-claude-kicker">NUVORA SKIN STUDIO</span><h2 id="skinClaudeTitle">Nuvora AI creative assistant</h2><p>Shape page layouts, refine copy and plan sections with your current draft as context.</p></div>
+        <button type="button" class="skin-claude-close" aria-label="Close Nuvora AI assistant" onclick="closeSkinClaudeAssistant()">×</button>
       </header>
-      <div class="skin-claude-status-row"><span class="skin-claude-status-dot"></span><span id="skinClaudeConnectionStatus">Checking Claude connection…</span></div>
+      <div class="skin-claude-status-row"><span class="skin-claude-status-dot"></span><span id="skinClaudeConnectionStatus">Checking Nuvora AI connection…</span></div>
       <div class="skin-claude-prompts" aria-label="Suggested prompts">
         <button type="button" onclick="useSkinClaudePrompt('Review this page and suggest a more premium, editorial composition without changing the Nuvora brand direction.')">Elevate this page</button>
         <button type="button" onclick="useSkinClaudePrompt('Improve the copy on the selected section. Make it clear, confident and editorial, without inventing product claims.')">Polish selected copy</button>
         <button type="button" onclick="useSkinClaudePrompt('Suggest one useful section to add after the selected section and explain what it should contain.')">Suggest a section</button>
       </div>
       <div id="skinClaudeMessages" class="skin-claude-messages" aria-live="polite">
-        <div class="skin-claude-message assistant"><span class="skin-claude-message-label">CLAUDE</span><p>Tell me what you want to improve. I can suggest copy edits or add a section to the page you are working on. Nothing changes until you review and apply the suggestions.</p></div>
+        <div class="skin-claude-message assistant"><span class="skin-claude-message-label">NUVORA AI</span><p>Tell me what you want to improve. I can suggest copy edits or add a section to the page you are working on. Nothing changes until you review and apply the suggestions.</p></div>
       </div>
       <div id="skinClaudeProposals" class="skin-claude-proposals" hidden>
         <div class="skin-claude-proposals-heading"><b>Suggested draft changes</b><span>Review before applying</span></div>
@@ -1165,8 +1165,8 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         <button type="button" class="btn primary" id="skinClaudeApply" onclick="applySkinClaudeChanges()">Apply suggestions to draft</button>
       </div>
       <form class="skin-claude-composer" onsubmit="event.preventDefault();sendSkinClaudePrompt()">
-        <textarea id="skinClaudePrompt" rows="3" maxlength="8000" placeholder="Describe what you want Claude to change…" aria-label="Message Claude"></textarea>
-        <div class="skin-claude-composer-foot"><span>Claude suggestions are reviewed before they change your draft.</span><button type="submit" class="btn primary" id="skinClaudeSend">Ask Claude ↗</button></div>
+        <textarea id="skinClaudePrompt" rows="3" maxlength="8000" placeholder="Describe what you want Nuvora AI to change…" aria-label="Message Nuvora AI"></textarea>
+        <div class="skin-claude-composer-foot"><span>Nuvora AI suggestions are reviewed before they change your draft.</span><button type="submit" class="btn primary" id="skinClaudeSend">Ask Nuvora AI ↗</button></div>
       </form>
     </section>
   </div>
@@ -1390,17 +1390,17 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
 <div id="aiStudioModal" class="modal-backdrop" onclick="if(event.target===this)closeAIStudio()">
   <div class="modal">
     <div class="modal-head">
-      <div><div class="eyebrow">Gemini AI Studio</div><h2>Make this product publish-ready</h2><div class="muted">Generate a polished advertising image and refined listing copy with Google Gemini. Your API key stays on the server; review all generated content before saving.</div></div>
+      <div><div class="eyebrow">Nuvora AI Studio</div><h2>Make this product publish-ready</h2><div class="muted">Generate a polished advertising image and refined listing copy with Cloudflare Workers AI. Your API key stays on the server; review all generated content before saving.</div></div>
       <button class="btn" onclick="closeAIStudio()">Close</button>
     </div>
-    <div id="aiGeminiConfigStatus" role="status" aria-live="polite" style="margin:0 24px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;font-size:12px;line-height:1.5;color:var(--muted)">Checking Gemini configuration…</div>
+    <div id="aiGeminiConfigStatus" role="status" aria-live="polite" style="margin:0 24px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;font-size:12px;line-height:1.5;color:var(--muted)">Checking Cloudflare Workers AI…</div>
     <div class="modal-body">
       <div class="ai-studio">
-        <div class="ai-studio-head"><div><h3>AI advertising image</h3><div class="muted">Use the product image as a reference for the strongest result. Gemini generates a promotional concept; review the product details carefully before applying it.</div></div></div>
+        <div class="ai-studio-head"><div><h3>AI advertising image</h3><div class="muted">Use the product image as a reference for the strongest result. Nuvora AI generates a promotional concept; review the product details carefully before applying it.</div></div></div>
         <div class="ai-grid">
           <div class="field"><label>Creative style</label><select id="aiStyle"><option value="premium ecommerce">Premium ecommerce</option><option value="clean studio">Clean studio</option><option value="luxury editorial">Luxury editorial</option><option value="modern lifestyle">Modern lifestyle</option><option value="social media ad">Social media ad</option><option value="minimal catalog">Minimal catalog</option></select></div>
           <div class="field"><label>Format</label><select id="aiSize"><option value="1024x1024">Square · 1:1</option><option value="1536x1024">Landscape · 3:2</option><option value="1024x1536">Portrait · 2:3</option></select></div>
-          <div class="field full"><label>Reference image <span class="muted">(optional)</span></label><input id="aiReference" type="file" accept="image/*"><div class="muted">If you leave this empty, Gemini automatically uses the first image already attached to the product. Upload one only when you want a different reference. Max 6 MB.</div></div>
+          <div class="field full"><label>Reference image <span class="muted">(optional)</span></label><input id="aiReference" type="file" accept="image/*"><div class="muted">If you leave this empty, Nuvora AI automatically uses the first image already attached to the product. Upload one only when you want a different reference. Max 6 MB.</div></div>
           <div class="field full"><label>Creative direction</label><textarea id="aiPrompt" placeholder="Optional: soft neutral background, subtle shadows, premium lighting…"></textarea></div>
         </div>
         <div class="ai-actions"><button class="btn primary" id="aiGenerateBtn" onclick="generateAIProductImage()">Generate advertising image</button></div>
@@ -1409,7 +1409,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
       </div>
       <div class="ai-studio">
         <div class="ai-studio-head"><div><h3>AI listing polish</h3><div class="muted">Refine the title, description, key features, SEO copy and social caption using the product information already in this form.</div></div></div>
-        <div class="ai-actions"><button class="btn primary" id="aiCopyBtn" onclick="generateAIProductCopy()">Polish product listing</button></div>
+        <div class="ai-actions"><button class="btn primary" id="aiCopyBtn" onclick="generateAIProductCopy()">Polish product listing with Nuvora AI</button></div>
         <div id="aiCopyStatus" class="ai-status"></div>
       </div>
     </div>
@@ -1444,7 +1444,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
       <button class="btn" onclick="closeProductModal()">Close</button>
     </div>
     <div class="modal-body">
-      <div class="workspace-note" id="importStatus">You can enter a product manually or use the quick Amazon link workflow below. Nothing becomes public until you publish it.</div><div id="productSaveFeedback" class="notice" role="status" aria-live="polite" hidden style="margin:10px 0 14px"></div><div style="display:flex;justify-content:flex-end;margin:-4px 0 14px"><button type="button" class="btn primary" onclick="openAIStudio()">✦ Run Gemini Studio</button></div>
+      <div class="workspace-note" id="importStatus">You can enter a product manually or use the quick Amazon link workflow below. Nothing becomes public until you publish it.</div><div id="productSaveFeedback" class="notice" role="status" aria-live="polite" hidden style="margin:10px 0 14px"></div><div style="display:flex;justify-content:flex-end;margin:-4px 0 14px"><button type="button" class="btn primary" onclick="openAIStudio()">✦ Run Nuvora AI Studio</button></div>
       <div class="importbar">
         <input id="amazonUrlInput" placeholder="Paste your Amazon affiliate/product link">
         <button class="btn primary" onclick="useAmazonLink()">Use Amazon link</button>
@@ -1474,7 +1474,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         <div class="field full"><label>Tax notice</label><input id="pfTax" placeholder="Sales taxes may apply at checkout"></div>
         <div class="field"><label>Category</label><select id="pfCategory"><option value="">No category</option></select></div>
         <div class="field"><label>Collection</label><select id="pfCollection"><option value="">No collection</option></select></div>
-        <div class="field full skin-only-field"><label>Gemini product assistant</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="skinGeminiFillBtn" type="button" class="btn" onclick="generateSkinProductWithGemini()">Fill product guide with Gemini</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input id="skinGeminiReplaceExisting" type="checkbox"> Replace existing text fields</label></div><div id="skinGeminiStatus" class="muted" role="status" aria-live="polite" style="margin-top:8px">Paste the exact Amazon link into Destination / affiliate URL. Gemini will fill supported fields for review; it will not save or publish the product.</div></div>
+        <div class="field full skin-only-field"><label>Nuvora AI product assistant</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="skinGeminiFillBtn" type="button" class="btn" onclick="generateSkinProductWithGemini()">Fill guide with Nuvora AI</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input id="skinGeminiReplaceExisting" type="checkbox"> Replace existing text fields</label></div><div id="skinGeminiStatus" class="muted" role="status" aria-live="polite" style="margin-top:8px">Paste the exact Amazon link into Destination / affiliate URL. Nuvora AI will fill supported fields for review; it will not save or publish the product.</div></div>
         <div class="field full"><label>Description</label><textarea id="pfDescription" placeholder="Product description"></textarea></div>
         <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div>
         <div class="field full skin-only-field"><label>Product benefits <span class="muted">(source-backed)</span></label><textarea id="pfBenefits" placeholder="What the product is intended to do, based on product information"></textarea></div>
@@ -2090,8 +2090,8 @@ async function openAIStudio(){
   const page=document.getElementById('aiStudioModal');
   page.classList.add('open');
   document.getElementById('aiPrompt').value='';
-  document.getElementById('aiImageStatus').textContent='Checking Gemini image generation…';
-  document.getElementById('aiCopyStatus').textContent='Waiting for Gemini…';
+  document.getElementById('aiImageStatus').textContent='Checking Nuvora AI image generation…';
+  document.getElementById('aiCopyStatus').textContent='Waiting for Nuvora AI…';
   document.getElementById('aiPreview').style.display='none';
   document.getElementById('aiReference').value='';
   page.scrollIntoView({behavior:'smooth',block:'start'});
@@ -2138,7 +2138,7 @@ async function generateAIProductImage(){
     fd.append('prompt',`Create a professional ecommerce advertising image for the exact product shown in the reference image. Preserve the product's identity, shape, materials, colors, branding and important physical details. Do not invent extra product features or change the product. Style: ${style}. Product name: ${p.name}. Brand: ${p.brand||'unknown'}. Place it in a polished, uncluttered commercial composition suitable for Nuvora product publishing. No fake logos, no misleading claims, no random text, no watermark. ${custom}`);
     const j=await api('/api/admin/ai/image',{method:'POST',body:fd});
     window.lastAIImage=j.image;document.getElementById('aiPreviewImg').src=j.image;document.getElementById('aiPreview').style.display='flex';status.textContent='Image ready. Review it before applying.';
-  }catch(e){status.textContent='Generation failed: '+(e.message||'Unknown error.');setAdminStatus(e.message||'Gemini image generation failed.','error')}
+  }catch(e){status.textContent='Generation failed: '+(e.message||'Unknown error.');setAdminStatus(e.message||'Nuvora AI image generation failed.','error')}
   finally{btn.disabled=false;btn.textContent='Generate advertising image';}
 }
 function dataUrlBlob(dataUrl){const [head,data]=dataUrl.split(',');const mime=(head.match(/data:([^;]+)/)||[])[1]||'image/png';const bin=atob(data);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:mime});}
@@ -2157,20 +2157,20 @@ async function refreshGeminiConfigStatus(){
  if(!nodes.length)return;
  const set=(message,ready)=>nodes.forEach(node=>{node.textContent=message;node.dataset.status=ready?'ready':'missing';node.style.color=ready?'var(--success,#2f855a)':'var(--muted)';node.style.borderColor=ready?'rgba(47,133,90,.35)':'var(--line)';});
  try{
-  const health=await api('/api/health?verify=gemini-ui');
-  if(health?.configured?.gemini===true)set('Gemini is connected. Paste the exact Amazon product link, review the generated fields, then save manually. Gemini will not publish anything automatically.',true);
-  else set('Gemini is not connected on the Worker yet. In Cloudflare Dashboard → Workers & Pages → nuvora → Settings → Variables and Secrets, add a secret named GEMINI_API_KEY, then reload this page. Do not paste the key into this form or chat.',false);
- }catch{set('Could not verify Gemini configuration. Check the Worker health status before using product extraction or image generation.',false);}
+  const health=await api('/api/health?verify=workers-ai-ui');
+  if(health?.configured?.workersAI===true)set('Nuvora AI is connected through Cloudflare Workers AI. Review generated product details before saving; nothing is published automatically.',true);
+  else set('Nuvora AI is not connected. In Cloudflare Dashboard → Workers & Pages → nuvora → Settings → Bindings, add a Workers AI binding named AI, then reload this page.',false);
+ }catch{set('Could not verify the Cloudflare AI connection. Check the Worker health status before generating product content.',false);}
 }
 async function generateSkinProductWithGemini(){
  const url=String(document.getElementById('pfDestination')?.value||document.getElementById('amazonUrlInput')?.value||'').trim();
  const status=document.getElementById('skinGeminiStatus'),button=document.getElementById('skinGeminiFillBtn');
- if(!url){if(status)status.textContent='Paste the exact Amazon product link into Destination / affiliate URL first.';skinBuilderMessage('Paste the Amazon product link before asking Gemini to fill the guide.','error');return;}
+ if(!url){if(status)status.textContent='Paste the exact Amazon product link into Destination / affiliate URL first.';skinBuilderMessage('Paste the Amazon product link before asking Nuvora AI to fill the guide.','error');return;}
  const original=button?.textContent;if(button){button.disabled=true;button.textContent='Reading listing + structuring fields…';}
- if(status)status.textContent='Reading the Amazon listing, then asking Gemini to organize verified details. This may take a little while.';
+ if(status)status.textContent='Reading the Amazon listing, then asking Nuvora AI to organize verified details. This may take a little while.';
  try{
   const response=await api('/api/admin/ai/skin-product',{method:'POST',body:{url}});
-  const p=response?.product;if(!response?.ok||!p)throw new Error('Gemini did not return product fields.');
+  const p=response?.product;if(!response?.ok||!p)throw new Error('Nuvora AI did not return product fields.');
   const replace=!!document.getElementById('skinGeminiReplaceExisting')?.checked;
   const fill=(id,value)=>{
    const el=document.getElementById(id);if(!el||value==null)return false;
@@ -2202,14 +2202,14 @@ async function generateSkinProductWithGemini(){
   updateRetailerRatingPreview();
   if(p.confidence_notes?.length){
    const notes=p.confidence_notes.join(' · ');
-   if(status)status.textContent='Gemini filled '+count+' fields, including '+(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids.length:0)+' suggested companion product(s). Review every suggestion before saving. Notes: '+notes;
-  }else if(status)status.textContent='Gemini filled '+count+' fields, including '+(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids.length:0)+' suggested companion product(s). Review every field; existing values were '+(replace?'replaced where new data was available.':'preserved. Nothing has been saved or published.');
-  productSaveMessage('Gemini prepared the skincare guide. Review the fields and click Save Draft when ready.','success');
+   if(status)status.textContent='Nuvora AI filled '+count+' fields, including '+(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids.length:0)+' suggested companion product(s). Review every suggestion before saving. Notes: '+notes;
+  }else if(status)status.textContent='Nuvora AI filled '+count+' fields, including '+(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids.length:0)+' suggested companion product(s). Review every field; existing values were '+(replace?'replaced where new data was available.':'preserved. Nothing has been saved or published.');
+  productSaveMessage('Nuvora AI prepared the skincare guide. Review the fields and click Save Draft when ready.','success');
  }catch(e){
-  const message=e.message||'Gemini could not prepare this product.';
+  const message=e.message||'Nuvora AI could not prepare this product.';
   if(status)status.textContent=message;
   productSaveMessage(message,'error');
- }finally{if(button){button.disabled=false;button.textContent=original||'Fill product guide with Gemini';}}
+ }finally{if(button){button.disabled=false;button.textContent=original||'Fill product guide with Nuvora AI';}}
 }
 async function generateAIProductCopy(){
   const btn=document.getElementById('aiCopyBtn'),status=document.getElementById('aiCopyStatus');const p=aiProductData();if(!p.name){setAdminStatus('Add the product title first.','error');return;}
@@ -2218,7 +2218,7 @@ async function generateAIProductCopy(){
     const j=await api('/api/admin/ai/copy',{method:'POST',body:{product:p}});
     if(j.title)document.getElementById('pfName').value=j.title;if(j.description)document.getElementById('pfDescription').value=j.description;if(j.features)document.getElementById('pfFeatures').value=Array.isArray(j.features)?j.features.join('\n'):j.features;
     status.textContent='Listing copy updated in the form. Review it before saving.';
-  }catch(e){status.textContent='Copy generation failed: '+(e.message||'Unknown error.');setAdminStatus(e.message||'Gemini copy generation failed.','error')}finally{btn.disabled=false;btn.textContent='Polish product listing';}
+  }catch(e){status.textContent='Copy generation failed: '+(e.message||'Unknown error.');setAdminStatus(e.message||'Nuvora AI copy generation failed.','error')}finally{btn.disabled=false;btn.textContent='Polish product listing with Nuvora AI';}
 }
 
 function showImportPage(source='amazon'){
@@ -2760,7 +2760,7 @@ async function healthCheck(){
   if(box)box.innerHTML='<div class="health-loading"><i></i>Checking live Nuvora connections…</div>';
   try{
     const j=await api('/api/admin/diagnostics');
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Core product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Legacy Cloudflare AI binding',gemini:'Gemini API key',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
+    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Core product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Cloudflare Workers AI binding',gemini:'Legacy Gemini API key (unused)',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
     const optional=new Set(['workersAI','gemini','shopifyStorefront','shopifyEnvironment','shopifyAuth','analytics']);
     const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
     window.__nuvoraSchemaState={
@@ -2788,7 +2788,7 @@ async function runDiagnostics(){
   box.innerHTML='<div class="muted">Running diagnostics…</div>';
   try{
     const j=await api('/api/admin/diagnostics');
-    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Legacy Cloudflare AI binding',gemini:'Gemini API key',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
+    const labels={environment:'Supabase environment',auth:'Admin session',admin:'Admin permission',products:'Products table',productSchema:'Product schema',settings:'Store settings',settingsSchema:'Store settings schema',social:'Customer/social data',analytics:'Analytics events table',workersAI:'Cloudflare Workers AI binding',gemini:'Legacy Gemini API key (unused)',shopifyStorefront:'Shopify Storefront checkout',shopifyEnvironment:'Shopify Admin credentials',shopifyAuth:'Shopify Admin authentication',shopifyProducts:'Shopify product API'};
     const optional=new Set(['workersAI','shopifyStorefront','shopifyEnvironment','shopifyAuth','shopifyProducts','analytics']);
     const checks=j?.checks&&typeof j.checks==='object'?j.checks:{};
     const missing=Array.isArray(j?.missingProductColumns)?j.missingProductColumns:[];
@@ -4568,7 +4568,7 @@ let skinClaudeConnectionReady=false;
 function skinClaudeAppendMessage(role,message){
  const root=document.getElementById('skinClaudeMessages');if(!root)return;
  const item=document.createElement('div');item.className='skin-claude-message '+(role==='user'?'user':'assistant');
- const label=document.createElement('span');label.className='skin-claude-message-label';label.textContent=role==='user'?'YOU':'CLAUDE';
+ const label=document.createElement('span');label.className='skin-claude-message-label';label.textContent=role==='user'?'YOU':'NUVORA AI';
  const body=document.createElement('p');body.textContent=String(message||'');
  item.append(label,body);root.appendChild(item);root.scrollTop=root.scrollHeight;
 }
@@ -4584,17 +4584,18 @@ function closeSkinClaudeAssistant(){
 }
 async function refreshSkinClaudeStatus(){
  const status=document.getElementById('skinClaudeConnectionStatus'),send=document.getElementById('skinClaudeSend');
- if(status)status.textContent='Checking Claude connection…';
+ if(status)status.textContent='Checking Nuvora AI connection…';
  try{
   const health=await api('/api/health');
-  skinClaudeConnectionReady=health?.configured?.claude===true;
-  if(status)status.textContent=skinClaudeConnectionReady?'Claude is connected. Your draft context is ready.':'Claude is not configured yet. Add ANTHROPIC_API_KEY as a Cloudflare Worker secret to activate it.';
+  skinClaudeConnectionReady=health?.configured?.workersAI===true;
+  if(status)status.textContent=skinClaudeConnectionReady?'Nuvora AI is connected through Cloudflare Workers AI. Your draft context is ready.':'Nuvora AI is not connected. Check that the Workers AI binding named AI is attached to the nuvora Worker.';
  }catch(error){
   skinClaudeConnectionReady=false;
-  if(status)status.textContent='Could not verify Claude status. Check your admin connection and try again.';
+  if(status)status.textContent='Could not verify Nuvora AI status. Check your admin connection and try again.';
  }
  if(send)send.disabled=false;
 }
+
 function useSkinClaudePrompt(prompt){
  const field=document.getElementById('skinClaudePrompt');if(!field)return;
  field.value=String(prompt||'');field.focus();
@@ -4646,24 +4647,24 @@ async function sendSkinClaudePrompt(){
  skinClaudeAppendMessage('user',prompt);skinClaudeHistory.push({role:'user',content:prompt});
  if(field)field.value='';if(button){button.disabled=true;button.textContent='Thinking…';}
  try{
-  const response=await api('/api/admin/ai/claude/studio',{method:'POST',body:{
+  const response=await api('/api/admin/ai/studio',{method:'POST',body:{
    prompt,pageId:context.pageId,pageTitle:context.pageTitle,
    selectedSection:context.selectedSection,sections:context.sections,brand:context.brand,
    history:skinClaudeHistory.slice(-8)
   }});
-  const reply=String(response?.reply||'Claude returned no suggestion.');
+  const reply=String(response?.reply||'Nuvora AI returned no suggestion.');
   skinClaudeAppendMessage('assistant',reply);skinClaudeHistory.push({role:'assistant',content:reply});
   renderSkinClaudeProposals(response?.changes||[]);
   if(!response?.changes?.length)skinClaudeAppendMessage('assistant','No draft changes were proposed. Ask for a specific copy edit or section addition to receive changes you can apply.');
  }catch(error){
-  const message=String(error?.message||'Claude could not complete the request.');
+  const message=String(error?.message||'Nuvora AI could not complete the request.');
   skinClaudeAppendMessage('assistant',message);
-  if(/ANTHROPIC_API_KEY|not configured/i.test(message)){
+  if(/Workers AI|not connected/i.test(message)){
    skinClaudeConnectionReady=false;
-   const status=document.getElementById('skinClaudeConnectionStatus');if(status)status.textContent='Claude needs the ANTHROPIC_API_KEY Cloudflare secret before it can respond.';
+   const status=document.getElementById('skinClaudeConnectionStatus');if(status)status.textContent='Nuvora AI needs the Cloudflare Workers AI binding named AI before it can respond.';
   }
  }finally{
-  if(button){button.disabled=false;button.textContent='Ask Claude ↗';}
+  if(button){button.disabled=false;button.textContent='Ask Nuvora AI ↗';}
   field?.focus();
  }
 }
