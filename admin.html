@@ -4682,7 +4682,18 @@ function applySkinClaudeChanges(){
     if(field==='textAlignment'&&!['left','center','right'].includes(value))continue;
     if(['buttonHref','secondaryButtonHref'].includes(field)&&value&&!value.startsWith('/')&&!/^https:\/\//i.test(value))continue;
    }
-   section[field]=value;lastPage=pageId;lastSectionId=String(section.id);applied++;
+   section[field]=value;
+   if(pageId==='home'&&section.type==='hero'){
+    const keys={title:'heroTitle',eyebrow:'heroEyebrow',text:'heroDescription',buttonLabel:'heroButtonLabel'};
+    if(keys[field])skinBuilderConfig[keys[field]]=String(value??'');
+    const inputs={title:'skinCfgHeroTitle',eyebrow:'skinCfgHeroEyebrow',text:'skinCfgHeroDescription',buttonLabel:'skinCfgHeroButton'};
+    if(inputs[field]){const el=document.getElementById(inputs[field]);if(el)el.value=String(value??'');}
+   }
+   if(pageId==='home'&&section.type==='editorial'){
+    const keys={title:'approachTitle',eyebrow:'approachEyebrow',text:'approachBody'};
+    if(keys[field])skinBuilderConfig[keys[field]]=String(value??'');
+   }
+   lastPage=pageId;lastSectionId=String(section.id);applied++;
   }else if(change.op==='add_section'){
    const definition=change.section||{},type=String(definition.type||'');
    if(!allowedTypes.has(type))continue;
