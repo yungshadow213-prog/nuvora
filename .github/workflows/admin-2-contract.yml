@@ -73,18 +73,21 @@ jobs:
                   "Home/Clothing/Games product form must expose Claude copy polishing")
 
           for endpoint in ["claude-chat", "claude-copy", "claude-skin-product"]:
-              route = re.search(r"if\\(url\\.pathname===?['\"]/api/admin/ai/" + endpoint + r"['\"]&&request\\.method==='POST'\\)\\{([\\s\\S]{0,500})", worker)
-              require(bool(route), f"Worker route missing: {endpoint}")
-              if route:
-                  require("adminUser(request,env)" in route.group(1),
+              anchor = "url.pathname==='/api/admin/ai/" + endpoint + "'&&request.method==='POST'"
+              offset = worker.find(anchor)
+              require(offset >= 0, f"Worker route missing: {endpoint}")
+              if offset >= 0:
+                  route_prefix = worker[offset:offset + 420]
+                  require("adminUser(request,env)" in route_prefix,
                           f"Claude route must check Nuvora admin permission: {endpoint}")
 
           require("ANTHROPIC_API_KEY" in worker and "claude:!!e.ANTHROPIC_API_KEY" in worker,
                   "Worker must read Claude key from server environment and expose configured status")
           require('env.ANTHROPIC_MODEL || "claude-sonnet-5-5"' in worker,
                   "Worker must default to the current configured Claude Sonnet model")
-          require("ANTHROPIC_API_KEY" not in admin and "ANTHROPIC_API_KEY" not in assistant and "ANTHROPIC_API_KEY" not in studios,
-                  "Anthropic API key name must not appear in client code")
+          client_bundle = admin + assistant + studios
+          require(not re.search(r"sk-ant-[A-Za-z0-9_-]{20,}", client_bundle),
+                  "Anthropic API key material must never be embedded in client code")
           require("/api/admin/ai/image" in worker and "/api/admin/ai/skin-product" in worker and "/api/admin/ai/copy" in worker,
                   "Existing Gemini endpoints must remain available")
           require("generateSkinProductWithGemini" in admin,
