@@ -2600,6 +2600,14 @@ function validateMultiStorefrontProducts(value){
     if(!id||id.length>120||ids.has(id))return 'Product IDs must be unique and under 120 characters.';
     ids.add(id);
     if(!name||name.length>200)return 'Every product needs a name under 200 characters.';
+    if(product.features!==undefined){
+      if(!Array.isArray(product.features)||product.features.length>30||product.features.some(value=>typeof value!=='string'||value.length>500))return 'Product features must be a list of up to 30 short text items.';
+    }
+    if(product.specifications!==undefined){
+      if(!product.specifications||typeof product.specifications!=='object'||Array.isArray(product.specifications)||Object.keys(product.specifications).length>50)return 'Product specifications must be an object with at most 50 entries.';
+      for(const [label,value] of Object.entries(product.specifications))if(!String(label).trim()||label.length>80||typeof value!=='string'||value.length>500)return 'A product specification is invalid or too long.';
+    }
+    if(product.featured!==undefined&&typeof product.featured!=='boolean')return 'The product featured setting must be true or false.';
     for(const key of ['description','shortDescription','brand','category','destinationUrl','image']){
       if(product[key]!==undefined&&(typeof product[key]!=='string'||product[key].length>(key==='description'?12000:2000)))return 'Product '+key+' is invalid or too long.';
     }
