@@ -30,7 +30,10 @@ for (const token of [
   ".nv-workspace-summary",
   ".nv-outline-summary",
   ".nv-settings-summary",
-  "grid-template-columns:248px minmax(0,1fr) 312px",
+  "grid-template-columns:360px minmax(0,1fr)",
+  ".studio-layout.is-inspecting .studio-left-panel>.studio-right-panel",
+  ".studio-workspace-group.nv-accordion",
+  ".nv-outline-accordion[hidden]",
   "height:calc(100dvh - 154px)",
   "#skinStudioPreview"
 ]) assert.ok(css.includes(token), "Admin layout styling missing: " + token);
