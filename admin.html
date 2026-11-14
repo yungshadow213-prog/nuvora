@@ -4030,7 +4030,7 @@ function filterSkinSectionLibraryCategory(category,button){
  document.querySelectorAll('.studio-section-library-categories button').forEach(item=>item.classList.toggle('is-active',item===button));
  renderSkinSectionLibraryPicker();
 }
-function closeSkinQuickAdd(){const panel=document.getElementById('skinQuickAddPanel');if(panel){panel.hidden=true;panel.innerHTML='';}skinQuickAddType='';}
+function closeSkinQuickAdd(){const panel=document.getElementById('skinQuickAddPanel');if(panel){panel.hidden=true;panel.innerHTML='';}if(skinQuickAddType==='section')window.__nuvoraSkinPendingSectionInsert=null;skinQuickAddType='';}
 function createSkinQuickItem(){
  if(!skinBuilderConfig)return;
  const title=String(document.getElementById('skinQuickTitle')?.value||'').trim();
@@ -4082,7 +4082,7 @@ function createSkinQuickItem(){
  if(skinQuickAddType==='section'){
   const type=document.getElementById('skinQuickType')?.value||'product-grid';
   const id='section-'+Date.now().toString(36);
-  const section={id,type,visible:true,title,eyebrow:String(document.getElementById('skinQuickEyebrow')?.value||''),text:String(document.getElementById('skinQuickDescription')?.value||''),image:type==='quiz-banner'?'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=85':'',buttonLabel:type==='quiz-banner'?'Explore concerns':'',buttonHref:type==='quiz-banner'?'/shop?q=skin+concerns':'',itemsText:type==='concern-grid'?'Acne & Blemishes\nAnti-Aging\nDryness & Dehydration\nRedness & Sensitivity\nDark Spots & Hyperpigmentation\nLarge Pores\nUneven Skin Tone\nDullness & Glow':'',imageAlignment:'center',imageWidth:70,backgroundColor:'',textAlignment:'left',filter:type==='featured-products'?'all':'all',columns:type==='featured-products'?5:3,productsPerPage:type==='featured-products'?8:8,product_ids:[],category_id:''};
+  const section={id,type,visible:true,title,eyebrow:String(document.getElementById('skinQuickEyebrow')?.value||''),text:String(document.getElementById('skinQuickDescription')?.value||''),image:'',buttonLabel:type==='quiz-banner'?'Explore concerns':'',buttonHref:type==='quiz-banner'?'/shop?q=skin+concerns':'',itemsText:type==='concern-grid'?'Acne & Blemishes\nAnti-Aging\nDryness & Dehydration\nRedness & Sensitivity\nDark Spots & Hyperpigmentation\nLarge Pores\nUneven Skin Tone\nDullness & Glow':'',imageAlignment:'center',imageWidth:70,backgroundColor:'',textAlignment:'left',filter:type==='featured-products'?'featured':'all',columns:type==='featured-products'?5:3,productsPerPage:type==='featured-products'?8:8,product_ids:[],category_id:''};
   const pendingInsert=window.__nuvoraSkinPendingSectionInsert||null;
   const targetPageId=pendingInsert?.pageId||skinStudioPageId||'home';
   const targetSections=skinSectionsFor(targetPageId);
