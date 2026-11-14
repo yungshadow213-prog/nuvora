@@ -1166,7 +1166,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
       </div>
       <form class="skin-claude-composer" onsubmit="event.preventDefault();sendSkinClaudePrompt()">
         <textarea id="skinClaudePrompt" rows="3" maxlength="8000" placeholder="Describe what you want Nuvora AI to change…" aria-label="Message Nuvora AI"></textarea>
-        <div class="skin-claude-composer-foot"><span>Claude suggestions are reviewed before they change your draft.</span><button type="submit" class="btn primary" id="skinClaudeSend">Ask Nuvora AI ↗</button></div>
+        <div class="skin-claude-composer-foot"><span>Nuvora AI suggestions are reviewed before they change your draft.</span><button type="submit" class="btn primary" id="skinClaudeSend">Ask Nuvora AI ↗</button></div>
       </form>
     </section>
   </div>
@@ -1474,7 +1474,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         <div class="field full"><label>Tax notice</label><input id="pfTax" placeholder="Sales taxes may apply at checkout"></div>
         <div class="field"><label>Category</label><select id="pfCategory"><option value="">No category</option></select></div>
         <div class="field"><label>Collection</label><select id="pfCollection"><option value="">No collection</option></select></div>
-        <div class="field full skin-only-field"><label>Nuvora AI product assistant</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="skinGeminiFillBtn" type="button" class="btn" onclick="generateSkinProductWithGemini()">Fill guide with Nuvora AI</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input id="skinGeminiReplaceExisting" type="checkbox"> Replace existing text fields</label></div><div id="skinGeminiStatus" class="muted" role="status" aria-live="polite" style="margin-top:8px">Paste the exact Amazon link into Destination / affiliate URL. Gemini will fill supported fields for review; it will not save or publish the product.</div></div>
+        <div class="field full skin-only-field"><label>Nuvora AI product assistant</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="skinGeminiFillBtn" type="button" class="btn" onclick="generateSkinProductWithGemini()">Fill guide with Nuvora AI</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input id="skinGeminiReplaceExisting" type="checkbox"> Replace existing text fields</label></div><div id="skinGeminiStatus" class="muted" role="status" aria-live="polite" style="margin-top:8px">Paste the exact Amazon link into Destination / affiliate URL. Nuvora AI will fill supported fields for review; it will not save or publish the product.</div></div>
         <div class="field full"><label>Description</label><textarea id="pfDescription" placeholder="Product description"></textarea></div>
         <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div>
         <div class="field full skin-only-field"><label>Product benefits <span class="muted">(source-backed)</span></label><textarea id="pfBenefits" placeholder="What the product is intended to do, based on product information"></textarea></div>
@@ -2164,14 +2164,14 @@ async function refreshGeminiConfigStatus(){
 }
 async function generateSkinProductWithGemini(){
  const url=String(document.getElementById('pfDestination')?.value||document.getElementById('amazonUrlInput')?.value||'').trim();
- const status=document.getElementById('skinNuvora AIStatus'),button=document.getElementById('skinNuvora AIFillBtn');
+ const status=document.getElementById('skinGeminiStatus'),button=document.getElementById('skinGeminiFillBtn');
  if(!url){if(status)status.textContent='Paste the exact Amazon product link into Destination / affiliate URL first.';skinBuilderMessage('Paste the Amazon product link before asking Nuvora AI to fill the guide.','error');return;}
  const original=button?.textContent;if(button){button.disabled=true;button.textContent='Reading listing + structuring fields…';}
  if(status)status.textContent='Reading the Amazon listing, then asking Nuvora AI to organize verified details. This may take a little while.';
  try{
   const response=await api('/api/admin/ai/skin-product',{method:'POST',body:{url}});
   const p=response?.product;if(!response?.ok||!p)throw new Error('Nuvora AI did not return product fields.');
-  const replace=!!document.getElementById('skinNuvora AIReplaceExisting')?.checked;
+  const replace=!!document.getElementById('skinGeminiReplaceExisting')?.checked;
   const fill=(id,value)=>{
    const el=document.getElementById(id);if(!el||value==null)return false;
    if(el instanceof HTMLSelectElement&&el.multiple){
@@ -4664,7 +4664,7 @@ async function sendSkinClaudePrompt(){
    const status=document.getElementById('skinClaudeConnectionStatus');if(status)status.textContent='Nuvora AI needs the Cloudflare Workers AI binding named AI before it can respond.';
   }
  }finally{
-  if(button){button.disabled=false;button.textContent='Ask Claude ↗';}
+  if(button){button.disabled=false;button.textContent='Ask Nuvora AI ↗';}
   field?.focus();
  }
 }
