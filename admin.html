@@ -62,6 +62,33 @@ body.skin-studio-fullpage .studio-preview-notice{border-radius:9px!important}
 @media(prefers-reduced-motion:reduce){.btn,.quick-card{transition:none!important}}
 
 
+
+/* Prevent the four-step rail from overlaying the product form */
+#productModal.product-entry-redesign .modal-body{position:relative;isolation:isolate;overflow-x:hidden}
+#productModal.product-entry-redesign .product-entry-workspace{position:relative;display:grid;width:100%;max-width:100%;min-width:0;grid-template-columns:minmax(0,190px) minmax(0,1fr) minmax(220px,250px);gap:16px;align-items:start;overflow:visible}
+#productModal.product-entry-redesign .product-entry-rail{position:relative!important;top:auto!important;left:auto!important;right:auto!important;float:none!important;transform:none!important;width:auto!important;min-width:0;max-width:100%;align-self:start;z-index:0;grid-column:1;grid-row:1}
+#productModal.product-entry-redesign .product-entry-content{position:relative;min-width:0;width:100%;max-width:100%;grid-column:2;grid-row:1;z-index:0}
+#productModal.product-entry-redesign .product-entry-preview{position:relative;top:auto;right:auto;min-width:0;width:100%;max-width:100%;grid-column:3;grid-row:1;z-index:0}
+#productModal.product-entry-redesign .product-entry-step-list{position:relative;display:grid;grid-template-columns:minmax(0,1fr);width:100%;min-width:0}
+#productModal.product-entry-redesign .product-entry-step-button{position:relative;min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+#productModal.product-entry-redesign .product-entry-step-button>span:nth-child(2){min-width:0;overflow-wrap:anywhere}
+#productModal.product-entry-redesign .product-entry-main{min-width:0;width:100%;max-width:100%}
+#productModal.product-entry-redesign .product-entry-step-panel{position:relative;min-width:0;width:100%;max-width:100%}
+#productModal.product-entry-redesign .product-entry-fields{min-width:0;width:100%;max-width:100%}
+@media(max-width:1450px){
+ #productModal.product-entry-redesign .product-entry-workspace{grid-template-columns:minmax(0,190px) minmax(0,1fr)}
+ #productModal.product-entry-redesign .product-entry-preview{display:none}
+ #productModal.product-entry-redesign .product-entry-content{grid-column:2}
+}
+@media(max-width:760px){
+ #productModal.product-entry-redesign .product-entry-workspace{grid-template-columns:minmax(0,1fr)}
+ #productModal.product-entry-redesign .product-entry-rail{grid-column:1;grid-row:1}
+ #productModal.product-entry-redesign .product-entry-content{grid-column:1;grid-row:2}
+ #productModal.product-entry-redesign .product-entry-step-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+ #productModal.product-entry-redesign .product-entry-step-button{grid-template-columns:26px minmax(0,1fr);gap:7px;padding:10px 7px}
+ #productModal.product-entry-redesign .product-entry-step-button>i{display:none}
+}
+
 /* Premium Skin Studio product workspace */
 #productModal.product-entry-redesign .modal-head{background:#101b2a;border-bottom:1px solid rgba(255,255,255,.09);padding:20px 26px}
 #productModal.product-entry-redesign .modal-body{background:#f3f1ec;color:#182331;padding:22px 24px}
