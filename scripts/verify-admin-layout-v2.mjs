@@ -118,4 +118,11 @@ for (const token of [
 assert.ok(studio.includes('products=seed.map(p=>({...p,status:"draft"}));'), "Starter products must load as private drafts, never public examples.");
 assert.ok(studio.includes("add a verified retailer link before publishing"), "Starter product warning must explain publication requirements.");
 
+for (const token of [
+  "Published products need a category.",
+  "Published products need a useful description.",
+  "Published products need a main product image.",
+  "Published products need a verified retailer destination URL."
+]) assert.ok(worker.includes(token), "Published product preflight is missing: " + token);
+
 console.log("Nuvora Admin layout and Cloudflare Workers AI contracts passed.");
