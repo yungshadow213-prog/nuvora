@@ -94,8 +94,8 @@ jobs:
                   "Existing Gemini skincare flow must remain available")
           require("saveSkinSiteDraft" in admin and "saveSkinSiteConfig" in admin,
                   "Skin Studio draft and publish flows must remain available")
-          require("Check price on Amazon" in admin,
-                  "Exact Skin Care retailer CTA must remain intact")
+          require("priceIds=['pfPrice','pfListPrice','pfDiscount','pfCurrency','pfDeal']" in admin and "display_price:null" in admin and "amazon_list_price:null" in admin,
+                  "Skin Care affiliate product editor must remain price-free")
           require("claude-sonnet-5-5" in worker,
                   "Claude model setting missing")
           if failures:
