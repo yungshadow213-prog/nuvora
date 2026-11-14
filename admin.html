@@ -1934,12 +1934,12 @@ function prepareProductEntryWorkspace(){
  ].filter(Boolean);
  controls.forEach(node=>sourcePanel.appendChild(node));
  const bulkPanel=document.createElement('section');bulkPanel.className='product-entry-bulk-panel';
- bulkPanel.innerHTML='<div class="product-entry-bulk-heading"><span class="product-entry-step-kicker">MULTI-PRODUCT WORKSPACE</span><h3>Build your product queue</h3></div><div class="skin-bulk-queue-toolbar"><span><b id="skinBulkQueueCount">1 product in queue</b></span><button type="button" class="btn" onclick="addSkinBulkQueueRow()">＋ Add product</button></div><div id="skinBulkQueue" class="skin-bulk-queue"></div><div class="product-entry-bulk-actions"><button type="button" class="btn primary" id="skinBulkAiImportBtn" onclick="runSkinBulkAiImport()">Import queue &amp; enrich with AI</button></div><div id="skinBulkAiProgress" class="product-entry-bulk-progress" role="status" aria-live="polite">Add product links above to start your queue.</div><div id="skinBulkAiResults" class="product-entry-bulk-results"></div>';
+ bulkPanel.innerHTML='<div class="product-entry-bulk-heading"><h3>Product queue</h3></div><div class="skin-bulk-queue-toolbar"><span><b id="skinBulkQueueCount">1 product in queue</b></span><button type="button" class="btn" onclick="addSkinBulkQueueRow()">＋ Add product</button></div><div id="skinBulkQueue" class="skin-bulk-queue"></div><div class="product-entry-bulk-actions"><button type="button" class="btn primary" id="skinBulkAiImportBtn" onclick="runSkinBulkAiImport()">Import queue &amp; enrich with AI</button></div><div id="skinBulkAiProgress" class="product-entry-bulk-progress" role="status" aria-live="polite">Ready.</div><div id="skinBulkAiResults" class="product-entry-bulk-results"></div>';
  sourcePanel.appendChild(bulkPanel);
  const aiButton=body.querySelector('button[onclick="openAIStudio()"]')?.parentElement||null;
  const shell=document.createElement('div');shell.className='product-entry-workspace';
  const rail=document.createElement('aside');rail.className='product-entry-rail';
- rail.innerHTML='<div class="product-entry-rail-top"><span class="product-entry-step-kicker">PRODUCT WORKSPACE</span><b>Build a better listing</b></div><nav class="product-entry-step-list" aria-label="Product entry steps">'+steps.map((step,index)=>'<button type="button" class="product-entry-step-button'+(index===0?' active':'')+'" data-entry-step="'+index+'" aria-current="'+(index===0?'step':'false')+'"><span class="product-entry-step-number">'+String(index+1).padStart(2,'0')+'</span><span><b>'+step.title+'</b><small>'+step.summary+'</small></span><i>›</i></button>').join('')+'</nav>';
+ rail.innerHTML='<div class="product-entry-rail-top"><span class="product-entry-step-kicker">PRODUCT WORKSPACE</span><b>Product setup</b></div><nav class="product-entry-step-list" aria-label="Product entry steps">'+steps.map((step,index)=>'<button type="button" class="product-entry-step-button'+(index===0?' active':'')+'" data-entry-step="'+index+'" aria-current="'+(index===0?'step':'false')+'"><span class="product-entry-step-number">'+String(index+1).padStart(2,'0')+'</span><span><b>'+step.title+'</b><small>'+step.summary+'</small></span><i>›</i></button>').join('')+'</nav>';
  const main=document.createElement('div');main.className='product-entry-main';
  steps.forEach((step,index)=>{
   const panel=document.createElement('section');panel.className='product-entry-step-panel'+(index===0?' active':'');panel.dataset.entryPanel=String(index);
@@ -2267,9 +2267,9 @@ async function refreshGeminiConfigStatus(){
  const set=(message,ready)=>nodes.forEach(node=>{node.textContent=message;node.dataset.status=ready?'ready':'missing';node.style.color=ready?'var(--success,#2f855a)':'var(--muted)';node.style.borderColor=ready?'rgba(47,133,90,.35)':'var(--line)';});
  try{
   const health=await api('/api/health?verify=workers-ai-ui');
-  if(health?.configured?.workersAI===true)set('Nuvora AI is connected through Cloudflare Workers AI. Review generated product details before saving; nothing is published automatically.',true);
-  else set('Nuvora AI is not connected. In Cloudflare Dashboard → Workers & Pages → nuvora → Settings → Bindings, add a Workers AI binding named AI, then reload this page.',false);
- }catch{set('Could not verify the Cloudflare AI connection. Check the Worker health status before generating product content.',false);}
+  if(health?.configured?.workersAI===true)set('Nuvora AI connected.',true);
+  else set('Nuvora AI unavailable.',false);
+ }catch{set('Connection unavailable.',false);}
 }
 async function generateSkinFieldWithAI(fieldId,button){
  if(!button||button.disabled)return;
@@ -3770,7 +3770,7 @@ function paintSkinStudioMediaLibrary(root){
   '<div class="studio-media-toolbar"><input aria-label="Search media files" placeholder="Search uploaded images" value="'+esc(window.skinStudioMediaSearch||'')+'" oninput="setSkinStudioMediaSearch(this.value)"><button type="button" class="btn" onclick="renderSkinMediaLibrary(document.getElementById(\'skinLibraryItems\'),true)">Refresh</button></div>'+
   (visible.length?'<div class="studio-media-grid">'+visible.map(item=>'<article class="studio-media-card"><div class="studio-media-thumb"><img loading="lazy" src="'+esc(item.url)+'" alt=""></div><div class="studio-media-meta"><div class="studio-media-name">'+esc(item.name)+'</div><div class="studio-media-actions"><button type="button" onclick="useSkinStudioMedia('+esc(JSON.stringify(item.url))+')">Use selected</button><button type="button" onclick="copySkinStudioMediaUrl('+esc(JSON.stringify(item.url))+')">Copy URL</button></div></div></article>').join('')+'</div>':'<div class="studio-library-empty">No matching images.</div>')+
   (pageCount>1?'<nav aria-label="Media pages" style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-top:12px"><button type="button" class="btn" '+(page===1?'disabled':'')+' onclick="setSkinStudioMediaPage('+(page-1)+')">Previous</button><span class="studio-inline-help">Page '+page+' of '+pageCount+'</span><button type="button" class="btn" '+(page===pageCount?'disabled':'')+' onclick="setSkinStudioMediaPage('+(page+1)+')">Next</button></nav>':'')+
-  '<p class="studio-inline-help">Showing '+(filtered.length?((page-1)*pageSize+1):0)+'–'+Math.min(page*pageSize,filtered.length)+' of '+filtered.length+' matching images ('+urls.length+' loaded; up to 1,000 storage entries).</p>';
+  '<p class="studio-inline-help">'+filtered.length+' images</p>';
 }
 function setSkinStudioMediaPage(page){
  window.skinStudioMediaPage=Math.max(1,Number(page)||1);
@@ -3855,7 +3855,7 @@ function renderSkinLibrary(){
    '<label>Category<select aria-label="Filter products by category" onchange="setSkinStudioProductFilter(\'category\',this.value)"><option value="all">All categories</option>'+categories.map(value=>'<option value="'+esc(value)+'" '+(filters.category===value?'selected':'')+'>'+esc(value)+'</option>').join('')+'</select></label>'+
    '<label>Publication<select aria-label="Filter products by publication status" onchange="setSkinStudioProductFilter(\'status\',this.value)"><option value="all">All statuses</option><option value="published" '+(filters.status==='published'?'selected':'')+'>Published</option><option value="draft" '+(filters.status==='draft'?'selected':'')+'>Draft</option></select></label>'+
    '<label>Availability<select aria-label="Filter products by known availability" onchange="setSkinStudioProductFilter(\'availability\',this.value)"><option value="all">All availability</option><option value="available" '+(filters.availability==='available'?'selected':'')+'>Available</option><option value="unavailable" '+(filters.availability==='unavailable'?'selected':'')+'>Unavailable</option><option value="unknown" '+(filters.availability==='unknown'?'selected':'')+'>Unknown</option></select></label>'+
-   '</div><p class="studio-inline-help">'+rows.length+' of '+allRows.length+' products · 10 products per page. Choose Edit details to change a product, or Place on page to add it to the selected product section.</p>'+
+   '</div><p class="studio-inline-help">'+rows.length+' of '+allRows.length+' products</p>'+
    (rows.length?'<div class="studio-products-grid">'+visibleRows.map(p=>{
     const id=String(p.id),image=skinImageOf(p),published=!!p.published;
     const selection=skinStudioSelection?.type==='product'&&String(skinStudioSelection.id)===id;
@@ -3981,14 +3981,14 @@ function renderSkinSelectedInspector(){
   html+='<label class="studio-inspector-field"><span>Background overlay · '+Number(sec.backgroundOverlay||0)+'%</span><input type="range" min="0" max="80" step="5" value="'+Number(sec.backgroundOverlay||0)+'" onchange="updateSkinSection('+index+',\'backgroundOverlay\',Number(this.value))"></label>';
 
 
-  if(['hero','editorial','image-block','quiz-banner'].includes(sec.type))html+=field('Section image URL','image',sec.image||'','url','1600')+'<label class="studio-inspector-field"><span>Upload section image from your device</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'section\','+index+')"><small class="studio-inline-help">JPG, PNG, WEBP or GIF · up to 6 MB. You can also drag an image file directly onto this section in the preview.</small></label>';
+  if(['hero','editorial','image-block','quiz-banner'].includes(sec.type))html+=field('Section image URL','image',sec.image||'','url','1600')+'<label class="studio-inspector-field"><span>Upload section image from your device</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'section\','+index+')"><small class="studio-inline-help">JPG, PNG, WebP or GIF · Max 6 MB.</small></label>';
    if(['hero','editorial'].includes(sec.type)){
-    html+='<div class="studio-inline-help">Drag the image in the preview to adjust its focal point, or use these controls for precision.</div>';
+    html+='';
     html+='<label class="studio-inspector-field"><span>Image focus · horizontal '+Number(sec.imagePositionX??50)+'%</span><input type="range" min="0" max="100" step="1" value="'+Number(sec.imagePositionX??50)+'" onchange="updateSkinSection('+index+',\'imagePositionX\',Number(this.value))"></label>';
     html+='<label class="studio-inspector-field"><span>Image focus · vertical '+Number(sec.imagePositionY??50)+'%</span><input type="range" min="0" max="100" step="1" value="'+Number(sec.imagePositionY??50)+'" onchange="updateSkinSection('+index+',\'imagePositionY\',Number(this.value))"></label>';
    }
    if(sec.type==='image-block'){
-    html+='<label class="studio-inspector-check"><input type="checkbox" '+(sec.imageFreePosition===true?'checked':'')+' onchange="updateSkinSection('+index+',\'imageFreePosition\',this.checked)"> Enable free image positioning</label><small class="studio-inline-help">When enabled, drag the image inside the preview to place it anywhere within its frame.</small>';
+    html+='<label class="studio-inspector-check"><input type="checkbox" '+(sec.imageFreePosition===true?'checked':'')+' onchange="updateSkinSection('+index+',\'imageFreePosition\',this.checked)"> Enable free image positioning</label>';
     if(sec.imageFreePosition===true){
      html+='<label class="studio-inspector-field"><span>Horizontal position · '+Number(sec.imagePositionX??50)+'%</span><input type="range" min="0" max="100" step="1" value="'+Number(sec.imagePositionX??50)+'" onchange="updateSkinSection('+index+',\'imagePositionX\',Number(this.value))"></label>';
      html+='<label class="studio-inspector-field"><span>Vertical position · '+Number(sec.imagePositionY??50)+'%</span><input type="range" min="0" max="100" step="1" value="'+Number(sec.imagePositionY??50)+'" onchange="updateSkinSection('+index+',\'imagePositionY\',Number(this.value))"></label>';
@@ -4005,8 +4005,8 @@ function renderSkinSelectedInspector(){
    html+='<label class="studio-inspector-field"><span>Product filter</span><select onchange="updateSkinSection('+index+',\'filter\',this.value)">'+[['all','All eligible skincare products'],['featured','Featured picks'],['top_pick','Top picks'],['trending','Trending picks']].map(([v,l])=>'<option value="'+v+'" '+(sec.filter===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
    html+='<label class="studio-inspector-field"><span>Category filter</span><select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+skinStoreCategoryOptions().map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
    html+='<label class="studio-inspector-field"><span>Columns</span><select onchange="updateSkinSection('+index+',\'columns\',Number(this.value))">'+[2,3,4,5].map(n=>'<option value="'+n+'" '+(Number(sec.columns||4)===n?'selected':'')+'>'+n+' columns</option>').join('')+'</select></label>';
-   if(['product-grid','featured-products'].includes(sec.type))html+='<label class="studio-inspector-field"><span>Products per page</span><select onchange="updateSkinSection('+index+',\'productsPerPage\',Number(this.value))">'+[4,5,6,8,9,12].map(n=>'<option value="'+n+'" '+(Number(sec.productsPerPage||8)===n?'selected':'')+'>'+n+' products</option>').join('')+'</select><small class="studio-inline-help">The storefront and live preview show this many products before page numbers appear.</small></label>';
-   html+='<div class="studio-inspector-field"><span>Choose products to show</span><p class="studio-inline-help">Tick the products you want to appear in this section. Untick to remove them.</p><div class="studio-product-checklist">'+(skinProductOptions().length?skinProductOptions().map(p=>'<label class="studio-product-check"><input type="checkbox" '+(activeIds.has(String(p.id))?'checked':'')+' onchange="toggleSkinSectionProduct('+index+','+esc(JSON.stringify(String(p.id)))+',this.checked)"><span>'+esc(p.name)+'</span></label>').join(''):'<p class="studio-inline-help">No skincare products yet. Use + Add → Product first.</p>')+'</div></div>';
+   if(['product-grid','featured-products'].includes(sec.type))html+='<label class="studio-inspector-field"><span>Products per page</span><select onchange="updateSkinSection('+index+',\'productsPerPage\',Number(this.value))">'+[4,5,6,8,9,12].map(n=>'<option value="'+n+'" '+(Number(sec.productsPerPage||8)===n?'selected':'')+'>'+n+' products</option>').join('')+'</select></label>';
+   html+='<div class="studio-inspector-field"><span>Choose products to show</span><div class="studio-product-checklist">'+(skinProductOptions().length?skinProductOptions().map(p=>'<label class="studio-product-check"><input type="checkbox" '+(activeIds.has(String(p.id))?'checked':'')+' onchange="toggleSkinSectionProduct('+index+','+esc(JSON.stringify(String(p.id)))+',this.checked)"><span>'+esc(p.name)+'</span></label>').join(''):'<p class="studio-inline-help">No products yet.</p>')+'</div></div>';
   }
   if(sec.type==='category-grid'){
    html+='<label class="studio-inspector-field"><span>Show category</span><select onchange="updateSkinSection('+index+',\'category_id\',this.value)"><option value="">All categories</option>'+skinStoreCategoryOptions().map(cat=>'<option value="'+esc(cat.slug)+'" '+(String(sec.category_id||'')===String(cat.slug)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>';
@@ -4025,9 +4025,9 @@ function renderSkinSelectedInspector(){
   const cats=skinStoreCategoryOptions();
   setHead('Product settings',String(p.name||'Skincare product'));
   root.innerHTML=(image?'<img src="'+esc(image)+'" alt="" style="display:block;width:100%;max-height:190px;object-fit:cover;border:1px solid #e3e9e1;border-radius:10px;margin-bottom:12px">':'')+
-   '<p class="studio-inline-help">'+esc(p.published?'Published product':'Draft product — publish before placing it in a live grid')+' · '+esc(retailerLabel(p))+'</p>'+
+   ''+
    '<label class="studio-inspector-field"><span>Storefront category</span><select onchange="assignSkinProductCategory('+esc(JSON.stringify(id))+',this.value)"><option value="">Automatic product type'+(detectedCategory?' · detected: '+esc(detectedCategory.name):' · review details')+'</option>'+cats.map(cat=>'<option value="'+esc(cat.slug)+'" '+(current===String(cat.slug)||current===String(cat.id)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>'+
-   '<p class="studio-inline-help"></p>'+
+   ''+
    (dest?'<a class="btn" style="display:inline-flex;margin:0 0 12px" href="'+esc(dest)+'" target="_blank" rel="noopener noreferrer">Check saved retailer link ↗</a>':'<div class="notice" style="font-size:10px">No specific retailer link is saved yet. Add the exact Amazon link in the product editor before publishing.</div>')+
    '<div class="studio-inspector-actions"><button class="btn primary" type="button" onclick="editSkinProduct('+esc(JSON.stringify(id))+')">Edit product details</button><button class="btn" type="button" onclick="togglePublish('+esc(JSON.stringify(id))+')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" type="button" onclick="removeProduct('+esc(JSON.stringify(id))+');renderSkinLibrary()">Delete</button></div>';
   return;
@@ -4047,7 +4047,7 @@ function renderSkinSelectedInspector(){
   const cat=skinDefaultCategories().find(x=>String(x.slug)===String(selection.id));
   if(!cat){setHead('Storefront category','');root.innerHTML='<div class="studio-library-empty">Select an existing category.</div>';return;}
   setHead('Storefront category',String(cat.name));
-  root.innerHTML='<p class="studio-inline-help"></p><div class="studio-inspector-actions"><button class="btn" type="button" onclick="switchSkinStudioTab(\'products\')">Open product library</button><button class="btn" type="button" onclick="openSkinAdd(\'category\')">Add a custom category</button></div>';
+  root.innerHTML='<div class="studio-inspector-actions"><button class="btn" type="button" onclick="switchSkinStudioTab(\'products\')">Open product library</button><button class="btn" type="button" onclick="openSkinAdd(\'category\')">Add a custom category</button></div>';
   return;
  }
  if(selection.type==='category'){
@@ -4058,7 +4058,7 @@ function renderSkinSelectedInspector(){
    '<label class="studio-inspector-field"><span>URL slug</span><input value="'+esc(cat.slug)+'" readonly></label>'+
    '<label class="studio-inspector-field"><span>Category description</span><textarea maxlength="1000" oninput="updateSkinCategory('+esc(JSON.stringify(String(cat.slug)))+',\'description\',this.value)">'+esc(cat.description||'')+'</textarea></label>'+
    '<label class="studio-inspector-field"><span>Category image URL</span><input type="url" maxlength="1600" value="'+esc(cat.image||'')+'" oninput="updateSkinCategory('+esc(JSON.stringify(String(cat.slug)))+',\'image\',this.value)"></label>'+
-   '<label class="studio-inspector-field"><span>Upload category image</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'category\','+esc(JSON.stringify(String(cat.slug)))+')"><small class="studio-inline-help">Choose an image from your device · up to 6 MB.</small></label>'+
+   '<label class="studio-inspector-field"><span>Upload category image</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'category\','+esc(JSON.stringify(String(cat.slug)))+')"><small class="studio-inline-help">Max 6 MB.</small></label>'+
    (cat.image?'<img src="'+esc(cat.image)+'" alt="" style="width:100%;max-height:140px;object-fit:cover;border-radius:9px;margin-bottom:10px">':'')+
    '<div class="studio-inspector-actions"><button class="btn danger" type="button" onclick="deleteSkinCategory('+esc(JSON.stringify(String(cat.slug)))+')">Delete category</button></div>';
   return;
@@ -4746,14 +4746,14 @@ function closeSkinClaudeAssistant(){
 }
 async function refreshSkinClaudeStatus(){
  const status=document.getElementById('skinClaudeConnectionStatus'),send=document.getElementById('skinClaudeSend');
- if(status)status.textContent='Checking Nuvora AI connection…';
+ if(status)status.textContent='Checking…';
  try{
   const health=await api('/api/health');
   skinClaudeConnectionReady=health?.configured?.workersAI===true;
-  if(status)status.textContent=skinClaudeConnectionReady?'Nuvora AI is connected through Cloudflare Workers AI. Your draft context is ready.':'Nuvora AI is not connected. Check that the Workers AI binding named AI is attached to the nuvora Worker.';
+  if(status)status.textContent=skinClaudeConnectionReady?'Connected':'Disconnected';
  }catch(error){
   skinClaudeConnectionReady=false;
-  if(status)status.textContent='Could not verify Nuvora AI status. Check your admin connection and try again.';
+  if(status)status.textContent='Connection unavailable.';
  }
  if(send)send.disabled=false;
 }
