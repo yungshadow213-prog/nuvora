@@ -1129,6 +1129,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         <button class="btn" id="skinStudioRedo" type="button" onclick="redoSkinStudio()" disabled aria-label="Redo editor change" title="Redo (Ctrl/⌘+Shift+Z)">↷ Redo</button>
       </div>
       <div class="studio-save-state"><span class="studio-save-dot"></span><span id="skinStudioSaveLabel">Saved version loaded</span></div>
+      <button class="btn studio-claude-trigger" type="button" onclick="openSkinClaudeAssistant()">✦ Claude AI</button>
       <details class="studio-more-actions">
         <summary class="btn" aria-label="More editor actions">••• More</summary>
         <div class="studio-more-actions-menu">
@@ -1142,6 +1143,33 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
       <button class="btn primary studio-publish-button" type="button" onclick="saveSkinSiteConfig(this)">Publish</button>
     </div>
   </header>
+  <div id="skinClaudeAssistant" class="skin-claude-overlay" hidden aria-hidden="true">
+    <button class="skin-claude-backdrop" type="button" aria-label="Close Claude assistant" onclick="closeSkinClaudeAssistant()"></button>
+    <section class="skin-claude-dialog" role="dialog" aria-modal="true" aria-labelledby="skinClaudeTitle">
+      <header class="skin-claude-header">
+        <div><span class="skin-claude-kicker">NUVORA SKIN STUDIO</span><h2 id="skinClaudeTitle">Claude creative assistant</h2><p>Shape page layouts, refine copy and plan sections with your current draft as context.</p></div>
+        <button type="button" class="skin-claude-close" aria-label="Close Claude assistant" onclick="closeSkinClaudeAssistant()">×</button>
+      </header>
+      <div class="skin-claude-status-row"><span class="skin-claude-status-dot"></span><span id="skinClaudeConnectionStatus">Checking Claude connection…</span></div>
+      <div class="skin-claude-prompts" aria-label="Suggested prompts">
+        <button type="button" onclick="useSkinClaudePrompt('Review this page and suggest a more premium, editorial composition without changing the Nuvora brand direction.')">Elevate this page</button>
+        <button type="button" onclick="useSkinClaudePrompt('Improve the copy on the selected section. Make it clear, confident and editorial, without inventing product claims.')">Polish selected copy</button>
+        <button type="button" onclick="useSkinClaudePrompt('Suggest one useful section to add after the selected section and explain what it should contain.')">Suggest a section</button>
+      </div>
+      <div id="skinClaudeMessages" class="skin-claude-messages" aria-live="polite">
+        <div class="skin-claude-message assistant"><span class="skin-claude-message-label">CLAUDE</span><p>Tell me what you want to improve. I can suggest copy edits or add a section to the page you are working on. Nothing changes until you review and apply the suggestions.</p></div>
+      </div>
+      <div id="skinClaudeProposals" class="skin-claude-proposals" hidden>
+        <div class="skin-claude-proposals-heading"><b>Suggested draft changes</b><span>Review before applying</span></div>
+        <div id="skinClaudeProposalList"></div>
+        <button type="button" class="btn primary" id="skinClaudeApply" onclick="applySkinClaudeChanges()">Apply suggestions to draft</button>
+      </div>
+      <form class="skin-claude-composer" onsubmit="event.preventDefault();sendSkinClaudePrompt()">
+        <textarea id="skinClaudePrompt" rows="3" maxlength="8000" placeholder="Describe what you want Claude to change…" aria-label="Message Claude"></textarea>
+        <div class="skin-claude-composer-foot"><span>Claude suggestions are reviewed before they change your draft.</span><button type="submit" class="btn primary" id="skinClaudeSend">Ask Claude ↗</button></div>
+      </form>
+    </section>
+  </div>
   <div id="skinBuilderStatus" class="studio-status notice" role="status" aria-live="polite">Loading your saved Skin Care site…</div>
     <div class="skin-builder-layout studio-layout">
     <aside class="studio-left-panel">
@@ -2889,6 +2917,7 @@ async function adminBoot(){
 
 const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
 let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinSiteDraftExists=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='',skinStudioPendingProductTarget=null;
+let skinClaudeHistory=[],skinClaudePendingChanges=[],skinClaudeLastPrompt='';
 let skinStudioUndoStack=[],skinStudioRedoStack=[],skinStudioHistoryLastCapture=0,skinStudioHistoryApplying=false,skinSitePublishInProgress=false;
 const defaultSkinSiteConfig=()=>({
   version:8,homeLayoutVersion:2,template:'soft-editorial',accentColor:'#66745f',
@@ -4054,7 +4083,14 @@ function createSkinQuickItem(){
   const type=document.getElementById('skinQuickType')?.value||'product-grid';
   const id='section-'+Date.now().toString(36);
   const section={id,type,visible:true,title,eyebrow:String(document.getElementById('skinQuickEyebrow')?.value||''),text:String(document.getElementById('skinQuickDescription')?.value||''),image:type==='quiz-banner'?'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=85':'',buttonLabel:type==='quiz-banner'?'Explore concerns':'',buttonHref:type==='quiz-banner'?'/shop?q=skin+concerns':'',itemsText:type==='concern-grid'?'Acne & Blemishes\nAnti-Aging\nDryness & Dehydration\nRedness & Sensitivity\nDark Spots & Hyperpigmentation\nLarge Pores\nUneven Skin Tone\nDullness & Glow':'',imageAlignment:'center',imageWidth:70,backgroundColor:'',textAlignment:'left',filter:type==='featured-products'?'all':'all',columns:type==='featured-products'?5:3,productsPerPage:type==='featured-products'?8:8,product_ids:[],category_id:''};
-  skinHistoryCapture();skinSectionsFor().push(section);skinStudioSelection={type:'section',id};closeSkinQuickAdd();skinMarkDirty('Section added to the current page. Drag it in the outline or canvas to arrange it.');switchSkinStudioTab('outline');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('New section added and saved to the page draft.');
+  const pendingInsert=window.__nuvoraSkinPendingSectionInsert||null;
+  const targetPageId=pendingInsert?.pageId||skinStudioPageId||'home';
+  const targetSections=skinSectionsFor(targetPageId);
+  const targetIndex=pendingInsert?targetSections.findIndex(item=>String(item.id)===String(pendingInsert.sectionId)):-1;
+  skinHistoryCapture();
+  targetSections.splice(targetIndex>=0?targetIndex+1:targetSections.length,0,section);
+  skinStudioPageId=targetPageId;window.__nuvoraSkinPendingSectionInsert=null;
+  skinStudioSelection={type:'section',id};closeSkinQuickAdd();skinMarkDirty(targetIndex>=0?'Section inserted after the selected live-preview section.':'Section added to the current page.');switchSkinStudioTab('outline');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('New section added and saved to the page draft.');
  }
 }
 function addSkinBuilderSection(){openSkinAdd('section');}
@@ -4452,7 +4488,7 @@ function sendSkinStudioPreview(){
   const normalized={...product,category_name:category?.name||product.category_name||'',category:category?{id:category.id,name:category.name}:product.category};
   return placedIds.has(String(product.id))&&isSkinProduct(product)?{...normalized,published:true,__studioDraftPreview:true}:normalized;
  }):[];
- frame.contentWindow.postMessage({type:'nuvora-skin-studio-preview',config:skinBuilderConfig,products:previewProducts},SKIN_CLIENT_ORIGIN);
+ frame.contentWindow.postMessage({type:'nuvora-skin-studio-preview',config:skinBuilderConfig,products:previewProducts,pageId:skinStudioPageId||'home',selection:skinStudioSelection||null},SKIN_CLIENT_ORIGIN);
 }
 function reloadSkinStudioPreview(){
  if(!document.body.classList.contains('skin-studio-fullpage')||!skinBuilderConfig)return;
@@ -4603,6 +4639,14 @@ function wireSkinStudioCanvas(){
     skinMarkDirty('Text block added after the selected section. Edit it directly in the preview or use the inspector.');
     renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('Text block added and saved to the page draft.');return;
    }
+   if(data.type==='nuvora-skin-studio-request-add-section'){
+    const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),target=sections.find(section=>String(section.id)===String(data.sectionId||''));
+    if(target?.locked)return skinBuilderMessage('Unlock this section before inserting another section beside it.','warning');
+    skinStudioPageId=pageId;skinStudioSelection={type:'section',id:String(target?.id||'')};
+    window.__nuvoraSkinPendingSectionInsert={pageId,sectionId:String(target?.id||'')};
+    switchSkinStudioTab('outline');openSkinAdd('section');
+    skinBuilderMessage('Choose a section layout. It will be inserted immediately after the section you selected in the live page.','info');return;
+   }
    if(data.type==='nuvora-skin-studio-request-add-product'){
     skinStudioPageId=data.pageId||'home';skinStudioPendingProductTarget={sectionId:String(data.sectionId||''),pageId:skinStudioPageId};skinStudioSelection={type:'section',id:String(data.sectionId||'')};
     switchSkinStudioTab('products');renderSkinLibrary();
@@ -4618,7 +4662,7 @@ function wireSkinStudioCanvas(){
    if(data.type==='nuvora-skin-studio-update-section-field'){
     skinStudioPageId=data.pageId||'home';
     const sections=skinSectionsFor(skinStudioPageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId));
-    if(index<0||!['title','eyebrow','text'].includes(data.key))return;
+    if(index<0||!['title','eyebrow','text','buttonLabel','secondaryButtonLabel'].includes(data.key))return;
     if(sections[index].locked)return skinBuilderMessage('Unlock this section before editing it from the preview.','warning');
     updateSkinSection(index,data.key,String(data.value??''),true);return;
    }
@@ -4638,8 +4682,8 @@ function wireSkinStudioCanvas(){
     if(data.type==='nuvora-skin-studio-select-section'){
     skinStudioPageId=data.pageId||'home';
     skinStudioSelection={type:'section',id:String(data.sectionId||'')};
-    switchSkinStudioTab('outline');skinStudioShowInspector(true);renderSkinStudioAll();
-    skinBuilderMessage('Selected '+(skinSectionsFor().find(x=>String(x.id)===String(data.sectionId))?.title||'section')+'. Edit its settings in the editor panel.','info');
+    switchSkinStudioTab('outline');skinStudioShowInspector(true);renderSkinStudioAll();sendSkinStudioPreview();
+    skinBuilderMessage('Selected '+(skinSectionsFor().find(x=>String(x.id)===String(data.sectionId))?.title||'section')+'. Edit it here or directly in the live canvas.','info');
     return;
    }
    if(data.type==='nuvora-skin-studio-select-product'){
