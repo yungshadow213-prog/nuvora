@@ -29,7 +29,7 @@ body.skin-studio-fullpage .studio-toolbar{min-height:68px!important;padding:9px 
 body.skin-studio-fullpage .studio-toolbar-actions{gap:7px!important;flex-wrap:wrap!important}
 body.skin-studio-fullpage .studio-layout{
   display:grid!important;
-  grid-template-columns:248px minmax(0,1fr) 312px!important;
+  grid-template-columns:360px minmax(0,1fr)!important;
   grid-template-rows:minmax(0,1fr)!important;
   gap:12px!important;
   height:calc(100dvh - 154px)!important;
