@@ -4444,15 +4444,13 @@ function requestSkinSectionImageUpload(sectionId,pageId='home'){
 function sendSkinStudioPreview(){
  const frame=document.getElementById('skinStudioPreview');
  if(!frame||!skinBuilderConfig||!frame.contentWindow)return;
+ // Draft preview exposes only products explicitly placed on a visible grid.
+ const sections=skinSectionsFor(skinStudioPageId),placedIds=new Set(sections.filter(sec=>sec.visible!==false&&['product-grid','featured-products'].includes(sec.type)&&Array.isArray(sec.product_ids)).flatMap(sec=>sec.product_ids.map(String)));
  const categoryById=new Map((Array.isArray(categories)?categories:[]).map(category=>[String(category.id),category]));
  const previewProducts=Array.isArray(adminProducts)?adminProducts.map(product=>{
   const category=categoryById.get(String(product.category_id||''));
   const normalized={...product,category_name:category?.name||product.category_name||'',category:category?{id:category.id,name:category.name}:product.category};
-  // Preview all Skin Care records as selectable content. The storefront renderer
-  // applies each section's saved/manual product selection and category filters.
-  // This prevents an auto-populated product grid from looking empty merely
-  // because the section has no explicit product_ids list yet.
-  return isSkinProduct(product)?{...normalized,published:true,__studioDraftPreview:true}:normalized;
+  return placedIds.has(String(product.id))&&isSkinProduct(product)?{...normalized,published:true,__studioDraftPreview:true}:normalized;
  }):[];
  frame.contentWindow.postMessage({type:'nuvora-skin-studio-preview',config:skinBuilderConfig,products:previewProducts},SKIN_CLIENT_ORIGIN);
 }
