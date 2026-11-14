@@ -6,6 +6,7 @@ on:
       - "admin.html"
       - "admin-layout-v2.css"
       - "admin-layout-v2.js"
+      - "worker.js"
       - "scripts/verify-admin-layout-v2.mjs"
       - ".github/workflows/admin-layout-v2.yml"
   workflow_dispatch:
