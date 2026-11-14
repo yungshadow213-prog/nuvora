@@ -2132,14 +2132,18 @@ async function getAIReferenceFile(){
 async function generateAIProductImage(){
   const btn=document.getElementById('aiGenerateBtn'),status=document.getElementById('aiImageStatus');
   const p=aiProductData(); if(!p.name){setAdminStatus('Add the product title first.','error');return;}
-  btn.disabled=true;btn.textContent='Preparing…';status.textContent='Using the product image as the reference…';
+  btn.disabled=true;btn.textContent='Preparing…';status.textContent='Preparing the product reference image…';
   try{
-    const file=await getAIReferenceFile();
-    if(file.size>6*1024*1024)throw new Error('Reference image must be 6 MB or smaller.');
+    const manual=document.getElementById('aiReference').files?.[0]||null;
+    const sourceUrl=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)[0]||'';
+    if(!manual&&!sourceUrl)throw new Error('Add a product image from Amazon or upload a reference image first.');
+    const file=manual?await getAIReferenceFile():null;
+    if(file&&file.size>6*1024*1024)throw new Error('Reference image must be 6 MB or smaller.');
     btn.textContent='Generating…';status.textContent='Creating your advertising image…';
     const fd=new FormData();
     const style=document.getElementById('aiStyle').value,size=document.getElementById('aiSize').value,custom=document.getElementById('aiPrompt').value.trim();
-    fd.append('image',file);fd.append('size',size);
+    if(file)fd.append('image',file);else fd.append('image_url',sourceUrl);
+    fd.append('size',size);
     fd.append('prompt',`Create a professional ecommerce advertising image for the exact product shown in the reference image. Preserve the product's identity, shape, materials, colors, branding and important physical details. Do not invent extra product features or change the product. Style: ${style}. Product name: ${p.name}. Brand: ${p.brand||'unknown'}. Place it in a polished, uncluttered commercial composition suitable for Nuvora product publishing. No fake logos, no misleading claims, no random text, no watermark. ${custom}`);
     const j=await api('/api/admin/ai/image',{method:'POST',body:fd});
     window.lastAIImage=j.image;document.getElementById('aiPreviewImg').src=j.image;document.getElementById('aiPreview').style.display='flex';status.textContent='Image ready. Review it before applying.';
