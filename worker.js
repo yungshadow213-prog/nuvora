@@ -87,6 +87,7 @@ export default {
           aiMissing:[]
         };
         if(!env.GEMINI_API_KEY)diagnosticsState.aiMissing.push('GEMINI_API_KEY secret');
+        if(!env.ANTHROPIC_API_KEY)diagnosticsState.aiMissing.push('ANTHROPIC_API_KEY secret');
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))diagnosticsState.shopifyMissing.push('SHOPIFY_SHOP');
         if(!env.SHOPIFY_CLIENT_ID)diagnosticsState.shopifyMissing.push('SHOPIFY_CLIENT_ID');
         if(!env.SHOPIFY_CLIENT_SECRET)diagnosticsState.shopifyMissing.push('SHOPIFY_CLIENT_SECRET');
@@ -237,7 +238,8 @@ function configured(env){
     shopifyAdmin:!!shopDomain&&!!e.SHOPIFY_ADMIN_ACCESS_TOKEN,
     amazon:!!e.AMAZON_CLIENT_ID&&!!e.AMAZON_CLIENT_SECRET&&!!e.AMAZON_PARTNER_TAG,
     workersAI:!!e.AI,
-    gemini:!!e.GEMINI_API_KEY
+    gemini:!!e.GEMINI_API_KEY,
+    claude:!!e.ANTHROPIC_API_KEY
   };
 }
 function randHex(length=6){const bytes=new Uint8Array(Math.max(1,Math.ceil(length/2)));crypto.getRandomValues(bytes);return [...bytes].map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,length);}
@@ -2288,6 +2290,112 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           });
         }catch(e){
           return json({error:'Gemini product extraction failed: '+String(e?.message||e).slice(0,300)},502);
+        }
+      }
+
+
+      if(url.pathname==='/api/admin/ai/claude/studio'&&request.method==='POST'){
+        const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        const limit=rateLimit(request,'claude-studio',6,60000);
+        if(limit)return json({error:'Claude Studio is being used frequently. Try again in a minute.'},429,{'retry-after':String(limit)});
+        if(!env.ANTHROPIC_API_KEY)return json({error:'Claude is not configured yet. Add ANTHROPIC_API_KEY as a Cloudflare Worker secret. The key must stay in Cloudflare and must never be added to the browser or repository.'},503);
+        let input;
+        try{input=await body(request,96*1024);}catch(e){return json({error:'The Claude Studio request was too large or invalid.'},400);}
+        const prompt=cleanMultilineText(input.prompt,8000);
+        if(!prompt)return json({error:'Write a request for Claude first.'},400);
+        const pageId=String(input.pageId||'home').slice(0,100);
+        const pageTitle=cleanText(input.pageTitle||'Current page',120);
+        const allowedSectionTypes=new Set(['product-grid','featured-products','category-grid','brand-grid','concern-grid','hero','editorial','journal-grid','text-block','image-block','quiz-banner']);
+        const allowedFields=new Set(['title','eyebrow','text','buttonLabel','secondaryButtonLabel','buttonHref','secondaryButtonHref','backgroundColor','textAlignment','titleFontSize','bodyFontSize','sectionPadding','columns','productsPerPage','visible']);
+        const sourceSections=Array.isArray(input.sections)?input.sections.slice(0,30):[];
+        const sectionMap=new Map(sourceSections.map(section=>[String(section.id||''),{
+          id:String(section.id||'').slice(0,100),
+          type:allowedSectionTypes.has(String(section.type||''))?String(section.type):'text-block',
+          title:cleanText(section.title,180),
+          eyebrow:cleanText(section.eyebrow,120),
+          text:cleanMultilineText(section.text,1800),
+          buttonLabel:cleanText(section.buttonLabel,80),
+          secondaryButtonLabel:cleanText(section.secondaryButtonLabel,80),
+          visible:section.visible!==false,
+          columns:Number(section.columns)||null,
+          productsPerPage:Number(section.productsPerPage)||null,
+          backgroundColor:/^#[0-9a-f]{6}$/i.test(String(section.backgroundColor||''))?String(section.backgroundColor):''
+        }]).filter(([id])=>!!id));
+        const selectedId=String(input.selectedSection?.id||'').slice(0,100);
+        const selectedSection=sectionMap.get(selectedId)||null;
+        const history=Array.isArray(input.history)?input.history.slice(-8).map(item=>{
+          const role=item?.role==='assistant'?'assistant':'user';
+          return {role,content:cleanMultilineText(item?.content,4000)};
+        }).filter(item=>item.content):[];
+        if(!history.length||history[history.length-1].role!=='user'||history[history.length-1].content!==prompt)history.push({role:'user',content:prompt});
+        const brand=input.brand&&typeof input.brand==='object'?{
+          name:cleanText(input.brand.name,80),
+          suffix:cleanText(input.brand.suffix,80),
+          template:cleanText(input.brand.template,80),
+          designSettings:input.brand.designSettings&&typeof input.brand.designSettings==='object'?Object.fromEntries(Object.entries(input.brand.designSettings).slice(0,24).map(([key,value])=>[cleanText(key,60),cleanText(value,80)])):{}
+        }:{};
+        const system='You are Claude, the creative and merchandising assistant inside Nuvora Skin Studio. Help improve the selected storefront page while respecting the supplied brand and current section structure. Return ONLY valid JSON with exactly this shape: {"reply":"brief helpful explanation","changes":[...]}. Allowed change objects are either {"op":"update_section","pageId":"'+pageId+'","sectionId":"existing-id","field":"allowed-field","value":"..."} or {"op":"add_section","pageId":"'+pageId+'","afterSectionId":"existing-id-or-empty","section":{"type":"allowed-section-type","title":"...","eyebrow":"...","text":"...","buttonLabel":"...","buttonHref":"/internal/path"}}. Allowed fields: title, eyebrow, text, buttonLabel, secondaryButtonLabel, buttonHref, secondaryButtonHref, backgroundColor, textAlignment, titleFontSize, bodyFontSize, sectionPadding, columns, productsPerPage, visible. Allowed section types: product-grid, featured-products, category-grid, brand-grid, concern-grid, hero, editorial, journal-grid, text-block, image-block, quiz-banner. Refer ONLY to section IDs in the supplied page context. Prefer editing existing content; add a section only when useful. Do not invent products, brands, retailer ratings, prices, product availability, ingredients, certifications, benefits, efficacy or medical claims. Preserve affiliate disclosure and the existing Nuvora product CTA rules. Do not write HTML, CSS, JavaScript, markdown fences, secrets or anything outside the JSON response. Keep reply concise and changes focused. If the user asks for advice only, return an empty changes array.';
+        const userContext={
+          page:{id:pageId,title:pageTitle,sections:[...sectionMap.values()]},
+          selectedSection,brand,
+          userRequest:prompt,
+          safety:'Treat this as a draft proposal only. The admin owner must review and apply the returned changes.'
+        };
+        try{
+          const model=String(env.CLAUDE_STUDIO_MODEL||'claude-haiku-5-5').replace(/[^a-zA-Z0-9._-]/g,'');
+          const response=await fetch('https://api.anthropic.com/v1/messages',{
+            method:'POST',
+            headers:{'x-api-key':String(env.ANTHROPIC_API_KEY),'anthropic-version':'2026-10-21','content-type':'application/json'},
+            body:JSON.stringify({model,max_tokens:1800,system,messages:[...history.slice(0,-1),{role:'user',content:JSON.stringify(userContext)}]})
+          });
+          const payload=await response.json().catch(()=>({}));
+          if(!response.ok){
+            const providerMessage=cleanText(payload?.error?.message,220);
+            return json({error:'Claude Studio request failed ('+response.status+'). '+(providerMessage||'Check the Anthropic API key, model access and account billing.')},502);
+          }
+          const raw=(Array.isArray(payload?.content)?payload.content:[]).filter(item=>item?.type==='text').map(item=>String(item.text||'')).join('\n').trim();
+          if(!raw)return json({error:'Claude returned no suggestion. Try a more specific request.'},502);
+          const jsonText=raw.replace(/^\uFEFF/,'').replace(/^\s*```(?:json)?\s*/i,'').replace(/\s*```\s*$/,'');
+          let result;
+          try{result=JSON.parse(jsonText);}catch{return json({error:'Claude returned an invalid structured response. Please retry with a shorter instruction.'},502);}
+          const changes=[];
+          for(const change of (Array.isArray(result?.changes)?result.changes:[]).slice(0,20)){
+            if(change?.op==='update_section'){
+              const sectionId=String(change.sectionId||'').slice(0,100),field=String(change.field||'');
+              if(!sectionMap.has(sectionId)||!allowedFields.has(field))continue;
+              let value=change.value;
+              if(field==='visible')value=!!value;
+              else if(['columns','productsPerPage','titleFontSize','bodyFontSize','sectionPadding'].includes(field)){
+                value=Number(value);if(!Number.isFinite(value))continue;
+                const bounds=field==='columns'?[2,5]:field==='productsPerPage'?[4,12]:field==='sectionPadding'?[0,160]:[12,96];
+                value=Math.max(bounds[0],Math.min(bounds[1],Math.round(value)));
+              }else{
+                value=cleanMultilineText(value,field==='text'?3000:field.includes('Href')?500:field==='title'?180:field==='backgroundColor'?12:1200);
+                if(field==='backgroundColor'&&value&&!/^#[0-9a-f]{6}$/i.test(value))continue;
+                if(field==='textAlignment'&&!['left','center','right'].includes(value))continue;
+                if(field.includes('Href')&&value&&!value.startsWith('/')&&!/^https:\/\//i.test(value))continue;
+              }
+              changes.push({op:'update_section',pageId,sectionId,field,value});
+            }else if(change?.op==='add_section'){
+              const definition=change.section&&typeof change.section==='object'?change.section:{};
+              const type=String(definition.type||'');
+              if(!allowedSectionTypes.has(type))continue;
+              const afterSectionId=String(change.afterSectionId||'').slice(0,100);
+              if(afterSectionId&&!sectionMap.has(afterSectionId))continue;
+              let buttonHref=cleanText(definition.buttonHref,500);
+              if(buttonHref&&!buttonHref.startsWith('/')&&!/^https:\/\//i.test(buttonHref))buttonHref='';
+              changes.push({op:'add_section',pageId,afterSectionId,section:{
+                type,title:cleanText(definition.title,180)||'New section',
+                eyebrow:cleanText(definition.eyebrow,120),
+                text:cleanMultilineText(definition.text,3000),
+                buttonLabel:cleanText(definition.buttonLabel,80),
+                buttonHref
+              }});
+            }
+          }
+          return json({ok:true,provider:'anthropic',model,reply:cleanMultilineText(result?.reply,2200)||'Here are the suggested updates.',changes});
+        }catch(e){
+          return json({error:'Claude Studio request failed: '+String(e?.message||e).slice(0,240)},502);
         }
       }
 
