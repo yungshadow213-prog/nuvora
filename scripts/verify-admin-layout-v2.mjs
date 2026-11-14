@@ -73,6 +73,16 @@ for (const token of [
   "workersAI:!!e.AI"
 ]) assert.ok(worker.includes(token), "Cloudflare Workers AI integration contract missing: " + token);
 
+for (const token of [
+  "product-workspace-page",
+  "pfSkinStoreCategory",
+  "pfStoreDescription",
+  "runSkinBulkAiImport",
+  "generateSkinProductWithGemini(j.destination_url||url,{auto:true})",
+  "aiModalBody.querySelectorAll('.ai-studio')",
+  "No other skincare products are available yet"
+]) assert.ok(html.includes(token), "AI-assisted Skin Studio product workspace behavior missing: " + token);
+
 assert.ok(!html.includes("sk-ant-api"), "No Anthropic API key may be embedded in the admin HTML");
 assert.ok(!js.includes("ANTHROPIC_API_KEY"), "No Anthropic API key may be embedded in admin layout JavaScript");
 

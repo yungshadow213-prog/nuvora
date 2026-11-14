@@ -1444,7 +1444,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
       <button class="btn" onclick="closeProductModal()">Close</button>
     </div>
     <div class="modal-body">
-      <div class="workspace-note" id="importStatus">You can enter a product manually or use the quick Amazon link workflow below. Nothing becomes public until you publish it.</div><div id="productSaveFeedback" class="notice" role="status" aria-live="polite" hidden style="margin:10px 0 14px"></div><div style="display:flex;justify-content:flex-end;margin:-4px 0 14px"><button type="button" class="btn primary" onclick="openAIStudio()">✦ Run Nuvora AI Studio</button></div>
+      <div class="workspace-note" id="importStatus">You can enter a product manually or use the quick Amazon link workflow below. Nothing becomes public until you publish it.</div><div id="productSaveFeedback" class="notice" role="status" aria-live="polite" hidden style="margin:10px 0 14px"></div><div style="display:flex;justify-content:flex-end;margin:-4px 0 14px"><button type="button" class="btn primary" onclick="openAIStudio()">✦ Jump to AI image tools</button></div>
       <div class="importbar">
         <input id="amazonUrlInput" placeholder="Paste your Amazon affiliate/product link">
         <button class="btn primary" onclick="useAmazonLink()">Use Amazon link</button>
@@ -1474,14 +1474,16 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         <div class="field full"><label>Tax notice</label><input id="pfTax" placeholder="Sales taxes may apply at checkout"></div>
         <div class="field"><label>Category</label><select id="pfCategory"><option value="">No category</option></select></div>
         <div class="field"><label>Collection</label><select id="pfCollection"><option value="">No collection</option></select></div>
+        <div class="field full skin-only-field"><label>Storefront category</label><select id="pfSkinStoreCategory"><option value="">Choose a storefront category</option></select><div class="muted">AI suggests a category from the product listing. You can change it before saving.</div></div>
         <div class="field full skin-only-field"><label>Nuvora AI product assistant</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="skinGeminiFillBtn" type="button" class="btn" onclick="generateSkinProductWithGemini()">Fill guide with Nuvora AI</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input id="skinGeminiReplaceExisting" type="checkbox"> Replace existing text fields</label></div><div id="skinGeminiStatus" class="muted" role="status" aria-live="polite" style="margin-top:8px">Paste the exact Amazon link into Destination / affiliate URL. Nuvora AI will fill supported fields for review; it will not save or publish the product.</div></div>
-        <div class="field full"><label>Description</label><textarea id="pfDescription" placeholder="Product description"></textarea></div>
+        <div class="field full"><label>Retailer description / source copy</label><textarea id="pfDescription" placeholder="Product description captured from the retailer"></textarea></div>
+        <div class="field full skin-only-field"><label>Nuvora product overview (AI draft)</label><textarea id="pfStoreDescription" placeholder="A clear, customer-friendly overview based on verified product facts"></textarea><div class="muted">AI writes this separately from the retailer’s original description. Review before saving.</div></div>
         <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div>
         <div class="field full skin-only-field"><label>Product benefits <span class="muted">(source-backed)</span></label><textarea id="pfBenefits" placeholder="What the product is intended to do, based on product information"></textarea></div>
         <div class="field full skin-only-field"><label>Suitable skin types</label><textarea id="pfSkinTypes" placeholder="Oily, dry, combination, normal, sensitive — include only supported suitability information"></textarea></div>
         <div class="field full skin-only-field"><label>Skin concerns / intended use</label><textarea id="pfSkinConcerns" placeholder="e.g. dryness, uneven texture, oiliness — avoid medical promises"></textarea></div>
         <div class="field full skin-only-field"><label>When to avoid / compatibility cautions</label><textarea id="pfSkinAvoid" placeholder="Source-backed warnings, contraindications, or known incompatibilities"></textarea></div>
-        <div class="field full skin-only-field"><label>Complementary products</label><select id="pfRecommendedProducts" multiple size="5" aria-label="Select complementary skincare products" style="min-height:115px"></select><div class="muted">Choose products you have reviewed as reasonable companions. This does not replace professional advice or ingredient compatibility checks.</div></div>
+        <div class="field full skin-only-field"><label>Complementary products</label><select id="pfRecommendedProducts" multiple size="5" aria-label="Select complementary skincare products" style="min-height:115px"></select><div class="muted">Nuvora AI suggests only suitable candidates from your existing published skincare catalog. Review every suggestion; no products are automatically linked without your approval.</div></div>
         <div class="field full skin-only-field"><label>Why these products work together</label><textarea id="pfRecommendationReason" placeholder="Explain the intended routine role, sequencing, and any limitations. Keep product facts separate from general guidance."></textarea></div>
         <div class="field full skin-only-field"><label>Storefront placement</label><div class="skin-flag-row"><label><input id="pfSkinFeatured" type="checkbox"> Feature on Skin homepage</label><label><input id="pfSkinTopPick" type="checkbox"> Mark as a top pick</label><label><input id="pfSkinTrending" type="checkbox"> Mark as trending</label></div></div><div class="field full"><label>Ingredients (source-verified)</label><textarea id="pfIngredients" placeholder="Only use ingredients confirmed by the source listing"></textarea></div><div class="field full"><label>Directions / how to use (source-verified)</label><textarea id="pfUsage" placeholder="Directions copied or summarized from the product source"></textarea></div><div class="field full"><label>Warnings / cautions (source-verified)</label><textarea id="pfWarnings" placeholder="Warnings stated by the manufacturer or source"></textarea></div><div class="field"><label>Product size / format</label><input id="pfProductSize" placeholder="e.g. 50 ml / 1.7 fl oz"></div><div class="field full"><label>Product options</label><textarea id="pfVariations" placeholder="Size: X-Small, Small, Medium, Large&#10;Color: Black, Grey, White"></textarea><div class="muted">Nuvora shows these as product options when the retailer provides them.</div></div>
         <div class="field full"><label>Destination / affiliate URL</label><input id="pfDestination" placeholder="https://..."></div>
@@ -1864,8 +1866,8 @@ function prepareProductEntryWorkspace(){
  if(!body||!grid||body.dataset.productEntryPrepared==='true')return;
  const steps=[
   {id:'identity',title:'Source & identity',summary:'Import a listing or enter the product’s basic identity.',fields:['pfName','pfKind','pfSource','pfBrand','pfProductType','pfRetailer','pfDestination','pfAsin','pfSourcinboxUrl','pfSourcinboxId']},
-  {id:'organize',title:'Organize & recommend',summary:'Give the product a clear category, collection and merchandising role.',fields:['pfCategory','pfCollection','pfSkinFeatured','pfSkinTopPick','pfSkinTrending','pfRecommendedProducts','pfRecommendationReason']},
-  {id:'guide',title:'Product information',summary:'Add useful, source-backed details customers can use to make a decision.',fields:['pfDescription','pfFeatures','pfBenefits','pfSkinTypes','pfSkinConcerns','pfSkinAvoid','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','skinGeminiFillBtn','skinGeminiReplaceExisting','skinGeminiStatus']},
+  {id:'organize',title:'Organize & recommend',summary:'Give the product a clear storefront category, collection and merchandising role.',fields:['pfCategory','pfCollection','pfSkinStoreCategory','pfSkinFeatured','pfSkinTopPick','pfSkinTrending','pfRecommendedProducts','pfRecommendationReason']},
+  {id:'guide',title:'Product information',summary:'Add useful, source-backed details customers can use to make a decision.',fields:['pfDescription','pfStoreDescription','pfFeatures','pfBenefits','pfSkinTypes','pfSkinConcerns','pfSkinAvoid','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','skinGeminiFillBtn','skinGeminiReplaceExisting','skinGeminiStatus']},
   {id:'media',title:'Images & retailer details',summary:'Choose the main product image, complete retailer facts and review the draft.',fields:['pfImages','pfUpload','uploadStatus','pfImageStrip','pfPrice','pfListPrice','pfDiscount','pfCurrency','pfDeal','pfRating','pfAvailability','pfReviews','pfBought','pfShipping','pfTax','pfSupplierCost']}
  ];
  const sourcePanel=document.createElement('section');sourcePanel.className='product-entry-source-card';
@@ -1877,6 +1879,9 @@ function prepareProductEntryWorkspace(){
   body.querySelector('.notice[style*="margin-top:10px"]')
  ].filter(Boolean);
  controls.forEach(node=>sourcePanel.appendChild(node));
+ const bulkPanel=document.createElement('section');bulkPanel.className='product-entry-bulk-panel';
+ bulkPanel.innerHTML='<div class="product-entry-bulk-heading"><span class="product-entry-step-kicker">BULK PRODUCT WORKFLOW</span><h3>Import several products at once</h3><p>Paste up to five Amazon product links. Nuvora will read each listing, prepare its skincare guide with AI, assign a storefront category and save it as a private draft. Existing products are skipped; nothing is published automatically.</p></div><textarea id="skinBulkAmazonUrls" rows="4" placeholder="Paste one Amazon product link per line"></textarea><div class="product-entry-bulk-actions"><button type="button" class="btn" onclick="formatSkinBulkAmazonUrls()">Clean links</button><button type="button" class="btn primary" id="skinBulkAiImportBtn" onclick="runSkinBulkAiImport()">Import &amp; AI-fill products</button></div><div id="skinBulkAiProgress" class="product-entry-bulk-progress" role="status" aria-live="polite">Each product is imported as a draft and processed one at a time.</div><div id="skinBulkAiResults" class="product-entry-bulk-results"></div>';
+ sourcePanel.appendChild(bulkPanel);
  const aiButton=body.querySelector('button[onclick="openAIStudio()"]')?.parentElement||null;
  const shell=document.createElement('div');shell.className='product-entry-workspace';
  const rail=document.createElement('aside');rail.className='product-entry-rail';
@@ -1889,6 +1894,11 @@ function prepareProductEntryWorkspace(){
   const form=document.createElement('div');form.className='formgrid product-entry-fields';panel.appendChild(form);
   main.appendChild(panel);
  });
+ const aiModalBody=document.querySelector('#aiStudioModal .modal-body');
+ const aiConfig=document.getElementById('aiGeminiConfigStatus');
+ const mediaPanel=main.querySelector('[data-entry-panel="3"]');
+ if(aiConfig&&mediaPanel)mediaPanel.insertBefore(aiConfig,mediaPanel.querySelector('.product-entry-fields'));
+ if(aiModalBody&&mediaPanel)Array.from(aiModalBody.querySelectorAll('.ai-studio')).forEach(block=>mediaPanel.appendChild(block));
  if(aiButton){const target=main.querySelector('[data-entry-panel="2"] .product-entry-panel-head');if(target){aiButton.className='product-entry-ai-action';target.appendChild(aiButton);}}
  const actions=body.querySelector('.modal-actions');
  const navigation=document.createElement('div');navigation.className='product-entry-navigation';
@@ -1938,16 +1948,16 @@ function renderProductTaxonomy(){
 }
 function resetProductForm(){
   window.temuImportMode=false;window.skinCareImportMode=false;setSkinAdminFormMode(false);
-  ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfFeatures','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost','pfBenefits','pfSkinTypes','pfSkinConcerns','pfSkinAvoid','pfRecommendationReason'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfStoreDescription','pfSkinStoreCategory','pfProductType','pfAvailability','pfFeatures','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost','pfBenefits','pfSkinTypes','pfSkinConcerns','pfSkinAvoid','pfRecommendationReason'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   ['pfSkinFeatured','pfSkinTopPick','pfSkinTrending'].forEach(id=>{const e=document.getElementById(id);if(e)e.checked=false;});
   document.getElementById('pfKind').value='shop'; document.getElementById('pfSource').value='manual'; document.getElementById('pfCurrency').value='NGN'; document.getElementById('pfRetailer').value='Amazon';
-  document.getElementById('pfImageStrip').innerHTML='';const rec=document.getElementById('pfRecommendedProducts');if(rec)rec.innerHTML='';
+  document.getElementById('pfImageStrip').innerHTML='';const rec=document.getElementById('pfRecommendedProducts');if(rec){rec.innerHTML='';rec.disabled=false;}const bulkBox=document.getElementById('skinBulkAmazonUrls');if(bulkBox)bulkBox.value='';const bulkResults=document.getElementById('skinBulkAiResults');if(bulkResults)bulkResults.replaceChildren();const bulkStatus=document.getElementById('skinBulkAiProgress');if(bulkStatus)bulkStatus.textContent='Each product is imported as a draft and processed one at a time.';
   document.getElementById('importStatus').textContent='You can enter a product manually or fetch an Amazon product below. Imported data stays editable and nothing becomes public until you publish it.';
   window.editingProductId=null;
 }
 function openProductModal(importMode=false){
   window.temuImportMode=false;window.skinCareImportMode=false;setSkinAdminFormMode(false);
-  document.body.classList.add('admin-workspace-open');
+  document.body.classList.add('admin-workspace-open','product-workspace-page');
   document.getElementById('aiStudioModal')?.classList.remove('open');
   document.getElementById('shopifyModal')?.classList.remove('open');
   resetProductForm();
@@ -1961,7 +1971,7 @@ function openProductModal(importMode=false){
   prepareProductEntryWorkspace();setProductEntryStep(0);
   document.getElementById('amazonUrlInput').focus();
 }
-function closeProductModal(){document.getElementById('productModal').classList.remove('open');document.body.classList.remove('admin-workspace-open');window.skinCareImportMode=false;setSkinAdminFormMode(false);}
+function closeProductModal(){document.getElementById('productModal').classList.remove('open');document.body.classList.remove('admin-workspace-open','product-workspace-page');window.skinCareImportMode=false;setSkinAdminFormMode(false);}
 function updateRetailerRatingPreview(){
  const box=document.getElementById('pfRatingPreview'),input=document.getElementById('pfRating');if(!box||!input)return;
  const raw=input.value.trim();if(!raw){box.textContent='Enter the retailer’s original rating. This is separate from Nuvora customer reviews.';return;}
@@ -2013,7 +2023,8 @@ function setProductForm(p){
   document.getElementById('pfTax').value=p.amazon_tax_text||'';
   document.getElementById('pfCategory').value=p.category_id||'';
   document.getElementById('pfCollection').value=p.collection_id||'';
-  document.getElementById('pfDescription').value=window.skinCareImportMode?(p.store_description||p.description||''):(p.description||'');
+  document.getElementById('pfDescription').value=p.description||'';
+  const storeDescription=document.getElementById('pfStoreDescription');if(storeDescription)storeDescription.value=p.store_description||'';
   document.getElementById('pfFeatures').value=p.features||'';document.getElementById('pfIngredients').value=p.ingredients||'';document.getElementById('pfUsage').value=p.usage_instructions||'';document.getElementById('pfWarnings').value=p.product_warnings||'';document.getElementById('pfProductSize').value=p.product_size||'';try{const v=Array.isArray(p.amazon_variations)?p.amazon_variations:[];document.getElementById('pfVariations').value=v.map(x=>x.name+': '+(Array.isArray(x.values)?x.values.join(', '):'')).join('\n')}catch(e){document.getElementById('pfVariations').value='';}
   document.getElementById('pfDestination').value=p.destination_url||'';
   document.getElementById('pfAsin').value=p.amazon_asin||'';
@@ -2084,26 +2095,16 @@ function removeProductImage(i){
   document.getElementById('pfImages').value=urls.join('\n'); renderProductImages();
 }
 async function openAIStudio(){
-  document.body.classList.add('admin-workspace-open');
-  // Keep the Add Product workspace open underneath AI Studio so generated
-  // copy and images return to the same unsaved product form for review.
   document.getElementById('shopifyModal')?.classList.remove('open');
-  const page=document.getElementById('aiStudioModal');
-  page.classList.add('open');
-  document.getElementById('aiPrompt').value='';
-  document.getElementById('aiImageStatus').textContent='Checking Nuvora AI image generation…';
-  document.getElementById('aiCopyStatus').textContent='Waiting for Nuvora AI…';
   document.getElementById('aiPreview').style.display='none';
-  document.getElementById('aiReference').value='';
-  page.scrollIntoView({behavior:'smooth',block:'start'});
+  setProductEntryStep(3);
+  document.getElementById('aiGenerateBtn')?.scrollIntoView({behavior:'smooth',block:'center'});
   refreshGeminiConfigStatus();
-  // AI generation is manual so merely opening the workspace never consumes an AI request.
 }
 function closeAIStudio(){
-  document.getElementById('aiStudioModal').classList.remove('open');
-  if(!document.getElementById('productModal')?.classList.contains('open'))document.body.classList.remove('admin-workspace-open');
+  if(document.getElementById('productModal')?.classList.contains('open'))setProductEntryStep(3);
 }
-function aiProductData(){return {name:document.getElementById('pfName').value.trim(),brand:document.getElementById('pfBrand').value.trim(),description:document.getElementById('pfDescription').value.trim(),features:document.getElementById('pfFeatures').value.trim(),category:document.getElementById('pfCategory').value.trim(),price:document.getElementById('pfPrice').value,currency:document.getElementById('pfCurrency').value};}
+function aiProductData(){return {name:document.getElementById('pfName').value.trim(),brand:document.getElementById('pfBrand').value.trim(),description:(window.skinCareImportMode?document.getElementById('pfStoreDescription')?.value:document.getElementById('pfDescription').value)?.trim()||'',features:document.getElementById('pfFeatures').value.trim(),category:document.getElementById('pfSkinStoreCategory')?.value||document.getElementById('pfCategory').value.trim(),price:document.getElementById('pfPrice').value,currency:document.getElementById('pfCurrency').value};}
 async function getAIReferenceFile(){
   const manual=document.getElementById('aiReference').files?.[0];
   let file=manual||null;
@@ -2131,14 +2132,18 @@ async function getAIReferenceFile(){
 async function generateAIProductImage(){
   const btn=document.getElementById('aiGenerateBtn'),status=document.getElementById('aiImageStatus');
   const p=aiProductData(); if(!p.name){setAdminStatus('Add the product title first.','error');return;}
-  btn.disabled=true;btn.textContent='Preparing…';status.textContent='Using the product image as the reference…';
+  btn.disabled=true;btn.textContent='Preparing…';status.textContent='Preparing the product reference image…';
   try{
-    const file=await getAIReferenceFile();
-    if(file.size>6*1024*1024)throw new Error('Reference image must be 6 MB or smaller.');
+    const manual=document.getElementById('aiReference').files?.[0]||null;
+    const sourceUrl=document.getElementById('pfImages').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean)[0]||'';
+    if(!manual&&!sourceUrl)throw new Error('Add a product image from Amazon or upload a reference image first.');
+    const file=manual?await getAIReferenceFile():null;
+    if(file&&file.size>6*1024*1024)throw new Error('Reference image must be 6 MB or smaller.');
     btn.textContent='Generating…';status.textContent='Creating your advertising image…';
     const fd=new FormData();
     const style=document.getElementById('aiStyle').value,size=document.getElementById('aiSize').value,custom=document.getElementById('aiPrompt').value.trim();
-    fd.append('image',file);fd.append('size',size);
+    if(file)fd.append('image',file);else fd.append('image_url',sourceUrl);
+    fd.append('size',size);
     fd.append('prompt',`Create a professional ecommerce advertising image for the exact product shown in the reference image. Preserve the product's identity, shape, materials, colors, branding and important physical details. Do not invent extra product features or change the product. Style: ${style}. Product name: ${p.name}. Brand: ${p.brand||'unknown'}. Place it in a polished, uncluttered commercial composition suitable for Nuvora product publishing. No fake logos, no misleading claims, no random text, no watermark. ${custom}`);
     const j=await api('/api/admin/ai/image',{method:'POST',body:fd});
     window.lastAIImage=j.image;document.getElementById('aiPreviewImg').src=j.image;document.getElementById('aiPreview').style.display='flex';status.textContent='Image ready. Review it before applying.';
@@ -2166,8 +2171,8 @@ async function refreshGeminiConfigStatus(){
   else set('Nuvora AI is not connected. In Cloudflare Dashboard → Workers & Pages → nuvora → Settings → Bindings, add a Workers AI binding named AI, then reload this page.',false);
  }catch{set('Could not verify the Cloudflare AI connection. Check the Worker health status before generating product content.',false);}
 }
-async function generateSkinProductWithGemini(){
- const url=String(document.getElementById('pfDestination')?.value||document.getElementById('amazonUrlInput')?.value||'').trim();
+async function generateSkinProductWithGemini(sourceUrl,options={}){
+ const url=String(sourceUrl||document.getElementById('pfDestination')?.value||document.getElementById('amazonUrlInput')?.value||'').trim();
  const status=document.getElementById('skinGeminiStatus'),button=document.getElementById('skinGeminiFillBtn');
  if(!url){if(status)status.textContent='Paste the exact Amazon product link into Destination / affiliate URL first.';skinBuilderMessage('Paste the Amazon product link before asking Nuvora AI to fill the guide.','error');return;}
  const original=button?.textContent;if(button){button.disabled=true;button.textContent='Reading listing + structuring fields…';}
@@ -2191,15 +2196,22 @@ async function generateSkinProductWithGemini(){
    el.value=next;el.dispatchEvent(new Event('input',{bubbles:true}));return true;
   };
   let count=0;
+  const inferredProduct={name:p.name,brand:p.brand,description:p.overview,features:p.benefits,product_type:inferSkinProductType({name:p.name,description:p.overview,features:p.benefits}),destination_url:url};
+  const inferredCategory=inferSkinProductCategory(inferredProduct);
+  const inferredType=inferredProduct.product_type;
+  if(inferredType&&document.getElementById('pfProductType'))document.getElementById('pfProductType').value=inferredType;
+  populateSkinStoreCategories(inferredCategory);
+  populateSkinRecommendations(p.recommended_product_ids||[]);
   const entries=[
-   ['pfName',p.name],['pfBrand',p.brand],['pfDescription',p.overview],
-   ['pfFeatures',p.benefits],['pfBenefits',p.benefits],['pfSkinTypes',p.skin_types],
+   ['pfName',p.name],['pfBrand',p.brand],['pfStoreDescription',p.overview],
+   ['pfBenefits',p.benefits],['pfSkinTypes',p.skin_types],
    ['pfSkinConcerns',p.skin_concerns],['pfIngredients',p.ingredients],['pfAvailability',p.availability],
    ['pfUsage',p.usage_instructions],['pfSkinAvoid',p.product_warnings],
    ['pfWarnings',p.product_warnings],['pfProductSize',p.size],['pfRating',p.rating],
    ['pfRecommendedProducts',p.recommended_product_ids],['pfRecommendationReason',p.recommendation_reason],['pfAsin',p.asin]
   ];
   for(const [id,value] of entries)if(fill(id,value))count++;
+  const skinCategory=await ensureSkinCategory(false);if(skinCategory&&document.getElementById('pfCategory'))document.getElementById('pfCategory').value=String(skinCategory.id);
   const source=document.getElementById('pfSource');if(source)source.value='amazon';
   const retailer=document.getElementById('pfRetailer');if(retailer)retailer.value='Amazon';
   const destination=document.getElementById('pfDestination');if(destination&&!destination.value.trim())destination.value=url;
@@ -2209,6 +2221,7 @@ async function generateSkinProductWithGemini(){
    if(status)status.textContent='Nuvora AI filled '+count+' fields, including '+(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids.length:0)+' suggested companion product(s). Review every suggestion before saving. Notes: '+notes;
   }else if(status)status.textContent='Nuvora AI filled '+count+' fields, including '+(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids.length:0)+' suggested companion product(s). Review every field; existing values were '+(replace?'replaced where new data was available.':'preserved. Nothing has been saved or published.');
   productSaveMessage('Nuvora AI prepared the skincare guide. Review the fields and click Save Draft when ready.','success');
+  if(options.auto){setProductEntryStep(2);document.getElementById('skinGeminiStatus')?.scrollIntoView({block:'center',behavior:'smooth'});}
  }catch(e){
   const message=e.message||'Nuvora AI could not prepare this product.';
   if(status)status.textContent=message;
@@ -2220,7 +2233,7 @@ async function generateAIProductCopy(){
   btn.disabled=true;btn.textContent='Polishing…';status.textContent='Writing publish-ready copy…';
   try{
     const j=await api('/api/admin/ai/copy',{method:'POST',body:{product:p}});
-    if(j.title)document.getElementById('pfName').value=j.title;if(j.description)document.getElementById('pfDescription').value=j.description;if(j.features)document.getElementById('pfFeatures').value=Array.isArray(j.features)?j.features.join('\n'):j.features;
+    if(j.title)document.getElementById('pfName').value=j.title;const descriptionTarget=window.skinCareImportMode?document.getElementById('pfStoreDescription'):document.getElementById('pfDescription');if(j.description&&descriptionTarget)descriptionTarget.value=j.description;if(j.features)document.getElementById('pfFeatures').value=Array.isArray(j.features)?j.features.join('\n'):j.features;
     status.textContent='Listing copy updated in the form. Review it before saving.';
   }catch(e){status.textContent='Copy generation failed: '+(e.message||'Unknown error.');setAdminStatus(e.message||'Nuvora AI copy generation failed.','error')}finally{btn.disabled=false;btn.textContent='Polish product listing with Nuvora AI';}
 }
@@ -2298,6 +2311,76 @@ async function runSmartImport(){
     document.getElementById('smartProgressCount').textContent='—';
     results.innerHTML='<div class="notice" style="margin:0">'+esc(e.message||'The import could not be completed.')+'</div>';
   }finally{btn.disabled=false;btn.textContent='Import as drafts';}
+}
+function formatSkinBulkAmazonUrls(){
+ const box=document.getElementById('skinBulkAmazonUrls');if(!box)return;
+ const urls=normalizeImportUrls(box.value).filter(url=>detectImportRetailer(url)==='Amazon');
+ box.value=urls.join('\n');
+}
+async function runSkinBulkAiImport(){
+ const box=document.getElementById('skinBulkAmazonUrls'),button=document.getElementById('skinBulkAiImportBtn');
+ const status=document.getElementById('skinBulkAiProgress'),results=document.getElementById('skinBulkAiResults');
+ const urls=normalizeImportUrls(box?.value||'');
+ if(!urls.length){if(status)status.textContent='Paste at least one Amazon product link first.';return;}
+ if(urls.some(url=>detectImportRetailer(url)!=='Amazon')){if(status)status.textContent='This batch accepts Amazon product links only. Remove any non-Amazon URLs and retry.';return;}
+ if(urls.length>5){if(status)status.textContent='For reliable AI processing and the free Workers AI allocation, process up to five products per batch.';return;}
+ if(button){button.disabled=true;button.textContent='Importing and AI-filling…';}
+ if(results)results.replaceChildren();
+ const report=message=>{if(status)status.textContent=message;};
+ try{
+  report('Reading '+urls.length+' Amazon listing'+(urls.length===1?'':'s')+'…');
+  const imported=await api('/api/admin/import/bulk',{method:'POST',body:{urls}});
+  const items=Array.isArray(imported.results)?imported.results:[];
+  const successes=items.filter(item=>item.status==='imported'&&item.id);
+  const failures=items.filter(item=>item.status==='failed');
+  const skipped=items.filter(item=>item.status==='skipped');
+  const skinCategory=await ensureSkinCategory(false);
+  const categoryAssignments={};
+  let completed=0,aiFailed=0;
+  for(const item of successes){
+   report('AI is organizing '+(completed+1)+' of '+successes.length+': '+(item.name||'Product')+'…');
+   try{
+    const ai=await api('/api/admin/ai/skin-product',{method:'POST',body:{url:item.source_url}});
+    const p=ai?.product;if(!p)throw new Error('AI returned no structured product details.');
+    const benefits=Array.isArray(p.benefits)?p.benefits.filter(Boolean).join('\n'):'';
+    const skinTypes=Array.isArray(p.skin_types)?p.skin_types.filter(Boolean).join('\n'):'';
+    const skinConcerns=Array.isArray(p.skin_concerns)?p.skin_concerns.filter(Boolean).join('\n'):'';
+    const ingredients=Array.isArray(p.ingredients)?p.ingredients.filter(Boolean).join('\n'):'';
+    const productType=inferSkinProductType({name:p.name||item.name,description:p.overview,features:benefits});
+    const categorySlug=inferSkinProductCategory({name:p.name||item.name,brand:p.brand,description:p.overview,features:benefits,product_type:productType,destination_url:item.source_url});
+    const patch={
+     name:p.name||item.name,brand:p.brand||null,store_description:p.overview||null,
+     benefits:benefits||null,why_we_picked_it:benefits||null,skin_types:skinTypes||null,best_for:skinTypes||null,
+     skin_concerns:skinConcerns||null,ingredients:ingredients||null,usage_instructions:p.usage_instructions||null,
+     product_warnings:p.product_warnings||null,product_size:p.size||null,product_type:productType||null,
+     recommended_product_ids:Array.isArray(p.recommended_product_ids)?p.recommended_product_ids:[],
+     recommendation_reason:p.recommendation_reason||null,availability:p.availability||null,
+     category_id:skinCategory?.id||null,retailer:'Amazon',source_type:'amazon',updated_at:new Date().toISOString()
+    };
+    await api('/api/admin/products/'+encodeURIComponent(String(item.id)),{method:'PATCH',body:patch});
+    categoryAssignments[String(item.id)]=categorySlug;
+    completed++;
+    if(results){const row=document.createElement('div');row.className='product-entry-bulk-result success';row.textContent='✓ '+(p.name||item.name)+' — AI guide prepared, category assigned, saved as draft.';results.appendChild(row);}
+   }catch(error){
+    aiFailed++;
+    if(results){const row=document.createElement('div');row.className='product-entry-bulk-result failed';row.textContent='! '+(item.name||'Product')+' — imported as a draft, but AI enrichment failed: '+(error.message||'Unknown error');results.appendChild(row);}
+   }
+  }
+  if(Object.keys(categoryAssignments).length){
+   skinBuilderConfig.productCategoryMap=skinBuilderConfig.productCategoryMap||{};
+   Object.assign(skinBuilderConfig.productCategoryMap,categoryAssignments);
+   skinMarkDirty('Bulk product categories updated in the Skin Studio draft.');
+  }
+  try{await liveAdminProducts();}catch(e){}
+  report('Finished: '+completed+' AI-enriched · '+aiFailed+' AI errors · '+skipped.length+' duplicates skipped · '+failures.length+' import failures. All successful products remain drafts.');
+  if(results){
+   failures.forEach(item=>{const row=document.createElement('div');row.className='product-entry-bulk-result failed';row.textContent='✕ '+(item.source_url||'Link')+' — '+(item.error||'Could not import.');results.appendChild(row);});
+   skipped.forEach(item=>{const row=document.createElement('div');row.className='product-entry-bulk-result';row.textContent='↷ '+(item.name||'Existing product')+' — already imported; left unchanged.';results.appendChild(row);});
+  }
+  if(successes.length===0&&failures.length===0)report('No new products needed AI processing. Existing products were left unchanged.');
+  if(completed)box.value='';
+ }catch(error){report('Bulk import stopped: '+(error.message||'Unknown error')+'. Any products already imported remain private drafts.');}
+ finally{if(button){button.disabled=false;button.textContent='Import & AI-fill products';}}
 }
 function showToastAdmin(msg){
   const existing=document.getElementById('adminToast');
@@ -2405,6 +2488,7 @@ async function useAmazonLink(){
       if(Array.isArray(a.images)&&a.images.length)captured.push(a.images.length+' images');
       const detectedStoreCategory=skinMode?skinStoreCategoryOptions().find(cat=>String(cat.slug)===inferSkinProductCategory({name:document.getElementById('pfName').value,brand:document.getElementById('pfBrand').value,description:document.getElementById('pfDescription').value,features:document.getElementById('pfFeatures').value,source_url:j.destination_url||url})):null;
       status.textContent=!a.title&&!document.getElementById('pfName').value.trim()?'Amazon link recognized, but the page did not expose a reliable product title. Enter the exact product title manually before saving.':(skinMode?'Amazon skincare link recognized. Skin Care category assigned automatically. '+(detectedStoreCategory?'Suggested storefront category: '+detectedStoreCategory.name+'. This is inferred from listing details and can be overridden in Skin Studio. ':'No reliable product type detected yet; it will use Other Beauty Finds until you review the product details. '):'Amazon link recognized. ')+'ASIN '+j.asin+' detected. '+(captured.length?'Automatically captured: '+captured.join(' · ')+'. ':'')+'Review available details and save as a draft.';
+      if(skinMode&&!j.duplicate&&document.getElementById('pfName').value.trim())await generateSkinProductWithGemini(j.destination_url||url,{auto:true});
     }
   }catch(e){
     status.textContent='Could not prepare this Amazon link.';
@@ -2493,7 +2577,7 @@ async function saveProductDraft(){
     supplier_cost:document.getElementById('pfSupplierCost').value===''?null:Number(document.getElementById('pfSupplierCost').value),
     published:window.editingProductId?!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.published:false
   };
-  if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer='Amazon';product.store_description=normalizeProductText(document.getElementById('pfDescription').value)||null;}
+  if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer='Amazon';product.store_description=normalizeProductText(document.getElementById('pfStoreDescription')?.value)||null;}
   try{
     const existingId=window.editingProductId||null;
     const existing=existingId?adminProducts.find(x=>String(x.id)===String(existingId)):null;
@@ -2510,6 +2594,8 @@ async function saveProductDraft(){
     const wasEditing=!!existingId,savedId=String(saveResult?.id||existingId||''),savedSlug=String(saveResult?.slug||slug);
     if(!savedId)throw new Error('The save request returned no product ID. The server did not confirm a saved product.');
     const confirmedProduct={...product,...(saveResult&&typeof saveResult==='object'?saveResult:{}),id:savedId,slug:savedSlug};
+    const selectedSkinCategory=document.getElementById('pfSkinStoreCategory')?.value||'';
+    if(window.skinCareImportMode&&selectedSkinCategory&&skinBuilderConfig){skinBuilderConfig.productCategoryMap=skinBuilderConfig.productCategoryMap||{};skinBuilderConfig.productCategoryMap[savedId]=selectedSkinCategory;skinMarkDirty('Product storefront category updated in the Skin Studio draft.');}
     if(!wasEditing&&confirmedProduct.published)throw new Error('The server unexpectedly marked this new product as published. Check its status before continuing.');
     // Treat the server's successful POST/PATCH response as the save confirmation.
     // Refreshing the entire catalog is a separate operation and must not make a
@@ -5119,7 +5205,15 @@ function setSkinAdminFormMode(enabled){
 function populateSkinRecommendations(selectedIds=[]){
  const el=document.getElementById('pfRecommendedProducts');if(!el)return;
  const selected=new Set((selectedIds||[]).map(String)),current=String(window.editingProductId||'');
- el.innerHTML=skinProductOptions().filter(p=>p.id!==current).map(p=>'<option value="'+esc(p.id)+'" '+(selected.has(p.id)?'selected':'')+'>'+esc(p.name)+'</option>').join('');
+ const options=skinProductOptions().filter(p=>p.id!==current);
+ el.disabled=!options.length;
+ el.innerHTML=options.length?options.map(p=>'<option value="'+esc(p.id)+'" '+(selected.has(p.id)?'selected':'')+'>'+esc(p.name)+'</option>').join(''):'<option value="" disabled>No other skincare products are available yet. Add more products to enable complementary recommendations.</option>';
+}
+function populateSkinStoreCategories(selected=''){
+ const el=document.getElementById('pfSkinStoreCategory');if(!el)return;
+ const options=skinStoreCategoryOptions();
+ el.innerHTML='<option value="">Choose a storefront category</option>'+options.map(item=>'<option value="'+esc(item.slug||item.id)+'">'+esc(item.name)+'</option>').join('');
+ const value=String(selected||'');el.value=options.some(item=>String(item.slug||item.id)===value)?value:'';
 }
 async function openSkinManualProduct(){
  try{
@@ -5142,6 +5236,8 @@ async function openSkinManualProduct(){
   document.getElementById('pfDiscount').value='';
   document.getElementById('pfDestination').placeholder='Paste the exact Amazon Associates product URL';
   document.getElementById('amazonUrlInput').placeholder='Optional: paste an Amazon product link to import details';
+  if(!adminProducts.length){try{await liveAdminProducts();}catch(e){}}
+  populateSkinStoreCategories();
   populateSkinRecommendations();
   document.getElementById('productModal').classList.add('open');
   document.getElementById('pfName')?.focus();
@@ -5166,6 +5262,7 @@ async function editSkinProduct(id){
   document.getElementById('pfSkinFeatured').checked=!!p.featured;document.getElementById('pfSkinTopPick').checked=!!p.top_pick;document.getElementById('pfSkinTrending').checked=!!p.trending;
   const availabilityValue=String(p.availability||'').trim().toLowerCase();
   document.getElementById('pfAvailability').value=/^(?:available|in stock|instock|yes|true|in-stock)$/.test(availabilityValue)?'available':/^(?:unavailable|out of stock|out-of-stock|sold out|sold-out|no|false)$/.test(availabilityValue)?'unavailable':'';
+  populateSkinStoreCategories(skinCategoryOfProduct(id));
   populateSkinRecommendations(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids:[]);
   document.getElementById('pfPrice').value='';document.getElementById('pfListPrice').value='';document.getElementById('pfDiscount').value='';
   document.getElementById('productModal').classList.add('open');
@@ -5703,4 +5800,38 @@ body.skin-studio-fullpage .studio-inspector-check input{width:15px;height:15px;a
 }
 </style>
 
-<script defer src="/admin-layout-v2.js?v=1"></script></body></html>
+<script defer src="/admin-layout-v2.js?v=1"></script>
+<style id="skin-product-workspace-page">
+body.product-workspace-page{overflow:hidden!important}
+body.product-workspace-page #productModal{position:fixed;inset:0;z-index:500;display:block;padding:0;background:var(--bg);overflow:hidden}
+body.product-workspace-page #productModal>.modal{width:100vw;height:100dvh;max-height:none;min-height:100dvh;margin:0;border:0;border-radius:0;box-shadow:none;overflow:hidden;display:flex;flex-direction:column;background:var(--bg)}
+body.product-workspace-page #productModal .modal-head{flex:0 0 auto;position:relative;padding:18px clamp(18px,3vw,42px);background:var(--panel,#0b1728)}
+body.product-workspace-page #productModal .modal-body{flex:1 1 auto;min-height:0;overflow:auto;padding:clamp(16px,2.5vw,36px);scrollbar-gutter:stable}
+body.product-workspace-page #productModal .product-entry-workspace{min-height:calc(100dvh - 150px)}
+body.product-workspace-page #productModal .product-entry-content{min-width:0}
+body.product-workspace-page #productModal .product-entry-step-panel{scroll-margin-top:18px}
+body.product-workspace-page #productModal .product-entry-bulk-panel{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025)}
+body.product-workspace-page #productModal .product-entry-bulk-heading h3{margin:5px 0;font-size:16px}
+body.product-workspace-page #productModal .product-entry-bulk-heading p{margin:0 0 12px;color:var(--muted);font-size:12px;line-height:1.55}
+body.product-workspace-page #productModal .product-entry-bulk-panel textarea{width:100%;min-height:96px}
+body.product-workspace-page #productModal .product-entry-bulk-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:10px}
+body.product-workspace-page #productModal .product-entry-bulk-progress{margin-top:10px;color:var(--muted);font-size:12px;line-height:1.5}
+body.product-workspace-page #productModal .product-entry-bulk-results{display:grid;gap:6px;margin-top:10px}
+body.product-workspace-page #productModal .product-entry-bulk-result{padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:12px;line-height:1.45}
+body.product-workspace-page #productModal .product-entry-bulk-result.success{border-color:rgba(80,180,120,.3)}
+body.product-workspace-page #productModal .product-entry-bulk-result.failed{border-color:rgba(220,100,100,.35)}
+body.product-workspace-page #productModal #pfSkinStoreCategory{min-height:44px}
+body.product-workspace-page #productModal .product-entry-step-panel[data-entry-panel="3"]>.ai-studio{margin-top:18px}
+body.product-workspace-page #productModal .product-entry-step-panel[data-entry-panel="3"] .ai-studio{max-width:1100px}
+body.product-workspace-page #productModal .modal-actions{position:sticky;bottom:0;background:var(--bg);padding:14px 0 calc(14px + env(safe-area-inset-bottom));z-index:3}
+@media(max-width:760px){
+ body.product-workspace-page #productModal .modal-head{padding:14px}
+ body.product-workspace-page #productModal .modal-body{padding:14px 12px calc(22px + env(safe-area-inset-bottom))}
+ body.product-workspace-page #productModal .product-entry-workspace{display:block}
+ body.product-workspace-page #productModal .product-entry-rail{position:static;width:100%;margin-bottom:14px}
+ body.product-workspace-page #productModal .product-entry-step-list{display:flex;overflow-x:auto;gap:6px}
+ body.product-workspace-page #productModal .product-entry-step-button{min-width:180px}
+ body.product-workspace-page #productModal .product-entry-navigation{position:sticky;bottom:0;background:var(--bg);padding:10px 0}
+}
+</style>
+</body></html>
