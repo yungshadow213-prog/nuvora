@@ -840,7 +840,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
  body.skin-studio-fullpage #skinSiteBuilder .studio-toolbar{position:relative!important;align-items:flex-start!important;flex-wrap:wrap!important}
  body.skin-studio-fullpage #skinSiteBuilder .studio-toolbar-actions{width:100%!important;justify-content:flex-start!important}
 }
-</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
+</style><link rel="stylesheet" href="/admin-layout-v2.css?v=1"></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
   <div class="nav-group">
     <span class="nav-group-label">Workspace</span>
     <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
@@ -1204,7 +1204,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         <button type="button" class="danger" onclick="skinPreviewAction('delete')" id="skinPreviewDelete" disabled>Delete section</button>
       </div>
       <div id="skinPreviewFrameOuter" class="studio-canvas-viewport" data-device="desktop">
-        <div class="studio-canvas-inner"><div id="skinStudioPreviewNotice" class="studio-preview-notice" role="status" aria-live="polite"><b>Connecting to Nuvora Skin…</b><span>Waiting for the storefront preview to respond.</span></div><iframe id="skinStudioPreview" title="Nuvora Skin storefront — editable preview" src="https://client-store-platform.rayyung713.workers.dev/?preview=admin&studioPreview=initial"></iframe></div>
+        <div class="studio-canvas-inner"><div id="skinStudioPreviewNotice" class="studio-preview-notice" role="status" aria-live="polite"><b>Connecting to Nuvora Skin…</b><span>Waiting for the storefront preview to respond.</span></div><iframe id="skinStudioPreview" title="Nuvora Skin storefront — editable preview" loading="eager" referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen" src="https://client-store-platform.rayyung713.workers.dev/?preview=admin&studioPreview=1&device=desktop"></iframe></div>
       </div>
     </section>
     <aside class="studio-right-panel">
@@ -3741,7 +3741,7 @@ function groupSkinInspectorSettings(root){
  const headings=[...root.querySelectorAll('.studio-inspector-subheading')];
  headings.forEach((heading,index)=>{
   const parent=heading.parentNode;if(!parent)return;
-  const group=document.createElement('details');group.className='studio-inspector-group';group.open=index<2;
+  const group=document.createElement('details');group.className='studio-inspector-group';group.open=index===0;
   const summary=document.createElement('summary');summary.textContent=heading.textContent.trim();group.appendChild(summary);
   parent.insertBefore(group,heading);
   let node=heading.nextSibling;heading.remove();
@@ -3905,7 +3905,7 @@ function openSkinStudioGlobalSettings(area){
  const match=area==='footer'?'Footer & site information':'Header & navigation';
  const groups=[...document.querySelectorAll('.studio-right-panel .skin-builder-group')];
  const target=groups.find(group=>String(group.querySelector('.skin-builder-group-heading')?.textContent||'').includes(match));
- if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+ if(target){target.open=true;target.scrollIntoView({behavior:'smooth',block:'start'});}
 }
 function renderSkinStudioAll(){renderSkinBuilderSections();renderSkinLibrary();renderSkinSelectedInspector();renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');updateSkinStudioPageTitle();syncSkinPreviewActionbar();}
 function selectSkinItem(type,id){
@@ -3918,7 +3918,7 @@ function selectSkinItem(type,id){
  skinStudioShowInspector(true);
  renderSkinSelectedInspector();syncSkinPreviewActionbar();
 }
-function skinStudioPreviewUrl(){const device=document.getElementById('skinPreviewFrameOuter')?.dataset.device||'desktop';return SKIN_CLIENT_ORIGIN+'/?preview=admin&studioPreview='+Date.now()+'&device='+encodeURIComponent(device)+(skinStudioPageId!=='home'?'&page='+encodeURIComponent(skinStudioPageId):'');}
+function skinStudioPreviewUrl(){const device=document.getElementById('skinPreviewFrameOuter')?.dataset.device||'desktop';return SKIN_CLIENT_ORIGIN+'/?preview=admin&studioPreview=1&device='+encodeURIComponent(device)+(skinStudioPageId!=='home'?'&page='+encodeURIComponent(skinStudioPageId):'');}
 function setSkinStudioPage(pageId){
  skinStudioPageId=pageId==='home'?'home':String(pageId);
  if(skinStudioPageId!=='home'&&!skinCurrentPage(skinStudioPageId)){skinStudioPageId='home';}
@@ -4444,7 +4444,7 @@ function requestSkinSectionImageUpload(sectionId,pageId='home'){
 function sendSkinStudioPreview(){
  const frame=document.getElementById('skinStudioPreview');
  if(!frame||!skinBuilderConfig||!frame.contentWindow)return;
- // Only make a draft product preview-visible when the current draft explicitly places it on a visible product grid.
+ // Draft preview exposes only products explicitly placed on a visible grid.
  const sections=skinSectionsFor(skinStudioPageId),placedIds=new Set(sections.filter(sec=>sec.visible!==false&&['product-grid','featured-products'].includes(sec.type)&&Array.isArray(sec.product_ids)).flatMap(sec=>sec.product_ids.map(String)));
  const categoryById=new Map((Array.isArray(categories)?categories:[]).map(category=>[String(category.id),category]));
  const previewProducts=Array.isArray(adminProducts)?adminProducts.map(product=>{
@@ -5481,4 +5481,4 @@ body.skin-studio-fullpage .studio-inspector-check input{width:15px;height:15px;a
 }
 </style>
 
-</body></html>
+<script defer src="/admin-layout-v2.js?v=1"></script></body></html>

@@ -1,0 +1,20 @@
+name: Nuvora Admin layout contracts
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "admin.html"
+      - "admin-layout-v2.css"
+      - "admin-layout-v2.js"
+      - "scripts/verify-admin-layout-v2.mjs"
+      - ".github/workflows/admin-layout-v2.yml"
+  workflow_dispatch:
+jobs:
+  admin-layout-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/verify-admin-layout-v2.mjs
