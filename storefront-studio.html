@@ -241,8 +241,9 @@ async function useStoreGeneratedImage(){
   if(error)throw error;
   const {data:publicData}=sb.storage.from("product-images").getPublicUrl(path),url=publicData?.publicUrl;
   if(!url)throw new Error("Nuvora could not create a public image URL.");
-  if(!$("pImage").value.trim())$("pImage").value=url;updateProductMainImagePreview();
+  if(!$("pImage").value.trim())$("pImage").value=url;
   else{const current=$("pGallery").value.split(/\r?\n/).map(value=>value.trim()).filter(Boolean);$("pGallery").value=[...new Set([...current,url])].join("\n");}
+  updateProductMainImagePreview();
   window.lastStoreGeneratedImage="";$("storeImagePreview").hidden=true;
   setStoreAIStatus("storeImageAIStatus","Image uploaded to Nuvora media storage and added to this product. Save the product draft to keep the change.");
  }catch(error){setStoreAIStatus("storeImageAIStatus",error.message||"The approved image could not be saved.",true);}
