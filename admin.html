@@ -4717,9 +4717,9 @@ function applySkinClaudeChanges(){
  if(!applied){skinBuilderMessage('None of the suggested changes could be applied. Check that the selected page and sections still exist, and that locked sections are unlocked.','warning');return;}
  skinStudioPageId=lastPage;skinStudioSelection=lastSectionId?{type:'section',id:lastSectionId}:{type:'none',id:''};
  skinClaudePendingChanges=[];renderSkinClaudeProposals([]);
- skinMarkDirty('Claude suggestions applied to the private page draft. Review the live canvas before publishing.');
+ skinMarkDirty('Nuvora AI suggestions applied to the private page draft. Review the live canvas before publishing.');
  renderSkinStudioAll();queueSkinStudioPreview();
- void saveSkinStudioChangeImmediately('Claude suggestions applied and saved to the private page draft. The public storefront has not been changed.');
+ void saveSkinStudioChangeImmediately('Nuvora AI suggestions applied and saved to the private page draft. The public storefront has not been changed.');
 }
 function wireSkinStudioCanvas(){
  const frame=document.getElementById('skinStudioPreview');if(!frame)return;
