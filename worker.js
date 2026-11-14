@@ -2346,7 +2346,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const response=await fetch('https://api.anthropic.com/v1/messages',{
             method:'POST',
             headers:{'x-api-key':String(env.ANTHROPIC_API_KEY),'anthropic-version':'2026-10-21','content-type':'application/json'},
-            body:JSON.stringify({model,max_tokens:1800,system,messages:[...history.slice(0,-1),{role:'user',content:JSON.stringify(userContext)}]})
+            body:JSON.stringify({model,max_tokens:1800,system,messages:[...history.slice(0,-1).filter((item,index)=>index>0||item.role==='user'),{role:'user',content:JSON.stringify(userContext)}]})
           });
           const payload=await response.json().catch(()=>({}));
           if(!response.ok){
