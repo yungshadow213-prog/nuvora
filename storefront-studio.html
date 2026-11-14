@@ -184,7 +184,7 @@ function saveProduct(e){
  if(existing)products=products.map(x=>String(x.id)===String(existing.id)?item:x);else{products.unshift(item);productPage=1;productSearch="";$("productSearch").value="";}
  $("productModal").classList.remove("open");renderProducts();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");switchTab("products");
 }
-async function updateProductImagePreview(){
+function updateProductImagePreview(){
  const image=$("pImagePreview"),empty=$("pImagePreviewEmpty"),status=$("pImagePreviewStatus");
  if(!image)return;
  const url=$("pImage").value.trim();
@@ -216,7 +216,7 @@ async function generateProductCopy(){
  finally{button.disabled=false;button.textContent="✦ Refine product copy with Nuvora AI";}
 }
 
-function uploadProductImages(){
+async function uploadProductImages(){
  const input=$("pFiles"),button=$("uploadImages"),files=Array.from(input.files||[]);
  if(!files.length){showNotice("Choose one or more image files first.",true);return;}
  if(!sb||!session){showNotice("Your admin session is not ready. Sign in again.",true);return;}
