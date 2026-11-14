@@ -42,7 +42,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-11-14-skin-studio-visual-editor-claude-r61',
+          release:'nuvora-2026-11-14-skin-studio-cloudflare-ai-r62',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -2406,7 +2406,7 @@ leanMultilineText(typeof value==='string'?value:'',max);
           required:['title','description','features','seo_title','seo_description','social_caption']
         };
         const prompt='Write polished ecommerce copy from the supplied product facts. Do not invent specifications, certifications, guarantees, discounts, ingredient details, performance claims, or medical claims. If a detail is not supported, omit it. Keep the description readable and concise; features should be short bullet items. Return only the requested structured fields. Product data: '+JSON.stringify(product);
-        tr        try{
+        try{
           const system='You are Nuvora’s premium ecommerce copy editor. Rewrite only from supplied product facts. Do not invent specifications, certifications, guarantees, discounts, ingredients, performance claims or medical claims. Omit unsupported details. Return only valid JSON with title, description, features, seo_title, seo_description and social_caption.';
           const ai=await runNuvoraWorkersAI(env,system,[{role:'user',content:prompt}],1800);
           const model=ai.model;
