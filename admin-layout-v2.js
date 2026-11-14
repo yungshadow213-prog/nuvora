@@ -52,6 +52,7 @@
    if(!heading)return;
    const details=document.createElement("details");
    details.className=[...group.classList,"nv-outline-accordion"].join(" ");
+   details.hidden=group.hidden;
    details.open=group.classList.contains("studio-outline-template-group");
    details.dataset.nvAccordion="true";
    const summary=document.createElement("summary");
