@@ -60,16 +60,20 @@ for (const token of [
 ]) assert.ok(css.includes(token), "Claude assistant styling missing: " + token);
 
 for (const token of [
-  "/api/admin/ai/claude/studio",
+  "/api/admin/ai/studio",
+  "/api/admin/ai/skin-product",
+  "/api/admin/ai/copy",
+  "/api/admin/ai/image",
   "adminUser(request,env)",
-  "ANTHROPIC_API_KEY",
-  "anthropic-version",
-  "claude-haiku-5-5",
-  "rateLimit(request,'claude-studio'",
-  "claude:!!e.ANTHROPIC_API_KEY"
-]) assert.ok(worker.includes(token), "Claude API integration contract missing: " + token);
+  "runNuvoraWorkersAI",
+  "@cf/google/gemma-4-26b-a4b-it",
+  "@cf/black-forest-labs/flux-2-klein-4b",
+  "rateLimit(request,'nuvora-ai-studio'",
+  "rateLimit(request,'nuvora-ai-image'",
+  "workersAI:!!e.AI"
+]) assert.ok(worker.includes(token), "Cloudflare Workers AI integration contract missing: " + token);
 
 assert.ok(!html.includes("sk-ant-api"), "No Anthropic API key may be embedded in the admin HTML");
 assert.ok(!js.includes("ANTHROPIC_API_KEY"), "No Anthropic API key may be embedded in admin layout JavaScript");
 
-console.log("Nuvora Admin layout and Claude contracts passed.");
+console.log("Nuvora Admin layout and Cloudflare Workers AI contracts passed.");
