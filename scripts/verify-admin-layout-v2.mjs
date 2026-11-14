@@ -12,7 +12,7 @@ assert.ok(html.includes('/admin-layout-v2.js?v=1'), "Admin must load the accordi
 assert.ok(html.includes('id="skinStudioPreview"'), "Skin Studio must retain its live storefront iframe");
 assert.ok(html.includes('loading="eager"'), "Store preview should load eagerly");
 assert.ok(html.includes("studioPreview=1&device=desktop"), "Preview route should use a stable cacheable URL");
-assert.ok(html.includes("Preview all Skin Care records as selectable content"), "Preview sender should include the full Skin Care catalog for section filters");
+assert.ok(html.includes("placedIds.has(String(product.id))&&isSkinProduct(product)"), "Preview must expose only Skin Care products placed in visible product grids");
 assert.ok(html.includes("group.open=index===0;"), "Only one dynamic inspector group should expand by default");
 assert.ok(html.includes("target.open=true;"), "Deep links to whole-site settings must open the target accordion");
 
