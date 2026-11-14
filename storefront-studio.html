@@ -367,9 +367,9 @@ function addSection(){const type=$("newSectionType");type.value="editorial";$("n
 function saveNewSection(e){e.preventDefault();const type=$("newSectionType").value,title=$("newSectionTitle").value.trim();if(!title){showNotice("Enter a section heading.",true);return;}const text=$("newSectionText").value.trim();config.sections.push({id:makeId("section"),type,visible:true,title,text,description:"",eyebrow:"",columns:4,product_ids:type==="product-grid"?[]:undefined,product_selection:type==="product-grid"?"manual":undefined});$("addSectionModal").classList.remove("open");renderSections();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");showNotice("Section added to the draft. Edit its content or product selection, then Save Draft or Publish.");}
 function adoptSeedProducts(seed){
  if(products.length||Number(config.catalogVersion)||!Array.isArray(seed)||!seed.length)return;
- products=seed.map(p=>({...p,status:p.status||"published"}));
+ products=seed.map(p=>({...p,status:"draft"}));
  renderProducts();draftDirty=true;setStatus("Starter catalogue loaded","warning");
- showNotice("Loaded the storefront starter catalogue into this editor as a starting point. Save Draft to keep your edits before publishing.");
+ showNotice("Loaded starter examples as private drafts. Review each item and add a verified retailer link before publishing; none of these examples is public yet.");
 }
 function watchPreview(){
  const frame=$("previewFrame");
