@@ -1,0 +1,102 @@
+name: Nuvora Admin 2.0 contract
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  admin-2-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Check Worker and Claude UI JavaScript
+        run: |
+          node --check worker.js
+          node --check admin-ai.js
+
+      - name: Check inline admin and studio scripts
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          for name in ["admin.html", "storefront-studio.html"]:
+              source = Path(name).read_text(encoding="utf-8")
+              blocks = re.findall(r"<script\\b([^>]*)>([\\s\\S]*?)</script>", source, flags=re.I)
+              inline = [body for attrs, body in blocks if not re.search(r"\\bsrc\\s*=", attrs, flags=re.I) and body.strip()]
+              if not inline:
+                  raise SystemExit(f"{name}: no inline script blocks found")
+              for index, body in enumerate(inline, 1):
+                  Path(f"/tmp/{Path(name).stem}-{index}.js").write_text(body, encoding="utf-8")
+              print(f"{name}: extracted {len(inline)} inline script block(s)")
+          PY
+          for file in /tmp/admin-*.js /tmp/storefront-studio-*.js; do
+            node --check "$file"
+          done
+
+      - name: Verify Admin 2.0 and Claude integration contract
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          failures = []
+          admin = Path("admin.html").read_text(encoding="utf-8")
+          worker = Path("worker.js").read_text(encoding="utf-8")
+          assistant = Path("admin-ai.js").read_text(encoding="utf-8")
+          css = Path("admin-experience.css").read_text(encoding="utf-8")
+          studios = Path("storefront-studio.html").read_text(encoding="utf-8")
+
+          def require(condition, message):
+              if not condition:
+                  failures.append(message)
+
+          require("/admin-experience.css" in admin and "/admin-experience.css" in studios,
+                  "Shared Admin 2.0 stylesheet must be linked from admin and other studios")
+          require("/admin-ai.js" in admin and "/admin-ai.js" in studios,
+                  "Shared Claude assistant script must load in both admin surfaces")
+          require("window.NuvoraAIRequest" in admin and "window.NuvoraAIRequest" in studios,
+                  "Admin surfaces must expose their authenticated request wrapper")
+          require("skinClaudeFillBtn" in admin and "generateSkinProductWithClaude" in assistant,
+                  "Skin Studio must expose Claude product-guide preparation")
+          require("claudeCopyBtn" in admin and "generateClaudeProductCopy" in assistant,
+                  "General product editor must expose Claude copy polishing")
+          require("storeClaudeCopyBtn" in studios and "generateStoreClaudeCopy" in assistant,
+                  "Home/Clothing/Games product form must expose Claude copy polishing")
+
+          for endpoint in ["claude-chat", "claude-copy", "claude-skin-product"]:
+              route = re.search(r"if\\(url\\.pathname===?['\"]/api/admin/ai/" + endpoint + r"['\"]&&request\\.method==='POST'\\)\\{([\\s\\S]{0,500})", worker)
+              require(bool(route), f"Worker route missing: {endpoint}")
+              if route:
+                  require("adminUser(request,env)" in route.group(1),
+                          f"Claude route must check Nuvora admin permission: {endpoint}")
+
+          require("ANTHROPIC_API_KEY" in worker and "claude:!!e.ANTHROPIC_API_KEY" in worker,
+                  "Worker must read Claude key from server environment and expose configured status")
+          require('env.ANTHROPIC_MODEL || "claude-sonnet-5-5"' in worker,
+                  "Worker must default to the current configured Claude Sonnet model")
+          require("ANTHROPIC_API_KEY" not in admin and "ANTHROPIC_API_KEY" not in assistant and "ANTHROPIC_API_KEY" not in studios,
+                  "Anthropic API key name must not appear in client code")
+          require("/api/admin/ai/image" in worker and "/api/admin/ai/skin-product" in worker and "/api/admin/ai/copy" in worker,
+                  "Existing Gemini endpoints must remain available")
+          require("generateSkinProductWithGemini" in admin,
+                  "Existing Gemini skincare flow must remain available")
+          require("saveSkinSiteDraft" in admin and "saveSkinSiteConfig" in admin,
+                  "Skin Studio draft and publish flows must remain available")
+          require("Check price on Amazon" in admin,
+                  "Exact Skin Care retailer CTA must remain intact")
+          require("claude-sonnet-5-5" in worker,
+                  "Claude model setting missing")
+          if failures:
+              print("\\n".join("FAIL: " + item for item in failures))
+              raise SystemExit(1)
+          print("Nuvora Admin 2.0 contract checks passed.")
+          PY
