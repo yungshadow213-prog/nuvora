@@ -42,7 +42,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-11-14-skin-studio-cloudflare-ai-r63',
+          release:'nuvora-2026-11-14-skin-studio-cloudflare-ai-r64',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
