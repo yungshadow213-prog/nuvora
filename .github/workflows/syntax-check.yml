@@ -71,6 +71,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: Verify multi-store publishing and editor contracts
+        run: node scripts/verify-multistore-audit.mjs
       - name: Audit HTML and JavaScript wiring
         shell: bash
         run: |
