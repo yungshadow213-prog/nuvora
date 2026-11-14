@@ -9,5 +9,5 @@ assert.ok(worker.includes("Published retailer destinations must use HTTPS."),"Pu
 assert.ok(studio.includes('id="pFeatured"'),"Product editor must let stores feature products on their homepage.");
 assert.ok(studio.includes('id="pImagePreview"')&&studio.includes("function updateProductMainImagePreview()"),"Product editor must preview the selected main image.");
 assert.ok(studio.includes("status==="+"\"published\"")&&studio.includes("validHttpUrl(destinationUrl,true)"),"Product editor must block incomplete or non-HTTPS published products.");
-assert.ok(studio.includes("read link &amp; fill fields")&&studio.includes("generateStoreProductImage"),"Store editor AI link and image workflows must remain available.");
+assert.ok(studio.includes('id="storeProductAIButton"')&&studio.includes("async function generateStoreProductImage()"),"Store editor AI link and image workflows must remain available.");
 console.log("Nuvora multi-store editor and publication contracts passed.");
