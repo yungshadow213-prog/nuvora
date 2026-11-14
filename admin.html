@@ -1476,7 +1476,8 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         <div class="field"><label>Collection</label><select id="pfCollection"><option value="">No collection</option></select></div>
         <div class="field full skin-only-field"><label>Storefront category</label><select id="pfSkinStoreCategory"><option value="">Choose a storefront category</option></select><div class="muted">AI suggests a category from the product listing. You can change it before saving.</div></div>
         <div class="field full skin-only-field"><label>Nuvora AI product assistant</label><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button id="skinGeminiFillBtn" type="button" class="btn" onclick="generateSkinProductWithGemini()">Fill guide with Nuvora AI</button><label class="muted" style="display:flex;gap:6px;align-items:center"><input id="skinGeminiReplaceExisting" type="checkbox"> Replace existing text fields</label></div><div id="skinGeminiStatus" class="muted" role="status" aria-live="polite" style="margin-top:8px">Paste the exact Amazon link into Destination / affiliate URL. Nuvora AI will fill supported fields for review; it will not save or publish the product.</div></div>
-        <div class="field full"><label>Description</label><textarea id="pfDescription" placeholder="Product description"></textarea></div>
+        <div class="field full"><label>Retailer description / source copy</label><textarea id="pfDescription" placeholder="Product description captured from the retailer"></textarea></div>
+        <div class="field full skin-only-field"><label>Nuvora product overview (AI draft)</label><textarea id="pfStoreDescription" placeholder="A clear, customer-friendly overview based on verified product facts"></textarea><div class="muted">AI writes this separately from the retailer’s original description. Review before saving.</div></div>
         <div class="field full"><label>Features / key points</label><textarea id="pfFeatures" placeholder="One feature per line"></textarea></div>
         <div class="field full skin-only-field"><label>Product benefits <span class="muted">(source-backed)</span></label><textarea id="pfBenefits" placeholder="What the product is intended to do, based on product information"></textarea></div>
         <div class="field full skin-only-field"><label>Suitable skin types</label><textarea id="pfSkinTypes" placeholder="Oily, dry, combination, normal, sensitive — include only supported suitability information"></textarea></div>
@@ -1866,7 +1867,7 @@ function prepareProductEntryWorkspace(){
  const steps=[
   {id:'identity',title:'Source & identity',summary:'Import a listing or enter the product’s basic identity.',fields:['pfName','pfKind','pfSource','pfBrand','pfProductType','pfRetailer','pfDestination','pfAsin','pfSourcinboxUrl','pfSourcinboxId']},
   {id:'organize',title:'Organize & recommend',summary:'Give the product a clear storefront category, collection and merchandising role.',fields:['pfCategory','pfCollection','pfSkinStoreCategory','pfSkinFeatured','pfSkinTopPick','pfSkinTrending','pfRecommendedProducts','pfRecommendationReason']},
-  {id:'guide',title:'Product information',summary:'Add useful, source-backed details customers can use to make a decision.',fields:['pfDescription','pfFeatures','pfBenefits','pfSkinTypes','pfSkinConcerns','pfSkinAvoid','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','skinGeminiFillBtn','skinGeminiReplaceExisting','skinGeminiStatus']},
+  {id:'guide',title:'Product information',summary:'Add useful, source-backed details customers can use to make a decision.',fields:['pfDescription','pfStoreDescription','pfFeatures','pfBenefits','pfSkinTypes','pfSkinConcerns','pfSkinAvoid','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','skinGeminiFillBtn','skinGeminiReplaceExisting','skinGeminiStatus']},
   {id:'media',title:'Images & retailer details',summary:'Choose the main product image, complete retailer facts and review the draft.',fields:['pfImages','pfUpload','uploadStatus','pfImageStrip','pfPrice','pfListPrice','pfDiscount','pfCurrency','pfDeal','pfRating','pfAvailability','pfReviews','pfBought','pfShipping','pfTax','pfSupplierCost']}
  ];
  const sourcePanel=document.createElement('section');sourcePanel.className='product-entry-source-card';
@@ -1947,10 +1948,10 @@ function renderProductTaxonomy(){
 }
 function resetProductForm(){
   window.temuImportMode=false;window.skinCareImportMode=false;setSkinAdminFormMode(false);
-  ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfFeatures','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost','pfBenefits','pfSkinTypes','pfSkinConcerns','pfSkinAvoid','pfRecommendationReason'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  ['pfName','pfBrand','pfPrice','pfListPrice','pfDiscount','pfCategory','pfCollection','pfDescription','pfStoreDescription','pfSkinStoreCategory','pfProductType','pfAvailability','pfFeatures','pfIngredients','pfUsage','pfWarnings','pfProductSize','pfVariations','pfDestination','pfAsin','pfImages','amazonUrlInput','pfDeal','pfRating','pfReviews','pfBought','pfShipping','pfTax','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost','pfBenefits','pfSkinTypes','pfSkinConcerns','pfSkinAvoid','pfRecommendationReason'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   ['pfSkinFeatured','pfSkinTopPick','pfSkinTrending'].forEach(id=>{const e=document.getElementById(id);if(e)e.checked=false;});
   document.getElementById('pfKind').value='shop'; document.getElementById('pfSource').value='manual'; document.getElementById('pfCurrency').value='NGN'; document.getElementById('pfRetailer').value='Amazon';
-  document.getElementById('pfImageStrip').innerHTML='';const rec=document.getElementById('pfRecommendedProducts');if(rec)rec.innerHTML='';
+  document.getElementById('pfImageStrip').innerHTML='';const rec=document.getElementById('pfRecommendedProducts');if(rec){rec.innerHTML='';rec.disabled=false;}const bulkBox=document.getElementById('skinBulkAmazonUrls');if(bulkBox)bulkBox.value='';const bulkResults=document.getElementById('skinBulkAiResults');if(bulkResults)bulkResults.replaceChildren();const bulkStatus=document.getElementById('skinBulkAiProgress');if(bulkStatus)bulkStatus.textContent='Each product is imported as a draft and processed one at a time.';
   document.getElementById('importStatus').textContent='You can enter a product manually or fetch an Amazon product below. Imported data stays editable and nothing becomes public until you publish it.';
   window.editingProductId=null;
 }
@@ -2022,7 +2023,8 @@ function setProductForm(p){
   document.getElementById('pfTax').value=p.amazon_tax_text||'';
   document.getElementById('pfCategory').value=p.category_id||'';
   document.getElementById('pfCollection').value=p.collection_id||'';
-  document.getElementById('pfDescription').value=window.skinCareImportMode?(p.store_description||p.description||''):(p.description||'');
+  document.getElementById('pfDescription').value=p.description||'';
+  const storeDescription=document.getElementById('pfStoreDescription');if(storeDescription)storeDescription.value=p.store_description||'';
   document.getElementById('pfFeatures').value=p.features||'';document.getElementById('pfIngredients').value=p.ingredients||'';document.getElementById('pfUsage').value=p.usage_instructions||'';document.getElementById('pfWarnings').value=p.product_warnings||'';document.getElementById('pfProductSize').value=p.product_size||'';try{const v=Array.isArray(p.amazon_variations)?p.amazon_variations:[];document.getElementById('pfVariations').value=v.map(x=>x.name+': '+(Array.isArray(x.values)?x.values.join(', '):'')).join('\n')}catch(e){document.getElementById('pfVariations').value='';}
   document.getElementById('pfDestination').value=p.destination_url||'';
   document.getElementById('pfAsin').value=p.amazon_asin||'';
@@ -2197,7 +2199,7 @@ async function generateSkinProductWithGemini(sourceUrl,options={}){
   populateSkinStoreCategories(inferredCategory);
   populateSkinRecommendations(p.recommended_product_ids||[]);
   const entries=[
-   ['pfName',p.name],['pfBrand',p.brand],['pfDescription',p.overview],
+   ['pfName',p.name],['pfBrand',p.brand],['pfStoreDescription',p.overview],
    ['pfBenefits',p.benefits],['pfSkinTypes',p.skin_types],
    ['pfSkinConcerns',p.skin_concerns],['pfIngredients',p.ingredients],['pfAvailability',p.availability],
    ['pfUsage',p.usage_instructions],['pfSkinAvoid',p.product_warnings],
@@ -2343,7 +2345,7 @@ async function runSkinBulkAiImport(){
     const productType=inferSkinProductType({name:p.name||item.name,description:p.overview,features:benefits});
     const categorySlug=inferSkinProductCategory({name:p.name||item.name,brand:p.brand,description:p.overview,features:benefits,product_type:productType,destination_url:item.source_url});
     const patch={
-     name:p.name||item.name,brand:p.brand||null,description:p.overview||null,store_description:p.overview||null,
+     name:p.name||item.name,brand:p.brand||null,store_description:p.overview||null,
      benefits:benefits||null,why_we_picked_it:benefits||null,skin_types:skinTypes||null,best_for:skinTypes||null,
      skin_concerns:skinConcerns||null,ingredients:ingredients||null,usage_instructions:p.usage_instructions||null,
      product_warnings:p.product_warnings||null,product_size:p.size||null,product_type:productType||null,
@@ -2571,7 +2573,7 @@ async function saveProductDraft(){
     supplier_cost:document.getElementById('pfSupplierCost').value===''?null:Number(document.getElementById('pfSupplierCost').value),
     published:window.editingProductId?!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.published:false
   };
-  if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer='Amazon';product.store_description=normalizeProductText(document.getElementById('pfDescription').value)||null;}
+  if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer='Amazon';product.store_description=normalizeProductText(document.getElementById('pfStoreDescription')?.value)||null;}
   try{
     const existingId=window.editingProductId||null;
     const existing=existingId?adminProducts.find(x=>String(x.id)===String(existingId)):null;
@@ -5186,7 +5188,7 @@ async function saveSkinSiteConfig(button){
 function setSkinAdminFormMode(enabled){
  document.body.classList.toggle('skin-admin-mode',!!enabled);
  const priceIds=['pfPrice','pfListPrice','pfDiscount','pfCurrency','pfDeal'];
- const hideIds=['pfKind','pfSource',...priceIds,'pfReviews','pfBought','pfShipping','pfTax','pfVariations','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost'];
+ const hideIds=['pfKind','pfSource',...priceIds,'pfReviews','pfBought','pfShipping','pfTax','pfVariations','pfCategory','pfCollection','pfSourcinboxUrl','pfSourcinboxId','pfSupplierCost'];
  hideIds.forEach(id=>{const el=document.getElementById(id),field=el?.closest('.field');if(field)field.style.display=(enabled||priceIds.includes(id))?'none':'';});
  const discover=document.getElementById('amazonSearchUrlInput')?.closest('.importbar');if(discover)discover.style.display=enabled?'none':'';
  const discoveryStatus=document.getElementById('amazonDiscoveryStatus');if(discoveryStatus)discoveryStatus.style.display=enabled?'none':'';
