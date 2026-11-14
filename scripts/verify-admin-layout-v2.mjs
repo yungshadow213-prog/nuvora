@@ -1,10 +1,11 @@
 import { readFile } from "node:fs/promises";
 import assert from "node:assert/strict";
 
-const [html, css, js] = await Promise.all([
+const [html, css, js, worker] = await Promise.all([
   readFile(new URL("../admin.html", import.meta.url), "utf8"),
   readFile(new URL("../admin-layout-v2.css", import.meta.url), "utf8"),
-  readFile(new URL("../admin-layout-v2.js", import.meta.url), "utf8")
+  readFile(new URL("../admin-layout-v2.js", import.meta.url), "utf8"),
+  readFile(new URL("../worker.js", import.meta.url), "utf8")
 ]);
 
 assert.ok(html.includes('/admin-layout-v2.css?v=1'), "Admin must load the new layout stylesheet");
@@ -39,4 +40,36 @@ for (const token of [
 ]) assert.ok(css.includes(token), "Admin layout styling missing: " + token);
 
 assert.ok(!js.includes("ANTHROPIC_API_KEY"), "Layout-only patch must not include or activate Claude secrets");
-console.log("Nuvora Admin layout contracts passed.");
+
+for (const token of [
+  "openSkinClaudeAssistant",
+  "sendSkinClaudePrompt",
+  "applySkinClaudeChanges",
+  "skinClaudePendingChanges",
+  "nuvora-skin-studio-request-add-section",
+  "window.__nuvoraSkinPendingSectionInsert",
+  "targetSections.splice(targetIndex>=0?targetIndex+1:targetSections.length,0,section)",
+  "selection:skinStudioSelection||null"
+]) assert.ok(html.includes(token), "Skin Studio visual-editor behavior missing: " + token);
+
+for (const token of [
+  "#skinClaudeAssistant[hidden]",
+  ".skin-claude-dialog",
+  ".skin-claude-proposals",
+  ".skin-claude-composer"
+]) assert.ok(css.includes(token), "Claude assistant styling missing: " + token);
+
+for (const token of [
+  "/api/admin/ai/claude/studio",
+  "adminUser(request,env)",
+  "ANTHROPIC_API_KEY",
+  "anthropic-version",
+  "claude-haiku-5-5",
+  "rateLimit(request,'claude-studio'",
+  "claude:!!e.ANTHROPIC_API_KEY"
+]) assert.ok(worker.includes(token), "Claude API integration contract missing: " + token);
+
+assert.ok(!html.includes("sk-ant-api"), "No Anthropic API key may be embedded in the admin HTML");
+assert.ok(!js.includes("ANTHROPIC_API_KEY"), "No Anthropic API key may be embedded in admin layout JavaScript");
+
+console.log("Nuvora Admin layout and Claude contracts passed.");

@@ -1129,6 +1129,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         <button class="btn" id="skinStudioRedo" type="button" onclick="redoSkinStudio()" disabled aria-label="Redo editor change" title="Redo (Ctrl/⌘+Shift+Z)">↷ Redo</button>
       </div>
       <div class="studio-save-state"><span class="studio-save-dot"></span><span id="skinStudioSaveLabel">Saved version loaded</span></div>
+      <button class="btn studio-claude-trigger" type="button" onclick="openSkinClaudeAssistant()">✦ Claude AI</button>
       <details class="studio-more-actions">
         <summary class="btn" aria-label="More editor actions">••• More</summary>
         <div class="studio-more-actions-menu">
@@ -1142,6 +1143,33 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
       <button class="btn primary studio-publish-button" type="button" onclick="saveSkinSiteConfig(this)">Publish</button>
     </div>
   </header>
+  <div id="skinClaudeAssistant" class="skin-claude-overlay" hidden aria-hidden="true">
+    <button class="skin-claude-backdrop" type="button" aria-label="Close Claude assistant" onclick="closeSkinClaudeAssistant()"></button>
+    <section class="skin-claude-dialog" role="dialog" aria-modal="true" aria-labelledby="skinClaudeTitle">
+      <header class="skin-claude-header">
+        <div><span class="skin-claude-kicker">NUVORA SKIN STUDIO</span><h2 id="skinClaudeTitle">Claude creative assistant</h2><p>Shape page layouts, refine copy and plan sections with your current draft as context.</p></div>
+        <button type="button" class="skin-claude-close" aria-label="Close Claude assistant" onclick="closeSkinClaudeAssistant()">×</button>
+      </header>
+      <div class="skin-claude-status-row"><span class="skin-claude-status-dot"></span><span id="skinClaudeConnectionStatus">Checking Claude connection…</span></div>
+      <div class="skin-claude-prompts" aria-label="Suggested prompts">
+        <button type="button" onclick="useSkinClaudePrompt('Review this page and suggest a more premium, editorial composition without changing the Nuvora brand direction.')">Elevate this page</button>
+        <button type="button" onclick="useSkinClaudePrompt('Improve the copy on the selected section. Make it clear, confident and editorial, without inventing product claims.')">Polish selected copy</button>
+        <button type="button" onclick="useSkinClaudePrompt('Suggest one useful section to add after the selected section and explain what it should contain.')">Suggest a section</button>
+      </div>
+      <div id="skinClaudeMessages" class="skin-claude-messages" aria-live="polite">
+        <div class="skin-claude-message assistant"><span class="skin-claude-message-label">CLAUDE</span><p>Tell me what you want to improve. I can suggest copy edits or add a section to the page you are working on. Nothing changes until you review and apply the suggestions.</p></div>
+      </div>
+      <div id="skinClaudeProposals" class="skin-claude-proposals" hidden>
+        <div class="skin-claude-proposals-heading"><b>Suggested draft changes</b><span>Review before applying</span></div>
+        <div id="skinClaudeProposalList"></div>
+        <button type="button" class="btn primary" id="skinClaudeApply" onclick="applySkinClaudeChanges()">Apply suggestions to draft</button>
+      </div>
+      <form class="skin-claude-composer" onsubmit="event.preventDefault();sendSkinClaudePrompt()">
+        <textarea id="skinClaudePrompt" rows="3" maxlength="8000" placeholder="Describe what you want Claude to change…" aria-label="Message Claude"></textarea>
+        <div class="skin-claude-composer-foot"><span>Claude suggestions are reviewed before they change your draft.</span><button type="submit" class="btn primary" id="skinClaudeSend">Ask Claude ↗</button></div>
+      </form>
+    </section>
+  </div>
   <div id="skinBuilderStatus" class="studio-status notice" role="status" aria-live="polite">Loading your saved Skin Care site…</div>
     <div class="skin-builder-layout studio-layout">
     <aside class="studio-left-panel">
@@ -2889,6 +2917,7 @@ async function adminBoot(){
 
 const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
 let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinSiteDraftExists=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='',skinStudioPendingProductTarget=null;
+let skinClaudeHistory=[],skinClaudePendingChanges=[],skinClaudeLastPrompt='';
 let skinStudioUndoStack=[],skinStudioRedoStack=[],skinStudioHistoryLastCapture=0,skinStudioHistoryApplying=false,skinSitePublishInProgress=false;
 const defaultSkinSiteConfig=()=>({
   version:8,homeLayoutVersion:2,template:'soft-editorial',accentColor:'#66745f',
@@ -3287,7 +3316,7 @@ function collectSkinConfigFields(){
  skinBuilderConfig.productGuideFields=skinBuilderConfig.productGuideFields||{};
  Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig.productGuideFields[key]=!!el.checked;});
  const hero=skinBuilderConfig.sections.find(x=>x.type==='hero');
- if(hero){hero.title=skinBuilderConfig.heroTitle;hero.eyebrow=skinBuilderConfig.heroEyebrow;hero.text=skinBuilderConfig.heroDescription;hero.image=skinBuilderConfig.heroImage;}
+ if(hero){hero.title=skinBuilderConfig.heroTitle;hero.eyebrow=skinBuilderConfig.heroEyebrow;hero.text=skinBuilderConfig.heroDescription;hero.image=skinBuilderConfig.heroImage;hero.buttonLabel=skinBuilderConfig.heroButtonLabel;}
  const editorial=skinBuilderConfig.sections.find(x=>x.type==='editorial');
  if(editorial){editorial.title=skinBuilderConfig.approachTitle;editorial.eyebrow=skinBuilderConfig.approachEyebrow;editorial.text=skinBuilderConfig.approachBody;}
 }
@@ -4001,7 +4030,7 @@ function filterSkinSectionLibraryCategory(category,button){
  document.querySelectorAll('.studio-section-library-categories button').forEach(item=>item.classList.toggle('is-active',item===button));
  renderSkinSectionLibraryPicker();
 }
-function closeSkinQuickAdd(){const panel=document.getElementById('skinQuickAddPanel');if(panel){panel.hidden=true;panel.innerHTML='';}skinQuickAddType='';}
+function closeSkinQuickAdd(){const panel=document.getElementById('skinQuickAddPanel');if(panel){panel.hidden=true;panel.innerHTML='';}if(skinQuickAddType==='section')window.__nuvoraSkinPendingSectionInsert=null;skinQuickAddType='';}
 function createSkinQuickItem(){
  if(!skinBuilderConfig)return;
  const title=String(document.getElementById('skinQuickTitle')?.value||'').trim();
@@ -4053,8 +4082,15 @@ function createSkinQuickItem(){
  if(skinQuickAddType==='section'){
   const type=document.getElementById('skinQuickType')?.value||'product-grid';
   const id='section-'+Date.now().toString(36);
-  const section={id,type,visible:true,title,eyebrow:String(document.getElementById('skinQuickEyebrow')?.value||''),text:String(document.getElementById('skinQuickDescription')?.value||''),image:type==='quiz-banner'?'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=85':'',buttonLabel:type==='quiz-banner'?'Explore concerns':'',buttonHref:type==='quiz-banner'?'/shop?q=skin+concerns':'',itemsText:type==='concern-grid'?'Acne & Blemishes\nAnti-Aging\nDryness & Dehydration\nRedness & Sensitivity\nDark Spots & Hyperpigmentation\nLarge Pores\nUneven Skin Tone\nDullness & Glow':'',imageAlignment:'center',imageWidth:70,backgroundColor:'',textAlignment:'left',filter:type==='featured-products'?'all':'all',columns:type==='featured-products'?5:3,productsPerPage:type==='featured-products'?8:8,product_ids:[],category_id:''};
-  skinHistoryCapture();skinSectionsFor().push(section);skinStudioSelection={type:'section',id};closeSkinQuickAdd();skinMarkDirty('Section added to the current page. Drag it in the outline or canvas to arrange it.');switchSkinStudioTab('outline');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('New section added and saved to the page draft.');
+  const section={id,type,visible:true,title,eyebrow:String(document.getElementById('skinQuickEyebrow')?.value||''),text:String(document.getElementById('skinQuickDescription')?.value||''),image:'',buttonLabel:type==='quiz-banner'?'Explore concerns':'',buttonHref:type==='quiz-banner'?'/shop?q=skin+concerns':'',itemsText:type==='concern-grid'?'Acne & Blemishes\nAnti-Aging\nDryness & Dehydration\nRedness & Sensitivity\nDark Spots & Hyperpigmentation\nLarge Pores\nUneven Skin Tone\nDullness & Glow':'',imageAlignment:'center',imageWidth:70,backgroundColor:'',textAlignment:'left',filter:type==='featured-products'?'featured':'all',columns:type==='featured-products'?5:3,productsPerPage:type==='featured-products'?8:8,product_ids:[],category_id:''};
+  const pendingInsert=window.__nuvoraSkinPendingSectionInsert||null;
+  const targetPageId=pendingInsert?.pageId||skinStudioPageId||'home';
+  const targetSections=skinSectionsFor(targetPageId);
+  const targetIndex=pendingInsert?targetSections.findIndex(item=>String(item.id)===String(pendingInsert.sectionId)):-1;
+  skinHistoryCapture();
+  targetSections.splice(targetIndex>=0?targetIndex+1:targetSections.length,0,section);
+  skinStudioPageId=targetPageId;window.__nuvoraSkinPendingSectionInsert=null;
+  skinStudioSelection={type:'section',id};closeSkinQuickAdd();skinMarkDirty(targetIndex>=0?'Section inserted after the selected live-preview section.':'Section added to the current page.');switchSkinStudioTab('outline');renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('New section added and saved to the page draft.');
  }
 }
 function addSkinBuilderSection(){openSkinAdd('section');}
@@ -4256,10 +4292,10 @@ function updateSkinSection(index,key,value,fromPreview=false){
  sec[key]=value;
  if(key==='type'){sec.product_ids=[];sec.category_id='';sec.filter=value==='featured-products'?'featured':'all';}
  if(skinStudioPageId==='home'&&sec.type==='hero'){
-  const map={title:'heroTitle',eyebrow:'heroEyebrow',text:'heroDescription'};
+  const map={title:'heroTitle',eyebrow:'heroEyebrow',text:'heroDescription',buttonLabel:'heroButtonLabel'};
   if(map[key])skinBuilderConfig[map[key]]=String(value??'');
   if(key==='image')skinBuilderConfig.heroImage=String(value??'');
-  const elementIds={title:'skinCfgHeroTitle',eyebrow:'skinCfgHeroEyebrow',text:'skinCfgHeroDescription',image:'skinCfgHeroImage'};
+  const elementIds={title:'skinCfgHeroTitle',eyebrow:'skinCfgHeroEyebrow',text:'skinCfgHeroDescription',image:'skinCfgHeroImage',buttonLabel:'skinCfgHeroButton'};
   if(elementIds[key]){const el=document.getElementById(elementIds[key]);if(el)el.value=String(value??'');}
  }
  if(skinStudioPageId==='home'&&sec.type==='editorial'){
@@ -4463,7 +4499,7 @@ function sendSkinStudioPreview(){
   const normalized={...product,category_name:category?.name||product.category_name||'',category:category?{id:category.id,name:category.name}:product.category};
   return placedIds.has(String(product.id))&&isSkinProduct(product)?{...normalized,published:true,__studioDraftPreview:true}:normalized;
  }):[];
- frame.contentWindow.postMessage({type:'nuvora-skin-studio-preview',config:skinBuilderConfig,products:previewProducts},SKIN_CLIENT_ORIGIN);
+ frame.contentWindow.postMessage({type:'nuvora-skin-studio-preview',config:skinBuilderConfig,products:previewProducts,pageId:skinStudioPageId||'home',selection:skinStudioSelection||null},SKIN_CLIENT_ORIGIN);
 }
 function reloadSkinStudioPreview(){
  if(!document.body.classList.contains('skin-studio-fullpage')||!skinBuilderConfig)return;
@@ -4526,6 +4562,163 @@ function skinPreviewAction(action){
   skinMarkDirty('Image removed from the selected preview section.');renderSkinStudioAll();queueSkinStudioPreview();return;
  }
  if(action==='delete'){removeSkinSection(index,true);return;}
+}
+
+let skinClaudeConnectionReady=false;
+function skinClaudeAppendMessage(role,message){
+ const root=document.getElementById('skinClaudeMessages');if(!root)return;
+ const item=document.createElement('div');item.className='skin-claude-message '+(role==='user'?'user':'assistant');
+ const label=document.createElement('span');label.className='skin-claude-message-label';label.textContent=role==='user'?'YOU':'CLAUDE';
+ const body=document.createElement('p');body.textContent=String(message||'');
+ item.append(label,body);root.appendChild(item);root.scrollTop=root.scrollHeight;
+}
+function openSkinClaudeAssistant(){
+ const root=document.getElementById('skinClaudeAssistant');if(!root)return;
+ root.hidden=false;root.setAttribute('aria-hidden','false');document.body.classList.add('skin-claude-open');
+ void refreshSkinClaudeStatus();
+ document.getElementById('skinClaudePrompt')?.focus();
+}
+function closeSkinClaudeAssistant(){
+ const root=document.getElementById('skinClaudeAssistant');if(!root)return;
+ root.hidden=true;root.setAttribute('aria-hidden','true');document.body.classList.remove('skin-claude-open');
+}
+async function refreshSkinClaudeStatus(){
+ const status=document.getElementById('skinClaudeConnectionStatus'),send=document.getElementById('skinClaudeSend');
+ if(status)status.textContent='Checking Claude connection…';
+ try{
+  const health=await api('/api/health');
+  skinClaudeConnectionReady=health?.configured?.claude===true;
+  if(status)status.textContent=skinClaudeConnectionReady?'Claude is connected. Your draft context is ready.':'Claude is not configured yet. Add ANTHROPIC_API_KEY as a Cloudflare Worker secret to activate it.';
+ }catch(error){
+  skinClaudeConnectionReady=false;
+  if(status)status.textContent='Could not verify Claude status. Check your admin connection and try again.';
+ }
+ if(send)send.disabled=false;
+}
+function useSkinClaudePrompt(prompt){
+ const field=document.getElementById('skinClaudePrompt');if(!field)return;
+ field.value=String(prompt||'');field.focus();
+}
+function skinClaudePageContext(){
+ const pageId=skinStudioPageId||'home',sections=skinSectionsFor(pageId);
+ const selected=skinStudioSelection?.type==='section'?sections.find(section=>String(section.id)===String(skinStudioSelection.id)):null;
+ const cleanSection=section=>({
+  id:String(section.id||''),type:String(section.type||''),title:String(section.title||''),
+  eyebrow:String(section.eyebrow||''),text:String(section.text||''),
+  buttonLabel:String(section.buttonLabel||''),secondaryButtonLabel:String(section.secondaryButtonLabel||''),
+  visible:section.visible!==false,columns:Number(section.columns)||null,
+  productsPerPage:Number(section.productsPerPage)||null,
+  backgroundColor:String(section.backgroundColor||'')
+ });
+ return {
+  pageId,pageTitle:skinPageLabel(pageId),
+  selectedSection:selected?cleanSection(selected):null,
+  sections:sections.slice(0,30).map(cleanSection),
+  brand:{name:skinBuilderConfig?.brandName||'Nuvora',suffix:skinBuilderConfig?.brandSuffix||'Skin',template:skinBuilderConfig?.template||'soft-editorial',designSettings:skinBuilderConfig?.designSettings||{}}
+ };
+}
+function renderSkinClaudeProposals(changes){
+ const root=document.getElementById('skinClaudeProposals'),list=document.getElementById('skinClaudeProposalList');
+ skinClaudePendingChanges=Array.isArray(changes)?changes.slice(0,20):[];
+ if(!root||!list)return;
+ list.replaceChildren();
+ const labelFor=change=>{
+  if(change.op==='add_section')return 'Add '+String(change.section?.type||'new')+' section';
+  const field=String(change.field||'').replace(/([A-Z])/g,' $1').toLowerCase();
+  return 'Update '+field;
+ };
+ skinClaudePendingChanges.forEach(change=>{
+  const row=document.createElement('div');row.className='skin-claude-proposal';
+  const title=document.createElement('b');title.textContent=labelFor(change);
+  const detail=document.createElement('span');
+  if(change.op==='add_section')detail.textContent=String(change.section?.title||'Untitled section');
+  else detail.textContent=String(change.value??'').slice(0,260);
+  row.append(title,detail);list.appendChild(row);
+ });
+ root.hidden=!skinClaudePendingChanges.length;
+}
+async function sendSkinClaudePrompt(){
+ const field=document.getElementById('skinClaudePrompt'),button=document.getElementById('skinClaudeSend');
+ const prompt=String(field?.value||'').trim();if(!prompt)return;
+ if(prompt.length>8000){skinClaudeAppendMessage('assistant','Please keep the request under 8,000 characters.');return;}
+ if(button?.disabled)return;
+ const context=skinClaudePageContext();
+ skinClaudeAppendMessage('user',prompt);skinClaudeHistory.push({role:'user',content:prompt});
+ if(field)field.value='';if(button){button.disabled=true;button.textContent='Thinking…';}
+ try{
+  const response=await api('/api/admin/ai/claude/studio',{method:'POST',body:{
+   prompt,pageId:context.pageId,pageTitle:context.pageTitle,
+   selectedSection:context.selectedSection,sections:context.sections,brand:context.brand,
+   history:skinClaudeHistory.slice(-8)
+  }});
+  const reply=String(response?.reply||'Claude returned no suggestion.');
+  skinClaudeAppendMessage('assistant',reply);skinClaudeHistory.push({role:'assistant',content:reply});
+  renderSkinClaudeProposals(response?.changes||[]);
+  if(!response?.changes?.length)skinClaudeAppendMessage('assistant','No draft changes were proposed. Ask for a specific copy edit or section addition to receive changes you can apply.');
+ }catch(error){
+  const message=String(error?.message||'Claude could not complete the request.');
+  skinClaudeAppendMessage('assistant',message);
+  if(/ANTHROPIC_API_KEY|not configured/i.test(message)){
+   skinClaudeConnectionReady=false;
+   const status=document.getElementById('skinClaudeConnectionStatus');if(status)status.textContent='Claude needs the ANTHROPIC_API_KEY Cloudflare secret before it can respond.';
+  }
+ }finally{
+  if(button){button.disabled=false;button.textContent='Ask Claude ↗';}
+  field?.focus();
+ }
+}
+function applySkinClaudeChanges(){
+ if(!skinClaudePendingChanges.length||!skinBuilderConfig)return;
+ const allowedFields=new Set(['title','eyebrow','text','buttonLabel','secondaryButtonLabel','buttonHref','secondaryButtonHref','backgroundColor','textAlignment','titleFontSize','bodyFontSize','sectionPadding','columns','productsPerPage','visible']);
+ const allowedTypes=new Set(['product-grid','featured-products','category-grid','brand-grid','concern-grid','hero','editorial','journal-grid','text-block','image-block','quiz-banner']);
+ let applied=0,lastPage=skinStudioPageId||'home',lastSectionId='';
+ skinHistoryCapture();
+ for(const change of skinClaudePendingChanges){
+  const pageId=String(change.pageId||lastPage),sections=skinSectionsFor(pageId);
+  if(!Array.isArray(sections))continue;
+  if(change.op==='update_section'){
+   const field=String(change.field||''),section=sections.find(item=>String(item.id)===String(change.sectionId||''));
+   if(!section||section.locked||!allowedFields.has(field))continue;
+   let value=change.value;
+   if(field==='visible')value=!!value;
+   else if(['columns','productsPerPage','titleFontSize','bodyFontSize','sectionPadding'].includes(field)){
+    value=Number(value);if(!Number.isFinite(value))continue;
+    if(field==='columns')value=Math.max(2,Math.min(5,Math.round(value)));
+    if(field==='productsPerPage')value=Math.max(4,Math.min(12,Math.round(value)));
+    if(field==='titleFontSize'||field==='bodyFontSize')value=Math.max(12,Math.min(96,Math.round(value)));
+    if(field==='sectionPadding')value=Math.max(0,Math.min(160,Math.round(value)));
+   }else{
+    value=String(value??'').slice(0,field==='text'?3000:field.toLowerCase().includes('href')?500:field==='title'?180:1200);
+    if(field==='backgroundColor'&&value&&!/^#[0-9a-f]{6}$/i.test(value))continue;
+    if(field==='textAlignment'&&!['left','center','right'].includes(value))continue;
+    if(['buttonHref','secondaryButtonHref'].includes(field)&&value&&!value.startsWith('/')&&!/^https:\/\//i.test(value))continue;
+   }
+   section[field]=value;
+   if(pageId==='home'&&section.type==='hero'){
+    const keys={title:'heroTitle',eyebrow:'heroEyebrow',text:'heroDescription',buttonLabel:'heroButtonLabel'};
+    if(keys[field])skinBuilderConfig[keys[field]]=String(value??'');
+    const inputs={title:'skinCfgHeroTitle',eyebrow:'skinCfgHeroEyebrow',text:'skinCfgHeroDescription',buttonLabel:'skinCfgHeroButton'};
+    if(inputs[field]){const el=document.getElementById(inputs[field]);if(el)el.value=String(value??'');}
+   }
+   if(pageId==='home'&&section.type==='editorial'){
+    const keys={title:'approachTitle',eyebrow:'approachEyebrow',text:'approachBody'};
+    if(keys[field])skinBuilderConfig[keys[field]]=String(value??'');
+   }
+   lastPage=pageId;lastSectionId=String(section.id);applied++;
+  }else if(change.op==='add_section'){
+   const definition=change.section||{},type=String(definition.type||'');
+   if(!allowedTypes.has(type))continue;
+   const section={id:'section-'+crypto.randomUUID(),type,visible:true,title:String(definition.title||'New section').slice(0,180),eyebrow:String(definition.eyebrow||'').slice(0,120),text:String(definition.text||'').slice(0,3000),image:'',buttonLabel:String(definition.buttonLabel||'').slice(0,80),buttonHref:String(definition.buttonHref||'').startsWith('/')?String(definition.buttonHref).slice(0,500):'',columns:3,productsPerPage:8,filter:'all',product_ids:[],category_id:'',textAlignment:'left'};
+   const afterId=String(change.afterSectionId||skinStudioSelection?.id||''),index=sections.findIndex(item=>String(item.id)===afterId);
+   sections.splice(index>=0?index+1:sections.length,0,section);lastPage=pageId;lastSectionId=section.id;applied++;
+  }
+ }
+ if(!applied){skinBuilderMessage('None of the suggested changes could be applied. Check that the selected page and sections still exist, and that locked sections are unlocked.','warning');return;}
+ skinStudioPageId=lastPage;skinStudioSelection=lastSectionId?{type:'section',id:lastSectionId}:{type:'none',id:''};
+ skinClaudePendingChanges=[];renderSkinClaudeProposals([]);
+ skinMarkDirty('Claude suggestions applied to the private page draft. Review the live canvas before publishing.');
+ renderSkinStudioAll();queueSkinStudioPreview();
+ void saveSkinStudioChangeImmediately('Claude suggestions applied and saved to the private page draft. The public storefront has not been changed.');
 }
 function wireSkinStudioCanvas(){
  const frame=document.getElementById('skinStudioPreview');if(!frame)return;
@@ -4614,6 +4807,14 @@ function wireSkinStudioCanvas(){
     skinMarkDirty('Text block added after the selected section. Edit it directly in the preview or use the inspector.');
     renderSkinStudioAll();queueSkinStudioPreview();void saveSkinStudioChangeImmediately('Text block added and saved to the page draft.');return;
    }
+   if(data.type==='nuvora-skin-studio-request-add-section'){
+    const pageId=data.pageId||'home',sections=skinSectionsFor(pageId),target=sections.find(section=>String(section.id)===String(data.sectionId||''));
+    if(target?.locked)return skinBuilderMessage('Unlock this section before inserting another section beside it.','warning');
+    skinStudioPageId=pageId;skinStudioSelection={type:'section',id:String(target?.id||'')};
+    window.__nuvoraSkinPendingSectionInsert={pageId,sectionId:String(target?.id||'')};
+    switchSkinStudioTab('outline');openSkinAdd('section');
+    skinBuilderMessage('Choose a section layout. It will be inserted immediately after the section you selected in the live page.','info');return;
+   }
    if(data.type==='nuvora-skin-studio-request-add-product'){
     skinStudioPageId=data.pageId||'home';skinStudioPendingProductTarget={sectionId:String(data.sectionId||''),pageId:skinStudioPageId};skinStudioSelection={type:'section',id:String(data.sectionId||'')};
     switchSkinStudioTab('products');renderSkinLibrary();
@@ -4629,7 +4830,7 @@ function wireSkinStudioCanvas(){
    if(data.type==='nuvora-skin-studio-update-section-field'){
     skinStudioPageId=data.pageId||'home';
     const sections=skinSectionsFor(skinStudioPageId),index=sections.findIndex(section=>String(section.id)===String(data.sectionId));
-    if(index<0||!['title','eyebrow','text'].includes(data.key))return;
+    if(index<0||!['title','eyebrow','text','buttonLabel','secondaryButtonLabel'].includes(data.key))return;
     if(sections[index].locked)return skinBuilderMessage('Unlock this section before editing it from the preview.','warning');
     updateSkinSection(index,data.key,String(data.value??''),true);return;
    }
@@ -4649,8 +4850,8 @@ function wireSkinStudioCanvas(){
     if(data.type==='nuvora-skin-studio-select-section'){
     skinStudioPageId=data.pageId||'home';
     skinStudioSelection={type:'section',id:String(data.sectionId||'')};
-    switchSkinStudioTab('outline');skinStudioShowInspector(true);renderSkinStudioAll();
-    skinBuilderMessage('Selected '+(skinSectionsFor().find(x=>String(x.id)===String(data.sectionId))?.title||'section')+'. Edit its settings in the editor panel.','info');
+    switchSkinStudioTab('outline');skinStudioShowInspector(true);renderSkinStudioAll();sendSkinStudioPreview();
+    skinBuilderMessage('Selected '+(skinSectionsFor().find(x=>String(x.id)===String(data.sectionId))?.title||'section')+'. Edit it here or directly in the live canvas.','info');
     return;
    }
    if(data.type==='nuvora-skin-studio-select-product'){
