@@ -12,6 +12,8 @@
 .section-row[draggable="true"]:active{cursor:grabbing}
 .section-row.dragging{opacity:.48}
 .section-row.drag-over{border-color:#73956b;background:#f2f8ef;box-shadow:0 0 0 2px #e3efde}
+
+.product-image-preview-wrap{grid-column:1/-1}.product-image-preview{width:100%;max-width:340px;aspect-ratio:4/3;display:grid;place-items:center;overflow:hidden;border:1px solid var(--line);border-radius:12px;background:#f4f6f2;color:var(--muted);font-size:11px}.product-image-preview img{width:100%;height:100%;object-fit:contain}.product-image-preview img[hidden]{display:none}.ai-product-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.ai-product-row .muted{max-width:440px}.checkline{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--ink)}.checkline input{width:auto;accent-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -54,12 +56,17 @@
 <div class="field"><label for="pBrand">Brand / label</label><input id="pBrand" maxlength="120"></div>
 <div class="field wide"><label for="pDescription">Product description</label><textarea id="pDescription" maxlength="12000"></textarea></div>
 <div class="field wide"><label for="pShort">Short description</label><textarea id="pShort" maxlength="2000"></textarea></div>
-<div class="field wide"><label for="pImage">Main image URL (HTTPS)</label><input id="pImage" type="url"></div>
-<div class="field wide"><label for="pFiles">Upload image(s) from your device</label><input id="pFiles" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" multiple><button type="button" class="btn" id="uploadImages">Upload selected images</button><small class="muted">Uploads use Nuvora’s existing product-images storage bucket. JPG, PNG, WebP, AVIF or GIF; maximum 6 MB per file.</small></div>
+<div class="field wide"><label for="pFeatures">Key features (one per line)</label><textarea id="pFeatures" maxlength="6000" placeholder="Use verified features from the product listing"></textarea></div>
+<div class="field wide"><label for="pSpecifications">Specifications / useful details (one per line: Label: value)</label><textarea id="pSpecifications" maxlength="6000" placeholder="Clothing: Fabric: …&#10;Gaming: Compatibility: …&#10;Home: Dimensions: …"></textarea></div>
+<div class="field wide"><label for="pImage">Main image URL (HTTPS)</label><input id="pImage" type="url" autocomplete="url"></div>
+<div class="field wide product-image-preview-wrap"><div class="product-image-preview"><img id="pImagePreview" alt="Main product image preview" hidden><span id="pImagePreviewEmpty">Main product image preview</span></div><div class="muted" id="pImagePreviewStatus">Add an image URL or upload a product image.</div></div>
+<div class="field wide"><label for="pFiles">Upload image(s) from your device</label><input id="pFiles" type="file" accept="image/jpeg,image/png,image/webp,image/avif,image/gif" multiple><button type="button" class="btn" id="uploadImages">Upload selected images</button><small class="muted">JPG, PNG, WebP, AVIF or GIF; maximum 6 MB per file.</small></div>
 <div class="field wide"><label for="pGallery">Additional gallery image URLs (one per line)</label><textarea id="pGallery" placeholder="https://…"></textarea></div>
-<div class="field wide"><label for="pDestination">Retailer / product link</label><input id="pDestination" type="url"></div>
+<div class="field wide"><label for="pDestination">Retailer / product link</label><input id="pDestination" type="url" placeholder="Paste the exact product destination"></div>
 <div class="field"><label for="pPrice">Display price (optional)</label><input id="pPrice" type="text" maxlength="80"></div>
 <div class="field"><label for="pStatus">Publication status</label><select id="pStatus"><option value="draft">Draft</option><option value="published">Published</option></select></div>
+<div class="field wide"><label class="checkline"><input id="pFeatured" type="checkbox"> Feature on the storefront homepage</label></div>
+<div class="field wide"><div class="ai-product-row"><button type="button" class="btn" id="generateProductCopy">✦ Refine product copy with Nuvora AI</button><span class="muted" id="productAiStatus" role="status" aria-live="polite">Uses the details entered here. Review the result before saving.</span></div></div>
 </div><div class="modal-footer"><button type="button" class="btn" id="cancelProduct">Cancel</button><button class="btn primary" type="submit">Save product</button></div></form></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -122,7 +129,7 @@ function wireEditor(){
  ["announcement","heroTitle","heroDescription","heroImage","approachTitle","approachBody","footerNote","accentColor"].forEach(id=>$(id).addEventListener("input",()=>{collectForm();draftDirty=true;setStatus("Unsaved changes","warning");sendPreview();}));
  $("saveDraft").onclick=()=>save("save-draft");$("publish").onclick=()=>save("publish");$("refreshPreview").onclick=sendPreview;
  $("addProduct").onclick=()=>openProduct();$("addSection").onclick=addSection;$("addSectionForm").onsubmit=saveNewSection;$("closeAddSection").onclick=$("cancelAddSection").onclick=()=> $("addSectionModal").classList.remove("open");$("closeProduct").onclick=$("cancelProduct").onclick=()=>{$("productModal").classList.remove("open");};
- $("productForm").onsubmit=saveProduct;$("uploadImages").onclick=uploadProductImages;$("addSection").onclick=addSection;
+ $("productForm").onsubmit=saveProduct;$("uploadImages").onclick=uploadProductImages;$("pImage").addEventListener("input",updateProductImagePreview);$("generateProductCopy").onclick=generateProductCopy;$("addSection").onclick=addSection;
  $("categoryForm").onsubmit=saveCategory;$("cancelCategory").onclick=resetCategoryForm;$("catName").addEventListener("input",()=>{if(!editingCategoryId&&!$("catSlug").dataset.touched)$("catSlug").value=categorySlug($("catName").value);});$("catSlug").addEventListener("input",()=>{$("catSlug").dataset.touched="true";});
  $("sectionForm").onsubmit=saveSection;$("closeSection").onclick=$("cancelSection").onclick=()=> $("sectionModal").classList.remove("open");
  $("productSearch").addEventListener("input",()=>{productSearch=$("productSearch").value;productPage=1;renderProducts();});$("productPageSize").addEventListener("change",()=>{productPageSize=Number($("productPageSize").value)||12;productPage=1;renderProducts();});$("productPrev").onclick=()=>{if(productPage>1){productPage--;renderProducts();}};$("productNext").onclick=()=>{productPage++;renderProducts();};
@@ -146,7 +153,12 @@ function renderProducts(){
 function openProduct(id=""){
  editingProductId=id||null;const p=products.find(x=>String(x.id)===String(id))||{};
  $("productModalTitle").textContent=id?"Edit product":"Add product";
- $("pName").value=p.name||"";$("pCategory").value=p.category||"";$("pType").value=p.productType||p.product_type||p.type||"";$("pBrand").value=p.brand||"";$("pDescription").value=p.description||"";$("pShort").value=p.shortDescription||"";$("pImage").value=p.image||"";$("pGallery").value=(Array.isArray(p.images)?p.images.filter(url=>url&&url!==p.image):[]).join("\n");$("pFiles").value="";$("pDestination").value=p.destinationUrl||"";$("pPrice").value=p.price||"";$("pStatus").value=p.status||"draft";
+ $("pName").value=p.name||"";$("pCategory").value=p.category||"";$("pType").value=p.productType||p.product_type||p.type||"";$("pBrand").value=p.brand||"";$("pDescription").value=p.description||"";$("pShort").value=p.shortDescription||"";
+ $("pFeatures").value=Array.isArray(p.features)?p.features.join("\n"):String(p.features||"");
+ $("pSpecifications").value=p.specifications&&typeof p.specifications==="object"?Object.entries(p.specifications).map(([key,value])=>key+": "+value).join("\n"):"";
+ $("pImage").value=p.image||"";$("pGallery").value=(Array.isArray(p.images)?p.images.filter(url=>url&&url!==p.image):[]).join("\n");$("pFiles").value="";$("pDestination").value=p.destinationUrl||"";$("pPrice").value=p.price||"";$("pStatus").value=p.status||"draft";$("pFeatured").checked=p.featured===true;
+ $("productAiStatus").textContent="Uses the details entered here. Review the result before saving.";
+ updateProductImagePreview();
  $("productModal").classList.add("open");
 }
 function saveProduct(e){
@@ -155,11 +167,57 @@ function saveProduct(e){
  const existing=products.find(x=>String(x.id)===String(editingProductId));
  const rawCategory=$("pCategory").value.trim(),categoryMatch=(Array.isArray(config.customCategories)?config.customCategories:[]).find(item=>String(item.name||"").toLowerCase()===rawCategory.toLowerCase()||String(item.slug||"")===categorySlug(rawCategory));
  const category=categoryMatch?.name||rawCategory,categorySlugValue=categoryMatch?.slug||categorySlug(rawCategory);
- const item={...(existing||{}),id:existing?.id||makeId(selectedStore.key),name,category,categorySlug:categorySlugValue,...(categoryMatch?{customCategoryId:String(categoryMatch.id||categoryMatch.slug||"")}:{customCategoryId:""}),productType:$("pType").value.trim(),brand:$("pBrand").value.trim(),description:$("pDescription").value.trim(),shortDescription:$("pShort").value.trim(),image:$("pImage").value.trim(),images:[...new Set([$("pImage").value.trim(),...$("pGallery").value.split(/\r?\n/).map(url=>url.trim())].filter(Boolean))],destinationUrl:$("pDestination").value.trim(),price:$("pPrice").value.trim(),status:$("pStatus").value};
+ const gallery=[$("pImage").value.trim(),...$("pGallery").value.split(/\r?\n/).map(url=>url.trim())].filter(Boolean);
+ const image=[...new Set(gallery)][0]||"";
+ const destinationUrl=$("pDestination").value.trim();
+ const status=$("pStatus").value;
+ const validWebUrl=(value,httpsOnly=false)=>{try{const url=new URL(value);return httpsOnly?url.protocol==="https:":["https:","http:"].includes(url.protocol);}catch{return false;}};
+ if(image&&!validWebUrl(image,true)){showNotice("Product images must use a valid HTTPS URL.",true);return;}
+ if(destinationUrl&&!validWebUrl(destinationUrl)){showNotice("Enter a valid retailer URL.",true);return;}
+ if(status==="published"&&(!category||!image||!destinationUrl||!validWebUrl(destinationUrl,true))){showNotice("To publish this product, add its category, a verified main image, and the exact HTTPS retailer product link. You can save it as a draft meanwhile.",true);return;}
+ const specifications={};
+ for(const line of $("pSpecifications").value.split(/\r?\n/).map(value=>value.trim()).filter(Boolean)){
+  const split=line.indexOf(":");
+  if(split<1||!line.slice(0,split).trim()||!line.slice(split+1).trim()){showNotice("Enter each specification as Label: value on its own line.",true);return;}
+  specifications[line.slice(0,split).trim().slice(0,80)]=line.slice(split+1).trim().slice(0,500);
+ }
+ const item={...(existing||{}),id:existing?.id||makeId(selectedStore.key),name,category,categorySlug:categorySlugValue,...(categoryMatch?{customCategoryId:String(categoryMatch.id||categoryMatch.slug||"")}:{customCategoryId:""}),productType:$("pType").value.trim(),brand:$("pBrand").value.trim(),description:$("pDescription").value.trim(),shortDescription:$("pShort").value.trim(),features:$("pFeatures").value.split(/\r?\n/).map(value=>value.trim()).filter(Boolean).slice(0,30),specifications,image,images:[...new Set(gallery)],destinationUrl,price:$("pPrice").value.trim(),status,featured:$("pFeatured").checked};
  if(existing)products=products.map(x=>String(x.id)===String(existing.id)?item:x);else{products.unshift(item);productPage=1;productSearch="";$("productSearch").value="";}
  $("productModal").classList.remove("open");renderProducts();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");switchTab("products");
 }
-async function uploadProductImages(){
+async function updateProductImagePreview(){
+ const image=$("pImagePreview"),empty=$("pImagePreviewEmpty"),status=$("pImagePreviewStatus");
+ if(!image)return;
+ const url=$("pImage").value.trim();
+ if(!url){image.hidden=true;image.removeAttribute("src");if(empty)empty.hidden=false;if(status)status.textContent="Add an image URL or upload a product image.";return;}
+ try{const parsed=new URL(url);if(parsed.protocol!=="https:")throw new Error();}
+ catch{image.hidden=true;if(empty)empty.hidden=false;if(status)status.textContent="Use a valid HTTPS image URL.";return;}
+ image.onload=()=>{image.hidden=false;if(empty)empty.hidden=true;if(status)status.textContent="Main image preview loaded.";};
+ image.onerror=()=>{image.hidden=true;if(empty)empty.hidden=false;if(status)status.textContent="The image could not be loaded. Check its URL or upload the image instead.";};
+ image.src=url;
+}
+async function generateProductCopy(){
+ const button=$("generateProductCopy"),status=$("productAiStatus");
+ if(!button||button.disabled)return;
+ const product={
+  title:$("pName").value.trim(),brand:$("pBrand").value.trim(),category:$("pCategory").value.trim(),
+  product_type:$("pType").value.trim(),description:$("pDescription").value.trim(),
+  short_description:$("pShort").value.trim(),features:$("pFeatures").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean),
+  specifications:$("pSpecifications").value.trim(),vertical:selectedStore?.key||"storefront"
+ };
+ if(!product.title){showNotice("Add a product name before generating copy.",true);return;}
+ button.disabled=true;button.textContent="Refining…";if(status)status.textContent="Nuvora AI is refining the description and feature list from the details entered.";
+ try{
+  const result=await request("/api/admin/ai/copy",{method:"POST",body:JSON.stringify({product})});
+  if(result.title)$("pName").value=result.title;
+  if(result.description)$("pDescription").value=result.description;
+  if(Array.isArray(result.features)&&result.features.length)$("pFeatures").value=result.features.join("\n");
+  if(status)status.textContent="Copy updated. Check every detail against the real product listing before saving.";
+ }catch(error){if(status)status.textContent="Could not generate copy: "+(error.message||"Please retry.");}
+ finally{button.disabled=false;button.textContent="✦ Refine product copy with Nuvora AI";}
+}
+
+function uploadProductImages(){
  const input=$("pFiles"),button=$("uploadImages"),files=Array.from(input.files||[]);
  if(!files.length){showNotice("Choose one or more image files first.",true);return;}
  if(!sb||!session){showNotice("Your admin session is not ready. Sign in again.",true);return;}
@@ -281,7 +339,9 @@ function addSection(){const type=$("newSectionType");type.value="editorial";$("n
 function saveNewSection(e){e.preventDefault();const type=$("newSectionType").value,title=$("newSectionTitle").value.trim();if(!title){showNotice("Enter a section heading.",true);return;}const text=$("newSectionText").value.trim();config.sections.push({id:makeId("section"),type,visible:true,title,text,description:"",eyebrow:"",columns:4,product_ids:type==="product-grid"?[]:undefined,product_selection:type==="product-grid"?"manual":undefined});$("addSectionModal").classList.remove("open");renderSections();draftDirty=true;sendPreview();setStatus("Unsaved changes","warning");showNotice("Section added to the draft. Edit its content or product selection, then Save Draft or Publish.");}
 function adoptSeedProducts(seed){
  if(products.length||Number(config.catalogVersion)||!Array.isArray(seed)||!seed.length)return;
- products=seed.map(p=>({...p,status:p.status||"published"}));
+ // Bundled starter products are examples only. Keep them private until the owner
+ // adds a verified retailer destination and deliberately publishes each product.
+ products=seed.map(p=>({...p,status:"draft",featured:false}));
  renderProducts();draftDirty=true;setStatus("Starter catalogue loaded","warning");
  showNotice("Loaded the storefront starter catalogue into this editor as a starting point. Save Draft to keep your edits before publishing.");
 }
