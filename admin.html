@@ -4552,6 +4552,152 @@ function skinPreviewAction(action){
  }
  if(action==='delete'){removeSkinSection(index,true);return;}
 }
+
+let skinClaudeConnectionReady=false;
+function skinClaudeAppendMessage(role,message){
+ const root=document.getElementById('skinClaudeMessages');if(!root)return;
+ const item=document.createElement('div');item.className='skin-claude-message '+(role==='user'?'user':'assistant');
+ const label=document.createElement('span');label.className='skin-claude-message-label';label.textContent=role==='user'?'YOU':'CLAUDE';
+ const body=document.createElement('p');body.textContent=String(message||'');
+ item.append(label,body);root.appendChild(item);root.scrollTop=root.scrollHeight;
+}
+function openSkinClaudeAssistant(){
+ const root=document.getElementById('skinClaudeAssistant');if(!root)return;
+ root.hidden=false;root.setAttribute('aria-hidden','false');document.body.classList.add('skin-claude-open');
+ void refreshSkinClaudeStatus();
+ document.getElementById('skinClaudePrompt')?.focus();
+}
+function closeSkinClaudeAssistant(){
+ const root=document.getElementById('skinClaudeAssistant');if(!root)return;
+ root.hidden=true;root.setAttribute('aria-hidden','true');document.body.classList.remove('skin-claude-open');
+}
+async function refreshSkinClaudeStatus(){
+ const status=document.getElementById('skinClaudeConnectionStatus'),send=document.getElementById('skinClaudeSend');
+ if(status)status.textContent='Checking Claude connection…';
+ try{
+  const health=await api('/api/health');
+  skinClaudeConnectionReady=health?.configured?.claude===true;
+  if(status)status.textContent=skinClaudeConnectionReady?'Claude is connected. Your draft context is ready.':'Claude is not configured yet. Add ANTHROPIC_API_KEY as a Cloudflare Worker secret to activate it.';
+ }catch(error){
+  skinClaudeConnectionReady=false;
+  if(status)status.textContent='Could not verify Claude status. Check your admin connection and try again.';
+ }
+ if(send)send.disabled=false;
+}
+function useSkinClaudePrompt(prompt){
+ const field=document.getElementById('skinClaudePrompt');if(!field)return;
+ field.value=String(prompt||'');field.focus();
+}
+function skinClaudePageContext(){
+ const pageId=skinStudioPageId||'home',sections=skinSectionsFor(pageId);
+ const selected=skinStudioSelection?.type==='section'?sections.find(section=>String(section.id)===String(skinStudioSelection.id)):null;
+ const cleanSection=section=>({
+  id:String(section.id||''),type:String(section.type||''),title:String(section.title||''),
+  eyebrow:String(section.eyebrow||''),text:String(section.text||''),
+  buttonLabel:String(section.buttonLabel||''),secondaryButtonLabel:String(section.secondaryButtonLabel||''),
+  visible:section.visible!==false,columns:Number(section.columns)||null,
+  productsPerPage:Number(section.productsPerPage)||null,
+  backgroundColor:String(section.backgroundColor||'')
+ });
+ return {
+  pageId,pageTitle:skinPageLabel(pageId),
+  selectedSection:selected?cleanSection(selected):null,
+  sections:sections.slice(0,30).map(cleanSection),
+  brand:{name:skinBuilderConfig?.brandName||'Nuvora',suffix:skinBuilderConfig?.brandSuffix||'Skin',template:skinBuilderConfig?.template||'soft-editorial',designSettings:skinBuilderConfig?.designSettings||{}}
+ };
+}
+function renderSkinClaudeProposals(changes){
+ const root=document.getElementById('skinClaudeProposals'),list=document.getElementById('skinClaudeProposalList');
+ skinClaudePendingChanges=Array.isArray(changes)?changes.slice(0,20):[];
+ if(!root||!list)return;
+ list.replaceChildren();
+ const labelFor=change=>{
+  if(change.op==='add_section')return 'Add '+String(change.section?.type||'new')+' section';
+  const field=String(change.field||'').replace(/([A-Z])/g,' $1').toLowerCase();
+  return 'Update '+field;
+ };
+ skinClaudePendingChanges.forEach(change=>{
+  const row=document.createElement('div');row.className='skin-claude-proposal';
+  const title=document.createElement('b');title.textContent=labelFor(change);
+  const detail=document.createElement('span');
+  if(change.op==='add_section')detail.textContent=String(change.section?.title||'Untitled section');
+  else detail.textContent=String(change.value??'').slice(0,260);
+  row.append(title,detail);list.appendChild(row);
+ });
+ root.hidden=!skinClaudePendingChanges.length;
+}
+async function sendSkinClaudePrompt(){
+ const field=document.getElementById('skinClaudePrompt'),button=document.getElementById('skinClaudeSend');
+ const prompt=String(field?.value||'').trim();if(!prompt)return;
+ if(prompt.length>8000){skinClaudeAppendMessage('assistant','Please keep the request under 8,000 characters.');return;}
+ if(button?.disabled)return;
+ const context=skinClaudePageContext();
+ skinClaudeAppendMessage('user',prompt);skinClaudeHistory.push({role:'user',content:prompt});
+ if(field)field.value='';if(button){button.disabled=true;button.textContent='Thinking…';}
+ try{
+  const response=await api('/api/admin/ai/claude/studio',{method:'POST',body:{
+   prompt,pageId:context.pageId,pageTitle:context.pageTitle,
+   selectedSection:context.selectedSection,sections:context.sections,brand:context.brand,
+   history:skinClaudeHistory.slice(-8)
+  }});
+  const reply=String(response?.reply||'Claude returned no suggestion.');
+  skinClaudeAppendMessage('assistant',reply);skinClaudeHistory.push({role:'assistant',content:reply});
+  renderSkinClaudeProposals(response?.changes||[]);
+  if(!response?.changes?.length)skinClaudeAppendMessage('assistant','No draft changes were proposed. Ask for a specific copy edit or section addition to receive changes you can apply.');
+ }catch(error){
+  const message=String(error?.message||'Claude could not complete the request.');
+  skinClaudeAppendMessage('assistant',message);
+  if(/ANTHROPIC_API_KEY|not configured/i.test(message)){
+   skinClaudeConnectionReady=false;
+   const status=document.getElementById('skinClaudeConnectionStatus');if(status)status.textContent='Claude needs the ANTHROPIC_API_KEY Cloudflare secret before it can respond.';
+  }
+ }finally{
+  if(button){button.disabled=false;button.textContent='Ask Claude ↗';}
+  field?.focus();
+ }
+}
+function applySkinClaudeChanges(){
+ if(!skinClaudePendingChanges.length||!skinBuilderConfig)return;
+ const allowedFields=new Set(['title','eyebrow','text','buttonLabel','secondaryButtonLabel','buttonHref','secondaryButtonHref','backgroundColor','textAlignment','titleFontSize','bodyFontSize','sectionPadding','columns','productsPerPage','visible']);
+ const allowedTypes=new Set(['product-grid','featured-products','category-grid','brand-grid','concern-grid','hero','editorial','journal-grid','text-block','image-block','quiz-banner']);
+ let applied=0,lastPage=skinStudioPageId||'home',lastSectionId='';
+ skinHistoryCapture();
+ for(const change of skinClaudePendingChanges){
+  const pageId=String(change.pageId||lastPage),sections=skinSectionsFor(pageId);
+  if(!Array.isArray(sections))continue;
+  if(change.op==='update_section'){
+   const field=String(change.field||''),section=sections.find(item=>String(item.id)===String(change.sectionId||''));
+   if(!section||section.locked||!allowedFields.has(field))continue;
+   let value=change.value;
+   if(field==='visible')value=!!value;
+   else if(['columns','productsPerPage','titleFontSize','bodyFontSize','sectionPadding'].includes(field)){
+    value=Number(value);if(!Number.isFinite(value))continue;
+    if(field==='columns')value=Math.max(2,Math.min(5,Math.round(value)));
+    if(field==='productsPerPage')value=Math.max(4,Math.min(12,Math.round(value)));
+    if(field==='titleFontSize'||field==='bodyFontSize')value=Math.max(12,Math.min(96,Math.round(value)));
+    if(field==='sectionPadding')value=Math.max(0,Math.min(160,Math.round(value)));
+   }else{
+    value=String(value??'').slice(0,field==='text'?3000:field.toLowerCase().includes('href')?500:field==='title'?180:1200);
+    if(field==='backgroundColor'&&value&&!/^#[0-9a-f]{6}$/i.test(value))continue;
+    if(field==='textAlignment'&&!['left','center','right'].includes(value))continue;
+    if(['buttonHref','secondaryButtonHref'].includes(field)&&value&&!value.startsWith('/')&&!/^https:\/\//i.test(value))continue;
+   }
+   section[field]=value;lastPage=pageId;lastSectionId=String(section.id);applied++;
+  }else if(change.op==='add_section'){
+   const definition=change.section||{},type=String(definition.type||'');
+   if(!allowedTypes.has(type))continue;
+   const section={id:'section-'+crypto.randomUUID(),type,visible:true,title:String(definition.title||'New section').slice(0,180),eyebrow:String(definition.eyebrow||'').slice(0,120),text:String(definition.text||'').slice(0,3000),image:'',buttonLabel:String(definition.buttonLabel||'').slice(0,80),buttonHref:String(definition.buttonHref||'').startsWith('/')?String(definition.buttonHref).slice(0,500):'',columns:3,productsPerPage:8,filter:'all',product_ids:[],category_id:'',textAlignment:'left'};
+   const afterId=String(change.afterSectionId||skinStudioSelection?.id||''),index=sections.findIndex(item=>String(item.id)===afterId);
+   sections.splice(index>=0?index+1:sections.length,0,section);lastPage=pageId;lastSectionId=section.id;applied++;
+  }
+ }
+ if(!applied){skinBuilderMessage('None of the suggested changes could be applied. Check that the selected page and sections still exist, and that locked sections are unlocked.','warning');return;}
+ skinStudioPageId=lastPage;skinStudioSelection=lastSectionId?{type:'section',id:lastSectionId}:{type:'none',id:''};
+ skinClaudePendingChanges=[];renderSkinClaudeProposals([]);
+ skinMarkDirty('Claude suggestions applied to the private page draft. Review the live canvas before publishing.');
+ renderSkinStudioAll();queueSkinStudioPreview();
+ void saveSkinStudioChangeImmediately('Claude suggestions applied and saved to the private page draft. The public storefront has not been changed.');
+}
 function wireSkinStudioCanvas(){
  const frame=document.getElementById('skinStudioPreview');if(!frame)return;
  if(!frame.dataset.canvasWired){
