@@ -254,7 +254,6 @@ function configured(env){
     amazon:!!e.AMAZON_CLIENT_ID&&!!e.AMAZON_CLIENT_SECRET&&!!e.AMAZON_PARTNER_TAG,
     workersAI:!!e.AI,
     gemini:!!e.GEMINI_API_KEY,
-    claude:!!e.ANTHROPIC_API_KEY
   };
 }
 function randHex(length=6){const bytes=new Uint8Array(Math.max(1,Math.ceil(length/2)));crypto.getRandomValues(bytes);return [...bytes].map(b=>b.toString(16).padStart(2,'0')).join('').slice(0,length);}
@@ -2289,7 +2288,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             }
           });
         }catch(e){
-          return json({error:'Gemini product extraction failed: '+String(e?.message||e).slice(0,300)},502);
+          return json({error:'Nuvora AI product extraction failed: '+String(e?.message||e).slice(0,300)},502);
         }
       }
 
