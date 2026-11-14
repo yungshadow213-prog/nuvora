@@ -1148,7 +1148,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
     <section class="skin-claude-dialog" role="dialog" aria-modal="true" aria-labelledby="skinClaudeTitle">
       <header class="skin-claude-header">
         <div><span class="skin-claude-kicker">NUVORA SKIN STUDIO</span><h2 id="skinClaudeTitle">Nuvora AI creative assistant</h2><p>Shape page layouts, refine copy and plan sections with your current draft as context.</p></div>
-        <button type="button" class="skin-claude-close" aria-label="Close Claude assistant" onclick="closeSkinClaudeAssistant()">×</button>
+        <button type="button" class="skin-claude-close" aria-label="Close Nuvora AI assistant" onclick="closeSkinClaudeAssistant()">×</button>
       </header>
       <div class="skin-claude-status-row"><span class="skin-claude-status-dot"></span><span id="skinClaudeConnectionStatus">Checking Nuvora AI connection…</span></div>
       <div class="skin-claude-prompts" aria-label="Suggested prompts">
@@ -1157,7 +1157,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         <button type="button" onclick="useSkinClaudePrompt('Suggest one useful section to add after the selected section and explain what it should contain.')">Suggest a section</button>
       </div>
       <div id="skinClaudeMessages" class="skin-claude-messages" aria-live="polite">
-        <div class="skin-claude-message assistant"><span class="skin-claude-message-label">CLAUDE</span><p>Tell me what you want to improve. I can suggest copy edits or add a section to the page you are working on. Nothing changes until you review and apply the suggestions.</p></div>
+        <div class="skin-claude-message assistant"><span class="skin-claude-message-label">NUVORA AI</span><p>Tell me what you want to improve. I can suggest copy edits or add a section to the page you are working on. Nothing changes until you review and apply the suggestions.</p></div>
       </div>
       <div id="skinClaudeProposals" class="skin-claude-proposals" hidden>
         <div class="skin-claude-proposals-heading"><b>Suggested draft changes</b><span>Review before applying</span></div>
@@ -1165,7 +1165,7 @@ body.skin-studio-fullpage #skinSiteBuilder .studio-more-actions-menu .btn:hover{
         <button type="button" class="btn primary" id="skinClaudeApply" onclick="applySkinClaudeChanges()">Apply suggestions to draft</button>
       </div>
       <form class="skin-claude-composer" onsubmit="event.preventDefault();sendSkinClaudePrompt()">
-        <textarea id="skinClaudePrompt" rows="3" maxlength="8000" placeholder="Describe what you want Claude to change…" aria-label="Message Claude"></textarea>
+        <textarea id="skinClaudePrompt" rows="3" maxlength="8000" placeholder="Describe what you want Nuvora AI to change…" aria-label="Message Nuvora AI"></textarea>
         <div class="skin-claude-composer-foot"><span>Claude suggestions are reviewed before they change your draft.</span><button type="submit" class="btn primary" id="skinClaudeSend">Ask Nuvora AI ↗</button></div>
       </form>
     </section>
@@ -4568,7 +4568,7 @@ let skinClaudeConnectionReady=false;
 function skinClaudeAppendMessage(role,message){
  const root=document.getElementById('skinClaudeMessages');if(!root)return;
  const item=document.createElement('div');item.className='skin-claude-message '+(role==='user'?'user':'assistant');
- const label=document.createElement('span');label.className='skin-claude-message-label';label.textContent=role==='user'?'YOU':'CLAUDE';
+ const label=document.createElement('span');label.className='skin-claude-message-label';label.textContent=role==='user'?'YOU':'NUVORA AI';
  const body=document.createElement('p');body.textContent=String(message||'');
  item.append(label,body);root.appendChild(item);root.scrollTop=root.scrollHeight;
 }
@@ -4584,17 +4584,18 @@ function closeSkinClaudeAssistant(){
 }
 async function refreshSkinClaudeStatus(){
  const status=document.getElementById('skinClaudeConnectionStatus'),send=document.getElementById('skinClaudeSend');
- if(status)status.textContent='Checking Claude connection…';
+ if(status)status.textContent='Checking Nuvora AI connection…';
  try{
   const health=await api('/api/health');
-  skinClaudeConnectionReady=health?.configured?.claude===true;
-  if(status)status.textContent=skinClaudeConnectionReady?'Claude is connected. Your draft context is ready.':'Claude is not configured yet. Add ANTHROPIC_API_KEY as a Cloudflare Worker secret to activate it.';
+  skinClaudeConnectionReady=health?.configured?.workersAI===true;
+  if(status)status.textContent=skinClaudeConnectionReady?'Nuvora AI is connected through Cloudflare Workers AI. Your draft context is ready.':'Nuvora AI is not connected. Check that the Workers AI binding named AI is attached to the nuvora Worker.';
  }catch(error){
   skinClaudeConnectionReady=false;
-  if(status)status.textContent='Could not verify Claude status. Check your admin connection and try again.';
+  if(status)status.textContent='Could not verify Nuvora AI status. Check your admin connection and try again.';
  }
  if(send)send.disabled=false;
 }
+
 function useSkinClaudePrompt(prompt){
  const field=document.getElementById('skinClaudePrompt');if(!field)return;
  field.value=String(prompt||'');field.focus();
@@ -4658,7 +4659,7 @@ async function sendSkinClaudePrompt(){
  }catch(error){
   const message=String(error?.message||'Nuvora AI could not complete the request.');
   skinClaudeAppendMessage('assistant',message);
-  if(/Workers AI|not configured/i.test(message)){
+  if(/Workers AI|not connected/i.test(message)){
    skinClaudeConnectionReady=false;
    const status=document.getElementById('skinClaudeConnectionStatus');if(status)status.textContent='Nuvora AI needs the Cloudflare Workers AI binding named AI before it can respond.';
   }
