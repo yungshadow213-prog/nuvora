@@ -2407,6 +2407,79 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         }
       }
 
+      if(url.pathname==='/api/admin/ai/store-product'&&request.method==='POST'){
+        const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
+        const aiLimit=rateLimit(request,'nuvora-ai-store-product',5,60000);
+        if(aiLimit)return json({error:'Nuvora AI product research is being used frequently. Try again in a minute.'},429,{'retry-after':String(aiLimit)});
+        if(!env.AI)return json({error:'Cloudflare Workers AI is not connected. Check the Nuvora Worker AI binding.'},503);
+        let input;
+        try{input=await body(request,64*1024);}catch(e){return json({error:'The product research request was too large or invalid.'},400);}
+        const store=String(input.store||'').toLowerCase();
+        const storeNames={clothing:'Nuvora Clothing',games:'Nuvora Games',home:'Nuvora Home'};
+        if(!storeNames[store])return json({error:'Choose Clothing, Gaming or Home before researching a product.'},400);
+        const sourceUrl=String(input.url||'').trim();
+        let parsed;
+        try{parsed=new URL(sourceUrl);}catch{return json({error:'Paste a valid retailer product URL first.'},400);}
+        if(!['http:','https:'].includes(parsed.protocol))return json({error:'Product links must use HTTP or HTTPS.'},400);
+        const hostname=parsed.hostname.toLowerCase().replace(/^\[|\]$/g,'');
+        if(hostname==='localhost'||hostname.endsWith('.localhost')||hostname.endsWith('.local')||hostname==='metadata.google.internal'||/^(?:0\.|10\.|127\.|169\.254\.|192\.168\.)/.test(hostname)||/^172\.(?:1[6-9]|2\d|3[01])\./.test(hostname)||hostname==='::1'){
+          return json({error:'That link does not point to a public product page.'},400);
+        }
+        const categoryNames=Array.isArray(input.categories)?[...new Set(input.categories.map(value=>cleanText(value,100)).filter(Boolean))].slice(0,80):[];
+        let listing;
+        try{listing=await ingestSourceProduct(sourceUrl,env);}catch(e){return json({error:'The retailer page could not be read: '+String(e?.message||e).slice(0,240)},422);}
+        if(!listing||listing.error)return json({error:String(listing?.error||'The retailer did not provide readable product information. Try its direct product URL.')},422);
+        const sourceFeatures=Array.isArray(listing.features)?listing.features.map(value=>cleanMultilineText(value,500)).filter(Boolean).slice(0,20):[];
+        const sourceSpecifications=listing.specifications&&typeof listing.specifications==='object'&&!Array.isArray(listing.specifications)?listing.specifications:{};
+        const specifications=Object.fromEntries(Object.entries(sourceSpecifications).slice(0,30).map(([key,value])=>[cleanText(key,100),cleanMultilineText(value,500)]).filter(([key,value])=>key&&value));
+        const images=Array.isArray(listing.images)?[...new Set(listing.images.map(value=>String(value||'').trim()).filter(value=>isValidHttpUrl(value)&&new URL(value).protocol==='https:'))].slice(0,20):[];
+        const facts={
+          store:storeNames[store],
+          title:cleanText(listing.title,500),
+          brand:cleanText(listing.brand,180),
+          description:cleanMultilineText(listing.description,9000),
+          features:sourceFeatures,
+          specifications,
+          category_path:cleanText(listing.category_path,900),
+          retailer:cleanText(listing.retailer||detectRetailer(sourceUrl),100),
+          images:images.slice(0,8)
+        };
+        if(!facts.title&&!facts.description&&!facts.features.length&&!Object.keys(specifications).length&&!images.length){
+          return json({error:'The retailer page did not expose enough product information to prepare a safe draft.'},422);
+        }
+        const verticalGuidance={
+          clothing:'For clothing, only mention garment measurements, size, fit, fabric, fibre content, colour and care when present in the source. Never guess fit, material or sizing.',
+          games:'For gaming, only mention platform compatibility, processor, graphics, memory, storage, refresh rate, ports and other technical specifications when present in the source. Never guess compatibility or performance.',
+          home:'For home products, only mention dimensions, material, capacity, wattage, plug type, installation, care and warranty when present in the source. Never guess safety or electrical requirements.'
+        }[store];
+        const prompt='Prepare an accurate, customer-friendly product draft for '+storeNames[store]+'. Return only valid JSON with title, brand, description, shortDescription, productType, category, and features. Use only the supplied retailer facts. '+verticalGuidance+' Choose category only from this exact list: '+JSON.stringify(categoryNames)+'. If none fits, return an empty category. Do not invent dimensions, material, fit, compatibility, safety guidance, guarantees, certifications, pricing, discounts, ratings or performance claims. Omit unsupported details. Preserve model names and meaningful measurements. Keep the title concise, description informative, shortDescription under 180 characters, and features as short factual bullet points. Source facts: '+JSON.stringify(facts).slice(0,18000);
+        const system='You are Nuvora’s product research editor. You convert source facts into a careful first draft for a curated affiliate storefront. Never infer or fabricate product attributes. Unknown fields must be empty. Categories must match one of the supplied category names exactly. Return valid JSON only.';
+        try{
+          const ai=await runNuvoraWorkersAI(env,system,[{role:'user',content:prompt}],1800);
+          const result=parseNuvoraAIJson(ai.raw);
+          const suggestedCategory=cleanText(result.category,100);
+          const matchedCategory=categoryNames.find(value=>value.toLowerCase()===suggestedCategory.toLowerCase())||'';
+          const features=Array.isArray(result.features)?result.features.map(value=>cleanMultilineText(value,500)).filter(Boolean).slice(0,20):sourceFeatures;
+          return json({
+            ok:true,provider:'cloudflare-workers-ai',model:ai.model,store,
+            title:cleanText(result.title,200)||facts.title,
+            brand:cleanText(result.brand,120)||facts.brand,
+            description:cleanMultilineText(result.description,9000)||facts.description,
+            shortDescription:cleanMultilineText(result.shortDescription,500),
+            productType:cleanText(result.productType,120),
+            category:matchedCategory,
+            features:features.length?features:sourceFeatures,
+            specifications,
+            image:images[0]||'',
+            images,
+            destinationUrl:sourceUrl,
+            retailer:facts.retailer,
+            status:'draft',
+            confidenceNotes:['AI suggestions are based on information exposed by the retailer page. Verify every product detail before publishing.']
+          });
+        }catch(e){return json({error:'Nuvora AI product research failed: '+String(e?.message||e).slice(0,280)},502);}
+      }
+
       if(url.pathname==='/api/admin/ai/copy'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const aiLimit=rateLimit(request,'nuvora-ai-copy',10,60000);
