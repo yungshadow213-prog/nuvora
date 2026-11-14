@@ -4647,7 +4647,7 @@ async function sendSkinClaudePrompt(){
  skinClaudeAppendMessage('user',prompt);skinClaudeHistory.push({role:'user',content:prompt});
  if(field)field.value='';if(button){button.disabled=true;button.textContent='Thinking…';}
  try{
-  const response=await api('/api/admin/ai/claude/studio',{method:'POST',body:{
+  const response=await api('/api/admin/ai/studio',{method:'POST',body:{
    prompt,pageId:context.pageId,pageTitle:context.pageTitle,
    selectedSection:context.selectedSection,sections:context.sections,brand:context.brand,
    history:skinClaudeHistory.slice(-8)
