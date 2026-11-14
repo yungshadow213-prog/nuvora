@@ -1939,7 +1939,7 @@ function prepareProductEntryWorkspace(){
  const aiButton=body.querySelector('button[onclick="openAIStudio()"]')?.parentElement||null;
  const shell=document.createElement('div');shell.className='product-entry-workspace';
  const rail=document.createElement('aside');rail.className='product-entry-rail';
- rail.innerHTML='<div class="product-entry-rail-top"><span class="product-entry-step-kicker">PRODUCT WORKSPACE</span><b>Product setup</b></div><nav class="product-entry-step-list" aria-label="Product entry steps">'+steps.map((step,index)=>'<button type="button" class="product-entry-step-button'+(index===0?' active':'')+'" data-entry-step="'+index+'" aria-current="'+(index===0?'step':'false')+'"><span class="product-entry-step-number">'+String(index+1).padStart(2,'0')+'</span><span><b>'+step.title+'</b><small>'+step.summary+'</small></span><i>›</i></button>').join('')+'</nav>';
+ rail.innerHTML='<div class="product-entry-rail-top"><span class="product-entry-step-kicker">PRODUCT WORKSPACE</span><b>Product setup</b></div><nav class="product-entry-step-list" aria-label="Product entry steps">'+steps.map((step,index)=>'<button type="button" class="product-entry-step-button'+(index===0?' active':'')+'" data-entry-step="'+index+'" aria-current="'+(index===0?'step':'false')+'"><span class="product-entry-step-number">'+String(index+1).padStart(2,'0')+'</span><span><b>'+step.title+'</b></span><i>›</i></button>').join('')+'</nav>';
  const main=document.createElement('div');main.className='product-entry-main';
  steps.forEach((step,index)=>{
   const panel=document.createElement('section');panel.className='product-entry-step-panel'+(index===0?' active':'');panel.dataset.entryPanel=String(index);
@@ -4064,7 +4064,7 @@ function renderSkinSelectedInspector(){
   return;
  }
  setHead('Select an item','');
- root.innerHTML='<div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b><p>Select an item in the left panel or a page section in Outline.</p></div>';
+ root.innerHTML='<div class="studio-empty-inspector"><span>↖</span><b>Select an item</b></div>';
 }
 function prepareSkinStudioShopifyLayout(){
  const layout=document.querySelector('#skinSiteBuilder .studio-layout'),left=layout?.querySelector('.studio-left-panel'),right=layout?.querySelector('.studio-right-panel');
@@ -4175,7 +4175,7 @@ function renderSkinSectionLibraryPicker(){
  const grid=document.getElementById('skinSectionLibraryGrid');if(!grid)return;
  const query=String(document.getElementById('skinSectionLibrarySearch')?.value||'').trim().toLowerCase();
  const items=skinSectionLibraryItems.filter(item=>(skinSectionLibraryCategory==='all'||item.category===skinSectionLibraryCategory)&&(!query||(item.title+' '+item.description+' '+item.category).toLowerCase().includes(query)));
- grid.innerHTML=items.map(item=>'<button type="button" class="studio-section-library-card '+(document.getElementById('skinQuickType')?.value===item.type?'is-selected':'')+'" data-section-type="'+item.type+'" onclick="chooseSkinSectionLibraryItem(&quot;'+item.type+'&quot;)"><span class="studio-section-library-thumb studio-section-thumb-'+item.type+'"><b>'+item.icon+'</b><i></i><i></i></span><strong>'+item.title+'</strong><small>'+item.description+'</small></button>').join('')||'<p class="studio-section-library-empty">No matching sections.</p>';
+ grid.innerHTML=items.map(item=>'<button type="button" class="studio-section-library-card '+(document.getElementById('skinQuickType')?.value===item.type?'is-selected':'')+'" data-section-type="'+item.type+'" onclick="chooseSkinSectionLibraryItem(&quot;'+item.type+'&quot;)"><span class="studio-section-library-thumb studio-section-thumb-'+item.type+'"><b>'+item.icon+'</b><i></i><i></i></span><strong>'+item.title+'</strong></button>').join('')||'<p class="studio-section-library-empty">No matching sections.</p>';
 }
 function chooseSkinSectionLibraryItem(type){
  const select=document.getElementById('skinQuickType');if(!select||!skinSectionLibraryItems.some(item=>item.type===type))return;
