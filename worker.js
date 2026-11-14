@@ -42,7 +42,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-10-24-skin-studio-storefront-parity-r60',
+          release:'nuvora-2026-11-14-skin-studio-visual-editor-claude-r61',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
