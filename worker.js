@@ -2683,7 +2683,14 @@ function validateMultiStorefrontProducts(value){
       if(!Array.isArray(product.images)||product.images.length>30)return 'Product images must be a list of at most 30 URLs.';
       for(const image of product.images){try{if(new URL(String(image)).protocol!=='https:')return 'Gallery images must use HTTPS.';}catch{return 'A gallery image URL is invalid.';}}
     }
-    if(product.status!==undefined&&!['draft','published'].includes(String(product.status).toLowerCase()))return 'Product status must be draft or published.';
+    const productStatus=String(product.status||'published').toLowerCase();
+    if(product.status!==undefined&&!['draft','published'].includes(productStatus))return 'Product status must be draft or published.';
+    if(productStatus==='published'){
+      if(!String(product.category||'').trim())return 'Published products need a category. Keep incomplete products as drafts until they are organised.';
+      if(!String(product.description||product.shortDescription||'').trim())return 'Published products need a useful description. Keep incomplete products as drafts.';
+      if(!String(product.image||'').trim())return 'Published products need a main product image. Add an image or keep the product as a draft.';
+      if(!String(product.destinationUrl||'').trim())return 'Published products need a verified retailer destination URL. Keep products without a confirmed link as drafts.';
+    }
   }
   return null;
 }
