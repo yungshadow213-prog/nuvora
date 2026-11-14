@@ -1977,7 +1977,7 @@ function prepareProductEntryWorkspace(){
  grid.remove();
  body.dataset.productEntryPrepared='true';
  const aiFieldMap={pfName:'Product title',pfBrand:'Brand',pfProductType:'Product type',pfSkinStoreCategory:'Storefront category',pfStoreDescription:'Nuvora product overview',pfBenefits:'Product benefits',pfSkinTypes:'Suitable skin types',pfSkinConcerns:'Skin concerns',pfSkinAvoid:'Compatibility cautions',pfIngredients:'Ingredients',pfUsage:'How to use',pfWarnings:'Product warnings',pfProductSize:'Product size',pfRecommendedProducts:'Complementary products',pfRecommendationReason:'Recommendation reason'};
- Object.entries(aiFieldMap).forEach(([id,label])=>{const control=document.getElementById(id),field=control?.closest('.field'),fieldLabel=field?.querySelector('label');if(!field||!fieldLabel||field.querySelector('.skin-field-ai-action'))return;const action=document.createElement('button');action.type='button';action.className='skin-field-ai-action';action.textContent='✦ Generate with AI';action.title='Prepare this field from the source listing';action.addEventListener('click',()=>generateSkinProductWithGemini(undefined,{field:id}));fieldLabel.insertAdjacentElement('afterend',action);});
+ Object.entries(aiFieldMap).forEach(([id,label])=>{const control=document.getElementById(id),field=control?.closest('.field'),fieldLabel=field?.querySelector('label');if(!field||!fieldLabel||field.querySelector('.skin-field-ai-action'))return;const action=document.createElement('button');action.type='button';action.className='skin-field-ai-action';action.textContent='✦ Generate with AI';action.title='Prepare this field from the source listing';action.addEventListener('click',()=>generateSkinFieldWithAI(id,action));fieldLabel.insertAdjacentElement('afterend',action);});
  const queue=document.getElementById('skinBulkQueue');if(queue&&!queue.children.length)addSkinBulkQueueRow();
  const preview=document.createElement('aside');preview.className='product-entry-preview';preview.innerHTML='<div class="product-entry-preview-kicker">LIVE PRODUCT PREVIEW</div><div class="product-entry-preview-image"><img id="productEntryPreviewImage" alt="Product preview" hidden><span id="productEntryPreviewPlaceholder">Your product image will appear here</span></div><div class="product-entry-preview-copy"><span id="productEntryPreviewBrand">YOUR BRAND</span><h3 id="productEntryPreviewName">New product</h3><p id="productEntryPreviewDescription">Your customer-facing overview will appear here as you build the listing.</p><div class="product-entry-preview-status"><i></i> Private draft</div></div><div class="product-entry-preview-note">Preview only · Changes are not saved until you save the draft.</div>';shell.appendChild(preview);body.querySelector('.product-entry-workspace')?.addEventListener('input',updateProductEntryPreview);updateProductEntryPreview();
  rail.querySelectorAll('[data-entry-step]').forEach(button=>button.addEventListener('click',()=>setProductEntryStep(Number(button.dataset.entryStep))));
@@ -2236,6 +2236,12 @@ async function refreshGeminiConfigStatus(){
   if(health?.configured?.workersAI===true)set('Nuvora AI is connected through Cloudflare Workers AI. Review generated product details before saving; nothing is published automatically.',true);
   else set('Nuvora AI is not connected. In Cloudflare Dashboard → Workers & Pages → nuvora → Settings → Bindings, add a Workers AI binding named AI, then reload this page.',false);
  }catch{set('Could not verify the Cloudflare AI connection. Check the Worker health status before generating product content.',false);}
+}
+async function generateSkinFieldWithAI(fieldId,button){
+ if(!button||button.disabled)return;
+ const original=button.textContent;button.disabled=true;button.textContent='Generating…';
+ try{await generateSkinProductWithGemini(undefined,{field:fieldId});}
+ finally{button.disabled=false;button.textContent=original||'✦ Generate with AI';}
 }
 async function generateSkinProductWithGemini(sourceUrl,options={}){
  const url=String(sourceUrl||document.getElementById('pfDestination')?.value||document.getElementById('amazonUrlInput')?.value||'').trim();
