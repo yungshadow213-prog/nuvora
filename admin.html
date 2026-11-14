@@ -4570,11 +4570,12 @@ function skinPreviewAction(action){
 
 let skinClaudeConnectionReady=false;
 function skinClaudeAppendMessage(role,message){
- const root=document.getElementById('skinClaudeMessages');if(!root)return;
+ const root=document.getElementById('skinClaudeMessages');if(!root)return null;
  const item=document.createElement('div');item.className='skin-claude-message '+(role==='user'?'user':'assistant');
  const label=document.createElement('span');label.className='skin-claude-message-label';label.textContent=role==='user'?'YOU':'NUVORA AI';
  const body=document.createElement('p');body.textContent=String(message||'');
  item.append(label,body);root.appendChild(item);root.scrollTop=root.scrollHeight;
+ return {item,body};
 }
 function openSkinClaudeAssistant(){
  const root=document.getElementById('skinClaudeAssistant');if(!root)return;
@@ -4649,7 +4650,8 @@ async function sendSkinClaudePrompt(){
  if(button?.disabled)return;
  const context=skinClaudePageContext();
  skinClaudeAppendMessage('user',prompt);skinClaudeHistory.push({role:'user',content:prompt});
- if(field)field.value='';if(button){button.disabled=true;button.textContent='Thinking…';}
+ if(field)field.value='';if(button){button.disabled=true;button.textContent='Working…';}
+ const pending=skinClaudeAppendMessage('assistant','Working on your request…');
  try{
   const response=await api('/api/admin/ai/studio',{method:'POST',body:{
    prompt,pageId:context.pageId,pageTitle:context.pageTitle,
@@ -4657,15 +4659,18 @@ async function sendSkinClaudePrompt(){
    history:skinClaudeHistory.slice(-8)
   }});
   const reply=String(response?.reply||'Nuvora AI returned no suggestion.');
-  skinClaudeAppendMessage('assistant',reply);skinClaudeHistory.push({role:'assistant',content:reply});
+  if(pending?.body)pending.body.textContent=reply;else skinClaudeAppendMessage('assistant',reply);
+  skinClaudeHistory.push({role:'assistant',content:reply});
   renderSkinClaudeProposals(response?.changes||[]);
   if(!response?.changes?.length)skinClaudeAppendMessage('assistant','No draft changes were proposed. Ask for a specific copy edit or section addition to receive changes you can apply.');
  }catch(error){
   const message=String(error?.message||'Nuvora AI could not complete the request.');
-  skinClaudeAppendMessage('assistant',message);
+  if(pending?.body)pending.body.textContent=message;else skinClaudeAppendMessage('assistant',message);
+  // Preserve the failed request in the composer so it can be retried or edited.
+  if(field&&!field.value.trim())field.value=prompt;
   if(/Workers AI|not connected/i.test(message)){
    skinClaudeConnectionReady=false;
-   const status=document.getElementById('skinClaudeConnectionStatus');if(status)status.textContent='Nuvora AI needs the Cloudflare Workers AI binding named AI before it can respond.';
+   const status=document.getElementById('skinClaudeConnectionStatus');if(status)status.textContent='Nuvora AI could not reach the configured Workers AI service. Check the Worker logs for the request error.';
   }
  }finally{
   if(button){button.disabled=false;button.textContent='Ask Nuvora AI ↗';}

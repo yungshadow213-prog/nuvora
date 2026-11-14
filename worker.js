@@ -230,9 +230,30 @@ async function inspectProductSchema(env){
 async function runNuvoraWorkersAI(env,system,messages,maxTokens=2200){
   if(!env?.AI||typeof env.AI.run!=='function')throw new Error("Cloudflare Workers AI is not connected. Check the Worker AI binding named AI.");
   const model=String(env.NUVORA_AI_MODEL||'@cf/google/gemma-4-26b-a4b-it').trim();
-  const result=await env.AI.run(model,{messages:[{role:'system',content:String(system||'')},...messages],max_tokens:maxTokens,temperature:0.2});
-  const raw=typeof result==='string'?result:typeof result?.response==='string'?result.response:typeof result?.output_text==='string'?result.output_text:'';
-  if(!raw.trim())throw new Error('Cloudflare AI returned an empty response. Try again.');
+  // This model enables reasoning by default. Nuvora's product and editor
+  // endpoints need concise structured output, so disable hidden thinking and
+  // use the current completion-token parameter to leave the budget for answers.
+  const result=await env.AI.run(model,{
+    messages:[{role:'system',content:String(system||'')},...messages],
+    max_completion_tokens:maxTokens,
+    temperature:0.2,
+    response_format:{type:'json_object'},
+    chat_template_kwargs:{enable_thinking:false,clear_thinking:true}
+  });
+  const toText=value=>{
+    if(typeof value==='string')return value;
+    if(Array.isArray(value))return value.map(part=>typeof part==='string'?part:typeof part?.text==='string'?part.text:'').join('');
+    return '';
+  };
+  const raw=typeof result==='string'?result:
+    toText(result?.response)||
+    toText(result?.output_text)||
+    toText(result?.choices?.[0]?.message?.content)||
+    toText(result?.result?.response);
+  if(!raw.trim()){
+    const detail=String(result?.error?.message||result?.message||'').trim();
+    throw new Error(detail?('Cloudflare AI returned no answer: '+detail.slice(0,180)):'Cloudflare AI returned an empty answer. Please retry.');
+  }
   return {model,raw:raw.trim()};
 }
 function parseNuvoraAIJson(raw){
