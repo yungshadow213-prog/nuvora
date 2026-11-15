@@ -2405,6 +2405,295 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
 
       // Nuvora Autopilot: first reference implementation is deliberately Skin Care-only.
       // Every product query is hard-scoped to storefront_key=skin.
+
+      // Skin Care bulk intake v2. Source pages are staged first; no product is
+      // created or published until an administrator explicitly approves it.
+      if(url.pathname==='/api/admin/ai/import/prepare'&&request.method==='POST'){
+        const admin=await adminUser(request,env);
+        if(!admin)return json({error:'Admin authentication required'},401);
+        const limited=rateLimit(request,'nuvora-skin-import-prepare',2,60000);
+        if(limited)return json({error:'A product intake batch was just started. Try again shortly.'},429,{'retry-after':String(limited)});
+        const input=await body(request,48*1024);
+        if(String(input.store||'skin').toLowerCase()!=='skin')return json({error:'This import queue is currently restricted to Nuvora Skin Care.'},400);
+        const rawUrls=Array.isArray(input.urls)?input.urls.join('\n'):String(input.urls||'');
+        const urls=[...new Set(extractUrls(rawUrls))];
+        if(!urls.length)return json({error:'Paste at least one product link.'},400);
+        if(urls.length>10)return json({error:'Prepare up to 10 product links per batch.'},400);
+        const rejectUnsafe=(value)=>{
+          try{
+            const parsed=new URL(String(value||''));
+            if(parsed.protocol!=='https:'||parsed.username||parsed.password)return 'Use a public HTTPS product link.';
+            const host=parsed.hostname.toLowerCase().replace(/^\[|\]$/g,'').replace(/^www\./,'');
+            if(!host||host==='localhost'||host.endsWith('.localhost')||host.endsWith('.local')||host.endsWith('.internal'))return 'Private or local network addresses are not supported.';
+            const octets=host.split('.').map(Number);
+            if(octets.length===4&&octets.every(n=>Number.isInteger(n)&&n>=0&&n<=255)){
+              const [a,b]=octets;
+              if(a===0||a===10||a===127||a>=224||(a===169&&b===254)||(a===172&&b>=16&&b<=31)||(a===192&&b===168)||(a===100&&b>=64&&b<=127))return 'Private or reserved IP addresses are not supported.';
+            }
+            if(host==='::1'||host.startsWith('fc')||host.startsWith('fd')||host.startsWith('fe80:'))return 'Private or local network addresses are not supported.';
+            return null;
+          }catch{return 'That product link is not a valid HTTPS URL.';}
+        };
+        for(const sourceUrl of urls){const unsafe=rejectUnsafe(sourceUrl);if(unsafe)return json({error:unsafe,source_url:sourceUrl},400);}
+        const batchInsert=await supabaseRest(env,'POST','nuvora_product_import_batches',{store_key:'skin',status:'processing',source_count:urls.length,created_by:admin.id,summary:{submitted:urls.length}});
+        if(!batchInsert.ok)return json({error:'The import batch could not be created. Apply the Skin Care import migration first.',detail:(await batchInsert.text()).slice(0,250)},503);
+        const batch=(await batchInsert.json()||[])[0];
+        if(!batch?.id)return json({error:'The import batch was created without an ID.'},502);
+        let categoryId=null;
+        try{
+          const categoriesResponse=await supabaseRest(env,'GET','categories',null,'?select=id,name,slug&active=eq.true');
+          if(categoriesResponse.ok){
+            const categories=await categoriesResponse.json()||[];
+            categoryId=categories.find(item=>String(item.slug||'').toLowerCase()==='skin-care'||String(item.name||'').toLowerCase()==='skin care')?.id||null;
+          }
+        }catch(error){}
+        const inferType=(title,description,features)=>{
+          const hay=[title,description,Array.isArray(features)?features.join(' '):features].filter(Boolean).join(' ').toLowerCase();
+          const rules=[
+            [/\b(?:cleanser|cleansing balm|face wash|micellar water)\b/,'Cleanser'],
+            [/\b(?:toner|essence)\b/,'Toner / essence'],
+            [/\b(?:serum|ampoule|concentrate|retinol|niacinamide|hyaluronic acid)\b/,'Serum / treatment'],
+            [/\b(?:sunscreen|sunblock|spf\s*\d*)\b/,'Sunscreen'],
+            [/\b(?:moisturizer|moisturiser|moisturizing cream|moisturising cream|face cream|gel cream)\b/,'Moisturizer'],
+            [/\b(?:eye cream|eye serum|under-eye)\b/,'Eye care'],
+            [/\b(?:lip balm|lip mask|lip oil)\b/,'Lip care'],
+            [/\b(?:sheet mask|face mask|sleeping mask|clay mask)\b/,'Face mask'],
+            [/\b(?:exfoliant|exfoliating|face scrub|chemical peel)\b/,'Exfoliant'],
+            [/\b(?:nail clipper|manicure|pedicure|nail file|cuticle|nail drill)\b/,'Nail grooming tool'],
+            [/\b(?:led mask|facial device|beauty device|microcurrent|face roller|gua sha|cleansing brush|skin scrubber)\b/,'Beauty device / tool'],
+            [/\b(?:foundation|concealer|mascara|eyeliner|lipstick|blush|makeup palette)\b/,'Makeup / cosmetics'],
+            [/\b(?:shampoo|conditioner|hair mask|hair serum|hair oil|hair dryer|hair straightener|curling iron)\b/,'Hair care / styling'],
+            [/\b(?:perfume|fragrance|eau de parfum|body mist|cologne)\b/,'Fragrance'],
+            [/\b(?:toothbrush|toothpaste|water flosser|oral care)\b/,'Oral care'],
+            [/\b(?:body lotion|body wash|body cream|body scrub)\b/,'Body care'],
+            [/\b(?:gift set|travel set|skincare set|beauty kit|bundle|5-step)\b/,'Beauty set / kit']
+          ];
+          for(const [pattern,label] of rules)if(pattern.test(hay))return label;
+          return '';
+        };
+        const findDuplicate=async(identity,retailer,sourceUrl,resolvedUrl)=>{
+          let found=null;
+          if(retailer==='Amazon'&&identity){
+            const res=await supabaseRest(env,'GET','products',null,'?select=id,name,amazon_asin&storefront_key=eq.skin&amazon_asin=eq.'+encodeURIComponent(identity)+'&limit=1');
+            if(res.ok)found=(await res.json()||[])[0]||null;
+          }
+          if(!found&&retailer!=='Amazon'&&identity){
+            const res=await supabaseRest(env,'GET','products',null,'?select=id,name,source_sku,retailer&storefront_key=eq.skin&source_sku=eq.'+encodeURIComponent(identity)+'&retailer=eq.'+encodeURIComponent(retailer)+'&limit=1');
+            if(res.ok)found=(await res.json()||[])[0]||null;
+          }
+          if(!found){
+            const urls=[sourceUrl,resolvedUrl].filter((value,index,array)=>value&&array.indexOf(value)===index);
+            for(const field of ['destination_url','amazon_source_url','temu_source_url','source_url','resolved_url']){
+              for(const value of urls){
+                const res=await supabaseRest(env,'GET','products',null,'?select=id,name&storefront_key=eq.skin&'+field+'=eq.'+encodeURIComponent(value)+'&limit=1');
+                if(res.ok){found=(await res.json()||[])[0]||null;if(found)break;}
+              }
+              if(found)break;
+            }
+          }
+          return found;
+        };
+        const itemRows=[];
+        for(const sourceUrl of urls){
+          const started=Date.now();
+          try{
+            const unsafe=rejectUnsafe(sourceUrl);
+            if(unsafe)throw new Error(unsafe);
+            const listing=await ingestSourceProduct(sourceUrl,env);
+            if(!listing||listing.error)throw new Error(listing?.error||'The retailer did not expose product details.');
+            const resolvedUrl=String(listing.resolved_url||listing.destination_url||sourceUrl);
+            const unsafeResolved=rejectUnsafe(resolvedUrl);
+            if(unsafeResolved)throw new Error('The retailer resolved this link to an unsupported destination.');
+            const retailer=String(listing.retailer||detectRetailer(sourceUrl));
+            const rawTitle=cleanText(listing.title,300);
+            const title=cleanImportedTitle(rawTitle,listing.brand||'');
+            if(!title||productTitleQualityIssue(title))throw new Error('The retailer did not return a reliable product title.');
+            const sourceId=String(listing.asin||listing.source_id||sourceProductId(resolvedUrl)||sourceProductId(sourceUrl)||listing.sku||resolvedUrl).trim().slice(0,160);
+            const asin=retailer==='Amazon'?(String(listing.asin||sourceId).match(/^[A-Z0-9]{10}$/i)?.[0]?.toUpperCase()||null):null;
+            const identity=asin||sourceId;
+            const duplicate=await findDuplicate(identity,retailer,sourceUrl,resolvedUrl);
+            if(duplicate){
+              itemRows.push({batch_id:batch.id,store_key:'skin',source_url:sourceUrl,resolved_url:resolvedUrl,retailer,source_identity:identity,status:'duplicate',duplicate_product_id:duplicate.id,error:'Already present in the Skin Care catalogue.',proposed_product:{name:title,brand:cleanText(listing.brand,180)||null,retailer,source_url:sourceUrl,source_identity:identity,duplicate_name:duplicate.name||'Existing product'},created_by:admin.id});
+              continue;
+            }
+            const images=dedupeImages([
+              ...(Array.isArray(listing.images)?listing.images:[]),
+              ...(Array.isArray(listing.image_urls)?listing.image_urls:[]),
+              listing.image_url
+            ],60).filter(isDisplayableProductImage).slice(0,30);
+            const description=cleanMultilineText(listing.description,12000);
+            const featureText=Array.isArray(listing.features)?listing.features.map(value=>cleanMultilineText(value,1000)).filter(Boolean).slice(0,20).join('\n'):cleanMultilineText(listing.features,12000);
+            const productType=inferType(title,description,featureText);
+            const flags=[];
+            if(!images.length)flags.push('No verified product image was captured.');
+            if(!description&& !featureText)flags.push('No usable product description or feature text was captured.');
+            if(!productType)flags.push('Product category needs manual classification.');
+            if(!listing.brand)flags.push('Brand was not identified by the source.');
+            const sourceType=retailer==='Amazon'?'amazon':retailer==='Temu'?'temu':'web';
+            const product={
+              storefront_key:'skin',
+              kind:'find',
+              name:title,
+              slug:makeProductSlug(title+' '+crypto.randomUUID().slice(0,8)),
+              brand:cleanText(listing.brand,180)||null,
+              product_type:productType||null,
+              description:description||null,
+              store_description:null,
+              features:featureText||null,
+              ingredients:cleanMultilineText(listing.ingredients,5000)||null,
+              usage_instructions:cleanMultilineText(listing.usage_instructions,4000)||null,
+              product_warnings:cleanMultilineText(listing.product_warnings,3000)||null,
+              product_size:cleanText(listing.product_size,180)||null,
+              benefits:null,
+              skin_types:null,
+              skin_concerns:null,
+              skip_if:null,
+              recommended_product_ids:[],
+              recommendation_reason:null,
+              category_id:categoryId,
+              image_url:images[0]||null,
+              image_urls:images,
+              source_image_urls:images,
+              source_related_products:Array.isArray(listing.related_products)?listing.related_products.slice(0,20):[],
+              display_price:null,
+              currency:'NGN',
+              destination_url:sourceUrl,
+              resolved_url:resolvedUrl,
+              source_url:retailer==='Amazon'||retailer==='Temu'?null:sourceUrl,
+              retailer,
+              source_type:sourceType,
+              source_sku:identity||null,
+              amazon_asin:asin,
+              amazon_source_url:retailer==='Amazon'?sourceUrl:null,
+              temu_source_url:retailer==='Temu'?sourceUrl:null,
+              amazon_rating:retailer==='Amazon'?(listing.rating??null):null,
+              amazon_review_count:retailer==='Amazon'?(listing.review_count??null):null,
+              temu_rating:retailer==='Temu'?(listing.rating??null):null,
+              temu_review_count:retailer==='Temu'?(listing.review_count??null):null,
+              rating:!['Amazon','Temu'].includes(retailer)?(listing.rating??null):null,
+              review_count:!['Amazon','Temu'].includes(retailer)?(listing.review_count??null):null,
+              availability:/out of stock|unavailable|sold out/i.test(String(listing.availability||''))?'unavailable':/in stock|available/i.test(String(listing.availability||''))?'available':null,
+              amazon_variations:Array.isArray(listing.variations)?listing.variations.slice(0,30):[],
+              amazon_last_synced:new Date().toISOString(),
+              published:false
+            };
+            itemRows.push({batch_id:batch.id,store_key:'skin',source_url:sourceUrl,resolved_url:resolvedUrl,retailer,source_identity:identity,status:flags.length?'needs_review':'ready',proposed_product:product,quality_flags:flags,created_by:admin.id});
+          }catch(error){
+            itemRows.push({batch_id:batch.id,store_key:'skin',source_url:sourceUrl,retailer:detectRetailer(sourceUrl),status:'failed',error:String(error?.message||error).slice(0,500),created_by:admin.id});
+          }
+        }
+        const inserted=[];
+        for(let offset=0;offset<itemRows.length;offset+=10){
+          const write=await supabaseRest(env,'POST','nuvora_product_import_items',itemRows.slice(offset,offset+10));
+          if(!write.ok)return json({error:'The import batch was prepared, but its review items could not be saved.',batch_id:batch.id,detail:(await write.text()).slice(0,300)},502);
+          inserted.push(...(await write.json()||[]));
+        }
+        const readyCount=inserted.filter(item=>['ready','needs_review'].includes(item.status)).length;
+        const duplicateCount=inserted.filter(item=>item.status==='duplicate').length;
+        const failedCount=inserted.filter(item=>item.status==='failed').length;
+        const status=failedCount===inserted.length?'failed':failedCount||duplicateCount?'partial':'completed';
+        await supabaseRest(env,'PATCH','nuvora_product_import_batches',{status,ready_count:readyCount,duplicate_count:duplicateCount,failed_count:failedCount,completed_at:new Date().toISOString(),summary:{ready:readyCount,duplicates:duplicateCount,failed:failedCount}},'?id=eq.'+encodeURIComponent(batch.id)+'&store_key=eq.skin');
+        await supabaseRest(env,'POST','admin_activity',{admin_id:admin.id,action:'nuvora_skin_import_prepared',entity_type:'skin_import_batch',entity_id:batch.id,metadata:{store_key:'skin',submitted:urls.length,ready:readyCount,duplicates:duplicateCount,failed:failedCount}});
+        return json({ok:true,batch:{id:batch.id,status,source_count:urls.length,ready_count:readyCount,duplicate_count:duplicateCount,failed_count:failedCount},items:inserted});
+      }
+
+      if(url.pathname==='/api/admin/ai/import/items'&&request.method==='GET'){
+        const admin=await adminUser(request,env);
+        if(!admin)return json({error:'Admin authentication required'},401);
+        if(String(url.searchParams.get('store')||'skin').toLowerCase()!=='skin')return json({error:'This import queue is restricted to Nuvora Skin Care.'},400);
+        const limit=Math.min(Math.max(Number(url.searchParams.get('limit')||40),1),100);
+        const [itemsResponse,batchesResponse]=await Promise.all([
+          supabaseRest(env,'GET','nuvora_product_import_items',null,'?select=id,batch_id,source_url,resolved_url,retailer,source_identity,status,proposed_product,quality_flags,duplicate_product_id,imported_product_id,error,created_at,imported_at&store_key=eq.skin&order=created_at.desc&limit='+limit),
+          supabaseRest(env,'GET','nuvora_product_import_batches',null,'?select=id,status,source_count,ready_count,duplicate_count,failed_count,imported_count,created_at,completed_at&store_key=eq.skin&order=created_at.desc&limit=12')
+        ]);
+        if(!itemsResponse.ok||!batchesResponse.ok)return json({error:'The Skin Care import queue could not be loaded. Apply the phase-two import migration.'},503);
+        const items=await itemsResponse.json()||[];
+        const productIds=[...new Set(items.map(item=>item.duplicate_product_id||item.imported_product_id).filter(Boolean))];
+        let productNames={};
+        if(productIds.length){
+          const productResponse=await supabaseRest(env,'GET','products',null,'?select=id,name&storefront_key=eq.skin&id=in.('+productIds.map(encodeURIComponent).join(',')+')');
+          if(productResponse.ok)for(const product of (await productResponse.json()||[]))productNames[product.id]=product.name;
+        }
+        return json({ok:true,items:items.map(item=>({...item,duplicate_name:productNames[item.duplicate_product_id]||null,imported_name:productNames[item.imported_product_id]||null})),batches:await batchesResponse.json()||[]});
+      }
+
+      const skinImportItemId=url.pathname.startsWith('/api/admin/ai/import/items/')?url.pathname.slice('/api/admin/ai/import/items/'.length):'';
+      if(skinImportItemId&&/^[0-9a-f-]{36}$/i.test(skinImportItemId)&&request.method==='POST'){
+        const admin=await adminUser(request,env);
+        if(!admin)return json({error:'Admin authentication required'},401);
+        const input=await body(request,8*1024);
+        const action=String(input.action||'').toLowerCase();
+        if(!['approve','skip'].includes(action))return json({error:'Choose approve or skip.'},400);
+        const itemResponse=await supabaseRest(env,'GET','nuvora_product_import_items',null,'?select=*&id=eq.'+encodeURIComponent(skinImportItemId)+'&store_key=eq.skin&limit=1');
+        if(!itemResponse.ok)return json({error:'The Skin Care import queue is unavailable.'},503);
+        const item=(await itemResponse.json()||[])[0];
+        if(!item)return json({error:'Skin Care import item not found.'},404);
+        if(action==='skip'){
+          if(!['ready','needs_review','duplicate','failed'].includes(item.status))return json({error:'This import item can no longer be skipped.'},409);
+          const skipped=await supabaseRest(env,'PATCH','nuvora_product_import_items',{status:'skipped',reviewed_by:admin.id,reviewed_at:new Date().toISOString()},'?id=eq.'+encodeURIComponent(item.id)+'&store_key=eq.skin&status=eq.'+item.status);
+          if(!skipped.ok||!(await skipped.json()||[]).length)return json({error:'This import item changed while you were reviewing it.'},409);
+          return json({ok:true,status:'skipped'});
+        }
+        if(!['ready','needs_review','importing'].includes(item.status))return json({error:'Only prepared Skin Care products can be approved.'},409);
+        if(item.status!=='importing'){
+          const claim=await supabaseRest(env,'PATCH','nuvora_product_import_items',{status:'importing',reviewed_by:admin.id,reviewed_at:new Date().toISOString()},'?id=eq.'+encodeURIComponent(item.id)+'&store_key=eq.skin&status=eq.'+item.status);
+          if(!claim.ok||!(await claim.json()||[]).length)return json({error:'Another review action may already be processing this item. Refresh the queue.'},409);
+        }
+        const proposed=item.proposed_product&&typeof item.proposed_product==='object'?item.proposed_product:{};
+        const retailer=String(item.retailer||proposed.retailer||'');
+        const identity=String(item.source_identity||proposed.source_sku||'');
+        let existing=null;
+        if(retailer==='Amazon'&&identity){
+          const check=await supabaseRest(env,'GET','products',null,'?select=id,name&storefront_key=eq.skin&amazon_asin=eq.'+encodeURIComponent(identity)+'&limit=1');
+          if(check.ok)existing=(await check.json()||[])[0]||null;
+        }
+        if(!existing&&identity&&retailer!=='Amazon'){
+          const check=await supabaseRest(env,'GET','products',null,'?select=id,name&storefront_key=eq.skin&source_sku=eq.'+encodeURIComponent(identity)+'&retailer=eq.'+encodeURIComponent(retailer)+'&limit=1');
+          if(check.ok)existing=(await check.json()||[])[0]||null;
+        }
+        if(!existing){
+          const check=await supabaseRest(env,'GET','products',null,'?select=id,name&storefront_key=eq.skin&destination_url=eq.'+encodeURIComponent(item.source_url)+'&limit=1');
+          if(check.ok)existing=(await check.json()||[])[0]||null;
+        }
+        if(existing){
+          await supabaseRest(env,'PATCH','nuvora_product_import_items',{status:'duplicate',duplicate_product_id:existing.id,error:'This source now matches an existing Skin Care product.',reviewed_by:admin.id,reviewed_at:new Date().toISOString()},'?id=eq.'+encodeURIComponent(item.id)+'&store_key=eq.skin');
+          return json({error:'This item now matches an existing Skin Care product and was not imported.',duplicate:existing},409);
+        }
+        const product={...proposed};
+        product.storefront_key='skin';
+        product.kind='find';
+        product.published=false;
+        product.display_price=null;
+        product.destination_url=item.source_url;
+        product.name=cleanText(product.name,180);
+        product.slug=makeProductSlug(String(product.name||'skin-product')+' '+crypto.randomUUID().slice(0,8));
+        product.image_urls=Array.isArray(product.image_urls)?product.image_urls.filter(isDisplayableProductImage).slice(0,30):[];
+        product.image_url=product.image_urls[0]||null;
+        if(!isValidHttpUrl(product.destination_url))return json({error:'The source link is no longer valid. No product was created.'},400);
+        const validation=validateProduct(product);
+        if(validation)return json({error:validation},400);
+        const saved=await supabaseProductWrite(env,'POST',product);
+        if(!saved.ok){
+          await supabaseRest(env,'PATCH','nuvora_product_import_items',{status:'needs_review',error:(await saved.text()).slice(0,500)},'?id=eq.'+encodeURIComponent(item.id)+'&store_key=eq.skin&status=eq.importing');
+          return json({error:'The product could not be created. The staged item remains in the review queue.'},400);
+        }
+        const created=(await saved.json()||[])[0];
+        if(!created?.id)return json({error:'The product was saved, but its new ID could not be confirmed. Refresh the product library before retrying.'},502);
+        const marked=await supabaseRest(env,'PATCH','nuvora_product_import_items',{status:'imported',imported_product_id:created.id,imported_at:new Date().toISOString(),error:null},'?id=eq.'+encodeURIComponent(item.id)+'&store_key=eq.skin&status=eq.importing');
+        await supabaseRest(env,'POST','admin_activity',{admin_id:admin.id,action:'nuvora_skin_product_imported',entity_type:'skin_product',entity_id:created.id,metadata:{store_key:'skin',batch_id:item.batch_id,import_item_id:item.id,retailer,source_identity:identity}});
+        const siblingRows=await supabaseRest(env,'GET','nuvora_product_import_items',null,'?select=status&batch_id=eq.'+encodeURIComponent(item.batch_id)+'&store_key=eq.skin');
+        if(siblingRows.ok){
+          const statuses=(await siblingRows.json()||[]).map(row=>row.status);
+          const importedCount=statuses.filter(status=>status==='imported').length;
+          const readyCount=statuses.filter(status=>['ready','needs_review','importing'].includes(status)).length;
+          const duplicateCount=statuses.filter(status=>status==='duplicate').length;
+          const failedCount=statuses.filter(status=>status==='failed').length;
+          await supabaseRest(env,'PATCH','nuvora_product_import_batches',{imported_count:importedCount,ready_count:readyCount,duplicate_count:duplicateCount,failed_count:failedCount},'?id=eq.'+encodeURIComponent(item.batch_id)+'&store_key=eq.skin');
+        }
+        if(!marked.ok||!(await marked.json()||[]).length)return json({ok:true,product:created,warning:'Product created as an unpublished draft, but the queue status needs refreshing.',status:'created'});
+        return json({ok:true,product:created,status:'imported',published:false});
+      }
+
       if(url.pathname==='/api/admin/ai/manager/audit'&&request.method==='POST'){
         const admin=await adminUser(request,env);
         if(!admin)return json({error:'Admin authentication required'},401);
