@@ -79,3 +79,7 @@ For a fresh database, run `backend/schema.sql` instead.
 Use `OPEN-ENV.bat` if you later need to configure Shopify or legitimate Amazon credentials. Changes made to a populated local `.env` are retained in the normal project folder; keep that folder private.
 
 If a secret was exposed previously, rotate it in Supabase and use the new secret locally.
+
+## Nuvora Experience Studio
+
+The Experience Studio is available in Nuvora Admin at `/admin/experiences`. It manages the Skin Care customer experiences (Compare, the existing Skin Quiz, Product Finder, Routine Builder, Ingredient Guide, Product Alternatives, Recommendations, Recently Viewed and Smart Search) through one configuration workspace. Settings are stored additively under `store_settings.skin_site_config.nuvoraExperiences`, preserving existing Skin Studio pages, products, category maps, design tokens and storefront sections. Draft or disabled experiences are filtered from the public `/api/skin-settings` response. The admin API uses the existing administrator profile check and reads product data scoped to `storefront_key=skin`.
