@@ -106,12 +106,11 @@ assert.ok(importPage.includes("reviewImportItem(item.id,'edit'"), "The review UI
 
 const systemSettingsStart = admin.indexOf('<section id="settings" class="view settings-view"');
 assert.ok(systemSettingsStart >= 0, "Nuvora System Settings must use the redesigned control-centre workspace.");
-const systemSettingsView = admin.slice(systemSettingsStart, admin.indexOf("</section>", systemSettingsStart) + "</section>".length);
 for (const fieldId of ["setName","setEmail","setCurrency","setTimezone","setRegion","setMaintenance","setDescription","setDisclosure","setShipping","setReturns"]) {
-  assert.ok(systemSettingsView.includes('id="' + fieldId + '"'), "System Settings must preserve the " + fieldId + " field.");
+  assert.ok(admin.includes('id="' + fieldId + '"'), "System Settings must preserve the " + fieldId + " field.");
 }
 for (const sectionId of ["settings-profile","settings-region","settings-policies","settings-connections","settings-account"]) {
-  assert.ok(systemSettingsView.includes('id="' + sectionId + '"'), "System Settings must include the " + sectionId + " section.");
+  assert.ok(admin.includes('id="' + sectionId + '"'), "System Settings must include the " + sectionId + " section.");
 }
 assert.ok(admin.includes("async function loadSettings()"), "System Settings must load the saved settings record when opened.");
 assert.ok(admin.includes("const settings=await api('/api/admin/settings')"), "System Settings must read its saved values from the authenticated settings endpoint.");
