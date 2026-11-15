@@ -1042,7 +1042,115 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
   body.skin-studio-fullpage #skinSiteBuilder .studio-canvas-panel{height:78dvh!important;min-height:620px!important}
 }
 </style>
-</head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
+<style id="nuvora-system-settings-redesign">
+#settings.settings-view{width:100%;max-width:none!important;margin:0!important;padding:0!important;color:#24392b}
+#settings .settings-hero{position:relative;display:grid;grid-template-columns:minmax(0,1.45fr) minmax(230px,.55fr);align-items:center;gap:24px;min-height:245px;padding:clamp(24px,3vw,38px);overflow:hidden;border-radius:24px;background:radial-gradient(circle at 84% 12%,rgba(185,224,123,.22),transparent 25%),radial-gradient(circle at 15% 110%,rgba(111,184,138,.22),transparent 35%),linear-gradient(118deg,#153b2a 0%,#214d34 52%,#355f39 100%);color:#fff;box-shadow:0 18px 42px rgba(24,61,38,.14)}
+#settings .settings-hero:after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.18;background-image:linear-gradient(rgba(255,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.08) 1px,transparent 1px);background-size:34px 34px;mask-image:linear-gradient(90deg,black,transparent 80%)}
+#settings .settings-hero-copy{position:relative;z-index:2;max-width:690px}
+#settings .settings-hero-kicker{display:flex;align-items:center;gap:9px;color:#c4dfb1;font-size:9px;font-weight:850;letter-spacing:.18em}
+#settings .settings-hero-kicker i{height:4px;width:4px;border-radius:50%;background:#e3bc76}
+#settings .settings-hero h2{max-width:620px;margin:17px 0 11px;color:#fff;font-family:Manrope,Inter,system-ui,sans-serif;font-size:clamp(28px,3.4vw,43px);letter-spacing:-1.8px;line-height:1.02}
+#settings .settings-hero p{max-width:570px;margin:0;color:#d2e1d4;font-size:12px;line-height:1.7}
+#settings .settings-hero-meta{display:flex;flex-wrap:wrap;gap:18px;margin-top:22px;color:#d8e7d9;font-size:9px;font-weight:700}
+#settings .settings-hero-meta span{display:flex;align-items:center;gap:6px}
+#settings .settings-hero-meta b{color:#d4eaa9;font-size:12px}
+#settings .settings-hero-visual{position:relative;z-index:1;justify-self:center;display:grid;place-items:center;width:220px;height:190px}
+#settings .settings-visual-orbit{position:absolute;border:1px solid rgba(220,245,206,.28);border-radius:50%;transform:rotate(-24deg)}
+#settings .orbit-one{width:188px;height:122px}
+#settings .orbit-two{width:148px;height:184px;transform:rotate(34deg);border-color:rgba(244,201,129,.3)}
+#settings .settings-visual-core{width:112px;height:112px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px;border:1px solid rgba(255,255,255,.28);border-radius:29px;background:linear-gradient(145deg,rgba(244,255,235,.19),rgba(255,255,255,.04));box-shadow:0 14px 34px rgba(5,30,15,.2);backdrop-filter:blur(8px);transform:rotate(-7deg)}
+#settings .settings-visual-core span{font-size:9px;font-weight:900;letter-spacing:.2em}
+#settings .settings-visual-core b{font-size:36px;line-height:1;color:#d5e9a2}
+#settings .settings-visual-core small{font-size:7px;font-weight:850;letter-spacing:.22em;color:#cbdcc9}
+#settings .settings-visual-tag{position:absolute;padding:6px 9px;border:1px solid rgba(255,255,255,.15);border-radius:99px;background:#254a31;color:#e4eedf;font-size:7px;font-weight:900;letter-spacing:.15em;box-shadow:0 5px 14px #0a271a33}
+#settings .tag-one{top:13px;right:1px;transform:rotate(7deg)}
+#settings .tag-two{bottom:14px;left:0;transform:rotate(-8deg);background:#705735;color:#fff1d7}
+#settings .settings-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:15px 0 18px}
+#settings .settings-shortcuts>button{display:flex;align-items:center;gap:11px;min-width:0;padding:14px 13px;border:1px solid #e2e9df;border-radius:15px;background:#fff;text-align:left;box-shadow:0 5px 16px rgba(43,73,43,.035);transition:transform .18s,border-color .18s,box-shadow .18s}
+#settings .settings-shortcuts>button:hover,#settings .settings-shortcuts>button.active{transform:translateY(-2px);border-color:#c6d9bf;box-shadow:0 10px 22px rgba(43,73,43,.08);background:#fbfdf9}
+#settings .shortcut-icon{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:11px;font-size:17px}
+#settings .profile-icon{background:#edf5e9;color:#548153}#settings .region-icon{background:#fff3e6;color:#b4773e}#settings .policy-icon{background:#f0edfb;color:#7565a3}#settings .connection-icon{background:#e9f2f4;color:#4c8492}
+#settings .settings-shortcuts b,#settings .settings-shortcuts small{display:block;min-width:0}
+#settings .settings-shortcuts b{font-size:10px;color:#294331}
+#settings .settings-shortcuts small{margin-top:4px;color:#849087;font-size:8px;line-height:1.3}
+#settings .settings-shortcuts em{margin-left:auto;color:#a4b0a2;font-size:8px;font-style:normal;font-weight:850}
+#settings .settings-workspace{display:grid;grid-template-columns:205px minmax(0,1fr);align-items:start;gap:15px}
+#settings .settings-rail{position:sticky;top:20px;padding:15px 11px;border:1px solid #e3e9e1;border-radius:17px;background:linear-gradient(180deg,#fbfdf9,#f5f8f2)}
+#settings .settings-rail-head{display:flex;align-items:center;gap:9px;padding:5px 7px 15px;border-bottom:1px solid #e5ebe2}
+#settings .settings-rail-mark{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:#e4efdd;color:#3d6a43;font-size:18px}
+#settings .settings-rail-head b,#settings .settings-rail-head small{display:block}
+#settings .settings-rail-head b{font-size:11px;color:#2a4431}
+#settings .settings-rail-head small{margin-top:3px;color:#8b988b;font-size:8px}
+#settings .settings-rail-label{padding:17px 8px 7px;color:#9aa69a;font-size:8px;font-weight:900;letter-spacing:.16em}
+#settings .settings-rail-link{display:flex;align-items:center;gap:9px;width:100%;padding:10px 9px;border:0;border-radius:9px;background:transparent;color:#647367;text-align:left;font-size:9px;font-weight:750;transition:background .15s,color .15s}
+#settings .settings-rail-link span{width:16px;text-align:center;color:#90a18f;font-size:13px}
+#settings .settings-rail-link:hover,#settings .settings-rail-link.active{background:#e9f2e5;color:#315c3b}
+#settings .settings-rail-link.active span{color:#477a4e}
+#settings .settings-rail-note{margin:19px 3px 2px;padding:12px;border-radius:12px;background:#edf4e9}
+#settings .settings-rail-note>span{display:grid;place-items:center;width:24px;height:24px;border-radius:8px;background:#d9e9d1;color:#4b794d}
+#settings .settings-rail-note b{display:block;margin-top:9px;color:#426349;font-size:9px}
+#settings .settings-rail-note p{margin:5px 0 0;color:#718574;font-size:8px;line-height:1.55}
+#settings .settings-content{display:grid;gap:13px;min-width:0}
+#settings .settings-card{scroll-margin-top:22px;min-width:0;padding:19px 20px;border:1px solid #e2e9df;border-radius:17px;background:#fff;box-shadow:0 6px 20px rgba(42,69,43,.035)}
+#settings .settings-card-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:17px}
+#settings .settings-card-title{display:flex;align-items:center;gap:11px;min-width:0}
+#settings .settings-index{display:grid;place-items:center;flex:none;width:31px;height:31px;border-radius:10px;background:#f0f4ed;color:#759071;font-size:9px;font-weight:900}
+#settings .settings-card-head h3{margin:0;color:#294331;font-size:14px;letter-spacing:-.3px}
+#settings .settings-card-head p{margin:4px 0 0;color:#849087;font-size:9px;line-height:1.5}
+#settings .settings-card-icon{display:grid;place-items:center;flex:none;width:37px;height:37px;border-radius:12px;font-size:17px}
+#settings .settings-card-icon.mint{background:#eaf4e6;color:#548055}#settings .settings-card-icon.apricot{background:#fff1e3;color:#bd834e}#settings .settings-card-icon.lilac{background:#f1eefb;color:#8170aa}
+#settings .settings-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+#settings .settings-form-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+#settings .settings-form-grid .field,#settings .settings-policy-stack .field{display:grid;gap:7px;min-width:0}
+#settings .settings-form-grid .field.full{grid-column:1/-1}
+#settings .settings-card .field label{color:#526657;font-size:9px;font-weight:850}
+#settings .settings-card input,#settings .settings-card select,#settings .settings-card textarea{width:100%;min-width:0;padding:11px 12px;border:1px solid #dfe7dc;border-radius:9px;background:#fbfcfa;color:#2d4432;font:500 10px/1.5 Inter,system-ui,sans-serif;outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
+#settings .settings-card input:focus,#settings .settings-card select:focus,#settings .settings-card textarea:focus{border-color:#91b18a;background:#fff;box-shadow:0 0 0 3px rgba(120,165,107,.13)}
+#settings .settings-card input::placeholder,#settings .settings-card textarea::placeholder{color:#a5afa4;opacity:1}
+#settings .settings-card textarea{resize:vertical;min-height:94px;line-height:1.65}
+#settings .settings-field-help{color:#99a398;font-size:8px}
+#settings .settings-policy-stack{display:grid;gap:16px}
+#settings .settings-maintenance{display:flex;align-items:center;gap:12px;margin-top:17px;padding:13px;border:1px solid #f0e4d4;border-radius:12px;background:linear-gradient(100deg,#fff9ef,#fffdf8)}
+#settings .maintenance-symbol{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:10px;background:#f8e8d3;color:#b47b40}
+#settings .maintenance-copy{flex:1;min-width:0}
+#settings .maintenance-copy b{font-size:10px;color:#73532e}
+#settings .maintenance-copy p{margin:4px 0 0;color:#9a8265;font-size:8px;line-height:1.5}
+#settings .settings-maintenance select{width:110px;flex:none;background:#fff}
+#settings .settings-connection-list{display:grid;gap:0;border:1px solid #e7ede5;border-radius:12px;overflow:hidden}
+#settings .settings-connection-list .row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;padding:11px 13px;border:0;border-bottom:1px solid #edf1eb;background:#fff;font-size:9px}
+#settings .settings-connection-list .row:last-child{border-bottom:0}
+#settings .settings-connection-list .row>span:first-child{color:#506454;font-weight:700}
+#settings .settings-connection-list .status{display:flex;align-items:center;gap:7px;color:#677a69;font-size:8px;font-weight:800;white-space:nowrap}
+#settings .settings-connection-list .dot{width:7px;height:7px;border-radius:50%;background:#65a474}
+#settings .settings-connection-list .dot.off{background:#d5a14f}
+#settings .settings-diagnostics .row{display:flex;justify-content:space-between;gap:12px;padding:9px 11px;border-bottom:1px solid #edf1eb;font-size:9px}
+#settings .settings-diagnostics .row:last-child{border-bottom:0}
+#settings .settings-diagnostics .status{display:flex;align-items:center;gap:7px;color:#687b6b;font-size:8px;font-weight:800;white-space:nowrap}
+#settings .settings-refresh{font-size:9px;padding:8px 11px;white-space:nowrap}
+#settings .settings-diagnostics{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-top:15px;padding:13px;border-radius:12px;background:#f3f7f0}
+#settings .settings-diagnostics b{color:#3c5941;font-size:9px}
+#settings .settings-diagnostics p{margin:4px 0 0;color:#7b8b7d;font-size:8px;line-height:1.5}
+#settings .settings-diagnostics .btn{flex:none;font-size:9px}
+#settings .settings-diagnostic-results:empty{display:none}
+#settings .settings-diagnostic-results{margin-top:12px;padding:10px;border:1px solid #e5ece2;border-radius:10px;background:#fbfcfa}
+#settings .settings-account-card{display:flex;align-items:center;gap:14px;padding:15px 18px}
+#settings .settings-account-art{display:grid;place-items:center;flex:none;width:43px;height:43px;border-radius:14px;background:linear-gradient(140deg,#e4efdf,#edf5e9);color:#4e794f;font-size:21px}
+#settings .settings-account-copy{flex:1;min-width:0}
+#settings .settings-account-kicker{color:#90a08f;font-size:7px;font-weight:900;letter-spacing:.16em}
+#settings .settings-account-copy h3{margin:4px 0 3px;color:#304a35;font-size:12px}
+#settings .settings-account-copy p{margin:0;color:#78877b;font-size:9px}
+#settings .settings-signout{border-color:#f0dcd6;background:#fff8f6;color:#9b5548;font-size:9px}
+#settings .settings-savebar{position:sticky;bottom:12px;z-index:8;display:flex;align-items:center;justify-content:space-between;gap:14px;margin:15px 0 0;padding:10px 13px 10px 16px;border:1px solid #dfe8dc;border-radius:14px;background:rgba(255,255,255,.94);box-shadow:0 12px 30px rgba(34,67,40,.12);backdrop-filter:blur(14px)}
+#settings .settings-savebar>div{display:flex;align-items:center;gap:8px;color:#6b7e6d;font-size:9px;font-weight:750}
+#settings .settings-save-indicator{width:7px;height:7px;border-radius:50%;background:#74a879}
+#settings .settings-savebar[data-tone="pending"] .settings-save-indicator{background:#d29d4e}#settings .settings-savebar[data-tone="error"] .settings-save-indicator{background:#c56c5c}
+#settings #settingsSaveState[data-tone="error"]{color:#a34b40}
+#settings .settings-savebar .btn{display:flex;align-items:center;gap:12px;padding:10px 15px;border-radius:9px;font-size:10px}
+#settings .settings-savebar .btn span{font-size:13px}
+@media(max-width:1050px){#settings .settings-shortcuts{grid-template-columns:repeat(2,minmax(0,1fr))}#settings .settings-workspace{grid-template-columns:180px minmax(0,1fr)}#settings .settings-form-grid.three{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){#settings .settings-hero{grid-template-columns:minmax(0,1fr);min-height:0;padding:25px}#settings .settings-hero-visual{position:absolute;right:-35px;bottom:-38px;opacity:.35;transform:scale(.85)}#settings .settings-workspace{grid-template-columns:minmax(0,1fr)}#settings .settings-rail{position:static;display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:10px}#settings .settings-rail-head{flex-basis:100%;padding:2px 5px 9px}#settings .settings-rail-label{display:none}#settings .settings-rail-link{width:auto;padding:8px 9px;font-size:8px}#settings .settings-rail-note{display:none}}
+@media(max-width:560px){#settings .settings-shortcuts{grid-template-columns:minmax(0,1fr);gap:8px}#settings .settings-shortcuts>button{padding:11px}#settings .settings-form-grid,#settings .settings-form-grid.three{grid-template-columns:minmax(0,1fr)}#settings .settings-card{padding:15px}#settings .settings-card-head{align-items:flex-start}#settings .settings-card-head p{max-width:235px}#settings .settings-maintenance{flex-wrap:wrap}#settings .settings-maintenance select{width:100%}#settings .settings-diagnostics{display:block}#settings .settings-diagnostics .btn{margin-top:10px;width:100%}#settings .settings-card-icon{display:none}#settings .settings-savebar{bottom:8px;padding:9px}#settings .settings-savebar .btn{padding:10px 11px}#settings .settings-account-card{align-items:flex-start;flex-wrap:wrap}#settings .settings-signout{margin-left:57px}}
+</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
   <div class="nav-group">
     <span class="nav-group-label">Workspace</span>
     <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
@@ -1550,7 +1658,93 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
 <section id="orders" class="view"><div class="panel"><h2>Orders</h2><p class="muted">Shopify orders are not mirrored into Supabase yet. The storefront checkout can hand customers to Shopify once Shopify is configured.</p><button class="btn" onclick="show('settings',document.querySelectorAll('.nav button')[7])">Configure Shopify</button></div></section>
 <section id="social" class="view"><div class="panel"><h2>Social Publishing Center</h2><p class="muted">Create a real saved social-post draft from a product or from scratch. Platform API publishing requires the relevant platform credentials.</p><div class="formgrid"><div class="field"><label>Post title</label><input id="socialTitle" placeholder="New Nuvora drop"></div><div class="field"><label>Platform</label><select id="socialPlatform"><option value="pinterest">Pinterest</option><option value="instagram">Instagram</option><option value="facebook">Facebook</option><option value="tiktok">TikTok</option><option value="x">X</option></select></div><div class="field"><label>Product</label><select id="socialProduct"><option value="">No product</option></select></div><div class="field"><label>Destination URL</label><input id="socialUrl" placeholder="https://…"></div><div class="field full"><label>Caption</label><textarea id="socialCaption" placeholder="Write the post caption…"></textarea></div><div class="field full"><label>Image URL</label><input id="socialImage" placeholder="https://…"></div></div><div class="actions"><button class="btn primary" onclick="createSocialPost()">Save social post</button></div><div id="socialRows" style="margin-top:18px"></div></div></section>
 <section id="analytics" class="view"><div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><h2>Analytics</h2><p class="muted">Real Nuvora events collected from the storefront. No invented numbers.</p></div><button class="btn" onclick="loadAnalytics()">Refresh</button></div><div id="analyticsRows" style="margin-top:16px"></div></div></section>
-<section id="settings" class="view"><div class="panel"><h2>Store settings</h2><p class="muted">These settings are persisted in Supabase. Secrets remain server-side and are never shown here.</p><div class="formgrid"><div class="field"><label>Store name</label><input id="setName"></div><div class="field"><label>Support email</label><input id="setEmail" type="email"></div><div class="field"><label>Currency</label><select id="setCurrency"><option>NGN</option><option>USD</option><option>GBP</option><option>EUR</option></select></div><div class="field"><label>Timezone</label><input id="setTimezone"></div><div class="field"><label>Default region</label><input id="setRegion"></div><div class="field"><label>Maintenance mode</label><select id="setMaintenance"><option value="false">Off</option><option value="true">On</option></select></div><div class="field full"><label>Store description</label><textarea id="setDescription"></textarea></div><div class="field full"><label>Affiliate disclosure</label><textarea id="setDisclosure"></textarea></div><div class="field full"><label>Shipping policy</label><textarea id="setShipping"></textarea></div><div class="field full"><label>Returns policy</label><textarea id="setReturns"></textarea></div></div><div class="actions"><button class="btn primary" onclick="saveSettings()">Save settings</button></div></div><div class="panel" style="margin-top:16px"><h2>Connections</h2><div id="connectionRows" class="muted">Checking…</div><div class="actions"><button class="btn primary" onclick="runDiagnostics()">Run full diagnostics</button></div><div id="diagnosticRows" style="margin-top:12px"></div><p class="muted" style="margin-top:14px">Diagnostics checks the signed-in admin, Supabase tables, Shopify Admin authentication, and Shopify product API access. Secrets are never displayed.</p></div><div class="panel" style="margin-top:16px"><h2>Account</h2><p id="adminEmail" class="muted"></p><button class="btn danger" onclick="signOutAdmin()">Sign out of Nuvora Admin</button></div></section>
+<section id="settings" class="view settings-view" oninput="setSettingsSaveState('Unsaved changes','pending')" onchange="setSettingsSaveState('Unsaved changes','pending')">
+  <div class="settings-hero">
+    <div class="settings-hero-copy">
+      <div class="settings-hero-kicker"><span>NUVORA SYSTEM</span><i></i><span>CONTROL CENTRE</span></div>
+      <h2>Make Nuvora feel like yours.</h2>
+      <p>Set your store identity, regional defaults, customer policies and connected services from one place.</p>
+      <div class="settings-hero-meta"><span><b>✦</b> Store configuration</span><span><b>◈</b> Admin-only workspace</span></div>
+    </div>
+    <div class="settings-hero-visual" aria-hidden="true">
+      <div class="settings-visual-orbit orbit-one"></div><div class="settings-visual-orbit orbit-two"></div>
+      <div class="settings-visual-core"><span>NUVORA</span><b>✳</b><small>SYSTEMS</small></div>
+      <div class="settings-visual-tag tag-one">IDENTITY</div><div class="settings-visual-tag tag-two">OPERATIONS</div>
+    </div>
+  </div>
+
+  <div class="settings-shortcuts" aria-label="Settings overview">
+    <button type="button" onclick="settingsJump('settings-profile',this)"><span class="shortcut-icon profile-icon">✳</span><span><b>Store identity</b><small>Brand and support details</small></span><em>01</em></button>
+    <button type="button" onclick="settingsJump('settings-region',this)"><span class="shortcut-icon region-icon">◷</span><span><b>Regional setup</b><small>Currency and operations</small></span><em>02</em></button>
+    <button type="button" onclick="settingsJump('settings-policies',this)"><span class="shortcut-icon policy-icon">▤</span><span><b>Customer policies</b><small>Disclosures and terms</small></span><em>03</em></button>
+    <button type="button" onclick="settingsJump('settings-connections',this)"><span class="shortcut-icon connection-icon">⌘</span><span><b>Connections</b><small>Services and diagnostics</small></span><em>04</em></button>
+  </div>
+
+  <div class="settings-workspace">
+    <aside class="settings-rail">
+      <div class="settings-rail-head"><span class="settings-rail-mark">✳</span><div><b>Settings</b><small>Manage your workspace</small></div></div>
+      <div class="settings-rail-label">GENERAL</div>
+      <button class="settings-rail-link active" type="button" onclick="settingsJump('settings-profile',this)"><span>◉</span>Store identity</button>
+      <button class="settings-rail-link" type="button" onclick="settingsJump('settings-region',this)"><span>◎</span>Regional setup</button>
+      <button class="settings-rail-link" type="button" onclick="settingsJump('settings-policies',this)"><span>▤</span>Customer policies</button>
+      <div class="settings-rail-label">SYSTEM</div>
+      <button class="settings-rail-link" type="button" onclick="settingsJump('settings-connections',this)"><span>⌘</span>Connections</button>
+      <button class="settings-rail-link" type="button" onclick="settingsJump('settings-account',this)"><span>♙</span>Admin account</button>
+      <div class="settings-rail-note"><span>✦</span><b>Your settings</b><p>Changes here apply to the main Nuvora store configuration. Skin Studio has its own storefront design settings.</p></div>
+    </aside>
+
+    <div class="settings-content">
+      <section class="settings-card" id="settings-profile">
+        <div class="settings-card-head"><div class="settings-card-title"><span class="settings-index">01</span><div><h3>Store identity</h3><p>The details customers use to recognise and contact Nuvora.</p></div></div><span class="settings-card-icon mint">✳</span></div>
+        <div class="settings-form-grid">
+          <div class="field"><label for="setName">Store name</label><input id="setName" autocomplete="organization" placeholder="Nuvora"></div>
+          <div class="field"><label for="setEmail">Support email</label><input id="setEmail" type="email" autocomplete="email" placeholder="hello@example.com"></div>
+          <div class="field full"><label for="setDescription">Store description</label><textarea id="setDescription" rows="3" placeholder="Tell customers what Nuvora is about…"></textarea><small class="settings-field-help">A short introduction to your store and what it offers.</small></div>
+        </div>
+      </section>
+
+      <section class="settings-card" id="settings-region">
+        <div class="settings-card-head"><div class="settings-card-title"><span class="settings-index">02</span><div><h3>Regional setup</h3><p>Set the defaults Nuvora uses for your market and operations.</p></div></div><span class="settings-card-icon apricot">◷</span></div>
+        <div class="settings-form-grid three">
+          <div class="field"><label for="setCurrency">Store currency</label><select id="setCurrency"><option>NGN</option><option>USD</option><option>GBP</option><option>EUR</option></select></div>
+          <div class="field"><label for="setTimezone">Timezone</label><input id="setTimezone" placeholder="Africa/Lagos"></div>
+          <div class="field"><label for="setRegion">Default region</label><input id="setRegion" placeholder="NG"></div>
+        </div>
+        <div class="settings-maintenance">
+          <div class="maintenance-symbol">⚑</div><div class="maintenance-copy"><b>Maintenance mode</b><p>Switch this on only when you intend to put the store into maintenance.</p></div>
+          <select id="setMaintenance" aria-label="Maintenance mode"><option value="false">Off</option><option value="true">On</option></select>
+        </div>
+      </section>
+
+      <section class="settings-card" id="settings-policies">
+        <div class="settings-card-head"><div class="settings-card-title"><span class="settings-index">03</span><div><h3>Customer policies</h3><p>Keep the information customers need clear and easy to find.</p></div></div><span class="settings-card-icon lilac">▤</span></div>
+        <div class="settings-policy-stack">
+          <div class="field"><label for="setDisclosure">Affiliate disclosure</label><textarea id="setDisclosure" rows="3" placeholder="Explain when Nuvora may earn a commission from qualifying purchases…"></textarea></div>
+          <div class="field"><label for="setShipping">Shipping policy</label><textarea id="setShipping" rows="3" placeholder="Add your shipping and delivery information…"></textarea></div>
+          <div class="field"><label for="setReturns">Returns policy</label><textarea id="setReturns" rows="3" placeholder="Add your returns and refund information…"></textarea></div>
+        </div>
+      </section>
+
+      <section class="settings-card" id="settings-connections">
+        <div class="settings-card-head"><div class="settings-card-title"><span class="settings-index">04</span><div><h3>Connections & system health</h3><p>Check the services Nuvora relies on and investigate anything that needs attention.</p></div></div><button class="btn settings-refresh" type="button" onclick="healthCheck()">↻ Check again</button></div>
+        <div id="connectionRows" class="settings-connection-list"><div class="health-loading"><i></i><span>Checking connections…</span></div></div>
+        <div class="settings-diagnostics">
+          <div><b>Need a deeper check?</b><p>Run diagnostics across your admin access, database and connected services.</p></div>
+          <button class="btn primary" type="button" onclick="runDiagnostics()">Run full diagnostics ↗</button>
+        </div>
+        <div id="diagnosticRows" class="settings-diagnostic-results"></div>
+      </section>
+
+      <section class="settings-card settings-account-card" id="settings-account">
+        <div class="settings-account-art" aria-hidden="true"><span>♙</span></div>
+        <div class="settings-account-copy"><span class="settings-account-kicker">ADMIN ACCESS</span><h3>Your Nuvora account</h3><p id="adminEmail" class="muted"></p></div>
+        <button class="btn settings-signout" type="button" onclick="signOutAdmin()">Sign out ↗</button>
+      </section>
+    </div>
+  </div>
+
+  <div class="settings-savebar"><div><span class="settings-save-indicator"></span><span id="settingsSaveState" data-tone="saved">Ready to edit</span></div><button class="btn primary" type="button" data-settings-save onclick="saveSettings()">Save changes <span>↗</span></button></div>
+</section>
 </main></div>
 
 <div id="aiStudioModal" class="modal-backdrop" onclick="if(event.target===this)closeAIStudio()">
@@ -1691,7 +1885,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .btn{white-space:nowrap}
 @media(max-width:760px){body.skin-studio-fullpage .studio-layout{display:flex!important;flex-direction:column;min-height:0}body.skin-studio-fullpage .studio-left-panel,body.skin-studio-fullpage .studio-right-panel{min-height:0}body.skin-studio-fullpage .studio-canvas-viewport{min-height:620px}}
 </style>
 <style id="skin-studio-clutter-removal">body.skin-studio-fullpage #skin-care>.skin-studio-hero,body.skin-studio-fullpage #skin-care>.skin-studio-stats,body.skin-studio-fullpage #skin-care>.skin-studio-section-head,body.skin-studio-fullpage #skin-care>.skin-studio-tools{display:none!important}body.skin-studio-fullpage #skin-care>.skin-site-builder{margin-top:0!important}body.skin-studio-fullpage .studio-toolbar .studio-overline{display:none}</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
-const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],bulkReview:['Import Review','Review, edit and publish the products from your latest bulk discovery.'],products:['Products','Manage Shop, Finds, and Learn listings.'],'skin-care':['Skin Care','Manage the dedicated Nuvora Skin skincare and beauty storefront.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['Settings','Connections and store configuration.']};
+const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],bulkReview:['Import Review','Review, edit and publish the products from your latest bulk discovery.'],products:['Products','Manage Shop, Finds, and Learn listings.'],'skin-care':['Skin Care','Manage the dedicated Nuvora Skin skincare and beauty storefront.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['System settings','Your store identity, policies and connected services.']};
 let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[],collections=[],socialPosts=[];
 window.__nuvoraSchemaState=window.__nuvoraSchemaState||{missingProductColumns:[],productSchemaError:''};
 function validURL(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
@@ -3088,7 +3282,69 @@ async function runDiagnostics(){
     (schemaError&&!missing.length?'<div class="notice" style="margin-top:12px"><strong>Database schema:</strong> '+esc(schemaError)+'</div>':'');
   }catch(e){box.innerHTML='<div class="notice">'+esc(e.message||'Diagnostics failed.')+'</div>';}
 }
-async function saveSettings(){try{await api('/api/admin/settings',{method:'PATCH',body:{store_name:document.getElementById('setName').value.trim()||'Nuvora',support_email:document.getElementById('setEmail').value.trim()||null,currency:document.getElementById('setCurrency').value,timezone:document.getElementById('setTimezone').value.trim()||'Africa/Lagos',default_region:document.getElementById('setRegion').value.trim()||'NG',maintenance_mode:document.getElementById('setMaintenance').value==='true',store_description:document.getElementById('setDescription').value,affiliate_disclosure:document.getElementById('setDisclosure').value,shipping_policy:document.getElementById('setShipping').value,returns_policy:document.getElementById('setReturns').value}});setAdminStatus('Settings saved.');}catch(e){setAdminStatus(e.message)}}
+function setSettingsSaveState(message,tone='saved'){
+ const state=document.getElementById('settingsSaveState');
+ if(state){state.textContent=String(message||'');state.dataset.tone=tone;const bar=state.closest('.settings-savebar');if(bar)bar.dataset.tone=tone;}
+}
+function settingsJump(id,button){
+ const target=document.getElementById(id);
+ if(!target)return;
+ target.scrollIntoView({behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+ document.querySelectorAll('#settings .settings-rail-link').forEach(link=>link.classList.toggle('active',link===button||link.getAttribute('onclick')?.includes("'"+id+"'")));
+ document.querySelectorAll('#settings .settings-shortcuts>button').forEach(link=>link.classList.toggle('active',link===button));
+}
+async function loadSettings(){
+ const ids={store_name:'setName',support_email:'setEmail',currency:'setCurrency',timezone:'setTimezone',default_region:'setRegion',maintenance_mode:'setMaintenance',store_description:'setDescription',affiliate_disclosure:'setDisclosure',shipping_policy:'setShipping',returns_policy:'setReturns'};
+ try{
+  const settings=await api('/api/admin/settings');
+  if(!settings||typeof settings!=='object'||Array.isArray(settings))throw new Error('Nuvora returned an invalid settings record.');
+  for(const [key,id] of Object.entries(ids)){
+   const input=document.getElementById(id);if(!input)continue;
+   if(key==='maintenance_mode')input.value=String(settings[key]===true||String(settings[key]).toLowerCase()==='true');
+   else if(key==='currency'){
+    const value=String(settings[key]||'NGN').toUpperCase();
+    input.value=[...input.options].some(option=>option.value===value)?value:'NGN';
+   }else{
+    const fallback=key==='store_name'?'Nuvora':key==='timezone'?'Africa/Lagos':key==='default_region'?'NG':'';
+    input.value=settings[key]===null||settings[key]===undefined?fallback:String(settings[key]);
+   }
+  }
+  const email=document.getElementById('adminEmail');
+  if(email)email.textContent='Signed in as '+(adminSession?.user?.email||adminUser?.email||'Nuvora administrator');
+  setSettingsSaveState('Settings loaded','saved');
+  healthCheck().catch(()=>{});
+ }catch(error){
+  setSettingsSaveState('Could not load saved settings','error');
+  setAdminStatus(error.message||'Settings could not be loaded.');
+ }
+}
+async function saveSettings(){
+ const button=document.querySelector('#settings [data-settings-save]');
+ if(button){button.disabled=true;button.innerHTML='Saving…';}
+ setSettingsSaveState('Saving changes…','pending');
+ try{
+  const payload={
+   store_name:document.getElementById('setName').value.trim()||'Nuvora',
+   support_email:document.getElementById('setEmail').value.trim()||null,
+   currency:document.getElementById('setCurrency').value,
+   timezone:document.getElementById('setTimezone').value.trim()||'Africa/Lagos',
+   default_region:document.getElementById('setRegion').value.trim()||'NG',
+   maintenance_mode:document.getElementById('setMaintenance').value==='true',
+   store_description:document.getElementById('setDescription').value,
+   affiliate_disclosure:document.getElementById('setDisclosure').value,
+   shipping_policy:document.getElementById('setShipping').value,
+   returns_policy:document.getElementById('setReturns').value
+  };
+  await api('/api/admin/settings',{method:'PATCH',body:payload});
+  setSettingsSaveState('All changes saved','saved');
+  setAdminStatus('Settings saved.','success');
+ }catch(error){
+  setSettingsSaveState('Save failed — your edits are still here','error');
+  setAdminStatus(error.message||'Settings could not be saved.','error');
+ }finally{
+  if(button){button.disabled=false;button.innerHTML='Save changes <span>↗</span>';}
+ }
+}
 async function loadCategories(){try{categories=await api('/api/admin/categories');renderProductTaxonomy();document.getElementById('categoryRows').innerHTML=categories.length?categories.map(c=>`<div class="row"><span><b>${esc(c.name)}</b><div class="muted">${esc(c.slug)}</div></span><span class="tag">Category</span></div>`).join(''):'<div class="muted">No categories yet.</div>'}catch(e){setAdminStatus(e.message)}}
 async function createCategory(){const name=document.getElementById('catName').value.trim();const slug=document.getElementById('catSlug').value.trim()||name.toLowerCase().replace(/[^a-z0-9]+/g,'-');if(!name)return setAdminStatus('Category name required.');try{await api('/api/admin/categories',{method:'POST',body:{name,slug,description:document.getElementById('catDesc').value}});document.getElementById('catName').value='';document.getElementById('catSlug').value='';document.getElementById('catDesc').value='';await loadCategories();}catch(e){setAdminStatus(e.message)}}
 async function loadCollections(){try{collections=await api('/api/admin/collections');renderProductTaxonomy();document.getElementById('collectionRows').innerHTML=collections.length?collections.map(c=>`<div class="row"><span><b>${esc(c.name)}</b><div class="muted">${esc(c.slug)} · ${c.published?'Published':'Draft'}</div></span><span class="tag">${c.published?'Published':'Draft'}</span></div>`).join(''):'<div class="muted">No collections yet.</div>'}catch(e){setAdminStatus(e.message)}}
