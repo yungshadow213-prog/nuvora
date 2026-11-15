@@ -2451,7 +2451,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const identities=new Map();
         for(const product of products){
           const asin=String(product.amazon_asin||'').trim().toUpperCase();
-          const destination=String(product.destination_url||'').trim().replace(/\\/+$/,'').toLowerCase();
+          let destination=String(product.destination_url||'').trim().toLowerCase();
+          while(destination.endsWith('/'))destination=destination.slice(0,-1);
           for(const key of [asin?'asin:'+asin:'',destination?'url:'+destination:''].filter(Boolean)){
             if(!identities.has(key))identities.set(key,[]);
             identities.get(key).push(product);
