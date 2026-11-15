@@ -177,7 +177,7 @@ async function operate(id,action){
   }catch(error){notice(error.message||'The operation could not be completed.','error');}
 }
 function normalizeSourceLinks(value){
-  const matches=String(value||'').match(/https?:\\/\\/[^\\s<>"'\\]\\[),;]+/gi)||[];
+  const matches=String(value||'').match(/https?:\/\/[^\s<>"'\]\[),;]+/gi)||[];
   return [...new Set(matches.map(value=>value.replace(/[.,;]+$/,'').trim()).filter(Boolean))];
 }
 function updateImportInputCount(){
