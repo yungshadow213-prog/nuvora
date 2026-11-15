@@ -970,7 +970,79 @@ body.product-workspace-page #productModal .product-entry-step-panel{scroll-margi
  body.product-workspace-page #productModal .product-entry-navigation .btn{min-width:0!important;flex:1 1 0!important}
  body.product-workspace-page #productModal .product-entry-footer>#productSaveBtn,body.product-workspace-page #productModal .product-entry-footer>#skinProductPublishBtn{min-width:0!important;flex:1 1 0!important}
 }
-</style></head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
+</style>
+<style id="skin-studio-expanded-canvas">
+/* Expanded canvas workspace: the preview gets the space, the outline stays compact. */
+@media (min-width:1200px){
+  body.skin-studio-fullpage #skinSiteBuilder .studio-layout.studio-shopify-workspace{
+    display:grid!important;
+    grid-template-columns:minmax(240px,var(--nv-studio-sidebar-width,268px)) 8px minmax(0,1fr)!important;
+    grid-template-rows:minmax(0,1fr)!important;
+    gap:0!important;
+    height:calc(100dvh - 160px)!important;
+    min-height:500px!important;
+    max-height:calc(100dvh - 125px)!important;
+    overflow:hidden!important;
+    padding:0!important;
+    align-items:stretch!important;
+  }
+  body.skin-studio-fullpage #skinSiteBuilder .studio-layout.studio-shopify-workspace>.studio-left-panel{
+    grid-column:1!important;grid-row:1!important;width:auto!important;min-width:0!important;
+    height:100%!important;min-height:0!important;max-height:none!important;overflow:hidden!important;
+  }
+  body.skin-studio-fullpage #skinSiteBuilder .studio-layout.studio-shopify-workspace>.studio-canvas-panel{
+    grid-column:3!important;grid-row:1!important;min-width:0!important;min-height:0!important;
+    width:100%!important;height:100%!important;max-height:none!important;overflow:hidden!important;
+    border-left:1px solid #dfe7dc!important;border-radius:0 13px 13px 0!important;
+  }
+  body.skin-studio-fullpage #skinSiteBuilder .studio-layout.studio-shopify-workspace>.studio-resize-handle{
+    grid-column:2!important;grid-row:1!important;display:flex!important;align-items:center!important;
+    justify-content:center!important;min-width:8px!important;width:8px!important;height:100%!important;
+    cursor:col-resize!important;touch-action:none!important;user-select:none!important;
+    background:transparent!important;z-index:12!important;outline:none!important;
+  }
+  body.skin-studio-fullpage #skinSiteBuilder .studio-resize-handle:before{
+    content:"";display:block;width:3px;height:54px;border-radius:9px;background:#cbd7c8;
+    box-shadow:0 0 0 1px #edf2eb;transition:background .15s, height .15s;
+  }
+  body.skin-studio-fullpage #skinSiteBuilder .studio-resize-handle:hover:before,
+  body.skin-studio-fullpage #skinSiteBuilder .studio-resize-handle:focus-visible:before,
+  body.skin-studio-fullpage #skinSiteBuilder .studio-resize-handle[aria-valuenow]:active:before{
+    height:76px;background:#668a67;
+  }
+  body.skin-studio-fullpage.skin-studio-hide-outline #skinSiteBuilder .studio-layout.studio-shopify-workspace{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  body.skin-studio-fullpage.skin-studio-hide-outline #skinSiteBuilder .studio-layout.studio-shopify-workspace>.studio-resize-handle{
+    display:none!important;
+  }
+  body.skin-studio-fullpage.skin-studio-hide-outline #skinSiteBuilder .studio-layout.studio-shopify-workspace>.studio-canvas-panel{
+    grid-column:1!important;
+  }
+}
+@media (min-width:761px) and (max-width:1199px){
+  body.skin-studio-fullpage #skinSiteBuilder .studio-layout.studio-shopify-workspace{
+    grid-template-columns:220px minmax(0,1fr)!important;
+    height:calc(100dvh - 168px)!important;min-height:560px!important;max-height:none!important;overflow:hidden!important;
+  }
+  body.skin-studio-fullpage #skinSiteBuilder .studio-layout.studio-shopify-workspace>.studio-resize-handle{display:none!important}
+  body.skin-studio-fullpage #skinSiteBuilder .studio-layout.studio-shopify-workspace>.studio-canvas-panel{grid-column:2!important}
+}
+body.skin-studio-fullpage #skinSiteBuilder .studio-canvas-viewport{
+  min-width:0!important;min-height:0!important;padding:6px!important;
+}
+body.skin-studio-fullpage #skinSiteBuilder .studio-canvas-inner{
+  width:100%!important;max-width:none!important;min-width:0!important;height:100%!important;
+}
+body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
+  display:block!important;width:100%!important;height:100%!important;min-height:0!important;
+}
+@media(max-width:760px){
+  body.skin-studio-fullpage #skinSiteBuilder .studio-layout.studio-shopify-workspace{height:auto!important;max-height:none!important;min-height:0!important}
+  body.skin-studio-fullpage #skinSiteBuilder .studio-canvas-panel{height:78dvh!important;min-height:620px!important}
+}
+</style>
+</head><body><div id="authGate" class="auth-gate"><div class="auth-card"><div class="brand" style="padding:0 0 18px">Nuvo<span>ra</span></div><h1>Admin sign in</h1><p>Sign in with the Google account you already use as a Nuvora administrator.</p><button id="googleSignIn" class="google-btn" onclick="signInWithGoogle()">Continue with Google</button><button id="switchGoogleAccount" class="btn" style="width:100%;margin-top:10px" onclick="switchAdminAccount()">Sign out / switch Google account</button><div id="authError" class="auth-error"></div><small>Your account is checked against Nuvora's admin permissions after sign-in.</small></div></div><div class="app"><aside class="side"><div class="brand">Nuvo<span>ra</span><div class="muted" style="margin-top:4px">store control center</div></div><nav class="nav" aria-label="Primary navigation">
   <div class="nav-group">
     <span class="nav-group-label">Workspace</span>
     <button class="active" data-icon="⌂" onclick="show('overview',this)">Overview</button>
