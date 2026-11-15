@@ -74,7 +74,7 @@ assert.ok(importWorker.includes("Do not invent or infer ingredient concentration
 assert.ok(importWorker.includes("product.published=false"), "Approved imports must remain unpublished drafts.");
 assert.ok(importWorker.includes("['ready','needs_review'].includes(item.status)"), "Import approvals must reject concurrent or already-importing items.");
 assert.ok(importWorker.includes("Use a public HTTPS product link."), "Source imports must reject non-HTTPS URLs.");
-assert.ok(importWorker.includes("/^https:\\/\\//i.test(String(value))"), "Imported product images must use HTTPS.");
+assert.ok(importWorker.includes("isDisplayableProductImage(value)") && importWorker.includes("test(String(value))"), "Imported product images must use HTTPS.");
 assert.ok(importPage.includes("id=\"importUrls\""), "AI Manager must provide a bulk product-link input.");
 assert.ok(importPage.includes("normalizeSourceLinks"), "AI Manager must normalise pasted product URLs.");
 assert.ok(importPage.includes("/api/admin/ai/import/prepare"), "AI Manager must call the isolated preparation endpoint.");
