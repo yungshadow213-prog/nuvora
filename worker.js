@@ -227,6 +227,26 @@ async function inspectProductSchema(env){
   }
   return {ok:true,core:true,missing,message:firstOptionalError};
 }
+async function refreshSkinImportBatch(env,batchId){
+  if(!/^[0-9a-f-]{36}$/i.test(String(batchId||'')))return false;
+  const response=await supabaseRest(env,'GET','nuvora_product_import_items',null,'?select=status&batch_id=eq.'+encodeURIComponent(batchId)+'&store_key=eq.skin');
+  if(!response.ok)return false;
+  const statuses=(await response.json()||[]).map(row=>row.status);
+  const importedCount=statuses.filter(status=>status==='imported').length;
+  const readyCount=statuses.filter(status=>['ready','needs_review','importing'].includes(status)).length;
+  const duplicateCount=statuses.filter(status=>status==='duplicate').length;
+  const failedCount=statuses.filter(status=>status==='failed').length;
+  const skippedCount=statuses.filter(status=>status==='skipped').length;
+  const write=await supabaseRest(env,'PATCH','nuvora_product_import_batches',{
+    imported_count:importedCount,
+    ready_count:readyCount,
+    duplicate_count:duplicateCount,
+    failed_count:failedCount,
+    summary:{ready:readyCount,duplicates:duplicateCount,failed:failedCount,imported:importedCount,skipped:skippedCount}
+  },'?id=eq.'+encodeURIComponent(batchId)+'&store_key=eq.skin');
+  return write.ok;
+}
+
 async function runNuvoraWorkersAI(env,system,messages,maxTokens=2200){
   if(!env?.AI||typeof env.AI.run!=='function')throw new Error("Cloudflare Workers AI is not connected. Check the Worker AI binding named AI.");
   const model=String(env.NUVORA_AI_MODEL||'@cf/google/gemma-4-26b-a4b-it').trim();
@@ -2705,6 +2725,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           if(!['ready','needs_review','duplicate','failed'].includes(item.status))return json({error:'This import item can no longer be skipped.'},409);
           const skipped=await supabaseRest(env,'PATCH','nuvora_product_import_items',{status:'skipped',reviewed_by:admin.id,reviewed_at:new Date().toISOString()},'?id=eq.'+encodeURIComponent(item.id)+'&store_key=eq.skin&status=eq.'+item.status);
           if(!skipped.ok||!(await skipped.json()||[]).length)return json({error:'This import item changed while you were reviewing it.'},409);
+          await refreshSkinImportBatch(env,item.batch_id);
           return json({ok:true,status:'skipped'});
         }
         if(!['ready','needs_review'].includes(item.status))return json({error:item.status==='importing'?'This item is already being imported. Refresh the queue before trying again.':'Only prepared Skin Care products can be approved.'},409);
@@ -2755,19 +2776,28 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         }
         const created=(await saved.json()||[])[0];
         if(!created?.id)return json({error:'The product was saved, but its new ID could not be confirmed. Refresh the product library before retrying.'},502);
+        // Write the inferred collection into the Skin Studio draft, not the published layout.
+        let categoryDraftSaved=false;
+        try{
+          const settingsResponse=await supabaseRest(env,'GET','store_settings',null,'?select=skin_site_draft&id=eq.true&limit=1');
+          if(settingsResponse.ok){
+            const settings=(await settingsResponse.json()||[])[0]||{};
+            const currentDraft=settings.skin_site_draft&&typeof settings.skin_site_draft==='object'?settings.skin_site_draft:{};
+            const productCategoryMap=currentDraft.productCategoryMap&&typeof currentDraft.productCategoryMap==='object'&&!Array.isArray(currentDraft.productCategoryMap)?{...currentDraft.productCategoryMap}:{};
+            productCategoryMap[String(created.id)]=skinCategorySlug;
+            const nextDraft={...currentDraft,productCategoryMap};
+            const draftError=validateSkinSiteConfig(nextDraft,{requireProductGrid:false});
+            if(!draftError){
+              const draftWrite=await supabaseRest(env,'PATCH','store_settings',{skin_site_draft:nextDraft,updated_at:new Date().toISOString()},'?id=eq.true');
+              categoryDraftSaved=draftWrite.ok;
+            }
+          }
+        }catch(error){}
         const marked=await supabaseRest(env,'PATCH','nuvora_product_import_items',{status:'imported',imported_product_id:created.id,imported_at:new Date().toISOString(),error:null},'?id=eq.'+encodeURIComponent(item.id)+'&store_key=eq.skin&status=eq.importing');
         await supabaseRest(env,'POST','admin_activity',{admin_id:admin.id,action:'nuvora_skin_product_imported',entity_type:'skin_product',entity_id:created.id,metadata:{store_key:'skin',batch_id:item.batch_id,import_item_id:item.id,retailer,source_identity:identity}});
-        const siblingRows=await supabaseRest(env,'GET','nuvora_product_import_items',null,'?select=status&batch_id=eq.'+encodeURIComponent(item.batch_id)+'&store_key=eq.skin');
-        if(siblingRows.ok){
-          const statuses=(await siblingRows.json()||[]).map(row=>row.status);
-          const importedCount=statuses.filter(status=>status==='imported').length;
-          const readyCount=statuses.filter(status=>['ready','needs_review','importing'].includes(status)).length;
-          const duplicateCount=statuses.filter(status=>status==='duplicate').length;
-          const failedCount=statuses.filter(status=>status==='failed').length;
-          await supabaseRest(env,'PATCH','nuvora_product_import_batches',{imported_count:importedCount,ready_count:readyCount,duplicate_count:duplicateCount,failed_count:failedCount},'?id=eq.'+encodeURIComponent(item.batch_id)+'&store_key=eq.skin');
-        }
+        await refreshSkinImportBatch(env,item.batch_id);
         if(!marked.ok||!(await marked.json()||[]).length)return json({ok:true,product:created,warning:'Product created as an unpublished draft, but the queue status needs refreshing.',status:'created'});
-        return json({ok:true,product:created,status:'imported',published:false});
+        return json({ok:true,product:created,status:'imported',published:false,categoryDraftSaved,warning:categoryDraftSaved?null:'The product is safely saved as a draft, but its Skin Studio category assignment could not be added to the current editor draft.'});
       }
 
       if(url.pathname==='/api/admin/ai/manager/audit'&&request.method==='POST'){
