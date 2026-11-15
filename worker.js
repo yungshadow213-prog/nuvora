@@ -2520,7 +2520,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
               ...(Array.isArray(listing.images)?listing.images:[]),
               ...(Array.isArray(listing.image_urls)?listing.image_urls:[]),
               listing.image_url
-            ],60).filter(isDisplayableProductImage).slice(0,30);
+            ],60).filter(value=>isDisplayableProductImage(value)&&/^https:\/\//i.test(String(value))).slice(0,30);
             const description=cleanMultilineText(listing.description,12000);
             const featureText=Array.isArray(listing.features)?listing.features.map(value=>cleanMultilineText(value,1000)).filter(Boolean).slice(0,20).join('\n'):cleanMultilineText(listing.features,12000);
             const productType=inferType(title,description,featureText);
