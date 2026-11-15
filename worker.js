@@ -2634,8 +2634,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           if(!skipped.ok||!(await skipped.json()||[]).length)return json({error:'This import item changed while you were reviewing it.'},409);
           return json({ok:true,status:'skipped'});
         }
-        if(!['ready','needs_review','importing'].includes(item.status))return json({error:'Only prepared Skin Care products can be approved.'},409);
-        if(item.status!=='importing'){
+        if(!['ready','needs_review'].includes(item.status))return json({error:item.status==='importing'?'This item is already being imported. Refresh the queue before trying again.':'Only prepared Skin Care products can be approved.'},409);
+        {
           const claim=await supabaseRest(env,'PATCH','nuvora_product_import_items',{status:'importing',reviewed_by:admin.id,reviewed_at:new Date().toISOString()},'?id=eq.'+encodeURIComponent(item.id)+'&store_key=eq.skin&status=eq.'+item.status);
           if(!claim.ok||!(await claim.json()||[]).length)return json({error:'Another review action may already be processing this item. Refresh the queue.'},409);
         }
