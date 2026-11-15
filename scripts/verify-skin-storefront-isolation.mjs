@@ -29,4 +29,31 @@ assert.ok(layout.includes("nuvora-skin-studio-sidebar-width"), "Sidebar width mu
 
 assert.ok(schema.includes("storefront_key text not null default 'main'"), "Fresh schema must include storefront ownership.");
 assert.ok(migration.includes("check (storefront_key in ('main', 'skin'))"), "Migration must restrict catalogue keys to supported shared catalogues.");
-console.log("Nuvora Skin Studio catalogue isolation and expanded-preview checks passed.");
+
+const [autopilotWorker, autopilotRouter, autopilotPage, autopilotMigration] = await Promise.all([
+  read("worker.js"),
+  read("worker-router.js"),
+  read("ai-manager.html"),
+  read("backend/migrations/20261115081209_nuvora_autopilot_phase_one.sql")
+]);
+
+assert.ok(autopilotRouter.includes('url.pathname === "/admin/ai-manager"'), "The AI Manager must be routed by the active Worker entry point.");
+assert.ok(autopilotRouter.includes('/ai-manager.html'), "The AI Manager route must serve its dashboard asset.");
+assert.ok(admin.includes("window.location.href='/admin/ai-manager'"), "Nuvora Admin must expose an AI Manager navigation link.");
+assert.ok(autopilotPage.includes("/api/admin/ai/manager/audit"), "The dashboard must call the authenticated Skin Care audit API.");
+assert.ok(autopilotPage.includes("/api/admin/ai/manager/prepare"), "The dashboard must expose AI copy preparation.");
+assert.ok(autopilotPage.includes("proposed_patch.store_description"), "The approval UI must display the exact description proposed by AI.");
+assert.ok(autopilotPage.includes("Undo change"), "The approval UI must expose rollback for applied changes.");
+
+assert.ok(autopilotWorker.includes("storefront_key=eq.skin&order=created_at.desc&limit=1000"), "Autopilot audit must read only the Skin Care catalogue.");
+assert.ok(autopilotWorker.includes("storefront_key=eq.skin&order=created_at.desc&limit=1000"), "Autopilot preparation must read only the Skin Care catalogue.");
+assert.ok(autopilotWorker.includes("&store_key=eq.skin&limit=1"), "Operation lookup must be scoped to the Skin Care store.");
+assert.ok(autopilotWorker.includes("&storefront_key=eq.skin&or=(store_description.is.null,store_description.eq.)"), "Approvals must only fill an empty description on a Skin Care product.");
+assert.ok(autopilotWorker.includes("&storefront_key=eq.skin&store_description=eq.'+encodeURIComponent(description)"), "Rollback must be scoped to Skin Care and protect newer product edits.");
+assert.ok(autopilotWorker.includes("['approve','reject','rollback']"), "The operation API must restrict state transitions to explicit actions.");
+assert.ok(autopilotWorker.includes("operation.action_type!=='fill_store_description'"), "Only the explicitly implemented action type may be applied.");
+assert.ok(autopilotWorker.includes("Main-store products were excluded from this audit."), "The audit must state the catalogue isolation boundary.");
+assert.ok(autopilotMigration.includes("alter table public.nuvora_ai_operations enable row level security"), "The AI approval queue must have RLS enabled.");
+assert.ok(autopilotMigration.includes("revoke all on table public.nuvora_ai_operations from anon, authenticated"), "Browser roles must not receive direct approval queue access.");
+
+console.log("Nuvora Skin Studio isolation and Autopilot safeguards passed.");
