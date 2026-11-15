@@ -45,7 +45,7 @@ jobs:
           from pathlib import Path
           import re
           total=0
-          for name in ["index.html","beauty.html","multi-store-studio.html","storefront-studio.html","ai-manager.html"]:
+          for name in ["index.html","beauty.html","multi-store-studio.html","storefront-studio.html","ai-manager.html","experience-studio.html"]:
               html=Path(name).read_text(encoding="utf-8")
               scripts=re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>", html, flags=re.I)
               inline=[s for s in scripts if s.strip()]
@@ -57,7 +57,7 @@ jobs:
               print(f"{name}: extracted {len(inline)} inline script block(s).")
           print(f"Extracted {total} storefront script block(s).")
           PY
-          for file in /tmp/nuvora-index-*.js /tmp/nuvora-beauty-*.js /tmp/nuvora-multi-store-studio-*.js /tmp/nuvora-storefront-studio-*.js; do
+          for file in /tmp/nuvora-index-*.js /tmp/nuvora-beauty-*.js /tmp/nuvora-multi-store-studio-*.js /tmp/nuvora-storefront-studio-*.js /tmp/nuvora-experience-studio-*.js; do
             node --check "$file"
           done
 
@@ -73,6 +73,8 @@ jobs:
           node-version: 24
       - name: Verify Skin Studio and Autopilot isolation contracts
         run: npm run verify:skin-store
+      - name: Verify Experience Studio architecture and storefront filtering
+        run: npm run verify:experiences
       - name: Verify multi-store editor and publish contracts
         run: node scripts/verify-multistore-audit.mjs
       - name: Audit HTML and JavaScript wiring
@@ -82,7 +84,7 @@ jobs:
           from pathlib import Path
           import re, sys
           failures=[]
-          for name in ["index.html","beauty.html","admin.html","edit-product.html","multi-store-studio.html","storefront-studio.html","ai-manager.html"]:
+          for name in ["index.html","beauty.html","admin.html","edit-product.html","multi-store-studio.html","storefront-studio.html","ai-manager.html","experience-studio.html"]:
               text=Path(name).read_text(encoding="utf-8")
               if len(re.findall(r"<script\b", text, re.I)) != len(re.findall(r"</script>", text, re.I)):
                   failures.append(f"{name}: script tag count mismatch")
