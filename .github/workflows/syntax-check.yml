@@ -57,7 +57,7 @@ jobs:
               print(f"{name}: extracted {len(inline)} inline script block(s).")
           print(f"Extracted {total} storefront script block(s).")
           PY
-          for file in /tmp/nuvora-index-*.js /tmp/nuvora-beauty-*.js /tmp/nuvora-multi-store-studio-*.js /tmp/nuvora-storefront-studio-*.js /tmp/nuvora-experience-studio-*.js; do
+          for file in /tmp/nuvora-index-*.js /tmp/nuvora-beauty-*.js /tmp/nuvora-multi-store-studio-*.js /tmp/nuvora-storefront-studio-*.js /tmp/nuvora-ai-manager-*.js /tmp/nuvora-experience-studio-*.js; do
             node --check "$file"
           done
 
