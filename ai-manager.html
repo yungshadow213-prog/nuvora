@@ -203,7 +203,7 @@ function renderImportQueue(items){
     meta.textContent=[product.brand,item.retailer,product.product_type,product.skin_category_slug].filter(Boolean).join(' · ')||'Source details unavailable';
     const source=document.createElement('a');source.className='import-source';source.href=item.source_url;source.target='_blank';source.rel='noopener noreferrer';source.textContent='Open retailer source ↗';
     copy.append(title,meta,source);
-    if(product.store_description){const description=document.createElement('p');description.className='import-store-copy';description.textContent=String(product.store_description);copy.append(description);}
+    if(product.store_description){const description=document.createElement('p');description.className='import-store-copy';description.textContent='Nuvora copy: '+String(product.store_description);copy.append(description);}
     if(product.description){const description=document.createElement('p');description.className='import-meta';description.textContent='Source description: '+String(product.description).slice(0,210)+(String(product.description).length>210?'…':'');copy.append(description);}
     if(product.store_description){const customerCopy=document.createElement('p');customerCopy.className='import-meta';customerCopy.style.color='#415b47';customerCopy.textContent='Nuvora copy: '+String(product.store_description).slice(0,260)+(String(product.store_description).length>260?'…':'');copy.append(customerCopy);}
     if(item.duplicate_name){const duplicate=document.createElement('p');duplicate.className='import-flags';duplicate.textContent='Already in Skin Care: '+item.duplicate_name;copy.append(duplicate);}
