@@ -2447,6 +2447,31 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             categoryId=categories.find(item=>String(item.slug||'').toLowerCase()==='skin-care'||String(item.name||'').toLowerCase()==='skin care')?.id||null;
           }
         }catch(error){}
+        const inferSkinCategory=(title,brand,description,features)=>{
+          const hay=[title,brand,description,Array.isArray(features)?features.join(' '):features].filter(Boolean).join(' ').toLowerCase();
+          const rules=[
+            [/\b(?:sunscreen|sun screen|spf|sunblock|sun protection)\b/,'sunscreen-spf'],
+            [/\b(?:perfume|fragrance|eau de parfum|eau de toilette|body mist|cologne)\b/,'fragrance'],
+            [/\b(?:toothbrush|tooth paste|toothpaste|whitening strips|oral irrigator|water flosser|tongue scraper|oral care)\b/,'oral-care-smile'],
+            [/\b(?:razor|shaving|shave gel|shave cream|hair removal|waxing kit|wax strips|electric shaver)\b/,'shaving-hair-removal'],
+            [/\b(?:bath bomb|bath salts|bubble bath|shower gel|shower steamer|bath soak|bath and shower)\b/,'bath-shower'],
+            [/\b(?:makeup bag|makeup organizer|cosmetic bag|cosmetic storage|cosmetic pouch|beauty organizer|beauty travel organizer|beauty storage|travel organizer|travel bottle|travel case|toiletry bag|vanity organizer|vanity storage|skincare fridge)\b/,'beauty-accessories-storage'],
+            [/\b(?:nail clipper|electric nail|nail drill|nail file|cuticle|manicure|pedicure|nail grooming|nail care|nail buffer)\b/,'nails-grooming'],
+            [/\b(?:hair dryer|blow dryer|curling iron|curling wand|hair straightener|flat iron|hair styler|hair brush|scalp massager|shampoo|conditioner|hair mask|hair serum|hair oil)\b/,'hair-care-styling'],
+            [/\b(?:makeup remover|cleansing balm|micellar|face wash|facial cleanser|cleanser)\b/,'cleansers-makeup-removers'],
+            [/\b(?:lip balm|eye cream|eye gel|eye serum|under eye|lip care|lip mask)\b/,'eye-lip-care'],
+            [/\b(?:led face mask|led therapy|facial therapy device|electric facial device|electric beauty device|microcurrent|beauty device|facial device|face roller|gua sha|cleansing brush|beauty tool|tweezers|dermaplan|epilator|facial steamer|pore vacuum|skin scrubber)\b/,'beauty-tools-devices'],
+            [/\b(?:face mask|clay mask|sheet mask|sleeping mask|exfoliat|face scrub|chemical peel|nose strip|pore strip)\b/,'exfoliants-masks'],
+            [/\b(?:foundation|concealer|blush|mascara|eyeliner|lipstick|lip gloss|eyeshadow|eye shadow|makeup palette|makeup brush|makeup sponge|makeup primer|setting spray|cosmetic)\b/,'makeup-cosmetics'],
+            [/\b(?:toner|essence)\b/,'toners-essences'],
+            [/\b(?:serum|retinol|treatment|acne|spot treatment|ampoule|niacinamide|vitamin c|hyaluronic acid)\b/,'serums-treatments'],
+            [/\b(?:body lotion|body cream|body wash|body butter|body oil|body care|body scrub)\b/,'body-care'],
+            [/\b(?:moisturizer|moisturiser|hydration|barrier cream|face cream|night cream|day cream|facial lotion|moisture cream)\b/,'moisturisers-barrier-care'],
+            [/\b(?:gift set|travel set|skincare set|beauty kit|bundle|routine pack)\b/,'sets-kits']
+          ];
+          for(const [pattern,slug] of rules)if(pattern.test(hay))return slug;
+          return 'other-skincare';
+        };
         const inferType=(title,description,features)=>{
           const hay=[title,description,Array.isArray(features)?features.join(' '):features].filter(Boolean).join(' ').toLowerCase();
           const rules=[
@@ -2524,6 +2549,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             const description=cleanMultilineText(listing.description,12000);
             const featureText=Array.isArray(listing.features)?listing.features.map(value=>cleanMultilineText(value,1000)).filter(Boolean).slice(0,20).join('\n'):cleanMultilineText(listing.features,12000);
             const productType=inferType(title,description,featureText);
+            const skinCategorySlug=inferSkinCategory(title,listing.brand||'',description,featureText);
             const flags=[];
             if(!images.length)flags.push('No verified product image was captured.');
             if(!description&& !featureText)flags.push('No usable product description or feature text was captured.');
@@ -2537,6 +2563,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
               slug:makeProductSlug(title+' '+crypto.randomUUID().slice(0,8)),
               brand:cleanText(listing.brand,180)||null,
               product_type:productType||null,
+              skin_category_slug:skinCategorySlug,
               description:description||null,
               store_description:null,
               features:featureText||null,
@@ -2706,6 +2733,9 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           return json({error:'This item now matches an existing Skin Care product and was not imported.',duplicate:existing},409);
         }
         const product={...proposed};
+        const skinCategorySlug=String(product.skin_category_slug||'other-skincare').slice(0,100);
+        delete product.skin_category_slug;
+        delete product.ai_copy_model;
         product.storefront_key='skin';
         product.kind='find';
         product.published=false;
