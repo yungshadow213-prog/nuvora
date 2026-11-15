@@ -92,5 +92,15 @@ assert.ok(importWorker.includes("refreshSkinImportBatch(env,item.batch_id)"), "A
 assert.ok(importPage.includes("Nuvora copy: "), "The generated customer-facing copy must be visible for review.");
 assert.ok(importPage.includes("import-store-copy"), "Generated store copy must be visually distinct from retailer source copy.");
 
+assert.ok(importWorker.includes("if(action==='edit')"), "The import endpoint must support editing a staged product before approval.");
+assert.ok(importWorker.includes("const categories=[") && importWorker.includes("'moisturisers-barrier-care'"), "Edits must be restricted to the Skin Studio category taxonomy.");
+assert.ok(importWorker.includes("!/^https:\\/\\//i.test(rawImage)||!isValidHttpUrl(rawImage)||!isDisplayableProductImage(rawImage)"), "Edited product images must remain public HTTPS displayable images.");
+assert.ok(importWorker.includes("proposed_product:proposed,status:'needs_review'"), "Edits must update only the staged proposal and keep it in review.");
+assert.ok(importWorker.includes("product.published=false"), "The edited product must still be created as an unpublished draft.");
+assert.ok(importPage.includes("Edit details") && importPage.includes("Save review details"), "The review UI must allow product edits before approval.");
+assert.ok(importPage.includes("store_description:description.value") && importPage.includes("image_url:imageUrl.value"), "The review UI must expose customer copy and image editing.");
+assert.ok(importPage.includes("reviewImportItem(item.id,'edit'"), "The review UI must save edits through the authenticated endpoint.");
+
+
 
 console.log("Nuvora Skin Studio isolation and Autopilot safeguards passed.");
