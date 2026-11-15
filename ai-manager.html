@@ -204,6 +204,7 @@ function renderImportQueue(items){
     const source=document.createElement('a');source.className='import-source';source.href=item.source_url;source.target='_blank';source.rel='noopener noreferrer';source.textContent='Open retailer source ↗';
     copy.append(title,meta,source);
     if(product.description){const description=document.createElement('p');description.className='import-meta';description.textContent=String(product.description).slice(0,230)+(String(product.description).length>230?'…':'');copy.append(description);}
+    if(product.store_description){const customerCopy=document.createElement('p');customerCopy.className='import-meta';customerCopy.style.color='#415b47';customerCopy.textContent='Nuvora copy: '+String(product.store_description).slice(0,260)+(String(product.store_description).length>260?'…':'');copy.append(customerCopy);}
     if(item.duplicate_name){const duplicate=document.createElement('p');duplicate.className='import-flags';duplicate.textContent='Already in Skin Care: '+item.duplicate_name;copy.append(duplicate);}
     const flags=Array.isArray(item.quality_flags)?item.quality_flags:[];
     if(item.error&&item.status==='failed'){const error=document.createElement('p');error.className='import-flags';error.textContent=item.error;copy.append(error);}
