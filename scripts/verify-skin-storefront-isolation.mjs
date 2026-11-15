@@ -56,4 +56,34 @@ assert.ok(autopilotWorker.includes("Main-store products were excluded from this 
 assert.ok(autopilotMigration.includes("alter table public.nuvora_ai_operations enable row level security"), "The AI approval queue must have RLS enabled.");
 assert.ok(autopilotMigration.includes("revoke all on table public.nuvora_ai_operations from anon, authenticated"), "Browser roles must not receive direct approval queue access.");
 
+
+const [importWorker, importPage, importQueueMigration, identityGuardMigration] = await Promise.all([
+  read("worker.js"),
+  read("ai-manager.html"),
+  read("backend/migrations/20261115083647_nuvora_skin_bulk_import_phase_two.sql"),
+  read("backend/migrations/20261115084720_nuvora_skin_product_import_identity_guards.sql")
+]);
+
+assert.ok(importWorker.includes("/api/admin/ai/import/prepare"), "The dedicated Skin Care import preparation endpoint must exist.");
+assert.ok(importWorker.includes("/api/admin/ai/import/items'&&request.method==='GET'"), "The Skin Care import review queue endpoint must exist.");
+assert.ok(importWorker.includes("store_key:'skin'") && importWorker.includes("storefront_key:'skin'"), "Every staged batch and created product must be explicitly assigned to Skin Care.");
+assert.ok(importWorker.includes("&storefront_key=eq.skin&amazon_asin=eq."), "Amazon duplicate checks must be scoped to Skin Care.");
+assert.ok(importWorker.includes("&storefront_key=eq.skin&source_sku=eq."), "Non-Amazon duplicate checks must be scoped to Skin Care.");
+assert.ok(importWorker.includes("Draft customer-facing copy once per batch"), "The importer must prepare customer copy from source facts.");
+assert.ok(importWorker.includes("Do not invent or infer ingredient concentrations"), "AI product copy must prohibit unsupported skincare claims.");
+assert.ok(importWorker.includes("product.published=false"), "Approved imports must remain unpublished drafts.");
+assert.ok(importWorker.includes("['ready','needs_review'].includes(item.status)"), "Import approvals must reject concurrent or already-importing items.");
+assert.ok(importWorker.includes("Use a public HTTPS product link."), "Source imports must reject non-HTTPS URLs.");
+assert.ok(importWorker.includes("/^https:\\/\\//i.test(String(value))"), "Imported product images must use HTTPS.");
+assert.ok(importPage.includes("id=\"importUrls\""), "AI Manager must provide a bulk product-link input.");
+assert.ok(importPage.includes("normalizeSourceLinks"), "AI Manager must normalise pasted product URLs.");
+assert.ok(importPage.includes("/api/admin/ai/import/prepare"), "AI Manager must call the isolated preparation endpoint.");
+assert.ok(importPage.includes("Add as draft"), "AI Manager must require an explicit draft-creation action.");
+assert.ok(importPage.includes("Nuvora copy:"), "AI Manager must preview generated customer-facing copy.");
+assert.ok(importQueueMigration.includes("store_key text not null default 'skin' check (store_key = 'skin')"), "Import queue rows must be Skin Care-only.");
+assert.ok(importQueueMigration.includes("alter table public.nuvora_product_import_items enable row level security"), "Import queue must have RLS enabled.");
+assert.ok(importQueueMigration.includes("revoke all on table public.nuvora_product_import_items from anon, authenticated"), "Browser roles must not read import queue records directly.");
+assert.ok(identityGuardMigration.includes("where storefront_key = 'skin' and amazon_asin is not null"), "Skin Care ASIN duplicates must be blocked by a database unique index.");
+assert.ok(identityGuardMigration.includes("where storefront_key = 'skin' and retailer is not null and source_sku is not null"), "Skin Care retailer/SKU duplicates must be blocked by a database unique index.");
+
 console.log("Nuvora Skin Studio isolation and Autopilot safeguards passed.");
