@@ -2724,11 +2724,54 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         if(!admin)return json({error:'Admin authentication required'},401);
         const input=await body(request,8*1024);
         const action=String(input.action||'').toLowerCase();
-        if(!['approve','skip'].includes(action))return json({error:'Choose approve or skip.'},400);
+        if(!['approve','skip','edit'].includes(action))return json({error:'Choose edit, approve or skip.'},400);
         const itemResponse=await supabaseRest(env,'GET','nuvora_product_import_items',null,'?select=*&id=eq.'+encodeURIComponent(skinImportItemId)+'&store_key=eq.skin&limit=1');
         if(!itemResponse.ok)return json({error:'The Skin Care import queue is unavailable.'},503);
         const item=(await itemResponse.json()||[])[0];
         if(!item)return json({error:'Skin Care import item not found.'},404);
+        if(action==='edit'){
+          if(!['ready','needs_review'].includes(item.status))return json({error:'Only prepared Skin Care items can be edited.'},409);
+          const edits=input.edits&&typeof input.edits==='object'&&!Array.isArray(input.edits)?input.edits:{};
+          const proposed=item.proposed_product&&typeof item.proposed_product==='object'?{...item.proposed_product}:{};
+          const name=cleanText(edits.name,180);
+          if(!name)return json({error:'A product name is required.'},400);
+          const nameIssue=productTitleQualityIssue(name);
+          if(nameIssue)return json({error:nameIssue},400);
+          const categories=[
+            'sunscreen-spf','fragrance','oral-care-smile','shaving-hair-removal','bath-shower',
+            'beauty-accessories-storage','nails-grooming','hair-care-styling','cleansers-makeup-removers',
+            'eye-lip-care','beauty-tools-devices','exfoliants-masks','makeup-cosmetics','toners-essences',
+            'serums-treatments','body-care','moisturisers-barrier-care','sets-kits','other-skincare'
+          ];
+          const category=String(edits.skin_category_slug||'');
+          if(!categories.includes(category))return json({error:'Choose a valid Skin Studio category.'},400);
+          const rawImage=String(edits.image_url||'').trim();
+          let imageUrl=null;
+          if(rawImage){
+            if(!/^https:\/\//i.test(rawImage)||!isValidHttpUrl(rawImage)||!isDisplayableProductImage(rawImage))return json({error:'Use a valid public HTTPS product image URL.'},400);
+            imageUrl=rawImage.slice(0,2000);
+          }
+          const storeDescription=cleanMultilineText(edits.store_description,1800);
+          proposed.name=name;
+          proposed.brand=cleanText(edits.brand,180)||null;
+          proposed.product_type=cleanText(edits.product_type,100)||null;
+          proposed.skin_category_slug=category;
+          proposed.store_description=storeDescription||null;
+          proposed.image_url=imageUrl;
+          proposed.image_urls=imageUrl?dedupeImages([imageUrl,...(Array.isArray(proposed.image_urls)?proposed.image_urls:[])],30).filter(value=>isDisplayableProductImage(value)&&/^https:\/\//i.test(String(value))).slice(0,30):[];
+          const updated=await supabaseRest(env,'PATCH','nuvora_product_import_items',{
+            proposed_product:proposed,status:'needs_review',error:null,
+            reviewed_by:admin.id,reviewed_at:new Date().toISOString()
+          },'?id=eq.'+encodeURIComponent(item.id)+'&store_key=eq.skin&status=eq.'+item.status);
+          if(!updated.ok||!(await updated.json()||[]).length)return json({error:'This item changed while you were editing it. Refresh the queue and try again.'},409);
+          await refreshSkinImportBatch(env,item.batch_id);
+          await supabaseRest(env,'POST','admin_activity',{
+            admin_id:admin.id,action:'nuvora_skin_import_item_edited',entity_type:'skin_import_item',entity_id:item.id,
+            metadata:{store_key:'skin',batch_id:item.batch_id}
+          });
+          return json({ok:true,status:'needs_review',message:'Draft details saved. Review them before adding the product.'});
+        }
+
         if(action==='skip'){
           if(!['ready','needs_review','duplicate','failed'].includes(item.status))return json({error:'This import item can no longer be skipped.'},409);
           const skipped=await supabaseRest(env,'PATCH','nuvora_product_import_items',{status:'skipped',reviewed_by:admin.id,reviewed_at:new Date().toISOString()},'?id=eq.'+encodeURIComponent(item.id)+'&store_key=eq.skin&status=eq.'+item.status);
