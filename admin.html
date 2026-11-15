@@ -1688,11 +1688,13 @@ function retailerLabel(p){
   if(r.includes('amazon')||p?.amazon_asin||p?.amazon_source_url||String(p?.source_type||'').toLowerCase()==='amazon') return 'Amazon';
   return p?.retailer||'Source';
 }
-function isSkinProduct(p){
-  const category=categories.find(x=>String(x.id)===String(p.category_id));
-  const label=String(category?.slug||'')+' '+String(category?.name||'');
-  const productText=[p.name,p.brand,p.description,p.features,p.store_description,p.product_type,p.amazon_source_url,p.destination_url,p.source_url].filter(Boolean).join(' ');
-  return /skin[- ]?care|skincare|beauty|cosmetic|nail|hair|fragrance|oral care|bath & shower|body care/i.test(label)||/cleanser|cleansing|face wash|moisturi|serum|sunscreen|sunblock|spf|face cream|toner|retinol|exfoliat|lip balm|facial oil|eye cream|face mask|nail clipper|electric nail|nail drill|nail file|cuticle|manicure|pedicure|beauty tool|beauty device|facial device|led facial therapy device|led therapy device|electric facial device|electric beauty device|microcurrent device|face roller|gua sha|tweezers|dermaplan|epilator|facial steamer|pore vacuum|skin scrubber|foundation|concealer|blush|mascara|eyeliner|lipstick|makeup|shampoo|conditioner|hair dryer|hair straightener|hair styler|perfume|eau de parfum|cologne|toothbrush|toothpaste|oral irrigator|water flosser|bath bomb|shower gel|razor|shaving|hair removal/i.test(productText);
+function isSkinProduct(product){
+  // Catalogue ownership is explicit. Product names and scraped descriptions are never used
+  // to guess which storefront owns a record.
+  return String(product?.storefront_key||'main').trim().toLowerCase()==='skin';
+}
+function mainStoreProducts(){
+  return Array.isArray(adminProducts)?adminProducts.filter(product=>!isSkinProduct(product)):[];
 }
 function renderSkinProducts(){
   const el=document.getElementById('skinProductRows');if(!el)return;
@@ -1851,19 +1853,21 @@ function setCatalogFilter(filter){
  document.getElementById('productRows')?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function renderCatalogHealth(){
+ const rows=mainStoreProducts();
  const count=(id,value)=>{const el=document.getElementById(id);if(el)el.textContent=String(value);};
- count('catalogHealthPublished',adminProducts.filter(p=>p.published).length);
- count('catalogHealthDrafts',adminProducts.filter(p=>!p.published).length);
- count('catalogHealthReview',adminProducts.filter(p=>productReviewFlags(p).length>0).length);
- count('catalogHealthUncategorized',adminProducts.filter(p=>!p.category_id).length);
+ count('catalogHealthPublished',rows.filter(p=>p.published).length);
+ count('catalogHealthDrafts',rows.filter(p=>!p.published).length);
+ count('catalogHealthReview',rows.filter(p=>productReviewFlags(p).length>0).length);
+ count('catalogHealthUncategorized',rows.filter(p=>!p.category_id).length);
  const review=document.querySelector('.catalog-health-card.attention');
- if(review)review.classList.toggle('healthy',adminProducts.length>0&&adminProducts.every(p=>productReviewFlags(p).length===0));
+ if(review)review.classList.toggle('healthy',rows.length>0&&rows.every(p=>productReviewFlags(p).length===0));
 }
 function renderProducts(){
   const el=document.getElementById('productRows');
   const query=String(document.getElementById('adminProductSearch')?.value||'').trim().toLowerCase();
   const filter=String(document.getElementById('adminProductFilter')?.value||'all');
-  const visibleProducts=adminProducts.filter(p=>{
+  const catalogRows=mainStoreProducts();
+  const visibleProducts=catalogRows.filter(p=>{
     const searchable=[p.name,p.brand,p.amazon_asin,p.slug,p.retailer,p.category_id,p.destination_url,p.amazon_source_url].filter(Boolean).join(' ').toLowerCase();
     if(query&&!searchable.includes(query))return false;
     const flags=productReviewFlags(p);
@@ -1874,8 +1878,8 @@ function renderProducts(){
     return true;
   });
   const note=document.querySelector('.catalog-filter-note span:last-child');
-  if(note)note.textContent=adminProducts.length?visibleProducts.length+' shown · '+adminProducts.filter(p=>productReviewFlags(p).length>0).length+' need review · drafts stay private until published.':'Drafts stay private until published.';
-  if(!adminProducts.length){
+  if(note)note.textContent=catalogRows.length?visibleProducts.length+' shown · '+catalogRows.filter(p=>productReviewFlags(p).length>0).length+' need review · drafts stay private until published.':'Drafts stay private until published.';
+  if(!catalogRows.length){
     el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet.</div>';
   }else if(!visibleProducts.length){
     el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No matching products.</div>';
@@ -1894,7 +1898,7 @@ function openRetailerLink(url){
   if(!value)return setAdminStatus('No retailer URL is available for this product.');
   try{const u=new URL(value);if(!/^https?:$/.test(u.protocol))throw new Error('Invalid retailer URL');const a=document.createElement('a');a.href=u.toString();a.target='_blank';a.rel='noopener noreferrer';a.style.display='none';document.body.appendChild(a);a.click();a.remove();}catch(e){setAdminStatus('The retailer URL is invalid.');}
 }
-function updateCounts(){document.getElementById('shopCount').textContent=adminProducts.filter(p=>p.kind==='shop'&&p.published).length;document.getElementById('findCount').textContent=adminProducts.filter(p=>p.kind==='find'&&p.published).length;document.getElementById('learnCount').textContent=adminProducts.filter(p=>p.kind==='learn'&&p.published).length;document.getElementById('draftCount').textContent=adminProducts.filter(p=>!p.published).length;}
+function updateCounts(){const rows=mainStoreProducts();document.getElementById('shopCount').textContent=rows.filter(p=>p.kind==='shop'&&p.published).length;document.getElementById('findCount').textContent=rows.filter(p=>p.kind==='find'&&p.published).length;document.getElementById('learnCount').textContent=rows.filter(p=>p.kind==='learn'&&p.published).length;document.getElementById('draftCount').textContent=rows.filter(p=>!p.published).length;}
 async function liveAdminProducts(){adminProducts=await api('/api/admin/products');renderProducts();renderSkinProducts();fillSocialProducts();if(document.body.classList.contains('skin-studio-fullpage'))sendSkinStudioPreview();}
 let shopifyProducts=[];
 function openShopifyImport(){
@@ -2483,7 +2487,7 @@ async function runSkinBulkAiImport(){
   for(const item of successes){report('Enriching '+(completed+aiFailed+1)+' of '+successes.length+': '+(item.name||'Product'));
    try{const ai=await api('/api/admin/ai/skin-product',{method:'POST',body:{url:item.source_url}}),p=ai?.product;if(!p)throw new Error('AI returned no structured product details.');
     const benefits=Array.isArray(p.benefits)?p.benefits.filter(Boolean).join('\n'):'',skinTypes=Array.isArray(p.skin_types)?p.skin_types.filter(Boolean).join('\n'):'',skinConcerns=Array.isArray(p.skin_concerns)?p.skin_concerns.filter(Boolean).join('\n'):'',ingredients=Array.isArray(p.ingredients)?p.ingredients.filter(Boolean).join('\n'):'',productType=inferSkinProductType({name:p.name||item.name,description:p.overview,features:benefits}),categorySlug=inferSkinProductCategory({name:p.name||item.name,brand:p.brand,description:p.overview,features:benefits,product_type:productType,destination_url:item.source_url});
-    await api('/api/admin/products/'+encodeURIComponent(String(item.id)),{method:'PATCH',body:{name:p.name||item.name,brand:p.brand||null,store_description:p.overview||null,benefits:benefits||null,why_we_picked_it:benefits||null,skin_types:skinTypes||null,best_for:skinTypes||null,skin_concerns:skinConcerns||null,ingredients:ingredients||null,usage_instructions:p.usage_instructions||null,product_warnings:p.product_warnings||null,product_size:p.size||null,product_type:productType||null,recommended_product_ids:Array.isArray(p.recommended_product_ids)?p.recommended_product_ids:[],recommendation_reason:p.recommendation_reason||null,availability:p.availability||null,category_id:skinCategory?.id||null,retailer:'Amazon',source_type:'amazon',updated_at:new Date().toISOString()}});
+    await api('/api/admin/products/'+encodeURIComponent(String(item.id)),{method:'PATCH',body:{storefront_key:'skin',name:p.name||item.name,brand:p.brand||null,store_description:p.overview||null,benefits:benefits||null,why_we_picked_it:benefits||null,skin_types:skinTypes||null,best_for:skinTypes||null,skin_concerns:skinConcerns||null,ingredients:ingredients||null,usage_instructions:p.usage_instructions||null,product_warnings:p.product_warnings||null,product_size:p.size||null,product_type:productType||null,recommended_product_ids:Array.isArray(p.recommended_product_ids)?p.recommended_product_ids:[],recommendation_reason:p.recommendation_reason||null,availability:p.availability||null,category_id:skinCategory?.id||null,retailer:'Amazon',source_type:'amazon',updated_at:new Date().toISOString()}});
     categoryAssignments[String(item.id)]=categorySlug;completed++;if(results){const row=document.createElement('div');row.className='product-entry-bulk-result success';row.textContent='✓ '+(p.name||item.name)+' — AI guide prepared as a private draft.';results.appendChild(row);}
    }catch(error){aiFailed++;if(results){const row=document.createElement('div');row.className='product-entry-bulk-result failed';row.textContent='! '+(item.name||'Product')+' — AI enrichment failed: '+(error.message||'Unknown error');results.appendChild(row);}}
   }
@@ -2659,6 +2663,7 @@ async function saveProductDraft(){
   if(ratingRaw!==''&&(!Number.isFinite(retailerRating)||retailerRating<0||retailerRating>5||Math.round(retailerRating*10)!==retailerRating*10)){productSaveMessage('Retailer rating must be a number from 0 to 5, such as 3.5.','error');releaseSave();return;}
   if(reviewCountRaw!==''&&(!Number.isInteger(retailerReviewCount)||retailerReviewCount<0)){productSaveMessage('Retailer review count must be a whole number of zero or more.','error');releaseSave();return;}
   const product={
+    storefront_key:window.skinCareImportMode?'skin':String(currentProduct?.storefront_key||'main'),
     name,kind:window.skinCareImportMode?'find':document.getElementById('pfKind').value,brand:document.getElementById('pfBrand').value.trim()||null,
     product_type:window.skinCareImportMode?(document.getElementById('pfProductType')?.value.trim()||null):(currentProduct?.product_type??null),
     description:normalizeProductText(document.getElementById('pfDescription').value)||null,features:normalizeProductText(document.getElementById('pfFeatures').value)||null,
@@ -4694,13 +4699,12 @@ function requestSkinSectionImageUpload(sectionId,pageId='home'){
 function sendSkinStudioPreview(){
  const frame=document.getElementById('skinStudioPreview');
  if(!frame||!skinBuilderConfig||!frame.contentWindow)return;
- // Draft preview exposes only products explicitly placed on a visible grid.
+ // Only explicitly Skin-owned products placed in a visible product grid can enter the draft preview.
  const sections=skinSectionsFor(skinStudioPageId),placedIds=new Set(sections.filter(sec=>sec.visible!==false&&['product-grid','featured-products'].includes(sec.type)&&Array.isArray(sec.product_ids)).flatMap(sec=>sec.product_ids.map(String)));
  const categoryById=new Map((Array.isArray(categories)?categories:[]).map(category=>[String(category.id),category]));
- const previewProducts=Array.isArray(adminProducts)?adminProducts.map(product=>{
+ const previewProducts=Array.isArray(adminProducts)?adminProducts.filter(product=>isSkinProduct(product)&&placedIds.has(String(product.id))).map(product=>{
   const category=categoryById.get(String(product.category_id||''));
-  const normalized={...product,category_name:category?.name||product.category_name||'',category:category?{id:category.id,name:category.name}:product.category};
-  return placedIds.has(String(product.id))&&isSkinProduct(product)?{...normalized,published:true,__studioDraftPreview:true}:normalized;
+  return {...product,category_name:category?.name||product.category_name||'',category:category?{id:category.id,name:category.name}:product.category,published:true,__studioDraftPreview:true};
  }):[];
  frame.contentWindow.postMessage({type:'nuvora-skin-studio-preview',config:skinBuilderConfig,products:previewProducts,pageId:skinStudioPageId||'home',selection:skinStudioSelection||null},SKIN_CLIENT_ORIGIN);
 }
