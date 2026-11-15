@@ -1878,7 +1878,10 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const r=await supabaseRest(env,'GET','store_settings',undefined,'?select=skin_site_config&id=eq.true&limit=1');
         if(!r.ok)return json({error:'Skin storefront settings could not be loaded.'},502);
         const row=(await r.json())?.[0]||{};
-        return json(row.skin_site_config&&typeof row.skin_site_config==='object'?row.skin_site_config:{},200,{'access-control-allow-origin':'https://client-store-platform.rayyung713.workers.dev','vary':'Origin'});
+        const config=row.skin_site_config&&typeof row.skin_site_config==='object'?{...row.skin_site_config}:{};
+        const experiences=config.nuvoraExperiences&&typeof config.nuvoraExperiences==='object'?config.nuvoraExperiences:defaultNuvoraExperienceConfig();
+        config.nuvoraExperiences={...experiences,features:Array.isArray(experiences.features)?experiences.features.filter(item=>item&&item.enabled===true&&item.status==='published'):[]};
+        return json(config,200,{'access-control-allow-origin':'https://client-store-platform.rayyung713.workers.dev','vary':'Origin'});
       }
 
       if(url.pathname==='/api/admin/settings'&&(request.method==='GET'||request.method==='PATCH')){
@@ -2403,6 +2406,41 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
       }
 
 
+      if(url.pathname==='/api/admin/experience-builder'&&(request.method==='GET'||request.method==='PUT')){
+        const admin=await adminUser(request,env);
+        if(!admin)return json({error:'Admin authentication required'},401);
+        if(String(url.searchParams.get('store')||'skin').toLowerCase()!=='skin')return json({error:'The Experience Studio currently manages Nuvora Skin Care only.'},400);
+        if(request.method==='GET'){
+          const [settingsResponse,productsResponse]=await Promise.all([
+            supabaseRest(env,'GET','store_settings',null,'?select=skin_site_config&id=eq.true&limit=1'),
+            supabaseRest(env,'GET','products',null,'?select=id,published,skin_types,skin_concerns,ingredients,product_type,size,description,features,brand&storefront_key=eq.skin&limit=1000')
+          ]);
+          if(!settingsResponse.ok)return json({error:'Skin Care storefront settings could not be loaded.'},502);
+          if(!productsResponse.ok)return json({error:'Skin Care product information could not be loaded.'},502);
+          const row=(await settingsResponse.json()||[])[0]||{};
+          const siteConfig=row.skin_site_config&&typeof row.skin_site_config==='object'?row.skin_site_config:{};
+          const products=await productsResponse.json()||[];
+          return json({ok:true,store:'skin',experiences:siteConfig.nuvoraExperiences||defaultNuvoraExperienceConfig(),metrics:{
+            products:products.length,published:products.filter(p=>p.published===true).length,
+            withIngredients:products.filter(p=>String(p.ingredients||'').trim()).length,
+            withSkinTags:products.filter(p=>String(p.skin_types||'').trim()||String(p.skin_concerns||'').trim()).length
+          }});
+        }
+        const input=await body(request,100*1024);
+        const invalid=validateNuvoraExperienceConfig(input.experiences);
+        if(invalid)return json({error:invalid},400);
+        const currentResponse=await supabaseRest(env,'GET','store_settings',null,'?select=skin_site_config&id=eq.true&limit=1');
+        if(!currentResponse.ok)return json({error:'Skin Care storefront settings could not be loaded.'},502);
+        const current=(await currentResponse.json()||[])[0]||{};
+        const existing=current.skin_site_config&&typeof current.skin_site_config==='object'?current.skin_site_config:{};
+        const next={...existing,nuvoraExperiences:input.experiences};
+        const configError=validateSkinSiteConfig(next,{requireProductGrid:false});
+        if(configError)return json({error:'Experience settings were not saved: '+configError},400);
+        const saved=await supabaseRest(env,'PATCH','store_settings',{skin_site_config:next,updated_at:new Date().toISOString()},'?id=eq.true');
+        if(!saved.ok)return json({error:'Experience settings could not be saved.',detail:(await saved.text()).slice(0,260)},502);
+        return json({ok:true,experiences:input.experiences,updatedAt:new Date().toISOString()});
+      }
+
       // Nuvora Autopilot: first reference implementation is deliberately Skin Care-only.
       // Every product query is hard-scoped to storefront_key=skin.
       if(url.pathname==='/api/admin/ai/manager/audit'&&request.method==='POST'){
@@ -2884,6 +2922,53 @@ function validateMultiStorefrontProducts(value){
       if(!String(product.destinationUrl||'').trim())return 'Published products need a verified retailer destination URL. Keep products without a confirmed link as drafts.';
       try{if(new URL(product.destinationUrl).protocol!=='https:')return 'Published retailer destinations must use HTTPS.';}catch{return 'A published retailer destination URL is invalid.';}
     }
+  }
+  return null;
+}
+
+function defaultNuvoraExperienceConfig(){
+  return {version:1,features:[
+    {id:'compare',type:'compare',label:'Compare',title:'Compare products with confidence',description:'Review meaningful product differences side by side.',enabled:true,status:'published',settings:{maxProducts:4,attributes:['productType','skinTypes','skinConcerns','ingredients','size','texture','fragrance','rating','directions','warnings']}},
+    {id:'quiz',type:'quiz',label:'Skin Quiz',title:'Find your kind of care',description:'A guided discovery quiz based on customer preferences and verified catalogue attributes.',enabled:true,status:'published',settings:{questions:[
+      {id:'skinType',title:'How does your skin usually feel?',choices:['Normal','Dry','Oily','Combination','Sensitive','Not sure']},
+      {id:'concern',title:'What would you like to focus on?',choices:['Dryness & Dehydration','Acne & Blemishes','Redness & Sensitivity','Dark Spots & Uneven Tone','Dullness & Glow','Fine Lines & Firmness','Just the essentials']},
+      {id:'texture',title:'What kind of textures do you enjoy?',choices:['Lightweight & fresh','Rich & comforting','Fragrance-free options','No preference']},
+      {id:'goal',title:'What would make your routine feel better?',choices:['Keep it simple','Build a consistent routine','Find targeted treatments','Prioritise daily sun care','Explore new beauty favourites']}
+    ]}},
+    {id:'product-finder',type:'finder',label:'Product Finder',title:'Find products that fit your preferences',description:'Filter verified products by skin type, concern and product category.',enabled:true,status:'published',settings:{matchFields:['skinTypes','skinConcerns','category','brand']}},
+    {id:'routine-builder',type:'routine',label:'Routine Builder',title:'Build a simple routine',description:'Explore products by routine step without implying that every product should be combined.',enabled:true,status:'published',settings:{steps:['Cleanse','Treat','Moisturise','Protect']}},
+    {id:'ingredient-library',type:'ingredients',label:'Ingredient Guide',title:'Explore product ingredients',description:'Browse the ingredients listed on published product records.',enabled:true,status:'published',settings:{showLinkedProducts:true}},
+    {id:'alternatives',type:'alternatives',label:'Product Alternatives',title:'Explore similar products',description:'Find alternatives using product type and category.',enabled:true,status:'published',settings:{maxSuggestions:6}},
+    {id:'recommendations',type:'recommendations',label:'Recommendations',title:'You may also like',description:'Show selected pairings or relevant alternatives with a clear explanation.',enabled:true,status:'published',settings:{useCuratedPairs:true,allowCategoryFallback:true}},
+    {id:'recently-viewed',type:'recent',label:'Recently Viewed',title:'Pick up where you left off',description:'Keep a local list of products viewed in this browser.',enabled:true,status:'published',settings:{maxItems:12}},
+    {id:'smart-search',type:'search',label:'Smart Search',title:'Search the beauty edit',description:'Find products by name, brand, category and available product details.',enabled:true,status:'published',settings:{searchFields:['name','brand','category','ingredients','skinTypes','skinConcerns']}}
+  ]};
+}
+function validateNuvoraExperienceConfig(value){
+  if(!value||typeof value!=='object'||Array.isArray(value))return 'Experience configuration must be an object.';
+  let encoded;try{encoded=JSON.stringify(value);}catch{return 'Experience configuration is not valid JSON.';}
+  if(encoded.length>80000)return 'Experience configuration is too large (maximum 80 KB).';
+  if(!Array.isArray(value.features)||value.features.length>20)return 'Experience configuration must contain up to 20 feature definitions.';
+  const allowedTypes=new Set(['compare','quiz','finder','routine','ingredients','alternatives','recommendations','recent','search']);
+  const attrs=new Set(['productType','skinTypes','skinConcerns','ingredients','size','texture','fragrance','rating','directions','warnings','brand','category']);
+  const ids=new Set();
+  for(const f of value.features){
+    if(!f||typeof f!=='object'||Array.isArray(f))return 'Every experience must be an object.';
+    const id=String(f.id||''),type=String(f.type||'');
+    if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)||id.length>60||ids.has(id))return 'Experience IDs must be unique URL-safe names.';
+    ids.add(id);if(!allowedTypes.has(type))return 'An experience uses an unsupported type.';
+    if(typeof f.enabled!=='boolean')return 'Every experience needs an enabled setting.';
+    if(!['draft','published','planned'].includes(String(f.status||'')))return 'Experience status must be draft, published or planned.';
+    if(String(f.title||'').length>120||String(f.label||'').length>60||String(f.description||'').length>500)return 'Experience copy is too long.';
+    const s=f.settings&&typeof f.settings==='object'&&!Array.isArray(f.settings)?f.settings:{};
+    if(type==='compare'&&(!Number.isInteger(Number(s.maxProducts||4))||Number(s.maxProducts||4)<2||Number(s.maxProducts||4)>4||!Array.isArray(s.attributes)||s.attributes.some(a=>!attrs.has(String(a)))))return 'Compare product count or specification fields are invalid.';
+    if(type==='quiz'){
+      if(!Array.isArray(s.questions)||s.questions.length<2||s.questions.length>12)return 'The Skin Quiz needs between two and twelve questions.';
+      const qids=new Set();for(const q of s.questions){const qid=String(q?.id||'');if(!/^[a-zA-Z0-9_-]{1,50}$/.test(qid)||qids.has(qid))return 'Quiz question IDs must be unique.';qids.add(qid);if(!String(q?.title||'').trim()||String(q.title).length>180)return 'Every quiz question needs a title under 180 characters.';if(!Array.isArray(q.choices)||q.choices.length<2||q.choices.length>8||q.choices.some(c=>typeof c!=='string'||!c.trim()||c.length>100))return 'Every question needs between two and eight valid choices.';}
+    }
+    if(type==='routine'&&s.steps!==undefined&&(!Array.isArray(s.steps)||s.steps.length<2||s.steps.length>8||s.steps.some(x=>typeof x!=='string'||!x.trim()||x.length>60)))return 'Routine Builder needs between two and eight named steps.';
+    if(type==='alternatives'&&s.maxSuggestions!==undefined&&(!Number.isInteger(Number(s.maxSuggestions))||Number(s.maxSuggestions)<1||Number(s.maxSuggestions)>12))return 'Alternatives must show between one and twelve suggestions.';
+    if(type==='recent'&&s.maxItems!==undefined&&(!Number.isInteger(Number(s.maxItems))||Number(s.maxItems)<1||Number(s.maxItems)>24))return 'Recently Viewed must show between one and 24 products.';
   }
   return null;
 }
