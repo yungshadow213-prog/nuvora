@@ -19,7 +19,7 @@ assert.ok(!server.includes("const productText=[p.name,p.brand,p.description,p.fe
 
 assert.ok(admin.includes("String(product?.storefront_key||'main').trim().toLowerCase()==='skin'"), "Skin Studio must rely on explicit product ownership.");
 assert.ok(admin.includes("storefront_key:window.skinCareImportMode?'skin':String(currentProduct?.storefront_key||'main')"), "Skin product saves must assign the Skin storefront key.");
-assert.ok(admin.includes("filter(product=>isSkinProduct(product)&&placedIds.has(String(product.id)))"), "Skin Studio preview must receive only explicitly assigned and placed Skin products.");
+assert.ok(admin.includes("filter(product=>placedIds.has(String(product.id))&&isSkinProduct(product))"), "Skin Studio preview must receive only explicitly assigned and placed Skin products.");
 assert.ok(admin.includes('id="skin-studio-expanded-canvas"'), "Skin Studio must use the expanded-canvas workspace styles.");
 assert.ok(admin.includes("--nv-studio-sidebar-width") && admin.includes("grid-template-columns:minmax(240px,var(--nv-studio-sidebar-width,268px))"), "The preview layout must support a wider adjustable canvas.");
 
