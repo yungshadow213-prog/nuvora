@@ -4774,7 +4774,7 @@ function sendSkinStudioPreview(){
  // Only explicitly Skin-owned products placed in a visible product grid can enter the draft preview.
  const sections=skinSectionsFor(skinStudioPageId),placedIds=new Set(sections.filter(sec=>sec.visible!==false&&['product-grid','featured-products'].includes(sec.type)&&Array.isArray(sec.product_ids)).flatMap(sec=>sec.product_ids.map(String)));
  const categoryById=new Map((Array.isArray(categories)?categories:[]).map(category=>[String(category.id),category]));
- const previewProducts=Array.isArray(adminProducts)?adminProducts.filter(product=>isSkinProduct(product)&&placedIds.has(String(product.id))).map(product=>{
+ const previewProducts=Array.isArray(adminProducts)?adminProducts.filter(product=>placedIds.has(String(product.id))&&isSkinProduct(product)).map(product=>{
   const category=categoryById.get(String(product.category_id||''));
   return {...product,category_name:category?.name||product.category_name||'',category:category?{id:category.id,name:category.name}:product.category,published:true,__studioDraftPreview:true};
  }):[];
