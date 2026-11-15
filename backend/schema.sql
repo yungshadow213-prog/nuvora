@@ -20,6 +20,7 @@ create table if not exists public.collections (
 );
 create table if not exists public.products (
   id uuid primary key default gen_random_uuid(), name text not null, slug text not null unique,
+  storefront_key text not null default 'main' check (storefront_key in ('main','skin')),
   kind text not null check (kind in ('shop','find','learn')), description text, features text, ingredients text, usage_instructions text, product_warnings text, product_size text, brand text, image_url text, image_urls jsonb not null default '[]'::jsonb, availability text,
   display_price numeric, currency text default 'NGN', destination_url text, retailer text, provider text, region text,
   category_id uuid references public.categories(id), collection_id uuid references public.collections(id), why_we_picked_it text, best_for text, skip_if text, last_checked_at timestamptz,
@@ -33,6 +34,18 @@ create table if not exists public.products (
   supplier_cost numeric,
   created_at timestamptz not null default now(), updated_at timestamptz not null default now(), amazon_last_synced timestamptz
 );
+
+alter table public.products add column if not exists storefront_key text not null default 'main';
+alter table public.products alter column storefront_key set default 'main';
+update public.products set storefront_key = 'main' where storefront_key is null;
+alter table public.products alter column storefront_key set not null;
+do $
+begin
+  if not exists (select 1 from pg_constraint where conname = 'products_storefront_key_check' and conrelid = 'public.products'::regclass) then
+    alter table public.products add constraint products_storefront_key_check check (storefront_key in ('main','skin'));
+  end if;
+end $;
+create index if not exists products_storefront_key_created_at_idx on public.products (storefront_key, created_at desc);
 
 alter table public.products add column if not exists product_type text;
 alter table public.products add column if not exists benefits text;
