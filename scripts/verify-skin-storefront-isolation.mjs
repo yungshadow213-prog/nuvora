@@ -9,7 +9,7 @@ const [worker, server, admin, layout, schema, migration] = await Promise.all([
   read("admin.html"),
   read("admin-layout-v2.js"),
   read("backend/schema.sql"),
-  read("backend/migrations/20261115073400_nuvora_skin_catalogue_storefront_key.sql")
+  read("backend/migrations/20261115073356_nuvora_skin_catalogue_storefront_key.sql")
 ]);
 
 assert.ok(worker.includes("storefront_key=eq.'+(url.searchParams.get('storefront')==='beauty'||url.searchParams.get('storefront')==='skin'?'skin':'main')"), "Worker public product API must filter by explicit storefront key.");
