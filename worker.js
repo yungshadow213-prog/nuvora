@@ -2402,6 +2402,109 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         }
       }
 
+
+      // Nuvora Autopilot: first reference implementation is deliberately Skin Care-only.
+      // Every product query is hard-scoped to storefront_key=skin.
+      if(url.pathname==='/api/admin/ai/manager/audit'&&request.method==='POST'){
+        const admin=await adminUser(request,env);
+        if(!admin)return json({error:'Admin authentication required'},401);
+        const limited=rateLimit(request,'nuvora-autopilot-skin-audit',3,60000);
+        if(limited)return json({error:'A store audit was just run. Try again shortly.'},429,{'retry-after':String(limited)});
+        const input=await body(request,16*1024);
+        if(String(input.store||'skin').toLowerCase()!=='skin')return json({error:'Phase one currently supports the Skin Care store only.'},400);
+        const [productsResponse,settingsResponse]=await Promise.all([
+          supabaseRest(env,'GET','products',null,'?select=*&storefront_key=eq.skin&order=created_at.desc&limit=1000'),
+          supabaseRest(env,'GET','store_settings',null,'?select=skin_site_config,skin_site_draft&id=eq.true&limit=1')
+        ]);
+        if(!productsResponse.ok)return json({error:'The Skin Care catalogue could not be inspected.'},502);
+        if(!settingsResponse.ok)return json({error:'The Skin Care storefront settings could not be inspected.'},502);
+        const products=await productsResponse.json()||[];
+        const settings=(await settingsResponse.json()||[])[0]||{};
+        const config=settings.skin_site_config&&typeof settings.skin_site_config==='object'?settings.skin_site_config:{};
+        const draft=settings.skin_site_draft&&typeof settings.skin_site_draft==='object'?settings.skin_site_draft:null;
+        const categoryMap=config.productCategoryMap&&typeof config.productCategoryMap==='object'?config.productCategoryMap:{};
+        const sections=Array.isArray(config.sections)?config.sections:[];
+        const visibleSections=sections.filter(section=>section&&section.visible!==false);
+        const published=products.filter(product=>product.published===true);
+        const drafts=products.filter(product=>product.published!==true);
+        const findings=[];
+        const addFinding=(code,severity,title,message,nextStep,items=[])=>{
+          findings.push({code,severity,title,message,nextStep,affectedCount:items.length,productIds:items.map(item=>String(item.id)).slice(0,100),examples:items.slice(0,5).map(item=>({id:String(item.id),name:cleanText(item.name,180)||'Untitled product'}))});
+        };
+        const missingDescription=products.filter(product=>![product.store_description,product.description,product.features,product.benefits].some(value=>String(value||'').trim()));
+        const missingImages=products.filter(product=>{
+          const candidates=[product.image_url,...(Array.isArray(product.image_urls)?product.image_urls:[])];
+          return !candidates.some(value=>isValidHttpUrl(value));
+        });
+        const missingLinks=products.filter(product=>!isValidHttpUrl(product.destination_url));
+        const missingCategories=products.filter(product=>!product.category_id&&!String(categoryMap[String(product.id)]||'').trim());
+        const invalidImages=products.filter(product=>{
+          const candidates=[product.image_url,...(Array.isArray(product.image_urls)?product.image_urls:[])].filter(Boolean);
+          return candidates.length>0&&!candidates.some(value=>isValidHttpUrl(value));
+        });
+        if(!products.length)addFinding('catalog_empty','warning','Skin Care catalogue is empty','No products are currently tagged storefront_key=skin. Main-store products were excluded from this audit.','Add or import products through Skin Studio.');
+        if(missingDescription.length)addFinding('missing_description','warning','Product descriptions need attention',missingDescription.length+' product(s) have no usable store description or source copy.','Prepare evidence-based copy drafts for review.',missingDescription);
+        if(missingImages.length)addFinding('missing_image','warning','Product images are missing',missingImages.length+' product(s) do not have a valid image URL.','Add a verified product image before publishing.',missingImages);
+        if(invalidImages.length)addFinding('invalid_image_url','warning','Some image URLs are invalid',invalidImages.length+' product(s) contain image URLs that are not valid HTTP or HTTPS addresses.','Replace the affected image URLs.',invalidImages);
+        if(missingLinks.length)addFinding('missing_affiliate_link','high','Affiliate destinations need attention',missingLinks.length+' product(s) have no valid destination_url.','Verify the exact retailer or affiliate destination before publishing.',missingLinks);
+        if(missingCategories.length)addFinding('missing_category','info','Some products are not categorised',missingCategories.length+' product(s) have neither a database category nor a Skin Studio category-map assignment.','Assign each product to the correct Skin Care category.',missingCategories);
+        const identities=new Map();
+        for(const product of products){
+          const asin=String(product.amazon_asin||'').trim().toUpperCase();
+          const destination=String(product.destination_url||'').trim().replace(/\\/+$/,'').toLowerCase();
+          for(const key of [asin?'asin:'+asin:'',destination?'url:'+destination:''].filter(Boolean)){
+            if(!identities.has(key))identities.set(key,[]);
+            identities.get(key).push(product);
+          }
+        }
+        const duplicateIds=new Set();
+        for(const group of identities.values()){
+          const unique=[...new Map(group.map(item=>[String(item.id),item])).values()];
+          if(unique.length>1)unique.forEach(item=>duplicateIds.add(String(item.id)));
+        }
+        if(duplicateIds.size){
+          const duplicateProducts=products.filter(product=>duplicateIds.has(String(product.id)));
+          addFinding('possible_duplicate','warning','Possible duplicate retailer listings',duplicateIds.size+' product(s) share an ASIN or exact destination URL with another Skin Care listing. Names alone are never used to mark duplicates.','Review matching retailer identities before removing anything.',duplicateProducts);
+        }
+        if(!visibleSections.some(section=>['product-grid','featured-products'].includes(String(section.type||'')))){
+          addFinding('homepage_product_section_missing','high','Homepage has no visible product section','The published Skin Care layout has no visible product grid or featured-product section.','Add or reveal a product section in the Store Builder.');
+        }
+        const heroSection=visibleSections.find(section=>section.type==='hero');
+        const heroImage=config.heroImage||heroSection?.image||'';
+        if(!isValidHttpUrl(heroImage))addFinding('homepage_hero_image_missing','warning','Homepage hero image needs attention','The published Skin Care hero does not have a valid image URL.','Choose a suitable hero image in the Store Builder.');
+        const severity={high:0,warning:0,info:0};
+        for(const finding of findings)severity[finding.severity]=(severity[finding.severity]||0)+1;
+        const metrics={productCount:products.length,publishedCount:published.length,draftCount:drafts.length,issueCount:findings.length,highCount:severity.high,warningCount:severity.warning,infoCount:severity.info,homepageSections:visibleSections.length,draftSections:Array.isArray(draft?.sections)?draft.sections.length:0};
+        let summary='Checked '+products.length+' Skin Care product(s), '+visibleSections.length+' visible homepage section(s), and the published/draft storefront settings. Found '+findings.length+' issue group(s).';
+        let model=null;
+        if(env.AI&&findings.length){
+          try{
+            const system='You are Nuvora Autopilot, a careful skincare-store operations analyst. Summarise only the supplied audit facts. Do not claim external links, live retailer availability, image content, mobile rendering, conversions or affiliate commissions were tested. Do not invent products, counts or causes. Return JSON only: {"summary":"one concise paragraph"}.';
+            const ai=await runNuvoraWorkersAI(env,system,[{role:'user',content:JSON.stringify({store:'Nuvora Skin Care',metrics,findings:findings.map(item=>({code:item.code,severity:item.severity,title:item.title,affectedCount:item.affectedCount,message:item.message,nextStep:item.nextStep}))})}],700);
+            const parsed=parseNuvoraAIJson(ai.raw);
+            summary=cleanMultilineText(parsed.summary,1200)||summary;
+            model=ai.model;
+          }catch(error){}
+        }
+        const runId=crypto.randomUUID();
+        const metadata={runId,storeKey:'skin',summary,model,metrics,findings,scope:'Skin Care products only (storefront_key=skin) and Skin Care storefront configuration',limitations:['Retailer destinations were syntax-checked only; external HTTP availability was not tested.','Image URLs were syntax-checked only; image visual quality was not evaluated.','Mobile and desktop rendering was not browser-tested.','Affiliate clicks, commissions and conversions were not inferred.']};
+        const historyWrite=await supabaseRest(env,'POST','admin_activity',{admin_id:admin.id,action:'nuvora_skin_audit',entity_type:'skin_store',entity_id:runId,metadata});
+        return json({ok:true,runId,store:'skin',summary,model,metrics,findings,limitations:metadata.limitations,historySaved:historyWrite.ok});
+      }
+
+      if(url.pathname==='/api/admin/ai/manager/history'&&request.method==='GET'){
+        const admin=await adminUser(request,env);
+        if(!admin)return json({error:'Admin authentication required'},401);
+        if(String(url.searchParams.get('store')||'skin').toLowerCase()!=='skin')return json({error:'Phase one currently supports the Skin Care store only.'},400);
+        const [runsResponse,operationsResponse]=await Promise.all([
+          supabaseRest(env,'GET','admin_activity',null,'?select=id,action,entity_type,entity_id,metadata,created_at&action=eq.nuvora_skin_audit&entity_type=eq.skin_store&order=created_at.desc&limit=20'),
+          supabaseRest(env,'GET','nuvora_ai_operations',null,'?select=*&store_key=eq.skin&order=created_at.desc&limit=50')
+        ]);
+        if(!runsResponse.ok)return json({error:'Autopilot activity history could not be loaded.'},502);
+        if(!operationsResponse.ok)return json({error:'Apply the Nuvora Autopilot phase-one database migration before loading the approval queue.',code:'AUTOPILOT_MIGRATION_REQUIRED'},503);
+        return json({ok:true,runs:await runsResponse.json(),operations:await operationsResponse.json()});
+      }
+
       if(url.pathname==='/api/admin/ai/store-product'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const aiLimit=rateLimit(request,'nuvora-ai-store-product',5,60000);
