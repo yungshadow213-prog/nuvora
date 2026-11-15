@@ -2431,7 +2431,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const addFinding=(code,severity,title,message,nextStep,items=[])=>{
           findings.push({code,severity,title,message,nextStep,affectedCount:items.length,productIds:items.map(item=>String(item.id)).slice(0,100),examples:items.slice(0,5).map(item=>({id:String(item.id),name:cleanText(item.name,180)||'Untitled product'}))});
         };
-        const missingDescription=products.filter(product=>![product.store_description,product.description,product.features,product.benefits].some(value=>String(value||'').trim()));
+        const missingDescription=products.filter(product=>!String(product.store_description||'').trim());
         const missingImages=products.filter(product=>{
           const candidates=[product.image_url,...(Array.isArray(product.image_urls)?product.image_urls:[])];
           return !candidates.some(value=>isValidHttpUrl(value));
@@ -2443,7 +2443,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           return candidates.length>0&&!candidates.some(value=>isValidHttpUrl(value));
         });
         if(!products.length)addFinding('catalog_empty','warning','Skin Care catalogue is empty','No products are currently tagged storefront_key=skin. Main-store products were excluded from this audit.','Add or import products through Skin Studio.');
-        if(missingDescription.length)addFinding('missing_description','warning','Product descriptions need attention',missingDescription.length+' product(s) have no usable store description or source copy.','Prepare evidence-based copy drafts for review.',missingDescription);
+        if(missingDescription.length)addFinding('missing_store_description','warning','Store descriptions need attention',missingDescription.length+' product(s) do not yet have a dedicated Nuvora Skin Care description. AI can draft copy only where existing source facts are available.','Prepare source-backed copy drafts for review.',missingDescription);
         if(missingImages.length)addFinding('missing_image','warning','Product images are missing',missingImages.length+' product(s) do not have a valid image URL.','Add a verified product image before publishing.',missingImages);
         if(invalidImages.length)addFinding('invalid_image_url','warning','Some image URLs are invalid',invalidImages.length+' product(s) contain image URLs that are not valid HTTP or HTTPS addresses.','Replace the affected image URLs.',invalidImages);
         if(missingLinks.length)addFinding('missing_affiliate_link','high','Affiliate destinations need attention',missingLinks.length+' product(s) have no valid destination_url.','Verify the exact retailer or affiliate destination before publishing.',missingLinks);
@@ -2497,7 +2497,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         if(!admin)return json({error:'Admin authentication required'},401);
         if(String(url.searchParams.get('store')||'skin').toLowerCase()!=='skin')return json({error:'Phase one currently supports the Skin Care store only.'},400);
         const [runsResponse,operationsResponse]=await Promise.all([
-          supabaseRest(env,'GET','admin_activity',null,'?select=id,action,entity_type,entity_id,metadata,created_at&action=eq.nuvora_skin_audit&entity_type=eq.skin_store&order=created_at.desc&limit=20'),
+          supabaseRest(env,'GET','admin_activity',null,'?select=id,action,entity_type,entity_id,metadata,created_at&or=(action.eq.nuvora_skin_audit,action.eq.nuvora_ai_fix_applied,action.eq.nuvora_ai_fix_rolled_back)&order=created_at.desc&limit=50'),
           supabaseRest(env,'GET','nuvora_ai_operations',null,'?select=*&store_key=eq.skin&order=created_at.desc&limit=50')
         ]);
         if(!runsResponse.ok)return json({error:'Autopilot activity history could not be loaded.'},502);
@@ -2539,11 +2539,11 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         }catch(error){return json({error:'Nuvora could not prepare copy drafts: '+String(error?.message||error).slice(0,240)},502);}
       }
 
-      const autopilotOperationMatch=url.pathname.match(/^\\/api\\/admin\\/ai\\/manager\\/operations\\/([0-9a-f-]{36})$/i);
-      if(autopilotOperationMatch&&request.method==='POST'){
+      const autopilotOperationId=url.pathname.startsWith('/api/admin/ai/manager/operations/')?url.pathname.slice('/api/admin/ai/manager/operations/'.length):'';
+      if(autopilotOperationId&&/^[0-9a-f-]{36}$/i.test(autopilotOperationId)&&request.method==='POST'){
         const admin=await adminUser(request,env);
         if(!admin)return json({error:'Admin authentication required'},401);
-        const operationId=autopilotOperationMatch[1];
+        const operationId=autopilotOperationId;
         const input=await body(request,8*1024);
         const action=String(input.action||'').toLowerCase();
         if(!['approve','reject','rollback'].includes(action))return json({error:'Choose approve, reject or rollback.'},400);
