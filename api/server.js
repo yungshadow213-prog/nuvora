@@ -169,7 +169,7 @@ const server=http.createServer(async(req,res)=>{
       // to the Cloudflare Worker path so the storefront never depends on which
       // deployment target is serving the domain.
       const [productsRes,categoriesRes,collectionsRes]=await Promise.all([
-        supabaseRest('GET','products',undefined,'?select=*&published=eq.true&order=created_at.desc'),
+        supabaseRest('GET','products',undefined,'?select=*&published=eq.true&storefront_key=eq.'+(u.searchParams.get('storefront')==='beauty'||u.searchParams.get('storefront')==='skin'?'skin':'main')+'&order=created_at.desc'),
         supabaseRest('GET','categories',undefined,'?select=id,name'),
         supabaseRest('GET','collections',undefined,'?select=id,name')
       ]);
@@ -179,12 +179,8 @@ const server=http.createServer(async(req,res)=>{
       const collections=collectionsRes.ok?await collectionsRes.json():[];
       const categoryMap=new Map(categories.map(x=>[String(x.id),x]));
       const collectionMap=new Map(collections.map(x=>[String(x.id),x]));
-      const storefront=String(u.searchParams.get('storefront')||'').toLowerCase();
-      const storefrontProducts=storefront==='beauty'?products.filter(p=>{
-        const category=categoryMap.get(String(p.category_id||'')),label=String(category?.name||'');
-        const productText=[p.name,p.brand,p.description,p.features,p.store_description].filter(Boolean).join(' ');
-        return /skin[ -]*care|skincare|beauty|cosmetic/i.test(label)||/skin[ -]*care|skincare|beauty|cosmetic|cleanser|cleansing|face wash|moisturi|serum|sunscreen|sunblock|spf|face cream|toner|retinol|exfoliat|lip balm|facial oil|eye cream|face mask/i.test(productText);
-      }):products;
+      // Catalogue ownership comes from the explicit storefront key, never product text.
+      const storefrontProducts=products;
       return json(res,200,storefrontProducts.map(p=>({
         ...p,
         benefits:p.benefits||p.why_we_picked_it||null,
@@ -326,7 +322,10 @@ const server=http.createServer(async(req,res)=>{
 
     if(u.pathname==='/api/admin/products'&&req.method==='GET'){
       const admin=await adminUser(req); if(!admin)return json(res,401,{error:'Admin authentication required'});
-      const r=await supabaseRest('GET','products',undefined,'?select=*&order=created_at.desc'); if(!r.ok)return json(res,500,{error:await r.text()}); return json(res,200,await r.json());
+      const storefront=String(u.searchParams.get('storefront')||'').toLowerCase();
+      if(storefront&&!['main','skin'].includes(storefront))return json(res,400,{error:'Unknown product storefront.'});
+      const scope=storefront?'storefront_key=eq.'+storefront+'&':'';
+      const r=await supabaseRest('GET','products',undefined,'?select=*&'+scope+'order=created_at.desc'); if(!r.ok)return json(res,500,{error:await r.text()}); return json(res,200,await r.json());
     }
     if(u.pathname==='/api/admin/products'&&req.method==='POST'){
       const admin=await adminUser(req); if(!admin)return json(res,401,{error:'Admin authentication required'});
@@ -334,6 +333,8 @@ const server=http.createServer(async(req,res)=>{
       const validation=validateProduct(product); if(validation)return json(res,400,{error:validation});
       product.name=String(product.name).trim().slice(0,180); product.slug=String(product.slug).trim().toLowerCase().slice(0,180);
       product.published=product.published===true;
+      product.storefront_key=String(product.storefront_key||'main').toLowerCase();
+      if(!['main','skin'].includes(product.storefront_key))return json(res,400,{error:'Unknown product storefront.'});
       product.description=cleanText(product.description,10000); product.features=cleanText(product.features,10000); product.brand=cleanText(product.brand,180);
       if(Array.isArray(product.image_urls))product.image_urls=product.image_urls.filter(validUrl).slice(0,30);
       if(product.image_url&&!validUrl(product.image_url))product.image_url=null;
@@ -345,6 +346,10 @@ const server=http.createServer(async(req,res)=>{
       const id=decodeURIComponent(productMatch[1]);
       if(req.method==='PATCH'){
         const patch=await body(req,512*1024);
+        if(Object.prototype.hasOwnProperty.call(patch,'storefront_key')){
+          patch.storefront_key=String(patch.storefront_key||'').toLowerCase();
+          if(!['main','skin'].includes(patch.storefront_key))return json(res,400,{error:'Unknown product storefront.'});
+        }
         if(patch.published===true){
           const current=await supabaseRest('GET','products',undefined,`?select=*&id=eq.${encodeURIComponent(id)}&limit=1`);
           if(!current.ok)return json(res,502,{error:'The current product could not be checked before publishing.'});

@@ -1954,7 +1954,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         // Keep the public catalog independent of Supabase relationship embeds.
         // A broken/missing category or collection relationship must not blank the store.
         const [productsRes,categoriesRes,collectionsRes]=await Promise.all([
-          supabaseRest(env,'GET','products',undefined,'?select=*&published=eq.true&order=created_at.desc'),
+          supabaseRest(env,'GET','products',undefined,'?select=*&published=eq.true&storefront_key=eq.'+(url.searchParams.get('storefront')==='beauty'||url.searchParams.get('storefront')==='skin'?'skin':'main')+'&order=created_at.desc'),
           supabaseRest(env,'GET','categories',undefined,'?select=id,name'),
           supabaseRest(env,'GET','collections',undefined,'?select=id,name')
         ]);
@@ -1964,22 +1964,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const collections=collectionsRes.ok?await collectionsRes.json():[];
         const categoryMap=new Map(categories.map(x=>[String(x.id),x]));
         const collectionMap=new Map(collections.map(x=>[String(x.id),x]));
-        const storefront=String(url.searchParams.get('storefront')||'').toLowerCase();
-        const storefrontProducts=storefront==='beauty'
-          ?products.filter(p=>{
-            const category=categoryMap.get(String(p.category_id||''));
-            const label=String(category?.name||'')+' '+String(category?.slug||'');
-            // Prefer the explicit Skin Care category. For uncategorized imports,
-            // only admit high-confidence skincare titles or structured skincare
-            // fields; broad words like "beauty" in scraped retailer copy are not enough.
-            if(/skin\s*care|skincare/i.test(label))return true;
-            const title=[p.name,p.brand].filter(Boolean).join(' ');
-            const titleIsSkincare=/skin\s*care|skincare|cosmetic|cleanser|cleansing|face wash|moisturi[sz]er|serum|sunscreen|sunblock|\bspf\b|face cream|toner|retinol|exfoliat|lip balm|facial oil|eye cream|face mask|essence|niacinamide|hyaluronic|ceramide|salicylic acid|glycolic acid|benzoyl peroxide|peptide|squalane|azelaic acid|tranexamic acid|centella|snail mucin|cica|acne treatment|spot treatment|micellar|facial (?:cleanser|oil|serum|mask|cream|mist)/i.test(title);
-            const structured=[p.ingredients,p.benefits,p.skin_types,p.skin_concerns].filter(Boolean).join(' ');
-            const structuredIsSkincare=/skin\s*care|skincare|cleanser|face wash|moisturi[sz]er|serum|sunscreen|sunblock|\bspf\b|retinol|niacinamide|hyaluronic acid|ceramide|salicylic acid|glycolic acid|benzoyl peroxide|azelaic acid|tranexamic acid|centella|snail mucin|acne treatment|skin concerns|skin type/i.test(structured);
-            return titleIsSkincare||(!label.trim()&&structuredIsSkincare);
-          })
-          :products;
+        // Store membership is explicit; never infer catalogue ownership from scraped text.
+        const storefrontProducts=products;
         return json(storefrontProducts.map(p=>{
           const source=p;
           const normalized=normalizeAmazonProduct(source);
@@ -2071,7 +2057,10 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
 
       if(url.pathname==='/api/admin/products'&&request.method==='GET'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
-        const r=await supabaseRest(env,'GET','products',undefined,'?select=*&order=created_at.desc'); if(!r.ok)return json({error:await r.text()},500); return json(await r.json());
+        const storefront=String(url.searchParams.get('storefront')||'').toLowerCase();
+        if(storefront&&!['main','skin'].includes(storefront))return json({error:'Unknown product storefront.'},400);
+        const scope=storefront?'storefront_key=eq.'+storefront+'&':'';
+        const r=await supabaseRest(env,'GET','products',undefined,'?select=*&'+scope+'order=created_at.desc'); if(!r.ok)return json({error:await r.text()},500); return json(await r.json());
       }
       if(url.pathname==='/api/admin/products'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
@@ -2080,6 +2069,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         product.slug=makeProductSlug(product.slug||product.name||product.amazon_asin||'product');
         const validation=validateProduct(product); if(validation)return json({error:validation},400);
         product.published=product.published===true;
+        product.storefront_key=String(product.storefront_key||'main').toLowerCase();
+        if(!['main','skin'].includes(product.storefront_key))return json({error:'Unknown product storefront.'},400);
         product.description=cleanMultilineText(product.description,12000); product.features=cleanMultilineText(product.features,12000); product.brand=cleanText(product.brand,180);
         if(Array.isArray(product.image_urls))product.image_urls=product.image_urls.filter(isValidHttpUrl).slice(0,30);
         if(product.image_url&&!isValidHttpUrl(product.image_url))product.image_url=null;
@@ -2110,6 +2101,10 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         }
         if(request.method==='PATCH'){
           const patch=await body(request);
+          if(Object.prototype.hasOwnProperty.call(patch,'storefront_key')){
+            patch.storefront_key=String(patch.storefront_key||'').toLowerCase();
+            if(!['main','skin'].includes(patch.storefront_key))return json({error:'Unknown product storefront.'},400);
+          }
           if(patch.name)patch.name=String(patch.name).trim().slice(0,180);
           // Preserve an existing product slug unless the caller explicitly changes it.
           // Changing slugs during ordinary edits breaks saved/shared product URLs.

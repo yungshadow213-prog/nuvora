@@ -4,7 +4,8 @@
   "scripts": {
     "start": "node api/server.js",
     "deploy": "wrangler deploy",
-    "preview": "wrangler dev"
+    "preview": "wrangler dev",
+    "verify:skin-store": "node scripts/verify-skin-storefront-isolation.mjs"
   },
   "engines": {
     "node": ">=18"

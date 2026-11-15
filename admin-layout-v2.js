@@ -132,6 +132,72 @@
    window.openSkinStudioGlobalSettings=wrapped;
   }
  }
+ function bindStudioResizer(){
+  const root=$("#skinSiteBuilder");
+  if(!root||root.dataset.nvStudioResizerObserver==="true")return;
+  root.dataset.nvStudioResizerObserver="true";
+  const install=()=>{
+   const layout=$("#skinSiteBuilder .studio-layout.studio-shopify-workspace");
+   const left=layout?.querySelector(":scope > .studio-left-panel");
+   const canvas=layout?.querySelector(":scope > .studio-canvas-panel");
+   if(!layout||!left||!canvas||layout.querySelector(":scope > .studio-resize-handle"))return;
+   const handle=document.createElement("div");
+   handle.className="studio-resize-handle";
+   handle.setAttribute("role","separator");
+   handle.setAttribute("aria-orientation","vertical");
+   handle.setAttribute("aria-label","Resize page outline and live preview");
+   handle.setAttribute("aria-valuemin","240");
+   handle.setAttribute("aria-valuemax","420");
+   handle.tabIndex=0;
+   handle.title="Drag to resize. Use the left and right arrow keys when focused.";
+   layout.insertBefore(handle,canvas);
+   const key="nuvora-skin-studio-sidebar-width";
+   const clamp=value=>Math.max(240,Math.min(420,Math.round(Number(value)||268)));
+   const apply=(value,persist=true)=>{
+    const width=clamp(value);
+    layout.style.setProperty("--nv-studio-sidebar-width",width+"px");
+    handle.setAttribute("aria-valuenow",String(width));
+    handle.setAttribute("aria-valuetext",width+" pixels");
+    if(persist){try{localStorage.setItem(key,String(width));}catch(error){}}
+   };
+   let initial=268;
+   try{const saved=Number(localStorage.getItem(key));if(Number.isFinite(saved)&&saved>=240&&saved<=420)initial=saved;}catch(error){}
+   apply(initial,false);
+   let dragging=false;
+   const move=event=>{
+    if(!dragging)return;
+    const bounds=layout.getBoundingClientRect();
+    apply(event.clientX-bounds.left);
+   };
+   const stop=()=>{
+    dragging=false;
+    handle.classList.remove("is-dragging");
+    try{if(handle.hasPointerCapture?.(activePointer))handle.releasePointerCapture(activePointer);}catch(error){}
+    activePointer=null;
+   };
+   let activePointer=null;
+   handle.addEventListener("pointerdown",event=>{
+    if(event.pointerType==="mouse"&&event.button!==0)return;
+    dragging=true;activePointer=event.pointerId;handle.classList.add("is-dragging");
+    try{handle.setPointerCapture(event.pointerId);}catch(error){}
+    event.preventDefault();
+   });
+   handle.addEventListener("pointermove",move);
+   handle.addEventListener("pointerup",stop);
+   handle.addEventListener("pointercancel",stop);
+   handle.addEventListener("lostpointercapture",()=>{dragging=false;handle.classList.remove("is-dragging");});
+   handle.addEventListener("keydown",event=>{
+    const current=Number(handle.getAttribute("aria-valuenow"))||268;
+    if(event.key==="ArrowLeft"||event.key==="ArrowRight"){
+     event.preventDefault();apply(current+(event.key==="ArrowRight"?10:-10));
+    }else if(event.key==="Home"){event.preventDefault();apply(240);}
+    else if(event.key==="End"){event.preventDefault();apply(420);}
+   });
+  };
+  const observer=new MutationObserver(()=>install());
+  observer.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:["class"]});
+  install();
+ }
  function initialise(){
   upgradeAdminNavigation();
   upgradeStudioWorkspace();
@@ -141,6 +207,7 @@
   bindSettingGroupUpdates();
   bindNavigation();
   wrapSettingsNavigation();
+  bindStudioResizer();
   const root=$("#skinBuilderSections");
   if(root&&!root.dataset.nvSearchBound)bindOutlineSearch();
  }
