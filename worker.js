@@ -2766,13 +2766,36 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         product.slug=makeProductSlug(String(product.name||'skin-product')+' '+crypto.randomUUID().slice(0,8));
         product.image_urls=Array.isArray(product.image_urls)?product.image_urls.filter(isDisplayableProductImage).slice(0,30):[];
         product.image_url=product.image_urls[0]||null;
-        if(!isValidHttpUrl(product.destination_url))return json({error:'The source link is no longer valid. No product was created.'},400);
+        if(!isValidHttpUrl(product.destination_url)){
+          await supabaseRest(env,'PATCH','nuvora_product_import_items',{status:'needs_review',error:'The source link is no longer valid. Review the source URL before retrying.'},'?id=eq.'+encodeURIComponent(item.id)+'&store_key=eq.skin&status=eq.importing');
+          await refreshSkinImportBatch(env,item.batch_id);
+          return json({error:'The source link is no longer valid. No product was created.'},400);
+        }
         const validation=validateProduct(product);
-        if(validation)return json({error:validation},400);
+        if(validation){
+          await supabaseRest(env,'PATCH','nuvora_product_import_items',{status:'needs_review',error:validation},'?id=eq.'+encodeURIComponent(item.id)+'&store_key=eq.skin&status=eq.importing');
+          await refreshSkinImportBatch(env,item.batch_id);
+          return json({error:validation},400);
+        }
         const saved=await supabaseProductWrite(env,'POST',product);
         if(!saved.ok){
-          await supabaseRest(env,'PATCH','nuvora_product_import_items',{status:'needs_review',error:(await saved.text()).slice(0,500)},'?id=eq.'+encodeURIComponent(item.id)+'&store_key=eq.skin&status=eq.importing');
-          return json({error:'The product could not be created. The staged item remains in the review queue.'},400);
+          const saveError=(await saved.text()).slice(0,900);
+          const isIdentityConflict=/23505|duplicate key value|unique constraint/i.test(saveError);
+          let duplicateProduct=null;
+          if(isIdentityConflict&&retailer==='Amazon'&&identity){
+            const check=await supabaseRest(env,'GET','products',null,'?select=id,name&storefront_key=eq.skin&amazon_asin=eq.'+encodeURIComponent(identity)+'&limit=1');
+            if(check.ok)duplicateProduct=(await check.json()||[])[0]||null;
+          }else if(isIdentityConflict&&identity){
+            const check=await supabaseRest(env,'GET','products',null,'?select=id,name&storefront_key=eq.skin&source_sku=eq.'+encodeURIComponent(identity)+'&retailer=eq.'+encodeURIComponent(retailer)+'&limit=1');
+            if(check.ok)duplicateProduct=(await check.json()||[])[0]||null;
+          }
+          await supabaseRest(env,'PATCH','nuvora_product_import_items',{
+            status:isIdentityConflict?'duplicate':'needs_review',
+            duplicate_product_id:duplicateProduct?.id||null,
+            error:isIdentityConflict?'A matching retailer identity already exists in the Skin Care catalogue.':saveError.slice(0,500)
+          },"?id=eq."+encodeURIComponent(item.id)+"&store_key=eq.skin&status=eq.importing");
+          await refreshSkinImportBatch(env,item.batch_id);
+          return json({error:isIdentityConflict?'This retailer identity is already in the Skin Care catalogue. No duplicate was created.':'The product could not be created. The staged item remains in the review queue.'},isIdentityConflict?409:400);
         }
         const created=(await saved.json()||[])[0];
         if(!created?.id)return json({error:'The product was saved, but its new ID could not be confirmed. Refresh the product library before retrying.'},502);
