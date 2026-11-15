@@ -30,7 +30,7 @@
 <section class="metrics"><article class="metric"><label>Skin Care products</label><strong id="metricProducts">—</strong><small>Scoped to Skin Care only</small></article><article class="metric"><label>Published products</label><strong id="metricPublished">—</strong><small>Customer-visible catalogue</small></article><article class="metric"><label>Live experiences</label><strong id="metricLive">—</strong><small>Enabled and published</small></article><article class="metric"><label>Ingredient data</label><strong id="metricIngredients">—</strong><small>Products with ingredient details</small></article></section>
 <section id="overview"><div class="layout"><div><div class="section-head"><div><h2>Customer experiences</h2><p>Open an experience to configure its customer-facing behaviour.</p></div></div><div class="grid-features" id="featureGrid"><div class="empty">Loading experiences…</div></div></div>
 <div><div class="section-head"><div><h2>Shared architecture</h2><p>One Skin Care catalogue powers every module.</p></div></div><article class="panel"><div class="panel-body"><p style="font-size:10px;line-height:1.7;color:#647267;margin:0 0 13px">The Experience Studio adds a versioned feature registry to the existing Skin Studio configuration. It does not replace product, page, category, media or design tools.</p><div class="roadmap"><div class="roadmap-item"><b>Products & taxonomy</b><span>Skin Studio</span></div><div class="roadmap-item"><b>Page layout & preview</b><span>Skin Studio</span></div><div class="roadmap-item"><b>Customer features</b><span>This workspace</span></div><div class="roadmap-item"><b>AI-assisted operations</b><span>AI Manager</span></div><div class="roadmap-item"><b>Store audit & approvals</b><span>Autopilot</span></div></div></div></article>
-<div class="section-head"><div><h2>Architecture extensions</h2><p>Reserved feature types for later development.</p></div></div><div class="roadmap"><div class="roadmap-item"><b>Cross-product compatibility scoring</b><span>Planned</span></div><div class="roadmap-item"><b>Saved customer preference profiles</b><span>Planned</span></div><div class="roadmap-item"><b>AI-guided shopping assistant</b><span>Planned</span></div><div class="roadmap-item"><b>Routine reminders & saved routines</b><span>Planned</span></div></div></div></div></section>
+<div class="section-head"><div><h2>Customer tools</h2><p>Each module is configurable from this workspace.</p></div></div><div class="roadmap"><div class="roadmap-item"><b>Product discovery & comparisons</b><span>Live modules</span></div><div class="roadmap-item"><b>Customer preferences & saved routines</b><span>Browser saved</span></div><div class="roadmap-item"><b>AI shopping conversation</b><span>Source-based</span></div><div class="roadmap-item"><b>Existing Skin Quiz & product guides</b><span>Preserved</span></div></div></div></div></section>
 <section id="editor" hidden><div class="editor-grid"><article class="panel editor-panel"><div class="editor-top"><div><span class="eyebrow" id="editorType">EXPERIENCE</span><h2 id="editorTitle">Edit experience</h2><p id="editorDescription"></p></div><button class="btn" id="backOverview">← All experiences</button></div><div id="editorFields"></div><div class="savebar"><small id="saveStatus">Choose a save action when you are ready.</small><div class="save-actions"><button class="btn" id="saveDraft">Save as draft</button><button class="btn primary" id="publish">Save & publish</button></div></div></article>
 <aside class="panel preview-card"><div class="panel-head"><div><h2>Customer preview</h2><p>Open the real customer page for this module.</p></div></div><div class="preview-display" id="preview"><span class="preview-kicker">NUVORA SKIN CARE</span><h3>Your store, thoughtfully connected.</h3><p>Choose an experience to view its customer-facing page.</p></div><div class="preview-foot"><span id="previewState">Not selected</span><a id="previewLink" href="https://client-store-platform.rayyung713.workers.dev" target="_blank" rel="noreferrer">Open page ↗</a></div></aside></div></section>
 </main></div>
@@ -38,8 +38,8 @@
 <script>
 const $=id=>document.getElementById(id);
 const STORE_URL='https://client-store-platform.rayyung713.workers.dev';
-const PREVIEW_PATHS={compare:'/compare',quiz:'/skin-quiz',finder:'/product-finder',routine:'/routine-builder',ingredients:'/ingredients',alternatives:'/alternatives',recommendations:'/shop',recent:'/recently-viewed',search:'/shop'};
-const ICONS={compare:'⇄',quiz:'✳',finder:'⌕',routine:'◈',ingredients:'✧',alternatives:'↗',recommendations:'♡',recent:'◷',search:'⌕'};
+const PREVIEW_PATHS={compare:'/compare',quiz:'/skin-quiz',finder:'/product-finder',routine:'/routine-builder',ingredients:'/ingredients',alternatives:'/alternatives',recommendations:'/shop',recent:'/recently-viewed',search:'/shop',compatibility:'/product-compatibility',profile:'/my-preferences',assistant:'/assistant','saved-routines':'/saved-routines'};
+const ICONS={compare:'⇄',quiz:'✳',finder:'⌕',routine:'◈',ingredients:'✧',alternatives:'↗',recommendations:'♡',recent:'◷',search:'⌕',compatibility:'⊕',profile:'◎',assistant:'✦','saved-routines':'▤'};
 const FIELD_LABELS={productType:'Product type',skinTypes:'Skin type',skinConcerns:'Concerns',ingredients:'Ingredients',size:'Size',texture:'Texture',fragrance:'Fragrance',rating:'Retailer rating',directions:'How to use',warnings:'Precautions',brand:'Brand',category:'Category'};
 let sb=null,session=null,config=null,selectedId=null,metrics={};
 const escapeHtml=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -67,6 +67,16 @@ function renderEditor(){
  if(f.type==='compare'){
   html+=field('Maximum products','<select id="fMaxProducts">'+[2,3,4].map(n=>'<option value="'+n+'" '+(Number(s.maxProducts||4)===n?'selected':'')+'>'+n+' products</option>').join('')+'</select>');
   html+='<div class="field full"><span class="field-label">Comparison specifications</span>'+checkboxGroup('compareAttr',Object.entries(FIELD_LABELS),s.attributes||[])+'</div>';
+ }else if(f.type==='compatibility'){
+  html+=field('Maximum products in the overlap view','<select id="fMaxCompatibility">'+[2,3,4].map(n=>'<option value="'+n+'" '+(Number(s.maxProducts||4)===n?'selected':'')+'>'+n+' products</option>').join('')+'</select>');
+  html+='<div class="field full"><span class="field-label">Attributes used for catalogue overlap</span>'+checkboxGroup('compatAttr',Object.entries(FIELD_LABELS).filter(([key])=>['productType','skinTypes','skinConcerns','ingredients','category','brand'].includes(key)),s.attributes||['productType','skinTypes','skinConcerns','ingredients'])+'</div>';
+ }else if(f.type==='profile'){
+  const options=[['skinTypes','Skin type'],['skinConcerns','Concerns'],['categories','Product categories'],['avoidIngredients','Ingredients to avoid']]; 
+  html+='<div class="field full"><span class="field-label">Preference fields shown to customers</span>'+checkboxGroup('profileField',options,s.fields||options.map(x=>x[0]))+'</div>';
+ }else if(f.type==='assistant'){
+  html+=field('Conversation turn limit','<select id="fMaxTurns">'+[4,6,8,10,12].map(n=>'<option value="'+n+'" '+(Number(s.maxTurns||8)===n?'selected':'')+'>'+n+' turns</option>').join('')+'</select>');
+ }else if(f.type==='saved-routines'){
+  html+=field('Maximum saved routines','<select id="fMaxRoutines">'+[3,4,6,8,10,12].map(n=>'<option value="'+n+'" '+(Number(s.maxRoutines||6)===n?'selected':'')+'>'+n+' routines</option>').join('')+'</select>');
  }else if(f.type==='quiz'){
   html+='<div class="field full"><span class="field-label">Quiz questions</span><div class="question-list" id="questionList">'+(s.questions||[]).map((q,i)=>'<div class="question"><div class="question-head"><b>Question '+(i+1)+'</b><button type="button" class="btn" data-remove-question="'+i+'">Remove</button></div><label class="field-label">Question text</label><input data-qtitle="'+i+'" maxlength="180" value="'+escapeHtml(q.title)+'"><label class="field-label" style="display:block;margin-top:8px">Answer choices · one per line</label><textarea data-qchoices="'+i+'">'+escapeHtml((q.choices||[]).join('\n'))+'</textarea></div>').join('')+'</div><button type="button" class="btn" id="addQuestion" style="margin-top:9px">+ Add question</button></div>';
  }else if(f.type==='routine'){
@@ -88,8 +98,8 @@ function renderEditor(){
   html+='<div class="field full"><span class="field-label">Searchable fields</span>'+checkboxGroup('searchField',options,s.searchFields||options.map(x=>x[0]))+'</div>';
  }
  html+='</div>';$('editorFields').innerHTML=html;
- ['fLabel','fTitle','fDescription','fEnabled','fStatus','fMaxProducts','fMaxSuggestions','fMaxItems','fSteps','fLinked','fCurated','fFallback'].forEach(id=>$(id)?.addEventListener('input',captureFields));
- document.querySelectorAll('[name="compareAttr"],[name="finderField"],[name="searchField"]').forEach(node=>node.addEventListener('change',captureFields));
+ ['fLabel','fTitle','fDescription','fEnabled','fStatus','fMaxProducts','fMaxSuggestions','fMaxItems','fMaxCompatibility','fMaxTurns','fMaxRoutines','fSteps','fLinked','fCurated','fFallback'].forEach(id=>$(id)?.addEventListener('input',captureFields));
+ document.querySelectorAll('[name="compareAttr"],[name="finderField"],[name="searchField"],[name="compatAttr"],[name="profileField"]').forEach(node=>node.addEventListener('change',captureFields));
  document.querySelectorAll('[data-qtitle],[data-qchoices]').forEach(node=>node.addEventListener('input',captureFields));
  document.querySelectorAll('[data-remove-question]').forEach(node=>node.addEventListener('click',()=>{captureFields();const current=currentFeature();current.settings.questions.splice(Number(node.dataset.removeQuestion),1);renderEditor();}));
  $('addQuestion')?.addEventListener('click',()=>{captureFields();const current=currentFeature();if(current.settings.questions.length>=12){notify('The Skin Quiz supports up to 12 questions.','info');return;}current.settings.questions.push({id:'question-'+Date.now(),title:'What would you like to know?',choices:['Option one','Option two']});renderEditor();});
@@ -99,6 +109,10 @@ function captureFields(){
  const f=currentFeature();if(!f)return;if($('fLabel'))f.label=$('fLabel').value;if($('fTitle'))f.title=$('fTitle').value;if($('fDescription'))f.description=$('fDescription').value;
  if($('fEnabled'))f.enabled=$('fEnabled').checked;if($('fStatus'))f.status=$('fStatus').value;f.settings=f.settings||{};
  if($('fMaxProducts')){f.settings.maxProducts=Number($('fMaxProducts').value);f.settings.attributes=checkedValues('compareAttr');}
+ if($('fMaxCompatibility')){f.settings.maxProducts=Number($('fMaxCompatibility').value);f.settings.attributes=checkedValues('compatAttr');}
+ if(document.querySelector('[name="profileField"]'))f.settings.fields=checkedValues('profileField');
+ if($('fMaxTurns'))f.settings.maxTurns=Number($('fMaxTurns').value);
+ if($('fMaxRoutines'))f.settings.maxRoutines=Number($('fMaxRoutines').value);
  if($('fSteps'))f.settings.steps=$('fSteps').value.split('\n').map(v=>v.trim()).filter(Boolean);
  if($('fMaxSuggestions'))f.settings.maxSuggestions=Number($('fMaxSuggestions').value);if($('fMaxItems'))f.settings.maxItems=Number($('fMaxItems').value);
  if($('fLinked'))f.settings.showLinkedProducts=$('fLinked').checked;if($('fCurated'))f.settings.useCuratedPairs=$('fCurated').checked;if($('fFallback'))f.settings.allowCategoryFallback=$('fFallback').checked;
