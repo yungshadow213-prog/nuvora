@@ -85,5 +85,12 @@ assert.ok(importQueueMigration.includes("alter table public.nuvora_product_impor
 assert.ok(importQueueMigration.includes("revoke all on table public.nuvora_product_import_items from anon, authenticated"), "Browser roles must not read import queue records directly.");
 assert.ok(identityGuardMigration.includes("where storefront_key = 'skin' and amazon_asin is not null"), "Skin Care ASIN duplicates must be blocked by a database unique index.");
 assert.ok(identityGuardMigration.includes("where storefront_key = 'skin' and retailer is not null and source_sku is not null"), "Skin Care retailer/SKU duplicates must be blocked by a database unique index.");
+assert.ok(importWorker.includes("const seenBatchIdentities=new Map()"), "Duplicate ASIN/SKU identities must be detected within the same import batch.");
+assert.ok(importWorker.includes("const skinCategorySlug=String(product.skin_category_slug||'other-skincare').slice(0,100)"), "Approved product category must be retained from the Skin Studio classification.");
+assert.ok(importWorker.includes("productCategoryMap[String(created.id)]=skinCategorySlug"), "Approval must sync the collection assignment into the private Skin Studio draft.");
+assert.ok(importWorker.includes("refreshSkinImportBatch(env,item.batch_id)"), "Approvals and dismissals must refresh their batch counters.");
+assert.ok(importPage.includes("Nuvora copy: "), "The generated customer-facing copy must be visible for review.");
+assert.ok(importPage.includes("import-store-copy"), "Generated store copy must be visually distinct from retailer source copy.");
+
 
 console.log("Nuvora Skin Studio isolation and Autopilot safeguards passed.");
