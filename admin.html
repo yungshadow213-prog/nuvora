@@ -1067,7 +1067,7 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
 #settings .tag-two{bottom:14px;left:0;transform:rotate(-8deg);background:#705735;color:#fff1d7}
 #settings .settings-shortcuts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:15px 0 18px}
 #settings .settings-shortcuts>button{display:flex;align-items:center;gap:11px;min-width:0;padding:14px 13px;border:1px solid #e2e9df;border-radius:15px;background:#fff;text-align:left;box-shadow:0 5px 16px rgba(43,73,43,.035);transition:transform .18s,border-color .18s,box-shadow .18s}
-#settings .settings-shortcuts>button:hover{transform:translateY(-2px);border-color:#c6d9bf;box-shadow:0 10px 22px rgba(43,73,43,.08)}
+#settings .settings-shortcuts>button:hover,#settings .settings-shortcuts>button.active{transform:translateY(-2px);border-color:#c6d9bf;box-shadow:0 10px 22px rgba(43,73,43,.08);background:#fbfdf9}
 #settings .shortcut-icon{display:grid;place-items:center;flex:none;width:36px;height:36px;border-radius:11px;font-size:17px}
 #settings .profile-icon{background:#edf5e9;color:#548153}#settings .region-icon{background:#fff3e6;color:#b4773e}#settings .policy-icon{background:#f0edfb;color:#7565a3}#settings .connection-icon{background:#e9f2f4;color:#4c8492}
 #settings .settings-shortcuts b,#settings .settings-shortcuts small{display:block;min-width:0}
@@ -1143,7 +1143,7 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
 #settings .settings-savebar{position:sticky;bottom:12px;z-index:8;display:flex;align-items:center;justify-content:space-between;gap:14px;margin:15px 0 0;padding:10px 13px 10px 16px;border:1px solid #dfe8dc;border-radius:14px;background:rgba(255,255,255,.94);box-shadow:0 12px 30px rgba(34,67,40,.12);backdrop-filter:blur(14px)}
 #settings .settings-savebar>div{display:flex;align-items:center;gap:8px;color:#6b7e6d;font-size:9px;font-weight:750}
 #settings .settings-save-indicator{width:7px;height:7px;border-radius:50%;background:#74a879}
-#settings #settingsSaveState[data-tone="pending"]~.settings-save-indicator{background:#d29d4e}
+#settings .settings-savebar[data-tone="pending"] .settings-save-indicator{background:#d29d4e}#settings .settings-savebar[data-tone="error"] .settings-save-indicator{background:#c56c5c}
 #settings #settingsSaveState[data-tone="error"]{color:#a34b40}
 #settings .settings-savebar .btn{display:flex;align-items:center;gap:12px;padding:10px 15px;border-radius:9px;font-size:10px}
 #settings .settings-savebar .btn span{font-size:13px}
@@ -3284,7 +3284,7 @@ async function runDiagnostics(){
 }
 function setSettingsSaveState(message,tone='saved'){
  const state=document.getElementById('settingsSaveState');
- if(state){state.textContent=String(message||'');state.dataset.tone=tone;}
+ if(state){state.textContent=String(message||'');state.dataset.tone=tone;const bar=state.closest('.settings-savebar');if(bar)bar.dataset.tone=tone;}
 }
 function settingsJump(id,button){
  const target=document.getElementById(id);
@@ -3335,8 +3335,7 @@ async function saveSettings(){
    shipping_policy:document.getElementById('setShipping').value,
    returns_policy:document.getElementById('setReturns').value
   };
-  const saved=await api('/api/admin/settings',{method:'PATCH',body:payload});
-  if(!saved||typeof saved!=='object')throw new Error('The server did not confirm the settings update.');
+  await api('/api/admin/settings',{method:'PATCH',body:payload});
   setSettingsSaveState('All changes saved','saved');
   setAdminStatus('Settings saved.','success');
  }catch(error){
