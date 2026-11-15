@@ -208,7 +208,7 @@ function renderImportQueue(items){
     if(product.store_description){const customerCopy=document.createElement('p');customerCopy.className='import-meta';customerCopy.style.color='#415b47';customerCopy.textContent='Nuvora copy: '+String(product.store_description).slice(0,260)+(String(product.store_description).length>260?'…':'');copy.append(customerCopy);}
     if(item.duplicate_name){const duplicate=document.createElement('p');duplicate.className='import-flags';duplicate.textContent='Already in Skin Care: '+item.duplicate_name;copy.append(duplicate);}
     const flags=Array.isArray(item.quality_flags)?item.quality_flags:[];
-    if(item.error&&item.status==='failed'){const error=document.createElement('p');error.className='import-flags';error.textContent=item.error;copy.append(error);}
+    if(item.error&&['failed','duplicate'].includes(item.status)){const error=document.createElement('p');error.className='import-flags';error.textContent=item.error;copy.append(error);}
     if(flags.length){const flag=document.createElement('p');flag.className='import-flags';flag.textContent=flags.join(' ');copy.append(flag);}
     const tag=document.createElement('span');tag.className='tag '+(item.status==='imported'?'applied':item.status==='failed'||item.status==='duplicate'?'rejected':'pending');tag.textContent=String(item.status||'pending').replace('_',' ');
     copy.append(tag);main.append(copy);
