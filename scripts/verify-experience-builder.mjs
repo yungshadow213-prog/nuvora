@@ -14,7 +14,7 @@ for(const id of ['compare','quiz','product-finder','routine-builder','ingredient
 assert.ok(router.includes('/admin/experiences')&&router.includes('experience-studio.html'),"Experience Studio route missing");
 assert.ok(router.includes('nuvora-experience-nav-link'),"Main Admin navigation entry missing");
 assert.ok(studio.includes("/api/admin/experience-builder?store=skin"),"Studio must load its scoped API");
-assert.ok(studio.includes("method:'PUT'"),"Studio must save through its admin API");
+assert.ok(studio.includes("'/api/admin/experience-builder?store=skin','PUT'"),"Studio must save through its admin API");
 assert.ok(studio.includes('Save as draft')&&studio.includes('Save & publish'),"Draft and publish controls required");
 assert.ok(studio.includes('data-remove-question')&&studio.includes('addQuestion'),"Quiz question editor is incomplete");
 assert.ok(ai.includes('/admin/experiences'),"AI Manager must link back to Experience Studio");
