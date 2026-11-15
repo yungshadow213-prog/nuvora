@@ -2539,6 +2539,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           return found;
         };
         const itemRows=[];
+        const seenBatchIdentities=new Map();
         for(const sourceUrl of urls){
           const started=Date.now();
           try{
@@ -2556,6 +2557,13 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             const sourceId=String(listing.asin||listing.source_id||sourceProductId(resolvedUrl)||sourceProductId(sourceUrl)||listing.sku||resolvedUrl).trim().slice(0,160);
             const asin=retailer==='Amazon'?(String(listing.asin||sourceId).match(/^[A-Z0-9]{10}$/i)?.[0]?.toUpperCase()||null):null;
             const identity=asin||sourceId;
+            const batchIdentity=retailer.toLowerCase()+':'+String(identity).toLowerCase();
+            if(seenBatchIdentities.has(batchIdentity)){
+              const first=seenBatchIdentities.get(batchIdentity);
+              itemRows.push({batch_id:batch.id,store_key:'skin',source_url:sourceUrl,resolved_url:resolvedUrl,retailer,source_identity:identity,status:'duplicate',error:'This same retailer product was already included earlier in this batch. The first link is kept for review.',proposed_product:{name:title,brand:cleanText(listing.brand,180)||null,retailer,source_url:sourceUrl,source_identity:identity,duplicate_name:first.name||'Earlier batch item'},created_by:admin.id});
+              continue;
+            }
+            seenBatchIdentities.set(batchIdentity,{name:title,sourceUrl});
             const duplicate=await findDuplicate(identity,retailer,sourceUrl,resolvedUrl);
             if(duplicate){
               itemRows.push({batch_id:batch.id,store_key:'skin',source_url:sourceUrl,resolved_url:resolvedUrl,retailer,source_identity:identity,status:'duplicate',duplicate_product_id:duplicate.id,error:'Already present in the Skin Care catalogue.',proposed_product:{name:title,brand:cleanText(listing.brand,180)||null,retailer,source_url:sourceUrl,source_identity:identity,duplicate_name:duplicate.name||'Existing product'},created_by:admin.id});
