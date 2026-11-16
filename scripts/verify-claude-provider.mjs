@@ -30,7 +30,7 @@ assert.match(provider, /provider:'cloudflare-workers-ai-fallback'/);
 assert.match(provider, /fallbackReason/);
 
 const config = section(worker, "function configured(env){", "function randHex(");
-assert.match(config, /claude:\s*!!String\(e\.ANTHROPIC_API_KEY\|\|'\'\)\.trim\(\)/);
+assert.ok(config.includes("claude:!!String(e.ANTHROPIC_API_KEY||'').trim()"), "Claude key presence must be reported as a boolean.");
 assert.match(config, /primaryTextAIProvider:/);
 assert.doesNotMatch(config, /ANTHROPIC_API_KEY\s*:/, "Health/config output must expose only key presence, never the secret.");
 
