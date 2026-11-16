@@ -331,7 +331,7 @@ async function runNuvoraWorkersAI(env,system,messages,maxTokens=2200){
     const detail=String(result?.error?.message||result?.message||'').trim();
     throw new Error(detail?('Cloudflare AI returned no answer: '+detail.slice(0,180)):'Cloudflare AI returned an empty answer. Please retry.');
   }
-  return {model,raw:raw.trim(),provider:'cloudflare-workers-ai-fallback',...(claudeError?{fallbackReason:claudeError}:{})};
+  return {model,raw:raw.trim(),provider:claudeError?'cloudflare-workers-ai-fallback':'cloudflare-workers-ai',...(claudeError?{fallbackReason:claudeError}:{})};
 }
 function parseNuvoraAIJson(raw){
   const cleaned=String(raw||'').replace(/^\uFEFF/,'').replace(/^\s*```(?:json)?\s*/i,'').replace(/\s*```\s*$/,'').trim();
