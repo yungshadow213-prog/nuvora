@@ -12,7 +12,10 @@ const [worker, server, admin, layout, schema, migration] = await Promise.all([
   read("backend/migrations/20261115073356_nuvora_skin_catalogue_storefront_key.sql")
 ]);
 
-assert.ok(worker.includes("storefront_key=eq.'+(url.searchParams.get('storefront')==='beauty'||url.searchParams.get('storefront')==='skin'?'skin':'main')"), "Worker public product API must filter by explicit storefront key.");
+assert.ok(worker.includes("storefront_key=eq.'+(isSkinStorefront?'skin':'main')"), "Worker public product API must filter by the normalized explicit storefront key.");
+assert.ok(worker.includes("const storefront=requestedStorefront==='beauty'?'beauty':requestedStorefront==='skin'?'skin':'main'"), "Worker public product API must declare and normalize its storefront before using it.");
+assert.ok(worker.includes("const isSkinStorefront=storefront==='beauty'||storefront==='skin'"), "Both Skin Care aliases must receive affiliate-only field filtering and storefront CORS.");
+assert.ok(worker.includes("storefront_key=eq.'+(isSkinStorefront?'skin':'main')"), "The normalized storefront must control the database catalogue filter.");
 assert.ok(server.includes("storefront_key=eq.'+(u.searchParams.get('storefront')==='beauty'||u.searchParams.get('storefront')==='skin'?'skin':'main')"), "Node public product API must match Worker storefront filtering.");
 assert.ok(!worker.includes("const titleIsSkincare="), "Worker must not infer Skin catalogue membership from product text.");
 assert.ok(!server.includes("const productText=[p.name,p.brand,p.description,p.features,p.store_description]"), "Node server must not infer Skin catalogue membership from product text.");
@@ -70,7 +73,7 @@ assert.ok(importWorker.includes("store_key:'skin'") && importWorker.includes("st
 assert.ok(importWorker.includes("&storefront_key=eq.skin&amazon_asin=eq."), "Amazon duplicate checks must be scoped to Skin Care.");
 assert.ok(importWorker.includes("&storefront_key=eq.skin&source_sku=eq."), "Non-Amazon duplicate checks must be scoped to Skin Care.");
 assert.ok(importWorker.includes("Draft customer-facing copy once per batch"), "The importer must prepare customer copy from source facts.");
-assert.ok(importWorker.includes("Do not invent or infer ingredient concentrations"), "AI product copy must prohibit unsupported skincare claims.");
+assert.ok(importWorker.includes("Never invent medical, clinical, efficacy, ingredient concentration"), "AI product copy must prohibit unsupported skincare claims.");
 assert.ok(importWorker.includes("product.published=false"), "Approved imports must remain unpublished drafts.");
 assert.ok(importWorker.includes("['ready','needs_review'].includes(item.status)"), "Import approvals must reject concurrent or already-importing items.");
 assert.ok(importWorker.includes("Use a public HTTPS product link."), "Source imports must reject non-HTTPS URLs.");
@@ -87,6 +90,7 @@ assert.ok(identityGuardMigration.includes("where storefront_key = 'skin' and ama
 assert.ok(identityGuardMigration.includes("where storefront_key = 'skin' and retailer is not null and source_sku is not null"), "Skin Care retailer/SKU duplicates must be blocked by a database unique index.");
 assert.ok(importWorker.includes("const seenBatchIdentities=new Map()"), "Duplicate ASIN/SKU identities must be detected within the same import batch.");
 assert.ok(importWorker.includes("const skinCategorySlug=String(product.skin_category_slug||'other-skincare').slice(0,100)"), "Approved product category must be retained from the Skin Studio classification.");
+assert.ok(importWorker.includes("['beauty-skincare','skin-care']"), "Skin Care intake must resolve the canonical shared Skincare category while accepting the legacy slug.");
 assert.ok(importWorker.includes("productCategoryMap[String(created.id)]=skinCategorySlug"), "Approval must sync the collection assignment into the private Skin Studio draft.");
 assert.ok(importWorker.includes("refreshSkinImportBatch(env,item.batch_id)"), "Approvals and dismissals must refresh their batch counters.");
 assert.ok(importPage.includes("Nuvora copy: "), "The generated customer-facing copy must be visible for review.");
@@ -118,5 +122,17 @@ assert.ok(admin.includes("setSettingsSaveState('All changes saved','saved')"), "
 assert.ok(admin.includes("settingsJump(id,button)"), "System Settings section navigation must work.");
 assert.ok(admin.includes("id=\"connectionRows\"") && admin.includes("id=\"diagnosticRows\""), "System Settings must preserve connection and diagnostic result regions.");
 assert.ok(admin.includes("settings-savebar[data-tone=\"pending\"]"), "System Settings must visually distinguish unsaved changes.");
+
+
+assert.ok(importWorker.includes("You are Nuvora Skin Care product intelligence"), "AI intake must classify product metadata from source-supported facts.");
+assert.ok(importWorker.includes("classification_confidence") && importWorker.includes("allowedSkinCategories"), "AI category classification must use a fixed taxonomy and explicit confidence.");
+assert.ok(importWorker.includes("delete product.ai_classification_confidence"), "AI-only metadata must not be sent as an unknown database column.");
+assert.ok(importWorker.includes("product.skin_types=intelligence.skinTypes") && importWorker.includes("product.skin_concerns=intelligence.skinConcerns"), "AI intake must retain source-supported skin types and concerns.");
+assert.ok(importWorker.includes("metadata->>store=eq.skin") && importWorker.includes("created_at=gte."), "Store Insights must be date-filtered and isolated to Skin Care events.");
+assert.ok(importWorker.includes("topProducts"), "Store Insights must return product-level engagement aggregates.");
+assert.ok(admin.includes("async function loadAnalytics(days)") && admin.includes("setInsightTrending"), "The admin must show date-filtered product insights and one-click Trending Now controls.");
+assert.ok(admin.includes("async function quickEditProduct(id)") && admin.includes("async function saveQuickEdit()"), "The Product Library must expose a lightweight quick-edit workflow.");
+assert.ok(admin.includes("id=\"skinLibrarySearch\"") && admin.includes("id=\"skinLibraryStatus\"") && admin.includes("id=\"skinLibrarySort\""), "The Skin Care Product Library must be searchable, filterable and sortable.");
+assert.ok(admin.includes("quickEditImageFile") && admin.includes("store_description:document.getElementById('quickEditShort').value.trim()"), "Quick edit must support image upload and customer-facing descriptions.");
 
 console.log("Nuvora Skin Studio isolation and Autopilot safeguards passed.");

@@ -1650,6 +1650,11 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
 <div class="panel catalog-panel skin-studio-catalog">
     <div class="catalog-panel-head"><div><h2>Skin Care products</h2></div><span id="skinProductCount" class="library-note">0 products</span></div>
     
+    <div style="display:flex;gap:9px;flex-wrap:wrap;margin:14px 0">
+      <input id="skinLibrarySearch" type="search" placeholder="Search products, brands or categories…" oninput="renderSkinProducts()" style="flex:1;min-width:190px">
+      <select id="skinLibraryStatus" onchange="renderSkinProducts()" aria-label="Filter products"><option value="all">All products</option><option value="published">Published</option><option value="drafts">Drafts</option><option value="review">Needs review</option></select>
+      <select id="skinLibrarySort" onchange="renderSkinProducts()" aria-label="Sort products"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name-asc">Name A–Z</option><option value="name-desc">Name Z–A</option></select>
+    </div>
     <div id="skinProductRows" class="product-library"></div>
   </div>
 </section>
@@ -1657,7 +1662,7 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
 <section id="collections" class="view"><div class="panel"><h2>Collections</h2><p class="muted">Create curated groups that can later be attached to products.</p><div class="formgrid"><div class="field"><label>Name</label><input id="colName" placeholder="Gaming Setup"></div><div class="field"><label>Slug</label><input id="colSlug" placeholder="gaming-setup"></div><div class="field full"><label>Description</label><textarea id="colDesc"></textarea></div></div><div class="actions"><button class="btn primary" onclick="createCollection()">Create collection</button></div><div id="collectionRows" style="margin-top:16px"></div></div></section>
 <section id="orders" class="view"><div class="panel"><h2>Orders</h2><p class="muted">Shopify orders are not mirrored into Supabase yet. The storefront checkout can hand customers to Shopify once Shopify is configured.</p><button class="btn" onclick="show('settings',document.querySelectorAll('.nav button')[7])">Configure Shopify</button></div></section>
 <section id="social" class="view"><div class="panel"><h2>Social Publishing Center</h2><p class="muted">Create a real saved social-post draft from a product or from scratch. Platform API publishing requires the relevant platform credentials.</p><div class="formgrid"><div class="field"><label>Post title</label><input id="socialTitle" placeholder="New Nuvora drop"></div><div class="field"><label>Platform</label><select id="socialPlatform"><option value="pinterest">Pinterest</option><option value="instagram">Instagram</option><option value="facebook">Facebook</option><option value="tiktok">TikTok</option><option value="x">X</option></select></div><div class="field"><label>Product</label><select id="socialProduct"><option value="">No product</option></select></div><div class="field"><label>Destination URL</label><input id="socialUrl" placeholder="https://…"></div><div class="field full"><label>Caption</label><textarea id="socialCaption" placeholder="Write the post caption…"></textarea></div><div class="field full"><label>Image URL</label><input id="socialImage" placeholder="https://…"></div></div><div class="actions"><button class="btn primary" onclick="createSocialPost()">Save social post</button></div><div id="socialRows" style="margin-top:18px"></div></div></section>
-<section id="analytics" class="view"><div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><h2>Analytics</h2><p class="muted">Real Nuvora events collected from the storefront. No invented numbers.</p></div><button class="btn" onclick="loadAnalytics()">Refresh</button></div><div id="analyticsRows" style="margin-top:16px"></div></div></section>
+<section id="analytics" class="view"><div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h2>Store Insights</h2><p class="muted">Product views and retailer referrals recorded by the storefront.</p></div><div style="display:flex;gap:7px;align-items:center"><select id="analyticsDays" onchange="loadAnalytics(Number(this.value))" aria-label="Analytics date range"><option value="7">7 days</option><option value="30" selected>30 days</option><option value="90">90 days</option></select><button class="btn" onclick="loadAnalytics()">Refresh</button></div></div><div id="analyticsRows" style="margin-top:16px"></div></div></section>
 <section id="settings" class="view settings-view" oninput="setSettingsSaveState('Unsaved changes','pending')" onchange="setSettingsSaveState('Unsaved changes','pending')">
   <div class="settings-hero">
     <div class="settings-hero-copy">
@@ -1965,16 +1970,29 @@ function mainStoreProducts(){
 }
 function renderSkinProducts(){
   const el=document.getElementById('skinProductRows');if(!el)return;
-  const rows=adminProducts.filter(isSkinProduct);
-  const count=document.getElementById('skinProductCount');if(count)count.textContent=rows.length+' product'+(rows.length===1?'':'s');
+  const allRows=adminProducts.filter(isSkinProduct);
+  const query=String(document.getElementById('skinLibrarySearch')?.value||'').trim().toLowerCase();
+  const status=String(document.getElementById('skinLibraryStatus')?.value||'all');
+  const sort=String(document.getElementById('skinLibrarySort')?.value||'newest');
+  let rows=allRows.filter(p=>{
+    const searchable=[p.name,p.brand,p.product_type,p.skin_category_slug,p.category_id,p.slug,p.retailer,p.amazon_asin].filter(Boolean).join(' ').toLowerCase();
+    if(query&&!searchable.includes(query))return false;
+    if(status==='published'&&!p.published)return false;
+    if(status==='drafts'&&p.published)return false;
+    if(status==='review'&&!productReviewFlags(p).length)return false;
+    return true;
+  });
+  rows.sort((a,b)=>sort==='name-asc'?String(a.name||'').localeCompare(String(b.name||'')):sort==='name-desc'?String(b.name||'').localeCompare(String(a.name||'')):sort==='oldest'?String(a.created_at||'').localeCompare(String(b.created_at||'')):String(b.created_at||'').localeCompare(String(a.created_at||'')));
+  const count=document.getElementById('skinProductCount');if(count)count.textContent=rows.length+' of '+allRows.length+' product'+(allRows.length===1?'':'s');
   const put=(id,value)=>{const node=document.getElementById(id);if(node)node.textContent=String(value);};
-  put('skinTotal',rows.length);put('skinPublished',rows.filter(p=>p.published).length);put('skinDrafts',rows.filter(p=>!p.published).length);put('skinImages',rows.filter(p=>Boolean(p.image_url||p.image||p.imageUrl||(Array.isArray(p.image_urls)&&p.image_urls.some(Boolean))||(Array.isArray(p.images)&&p.images.some(Boolean)))).length);
+  put('skinTotal',allRows.length);put('skinPublished',allRows.filter(p=>p.published).length);put('skinDrafts',allRows.filter(p=>!p.published).length);put('skinImages',allRows.filter(p=>Boolean(p.image_url||p.image||p.imageUrl||(Array.isArray(p.image_urls)&&p.image_urls.some(Boolean))||(Array.isArray(p.images)&&p.images.some(Boolean)))).length);
   const notice=document.getElementById('skinCategoryNotice');
   const cat=categories.find(x=>/^(skin-care|skincare|beauty)$/i.test(String(x.slug||''))||/skin care|skincare/i.test(String(x.name||'')));
   if(notice)notice.textContent=cat?'Skin Care category: '+cat.name:'Create Skin Care category.';
   renderSkinBuilderSections();
-  if(!rows.length){el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet.</div>';return;}
-  el.innerHTML=rows.map(p=>{const dest=retailerDestination(p),label=retailerLabel(p);return '<div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+'</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" type="button" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+'<button class="btn" type="button" onclick="editSkinProduct('+esc(JSON.stringify(String(p.id)))+')">Edit</button><button class="btn" type="button" data-product-publish="'+esc(String(p.id))+'" onclick="togglePublish('+esc(JSON.stringify(String(p.id)))+')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" type="button" onclick="removeProduct('+esc(JSON.stringify(String(p.id)))+')">Delete</button></div></div>';}).join('');
+  if(!allRows.length){el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet.</div>';return;}
+  if(!rows.length){el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products match these filters.</div>';return;}
+  el.innerHTML=rows.map(p=>{const dest=retailerDestination(p),label=retailerLabel(p);return '<div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+'</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" type="button" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+'<button class="btn" type="button" onclick="quickEditProduct('+esc(JSON.stringify(String(p.id)))+')">Quick edit</button><button class="btn" type="button" onclick="editSkinProduct('+esc(JSON.stringify(String(p.id)))+')">Full editor</button><button class="btn" type="button" data-product-publish="'+esc(String(p.id))+'" onclick="togglePublish('+esc(JSON.stringify(String(p.id)))+')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" type="button" onclick="removeProduct('+esc(JSON.stringify(String(p.id)))+')">Delete</button></div></div>';}).join('');
 }
 async function ensureSkinCategory(openForm=false){
   try{
@@ -2154,7 +2172,7 @@ function renderProducts(){
     el.innerHTML=visibleProducts.map(p=>{
       const dest=retailerDestination(p),label=retailerLabel(p),flags=productReviewFlags(p);
       const image=p.image_url&&/^https?:\/\//i.test(String(p.image_url))?'<img class="admin-product-thumb" src="'+esc(p.image_url)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'<span class="admin-product-thumb" aria-hidden="true"></span>';
-      return '<div class="row"><div class="admin-product-leading">'+image+'<div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</div>'+(flags.length?'<div class="admin-product-flags">'+flags.map(flag=>'<span class="tag quality-warning">'+esc(flag)+'</span>').join('')+'</div>':'<div class="admin-product-flags"><span class="tag quality-good">Basic checks passed</span></div>')+'</div></div><div class="product-row-actions"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+(!p.published&&label==='Amazon'&&(p.amazon_source_url||p.source_url||p.resolved_url||p.destination_url)?'<button class="btn" data-product-refresh="'+esc(p.id)+'" onclick="refreshAmazonDraft(\''+esc(p.id)+'\')">Refresh source</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit</button><button class="btn" data-product-publish="'+esc(p.id)+'" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';
+      return '<div class="row"><div class="admin-product-leading">'+image+'<div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</div>'+(flags.length?'<div class="admin-product-flags">'+flags.map(flag=>'<span class="tag quality-warning">'+esc(flag)+'</span>').join('')+'</div>':'<div class="admin-product-flags"><span class="tag quality-good">Basic checks passed</span></div>')+'</div></div><div class="product-row-actions"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+(!p.published&&label==='Amazon'&&(p.amazon_source_url||p.source_url||p.resolved_url||p.destination_url)?'<button class="btn" data-product-refresh="'+esc(p.id)+'" onclick="refreshAmazonDraft(\''+esc(p.id)+'\')">Refresh source</button>':'')+'<button class="btn" onclick="quickEditProduct(\''+p.id+'\')">Quick edit</button><button class="btn" onclick="editProduct(\''+p.id+'\')">Full editor</button><button class="btn" data-product-publish="'+esc(p.id)+'" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';
     }).join('');
   }
   renderCatalogHealth();
@@ -3349,6 +3367,106 @@ async function loadCategories(){try{categories=await api('/api/admin/categories'
 async function createCategory(){const name=document.getElementById('catName').value.trim();const slug=document.getElementById('catSlug').value.trim()||name.toLowerCase().replace(/[^a-z0-9]+/g,'-');if(!name)return setAdminStatus('Category name required.');try{await api('/api/admin/categories',{method:'POST',body:{name,slug,description:document.getElementById('catDesc').value}});document.getElementById('catName').value='';document.getElementById('catSlug').value='';document.getElementById('catDesc').value='';await loadCategories();}catch(e){setAdminStatus(e.message)}}
 async function loadCollections(){try{collections=await api('/api/admin/collections');renderProductTaxonomy();document.getElementById('collectionRows').innerHTML=collections.length?collections.map(c=>`<div class="row"><span><b>${esc(c.name)}</b><div class="muted">${esc(c.slug)} · ${c.published?'Published':'Draft'}</div></span><span class="tag">${c.published?'Published':'Draft'}</span></div>`).join(''):'<div class="muted">No collections yet.</div>'}catch(e){setAdminStatus(e.message)}}
 async function createCollection(){const name=document.getElementById('colName').value.trim();const slug=document.getElementById('colSlug').value.trim()||name.toLowerCase().replace(/[^a-z0-9]+/g,'-');if(!name)return setAdminStatus('Collection name required.');try{await api('/api/admin/collections',{method:'POST',body:{name,slug,description:document.getElementById('colDesc').value,published:false}});document.getElementById('colName').value='';document.getElementById('colSlug').value='';document.getElementById('colDesc').value='';await loadCollections();}catch(e){setAdminStatus(e.message)}}
+async function loadAnalytics(days){
+ const range=Math.max(1,Math.min(90,Number(days||document.getElementById('analyticsDays')?.value||30)||30));
+ const root=document.getElementById('analyticsRows');if(!root)return;
+ root.innerHTML='<div class="muted">Loading store activity…</div>';
+ try{
+  const data=await api('/api/admin/analytics?days='+range);
+  const counts=data.counts||{};
+  const views=Number(counts.product_view||0),cardClicks=Number(counts.product_card_click||0),referrals=Number(counts.affiliate_click||0);
+  const saves=Number(counts.product_save||0),comparisons=Number(counts.product_compare_add||0);
+  const rows=Array.isArray(data.topProducts)?data.topProducts:[];
+  const names=new Map((Array.isArray(adminProducts)?adminProducts:[]).map(p=>[String(p.id),p]));
+  const top=rows.map(row=>({row,product:names.get(String(row.product_id))})).filter(x=>x.product);
+  const categoryRows=Array.isArray(data.topCategories)?data.topCategories:[];
+  const guideRows=Array.isArray(data.topGuides)?data.topGuides:[];
+  const eligible=row=>Number(row.views||0)>=5||Number(row.card_clicks||0)>=5||Number(row.affiliate_clicks||0)>=3||Number(row.saves||0)>=3;
+  root.innerHTML='<div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:12px;margin-bottom:18px">'+
+   '<div class="stat-card"><small>Store visits</small><strong>'+Number(data.uniqueVisits||0).toLocaleString()+'</strong></div>'+
+   '<div class="stat-card"><small>Product views</small><strong>'+views.toLocaleString()+'</strong></div>'+
+   '<div class="stat-card"><small>Card clicks</small><strong>'+cardClicks.toLocaleString()+'</strong></div>'+
+   '<div class="stat-card"><small>Affiliate referrals</small><strong>'+referrals.toLocaleString()+'</strong></div>'+
+   '<div class="stat-card"><small>Product saves</small><strong>'+saves.toLocaleString()+'</strong></div>'+
+   '<div class="stat-card"><small>Comparisons</small><strong>'+comparisons.toLocaleString()+'</strong></div></div>'+
+   '<div class="muted" style="margin-bottom:12px">Last '+range+' days · Affiliate referrals are outbound clicks, not confirmed purchases. Trending eligibility is checked per product, not against store-wide totals.'+(data.possiblyTruncated?' The report reached its 10,000-event read cap; narrow the date range for a complete sample.':'')+'</div>'+
+   '<h3 style="margin:12px 0">Most engaged products</h3>'+
+   (top.length?top.map(({row,product})=>'<div class="row"><div><b>'+esc(product.name)+'</b><div class="muted">'+Number(row.card_clicks||0)+' card clicks · '+Number(row.views||0)+' views · '+Number(row.affiliate_clicks||0)+' retailer referrals · '+Number(row.saves||0)+' saves · '+Number(row.comparisons||0)+' comparisons</div></div><div style="display:flex;gap:8px;align-items:center"><span class="muted">'+(Number(row.views||0)+Number(row.card_clicks||0)+Number(row.affiliate_clicks||0)+Number(row.saves||0)+Number(row.comparisons||0))+' interactions</span>'+(eligible(row)?'<button class="btn" type="button" onclick="setInsightTrending(\''+esc(product.id)+'\','+(!product.trending)+')">'+(product.trending?'Remove trending':'Make trending')+'</button>':'<span class="muted">Early data</span>')+'</div></div>').join(''):'<div class="muted">No product-level activity has been recorded in this period yet.</div>')+
+   '<div class="grid" style="margin-top:20px"><div><h3 style="margin:12px 0">Popular categories</h3>'+(categoryRows.length?categoryRows.map(item=>'<div class="row"><b>'+esc(item.category)+'</b><span class="muted">'+Number(item.count||0)+' interactions</span></div>').join(''):'<div class="muted">Category activity will appear here as visitors browse.</div>')+'</div><div><h3 style="margin:12px 0">Most-read guides</h3>'+(guideRows.length?guideRows.map(item=>'<div class="row"><b>'+esc(item.guide_slug.replace(/-/g,' '))+'</b><span class="muted">'+Number(item.count||0)+' reads</span></div>').join(''):'<div class="muted">Guide activity will appear here as visitors open journal notes.</div>')+'</div></div>';
+ }catch(error){root.innerHTML='<div class="muted">Insights could not be loaded: '+esc(error.message)+'</div>';}
+}
+async function setInsightTrending(id,enabled){
+ try{
+  await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body:{trending:!!enabled}});
+  await liveAdminProducts();
+  await loadAnalytics(Number(document.getElementById('analyticsDays')?.value||30));
+  setAdminStatus(enabled?'Product added to Trending Now.':'Product removed from Trending Now.','success');
+ }catch(error){setAdminStatus('Trending status could not be changed: '+error.message,'error');}
+}
+let quickEditProductId='';
+let quickEditOriginalImage='';
+let quickEditProductGallery=[];
+async function quickEditProduct(id){
+ try{
+  const product=await api('/api/admin/products/'+encodeURIComponent(id));
+  if(!product)throw new Error('Product not found.');
+  quickEditProductId=String(product.id);
+  quickEditOriginalImage=String(product.image_url||'');
+  quickEditProductGallery=[...new Set([...(Array.isArray(product.image_urls)?product.image_urls:[]),...(Array.isArray(product.images)?product.images:[]),quickEditOriginalImage].filter(value=>typeof value==='string'&&value.trim()))];
+  document.getElementById('quickEditName').value=product.name||'';
+  document.getElementById('quickEditBrand').value=product.brand||'';
+  document.getElementById('quickEditShort').value=product.store_description||'';
+  document.getElementById('quickEditDescription').value=product.description||'';
+  document.getElementById('quickEditImage').value=product.image_url||'';
+  document.getElementById('quickEditImageFile').value='';
+  document.getElementById('quickEditStatus').textContent='Only these display fields will be updated. Retailer URL and ASIN remain unchanged.';
+  document.getElementById('quickEditModal').hidden=false;
+ }catch(error){setAdminStatus(error.message,'error');}
+}
+function closeQuickEdit(){document.getElementById('quickEditModal').hidden=true;quickEditProductId='';quickEditOriginalImage='';quickEditProductGallery=[];}
+async function uploadQuickEditImage(){
+ const input=document.getElementById('quickEditImageFile'),file=input?.files?.[0];
+ if(!file)return setQuickEditStatus('Choose an image first.');
+ if(!adminSB)return setQuickEditStatus('Image storage is not connected. Sign in again.');
+ const allowed=new Set(['image/jpeg','image/png','image/webp','image/gif']);
+ if(!allowed.has(file.type)||file.size>6*1024*1024)return setQuickEditStatus('Use JPG, PNG, WEBP or GIF up to 6 MB.');
+ try{
+  const ext=({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'})[file.type];
+  const path='products/quick-edit-'+crypto.randomUUID()+'.'+ext;
+  const {error}=await adminSB.storage.from('product-images').upload(path,file,{cacheControl:'31536000',contentType:file.type,upsert:false});
+  if(error)throw error;
+  const {data}=adminSB.storage.from('product-images').getPublicUrl(path);
+  if(!data?.publicUrl)throw new Error('Could not create a public image URL.');
+  document.getElementById('quickEditImage').value=data.publicUrl;
+  setQuickEditStatus('Image uploaded. Save to apply it to this product.');
+ }catch(error){setQuickEditStatus('Image upload failed: '+error.message);}
+}
+function setQuickEditStatus(message){const el=document.getElementById('quickEditStatus');if(el)el.textContent=String(message||'');}
+async function saveQuickEdit(){
+ if(!quickEditProductId)return;
+ const button=document.getElementById('quickEditSave');
+ const patch={
+  name:document.getElementById('quickEditName').value.trim(),
+  brand:document.getElementById('quickEditBrand').value.trim(),
+  store_description:document.getElementById('quickEditShort').value.trim(),
+  description:document.getElementById('quickEditDescription').value.trim(),
+  image_url:document.getElementById('quickEditImage').value.trim()
+ };
+ const imageChanged=patch.image_url!==quickEditOriginalImage;
+ if(imageChanged){
+  const remainingImages=quickEditProductGallery.filter(value=>value!==quickEditOriginalImage&&value!==patch.image_url);
+  patch.image_urls=patch.image_url?[patch.image_url,...remainingImages]:remainingImages;
+ }
+ if(!patch.name)return setQuickEditStatus('Product name is required.');
+ if(button){button.disabled=true;button.textContent='Saving…';}
+ try{
+  await api('/api/admin/products/'+encodeURIComponent(quickEditProductId),{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(patch)});
+  const id=quickEditProductId;closeQuickEdit();
+  await liveAdminProducts();
+  setAdminStatus('Product details saved. Retailer link and ASIN were left untouched.','success');
+ }catch(error){setQuickEditStatus(error.message);}
+ finally{if(button){button.disabled=false;button.textContent='Save changes';}}
+}
 function fillSocialProducts(){const s=document.getElementById('socialProduct');if(!s)return;s.innerHTML='<option value="">No product</option>'+adminProducts.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}
 async function loadSocial(){try{socialPosts=await api('/api/admin/social-posts');fillSocialProducts();document.getElementById('socialRows').innerHTML=socialPosts.length?socialPosts.map(p=>`<div class="row"><div><b>${esc(p.title)}</b><div class="muted">${esc(p.platform)} · ${esc(p.status)}${p.destination_url?' · '+esc(p.destination_url):''}</div></div><div style="display:flex;gap:7px"><button class="btn" onclick="markSocialReady('${p.id}')">${p.status==='draft'?'Mark ready':'Ready'}</button><button class="btn danger" onclick="deleteSocial('${p.id}')">Delete</button></div></div>`).join(''):'<div class="muted">No social posts yet.</div>'}catch(e){setAdminStatus(e.message)}}
 async function createSocialPost(){const title=document.getElementById('socialTitle').value.trim();const caption=document.getElementById('socialCaption').value.trim();const platform=document.getElementById('socialPlatform').value;if(!title||!caption)return setAdminStatus('Post title and caption are required.');try{await api('/api/admin/social-posts',{method:'POST',body:{title,caption,platform,product_id:document.getElementById('socialProduct').value||null,destination_url:document.getElementById('socialUrl').value.trim()||null,image_url:document.getElementById('socialImage').value.trim()||null,status:'draft'}});document.getElementById('socialTitle').value='';document.getElementById('socialCaption').value='';document.getElementById('socialUrl').value='';document.getElementById('socialImage').value='';await loadSocial();setAdminStatus('Social post saved as a draft.');}catch(e){setAdminStatus(e.message)}}
@@ -6544,4 +6662,19 @@ body.product-workspace-page #productModal .product-entry-footer>#skinProductPubl
   }
 }
 </style>
+<div id="quickEditModal" hidden style="position:fixed;inset:0;z-index:10050;background:rgba(15,20,17,.62);padding:18px;overflow:auto">
+ <div style="max-width:680px;margin:5vh auto;background:var(--panel,#fff);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.25)">
+  <div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><h2 style="margin:0">Quick edit</h2><p class="muted" style="margin:5px 0 0">Update the customer-facing product details without opening the full editor.</p></div><button class="btn" type="button" onclick="closeQuickEdit()">Close</button></div>
+  <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px">
+   <div class="field"><label>Product name</label><input id="quickEditName" maxlength="180"></div>
+   <div class="field"><label>Brand display name</label><input id="quickEditBrand" maxlength="180"></div>
+   <div class="field full" style="grid-column:1/-1"><label>Short description</label><textarea id="quickEditShort" rows="3" maxlength="1800"></textarea></div>
+   <div class="field full" style="grid-column:1/-1"><label>Full description</label><textarea id="quickEditDescription" rows="5" maxlength="12000"></textarea></div>
+   <div class="field full" style="grid-column:1/-1"><label>Product image URL</label><input id="quickEditImage" type="url" placeholder="https://…"></div>
+   <div class="field full" style="grid-column:1/-1"><label>Or upload replacement image</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="quickEditImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"><button class="btn" type="button" onclick="uploadQuickEditImage()">Upload image</button></div></div>
+  </div>
+  <p id="quickEditStatus" class="muted" style="margin:12px 0"></p>
+  <div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" type="button" onclick="closeQuickEdit()">Cancel</button><button class="btn primary" id="quickEditSave" type="button" onclick="saveQuickEdit()">Save changes</button></div>
+ </div>
+</div>
 </body></html>
