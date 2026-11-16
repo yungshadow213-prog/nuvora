@@ -3367,8 +3367,16 @@ async function loadAnalytics(days){
    '<div class="stat-card"><small>Recorded events</small><strong>'+Number(data.total||0).toLocaleString()+'</strong></div></div>'+
    '<div class="muted" style="margin-bottom:12px">Last '+range+' days · Affiliate referrals are outbound clicks, not confirmed purchases. '+(enough?'Engagement sample is large enough to compare products.':'Early data: too few events to label anything as trending.')+'</div>'+
    '<h3 style="margin:12px 0">Most engaged products</h3>'+
-   (top.length?top.map(({row,product})=>'<div class="row"><div><b>'+esc(product.name)+'</b><div class="muted">'+Number(row.views||0)+' views · '+Number(row.affiliate_clicks||0)+' retailer referrals · '+Number(row.saves||0)+' saves</div></div><span class="muted">'+(Number(row.views||0)+Number(row.affiliate_clicks||0)+Number(row.saves||0))+' interactions</span></div>').join(''):'<div class="muted">No product-level activity has been recorded in this period yet.</div>');
+   (top.length?top.map(({row,product})=>'<div class="row"><div><b>'+esc(product.name)+'</b><div class="muted">'+Number(row.views||0)+' views · '+Number(row.affiliate_clicks||0)+' retailer referrals · '+Number(row.saves||0)+' saves</div></div><div style="display:flex;gap:8px;align-items:center"><span class="muted">'+(Number(row.views||0)+Number(row.affiliate_clicks||0)+Number(row.saves||0))+' interactions</span>'+(enough?'<button class="btn" type="button" onclick="setInsightTrending(\''+esc(product.id)+'\','+(!product.trending)+')">'+(product.trending?'Remove trending':'Make trending')+'</button>':'')+'</div></div>').join(''):'<div class="muted">No product-level activity has been recorded in this period yet.</div>');
  }catch(error){root.innerHTML='<div class="muted">Insights could not be loaded: '+esc(error.message)+'</div>';}
+}
+async function setInsightTrending(id,enabled){
+ try{
+  await api('/api/admin/products/'+encodeURIComponent(id),{method:'PATCH',body:{trending:!!enabled}});
+  await liveAdminProducts();
+  await loadAnalytics(Number(document.getElementById('analyticsDays')?.value||30));
+  setAdminStatus(enabled?'Product added to Trending Now.':'Product removed from Trending Now.','success');
+ }catch(error){setAdminStatus('Trending status could not be changed: '+error.message,'error');}
 }
 let quickEditProductId='';
 async function quickEditProduct(id){
