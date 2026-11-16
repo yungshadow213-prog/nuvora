@@ -2740,7 +2740,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         if(env.AI){
           const copyCandidates=itemRows.map((row,index)=>({index,row,product:row.proposed_product||{}}))
             .filter(entry=>['ready','needs_review'].includes(entry.row.status)&&
-              (String(entry.product.description||'').trim()||String(entry.product.features||'').trim()));
+              (String(entry.product.description||'').trim()||String(entry.product.features||'').trim()||String(entry.product.ingredients||'').trim()||String(entry.product.product_type||'').trim()||String(entry.product.name||'').trim()));
           if(copyCandidates.length){
             try{
               const facts=copyCandidates.map(entry=>({
