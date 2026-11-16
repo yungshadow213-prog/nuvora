@@ -39,6 +39,9 @@ async function publicStorefront(request, env, key) {
   return json({ config: row[store.config] && typeof row[store.config] === "object" ? row[store.config] : {}, products });
 }
 export default {
+  async scheduled(controller, env, ctx) {
+    if (typeof worker.scheduled === "function") return worker.scheduled(controller, env, ctx);
+  },
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     // Route all studio aliases to the same maintained builder.
