@@ -1815,7 +1815,9 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
 
       if(url.pathname==='/api/admin/analytics'&&request.method==='GET'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
-        const r=await supabaseRest(env,'GET','analytics_events',undefined,'?select=event_name&limit=5000');
+        const days=Math.max(1,Math.min(90,Number(url.searchParams.get('days')||30)||30));
+        const since=new Date(Date.now()-days*86400000).toISOString();
+        const r=await supabaseRest(env,'GET','analytics_events',undefined,'?select=event_name,product_id,session_id,metadata,created_at&created_at=gte.'+encodeURIComponent(since)+'&order=created_at.desc&limit=10000');
         if(!r.ok){
           const raw=await r.text();
           const setupMissing=/PGRST205|relation .*analytics_events|table .*analytics_events/i.test(raw);
@@ -1825,9 +1827,21 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           },setupMissing?503:500);
         }
         const rows=await r.json();
-        const counts={};
-        for(const x of Array.isArray(rows)?rows:[]) counts[x.event_name]=(counts[x.event_name]||0)+1;
-        return json({counts,total:Array.isArray(rows)?rows.length:0});
+        const events=Array.isArray(rows)?rows:[];
+        const counts={},products={};
+        for(const event of events){
+          const name=String(event.event_name||'');
+          counts[name]=(counts[name]||0)+1;
+          if(event.product_id){
+            const item=products[event.product_id]||(products[event.product_id]={product_id:event.product_id,views:0,affiliate_clicks:0,saves:0,other:0});
+            if(name==='product_view')item.views++;
+            else if(name==='affiliate_click')item.affiliate_clicks++;
+            else if(name==='save'||name==='product_save')item.saves++;
+            else item.other++;
+          }
+        }
+        const topProducts=Object.values(products).sort((a,b)=>(b.views+b.affiliate_clicks+b.saves)-(a.views+a.affiliate_clicks+a.saves)).slice(0,20);
+        return json({days,since,counts,total:events.length,topProducts,events:events.slice(0,500)});
       }
 
       const publicStorefrontMatch=url.pathname.match(/^\/api\/(home|clothing|games)-storefront$/);
