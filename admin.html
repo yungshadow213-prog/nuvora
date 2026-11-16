@@ -2154,7 +2154,7 @@ function renderProducts(){
     el.innerHTML=visibleProducts.map(p=>{
       const dest=retailerDestination(p),label=retailerLabel(p),flags=productReviewFlags(p);
       const image=p.image_url&&/^https?:\/\//i.test(String(p.image_url))?'<img class="admin-product-thumb" src="'+esc(p.image_url)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">':'<span class="admin-product-thumb" aria-hidden="true"></span>';
-      return '<div class="row"><div class="admin-product-leading">'+image+'<div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</div>'+(flags.length?'<div class="admin-product-flags">'+flags.map(flag=>'<span class="tag quality-warning">'+esc(flag)+'</span>').join('')+'</div>':'<div class="admin-product-flags"><span class="tag quality-good">Basic checks passed</span></div>')+'</div></div><div class="product-row-actions"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+(!p.published&&label==='Amazon'&&(p.amazon_source_url||p.source_url||p.resolved_url||p.destination_url)?'<button class="btn" data-product-refresh="'+esc(p.id)+'" onclick="refreshAmazonDraft(\''+esc(p.id)+'\')">Refresh source</button>':'')+'<button class="btn" onclick="editProduct(\''+p.id+'\')">Edit</button><button class="btn" data-product-publish="'+esc(p.id)+'" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';
+      return '<div class="row"><div class="admin-product-leading">'+image+'<div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+(p.amazon_asin?' · '+esc(p.amazon_asin):'')+'</div>'+(flags.length?'<div class="admin-product-flags">'+flags.map(flag=>'<span class="tag quality-warning">'+esc(flag)+'</span>').join('')+'</div>':'<div class="admin-product-flags"><span class="tag quality-good">Basic checks passed</span></div>')+'</div></div><div class="product-row-actions"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+(!p.published&&label==='Amazon'&&(p.amazon_source_url||p.source_url||p.resolved_url||p.destination_url)?'<button class="btn" data-product-refresh="'+esc(p.id)+'" onclick="refreshAmazonDraft(\''+esc(p.id)+'\')">Refresh source</button>':'')+'<button class="btn" onclick="quickEditProduct(\''+p.id+'\')">Quick edit</button><button class="btn" onclick="editProduct(\''+p.id+'\')">Full editor</button><button class="btn" data-product-publish="'+esc(p.id)+'" onclick="togglePublish(\''+p.id+'\')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" onclick="removeProduct(\''+p.id+'\')">Delete</button></div></div>';
     }).join('');
   }
   renderCatalogHealth();
@@ -3369,6 +3369,62 @@ async function loadAnalytics(days){
    '<h3 style="margin:12px 0">Most engaged products</h3>'+
    (top.length?top.map(({row,product})=>'<div class="row"><div><b>'+esc(product.name)+'</b><div class="muted">'+Number(row.views||0)+' views · '+Number(row.affiliate_clicks||0)+' retailer referrals · '+Number(row.saves||0)+' saves</div></div><span class="muted">'+(Number(row.views||0)+Number(row.affiliate_clicks||0)+Number(row.saves||0))+' interactions</span></div>').join(''):'<div class="muted">No product-level activity has been recorded in this period yet.</div>');
  }catch(error){root.innerHTML='<div class="muted">Insights could not be loaded: '+esc(error.message)+'</div>';}
+}
+let quickEditProductId='';
+async function quickEditProduct(id){
+ try{
+  const product=await api('/api/admin/products/'+encodeURIComponent(id));
+  if(!product)throw new Error('Product not found.');
+  quickEditProductId=String(product.id);
+  document.getElementById('quickEditName').value=product.name||'';
+  document.getElementById('quickEditBrand').value=product.brand||'';
+  document.getElementById('quickEditShort').value=product.store_description||'';
+  document.getElementById('quickEditDescription').value=product.description||'';
+  document.getElementById('quickEditImage').value=product.image_url||'';
+  document.getElementById('quickEditImageFile').value='';
+  document.getElementById('quickEditStatus').textContent='Only these display fields will be updated. Retailer URL and ASIN remain unchanged.';
+  document.getElementById('quickEditModal').hidden=false;
+ }catch(error){setAdminStatus(error.message,'error');}
+}
+function closeQuickEdit(){document.getElementById('quickEditModal').hidden=true;quickEditProductId='';}
+async function uploadQuickEditImage(){
+ const input=document.getElementById('quickEditImageFile'),file=input?.files?.[0];
+ if(!file)return setQuickEditStatus('Choose an image first.');
+ if(!adminSB)return setQuickEditStatus('Image storage is not connected. Sign in again.');
+ const allowed=new Set(['image/jpeg','image/png','image/webp','image/gif']);
+ if(!allowed.has(file.type)||file.size>6*1024*1024)return setQuickEditStatus('Use JPG, PNG, WEBP or GIF up to 6 MB.');
+ try{
+  const ext=({'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/gif':'gif'})[file.type];
+  const path='products/quick-edit-'+crypto.randomUUID()+'.'+ext;
+  const {error}=await adminSB.storage.from('product-images').upload(path,file,{cacheControl:'31536000',contentType:file.type,upsert:false});
+  if(error)throw error;
+  const {data}=adminSB.storage.from('product-images').getPublicUrl(path);
+  if(!data?.publicUrl)throw new Error('Could not create a public image URL.');
+  document.getElementById('quickEditImage').value=data.publicUrl;
+  setQuickEditStatus('Image uploaded. Save to apply it to this product.');
+ }catch(error){setQuickEditStatus('Image upload failed: '+error.message);}
+}
+function setQuickEditStatus(message){const el=document.getElementById('quickEditStatus');if(el)el.textContent=String(message||'');}
+async function saveQuickEdit(){
+ if(!quickEditProductId)return;
+ const button=document.getElementById('quickEditSave');
+ const patch={
+  name:document.getElementById('quickEditName').value.trim(),
+  brand:document.getElementById('quickEditBrand').value.trim(),
+  store_description:document.getElementById('quickEditShort').value.trim(),
+  description:document.getElementById('quickEditDescription').value.trim(),
+  image_url:document.getElementById('quickEditImage').value.trim()
+ };
+ if(!patch.name)return setQuickEditStatus('Product name is required.');
+ if(button){button.disabled=true;button.textContent='Saving…';}
+ try{
+  await api('/api/admin/products/'+encodeURIComponent(quickEditProductId),{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(patch)});
+  const id=quickEditProductId;closeQuickEdit();
+  if(typeof loadProducts==='function')await loadProducts();else if(typeof loadAdminProducts==='function')await loadAdminProducts();
+  if(typeof renderProducts==='function')renderProducts();
+  setAdminStatus('Product details saved. Retailer link and ASIN were left untouched.','success');
+ }catch(error){setQuickEditStatus(error.message);}
+ finally{if(button){button.disabled=false;button.textContent='Save changes';}}
 }
 function fillSocialProducts(){const s=document.getElementById('socialProduct');if(!s)return;s.innerHTML='<option value="">No product</option>'+adminProducts.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('')}
 async function loadSocial(){try{socialPosts=await api('/api/admin/social-posts');fillSocialProducts();document.getElementById('socialRows').innerHTML=socialPosts.length?socialPosts.map(p=>`<div class="row"><div><b>${esc(p.title)}</b><div class="muted">${esc(p.platform)} · ${esc(p.status)}${p.destination_url?' · '+esc(p.destination_url):''}</div></div><div style="display:flex;gap:7px"><button class="btn" onclick="markSocialReady('${p.id}')">${p.status==='draft'?'Mark ready':'Ready'}</button><button class="btn danger" onclick="deleteSocial('${p.id}')">Delete</button></div></div>`).join(''):'<div class="muted">No social posts yet.</div>'}catch(e){setAdminStatus(e.message)}}
@@ -6565,4 +6621,19 @@ body.product-workspace-page #productModal .product-entry-footer>#skinProductPubl
   }
 }
 </style>
+<div id="quickEditModal" hidden style="position:fixed;inset:0;z-index:10050;background:rgba(15,20,17,.62);padding:18px;overflow:auto">
+ <div style="max-width:680px;margin:5vh auto;background:var(--panel,#fff);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.25)">
+  <div style="display:flex;justify-content:space-between;gap:12px;align-items:center"><div><h2 style="margin:0">Quick edit</h2><p class="muted" style="margin:5px 0 0">Update the customer-facing product details without opening the full editor.</p></div><button class="btn" type="button" onclick="closeQuickEdit()">Close</button></div>
+  <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px">
+   <div class="field"><label>Product name</label><input id="quickEditName" maxlength="180"></div>
+   <div class="field"><label>Brand display name</label><input id="quickEditBrand" maxlength="180"></div>
+   <div class="field full" style="grid-column:1/-1"><label>Short description</label><textarea id="quickEditShort" rows="3" maxlength="1800"></textarea></div>
+   <div class="field full" style="grid-column:1/-1"><label>Full description</label><textarea id="quickEditDescription" rows="5" maxlength="12000"></textarea></div>
+   <div class="field full" style="grid-column:1/-1"><label>Product image URL</label><input id="quickEditImage" type="url" placeholder="https://…"></div>
+   <div class="field full" style="grid-column:1/-1"><label>Or upload replacement image</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="quickEditImageFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"><button class="btn" type="button" onclick="uploadQuickEditImage()">Upload image</button></div></div>
+  </div>
+  <p id="quickEditStatus" class="muted" style="margin:12px 0"></p>
+  <div style="display:flex;justify-content:flex-end;gap:8px"><button class="btn" type="button" onclick="closeQuickEdit()">Cancel</button><button class="btn primary" id="quickEditSave" type="button" onclick="saveQuickEdit()">Save changes</button></div>
+ </div>
+</div>
 </body></html>
