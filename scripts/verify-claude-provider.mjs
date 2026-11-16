@@ -15,7 +15,7 @@ function section(source, startToken, endToken) {
 const claude = section(worker, "async function runNuvoraClaude(", "async function runNuvoraWorkersAI(");
 assert.match(claude, /env\?\.ANTHROPIC_API_KEY/);
 assert.match(claude, /https:\/\/api\.anthropic\.com\/v1\/messages/);
-assert.match(claude, /authorization:\s*'Bearer '\s*\+\s*apiKey/);
+assert.ok(claude.includes("'authorization':'Bearer '+apiKey"), "Claude API key must be sent as a server-side bearer token.");
 assert.match(claude, /anthropic-version':\s*'2026-10-21'/);
 assert.match(claude, /claude-sonnet-5-5/);
 assert.match(claude, /max_tokens:\s*tokenLimit/);
