@@ -73,7 +73,7 @@ assert.ok(importWorker.includes("store_key:'skin'") && importWorker.includes("st
 assert.ok(importWorker.includes("&storefront_key=eq.skin&amazon_asin=eq."), "Amazon duplicate checks must be scoped to Skin Care.");
 assert.ok(importWorker.includes("&storefront_key=eq.skin&source_sku=eq."), "Non-Amazon duplicate checks must be scoped to Skin Care.");
 assert.ok(importWorker.includes("Draft customer-facing copy once per batch"), "The importer must prepare customer copy from source facts.");
-assert.ok(importWorker.includes("Do not invent or infer ingredient concentrations"), "AI product copy must prohibit unsupported skincare claims.");
+assert.ok(importWorker.includes("Never invent medical, clinical, efficacy, ingredient concentration"), "AI product copy must prohibit unsupported skincare claims.");
 assert.ok(importWorker.includes("product.published=false"), "Approved imports must remain unpublished drafts.");
 assert.ok(importWorker.includes("['ready','needs_review'].includes(item.status)"), "Import approvals must reject concurrent or already-importing items.");
 assert.ok(importWorker.includes("Use a public HTTPS product link."), "Source imports must reject non-HTTPS URLs.");
