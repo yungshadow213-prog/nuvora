@@ -87,17 +87,13 @@ async function loadAIProviderStatus(){
     const response=await fetch('/api/health',{cache:'no-store'});
     if(!response.ok)throw new Error('Health check unavailable');
     const health=await response.json(),configured=health?.configured||{};
-    if(configured.claude===true){
-      pill.textContent='Claude key configured · primary';
+    if(configured.workersAI===true){
+      pill.textContent='Cloudflare Workers AI active';
       pill.className='pill';
-      pill.title='Claude is selected as the primary text provider. Cloudflare Workers AI remains the automatic fallback. Key validity is confirmed only when a Claude request succeeds.';
-    }else if(configured.workersAI===true){
-      pill.textContent='Workers AI active · Claude not configured';
-      pill.className='pill warn';
-      pill.title='Cloudflare Workers AI is available. Add ANTHROPIC_API_KEY as a private Worker secret to enable Claude as primary.';
+      pill.title='Cloudflare Workers AI is the configured text-generation provider.';
     }else{
       pill.textContent='Text AI unavailable';pill.className='pill warn';
-      pill.title='No text-generation provider is currently available.';
+      pill.title='Cloudflare Workers AI binding named AI is not connected to this Worker.';
     }
   }catch(error){pill.textContent='AI provider status unknown';pill.className='pill warn';pill.title='Could not read the public provider health status.';}
 }
