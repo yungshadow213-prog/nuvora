@@ -53,7 +53,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-11-14-complete-store-audit-r65',
+          release:'nuvora-2026-11-16-ops-backups-r66',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
@@ -143,7 +143,7 @@ export default {
           shopifyMissing:[],
           aiMissing:[]
         };
-        if(!hasNuvoraTextAI(env))diagnosticsState.aiMissing.push('ANTHROPIC_API_KEY or Workers AI binding named AI');
+        if(!hasNuvoraTextAI(env))diagnosticsState.aiMissing.push('ANTHROPIC_API_KEY or CLAUDE_API_KEY, or Workers AI binding named AI');
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))diagnosticsState.shopifyMissing.push('SHOPIFY_SHOP');
         if(!env.SHOPIFY_CLIENT_ID)diagnosticsState.shopifyMissing.push('SHOPIFY_CLIENT_ID');
         if(!env.SHOPIFY_CLIENT_SECRET)diagnosticsState.shopifyMissing.push('SHOPIFY_CLIENT_SECRET');
@@ -304,11 +304,12 @@ async function refreshSkinImportBatch(env,batchId){
   return write.ok;
 }
 
+function getNuvoraClaudeApiKey(env){return String(env?.ANTHROPIC_API_KEY||env?.CLAUDE_API_KEY||'').trim();}
 function hasNuvoraTextAI(env){
-  return !!String(env?.ANTHROPIC_API_KEY||'').trim()||!!(env?.AI&&typeof env.AI.run==='function');
+  return !!getNuvoraClaudeApiKey(env)||!!(env?.AI&&typeof env.AI.run==='function');
 }
 async function runNuvoraClaude(env,system,messages,maxTokens=2200){
-  const apiKey=String(env?.ANTHROPIC_API_KEY||'').trim();
+  const apiKey=getNuvoraClaudeApiKey(env);
   if(!apiKey)throw new Error('Claude API key is not configured.');
   const model=String(env.NUVORA_CLAUDE_MODEL||'claude-sonnet-5-5').trim();
   const safeMessages=(Array.isArray(messages)?messages:[])
@@ -345,7 +346,7 @@ async function runNuvoraClaude(env,system,messages,maxTokens=2200){
 }
 async function runNuvoraWorkersAI(env,system,messages,maxTokens=2200){
   let claudeError='';
-  if(String(env?.ANTHROPIC_API_KEY||'').trim()){
+  if(getNuvoraClaudeApiKey(env)){
     try{return await runNuvoraClaude(env,system,messages,maxTokens);}
     catch(error){claudeError=String(error?.message||error).slice(0,180);}
   }
@@ -395,9 +396,9 @@ function configured(env){
     shopifyStorefront:!!shopDomain&&!!e.SHOPIFY_STOREFRONT_ACCESS_TOKEN,
     shopifyAdmin:!!shopDomain&&!!e.SHOPIFY_ADMIN_ACCESS_TOKEN,
     amazon:!!e.AMAZON_CLIENT_ID&&!!e.AMAZON_CLIENT_SECRET&&!!e.AMAZON_PARTNER_TAG,
-    claude:!!String(e.ANTHROPIC_API_KEY||'').trim(),
+    claude:!!getNuvoraClaudeApiKey(e),
     claudeModel:String(e.NUVORA_CLAUDE_MODEL||'claude-sonnet-5-5').trim(),
-    primaryTextAIProvider:String(e.ANTHROPIC_API_KEY||'').trim()?'anthropic-claude':e.AI?'cloudflare-workers-ai':'unavailable',
+    primaryTextAIProvider:getNuvoraClaudeApiKey(e)?'anthropic-claude':e.AI?'cloudflare-workers-ai':'unavailable',
     workersAI:!!e.AI,
     gemini:!!e.GEMINI_API_KEY,
   };
