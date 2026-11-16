@@ -2928,6 +2928,8 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const skinCategorySlug=String(product.skin_category_slug||'other-skincare').slice(0,100);
         delete product.skin_category_slug;
         delete product.ai_copy_model;
+        delete product.ai_intelligence_model;
+        delete product.ai_classification_confidence;
         product.storefront_key='skin';
         product.kind='find';
         product.published=false;
