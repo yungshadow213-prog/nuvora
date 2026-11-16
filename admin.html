@@ -1404,7 +1404,7 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
         <button class="btn" id="skinStudioRedo" type="button" onclick="redoSkinStudio()" disabled aria-label="Redo editor change" title="Redo (Ctrl/⌘+Shift+Z)">↷ Redo</button>
       </div>
       <div class="studio-save-state"><span class="studio-save-dot"></span><span id="skinStudioSaveLabel">Saved version loaded</span></div>
-      <button class="btn studio-claude-trigger" type="button" onclick="openSkinClaudeAssistant()">✦ Nuvora AI</button>
+      <button class="btn studio-assistant-trigger" type="button" onclick="openSkinAssistantAssistant()">✦ Nuvora AI</button>
       <details class="studio-more-actions">
         <summary class="btn" aria-label="More editor actions">••• More</summary>
         <div class="studio-more-actions-menu">
@@ -1418,30 +1418,30 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
       <button class="btn primary studio-publish-button" type="button" onclick="saveSkinSiteConfig(this)">Publish</button>
     </div>
   </header>
-  <div id="skinClaudeAssistant" class="skin-claude-overlay" hidden aria-hidden="true">
-    <button class="skin-claude-backdrop" type="button" aria-label="Close Nuvora AI assistant" onclick="closeSkinClaudeAssistant()"></button>
-    <section class="skin-claude-dialog" role="dialog" aria-modal="true" aria-labelledby="skinClaudeTitle">
-      <header class="skin-claude-header">
-        <div><span class="skin-claude-kicker">NUVORA SKIN STUDIO</span><h2 id="skinClaudeTitle">Nuvora AI</h2></div>
-        <button type="button" class="skin-claude-close" aria-label="Close Nuvora AI assistant" onclick="closeSkinClaudeAssistant()">×</button>
+  <div id="skinAssistantAssistant" class="skin-assistant-overlay" hidden aria-hidden="true">
+    <button class="skin-assistant-backdrop" type="button" aria-label="Close Nuvora AI assistant" onclick="closeSkinAssistantAssistant()"></button>
+    <section class="skin-assistant-dialog" role="dialog" aria-modal="true" aria-labelledby="skinAssistantTitle">
+      <header class="skin-assistant-header">
+        <div><span class="skin-assistant-kicker">NUVORA SKIN STUDIO</span><h2 id="skinAssistantTitle">Nuvora AI</h2></div>
+        <button type="button" class="skin-assistant-close" aria-label="Close Nuvora AI assistant" onclick="closeSkinAssistantAssistant()">×</button>
       </header>
-      <div class="skin-claude-status-row"><span class="skin-claude-status-dot"></span><span id="skinClaudeConnectionStatus">Checking Nuvora AI connection…</span></div>
-      <div class="skin-claude-prompts" aria-label="Suggested prompts">
-        <button type="button" onclick="useSkinClaudePrompt('Review this page and suggest a more premium, editorial composition without changing the Nuvora brand direction.')">Elevate this page</button>
-        <button type="button" onclick="useSkinClaudePrompt('Improve the copy on the selected section. Make it clear, confident and editorial, without inventing product claims.')">Polish selected copy</button>
-        <button type="button" onclick="useSkinClaudePrompt('Suggest one useful section to add after the selected section and explain what it should contain.')">Suggest a section</button>
+      <div class="skin-assistant-status-row"><span class="skin-assistant-status-dot"></span><span id="skinAssistantConnectionStatus">Checking Nuvora AI connection…</span></div>
+      <div class="skin-assistant-prompts" aria-label="Suggested prompts">
+        <button type="button" onclick="useSkinAssistantPrompt('Review this page and suggest a more premium, editorial composition without changing the Nuvora brand direction.')">Elevate this page</button>
+        <button type="button" onclick="useSkinAssistantPrompt('Improve the copy on the selected section. Make it clear, confident and editorial, without inventing product claims.')">Polish selected copy</button>
+        <button type="button" onclick="useSkinAssistantPrompt('Suggest one useful section to add after the selected section and explain what it should contain.')">Suggest a section</button>
       </div>
-      <div id="skinClaudeMessages" class="skin-claude-messages" aria-live="polite">
-        <div class="skin-claude-message assistant"><span class="skin-claude-message-label">NUVORA AI</span><p>What would you like to change?</p></div>
+      <div id="skinAssistantMessages" class="skin-assistant-messages" aria-live="polite">
+        <div class="skin-assistant-message assistant"><span class="skin-assistant-message-label">NUVORA AI</span><p>What would you like to change?</p></div>
       </div>
-      <div id="skinClaudeProposals" class="skin-claude-proposals" hidden>
-        <div class="skin-claude-proposals-heading"><b>Suggested draft changes</b><span>Review before applying</span></div>
-        <div id="skinClaudeProposalList"></div>
-        <button type="button" class="btn primary" id="skinClaudeApply" onclick="applySkinClaudeChanges()">Apply suggestions to draft</button>
+      <div id="skinAssistantProposals" class="skin-assistant-proposals" hidden>
+        <div class="skin-assistant-proposals-heading"><b>Suggested draft changes</b><span>Review before applying</span></div>
+        <div id="skinAssistantProposalList"></div>
+        <button type="button" class="btn primary" id="skinAssistantApply" onclick="applySkinAssistantChanges()">Apply suggestions to draft</button>
       </div>
-      <form class="skin-claude-composer" onsubmit="event.preventDefault();sendSkinClaudePrompt()">
-        <textarea id="skinClaudePrompt" rows="3" maxlength="8000" placeholder="Describe what you want Nuvora AI to change…" aria-label="Message Nuvora AI"></textarea>
-        <div class="skin-claude-composer-foot"><button type="submit" class="btn primary" id="skinClaudeSend">Ask Nuvora AI ↗</button></div>
+      <form class="skin-assistant-composer" onsubmit="event.preventDefault();sendSkinAssistantPrompt()">
+        <textarea id="skinAssistantPrompt" rows="3" maxlength="8000" placeholder="Describe what you want Nuvora AI to change…" aria-label="Message Nuvora AI"></textarea>
+        <div class="skin-assistant-composer-foot"><button type="submit" class="btn primary" id="skinAssistantSend">Ask Nuvora AI ↗</button></div>
       </form>
     </section>
   </div>
@@ -3699,7 +3699,7 @@ async function adminBoot(){
 
 const SKIN_CLIENT_ORIGIN='https://client-store-platform.rayyung713.workers.dev';
 let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,skinSiteDraftExists=false,skinStudioTab='outline',skinStudioPageId='home',skinStudioSelection={type:'section',id:'hero'},skinQuickAddType='',skinStudioPendingProductTarget=null;
-let skinClaudeHistory=[],skinClaudePendingChanges=[],skinClaudeLastPrompt='';
+let skinAssistantHistory=[],skinAssistantPendingChanges=[],skinAssistantLastPrompt='';
 let skinStudioUndoStack=[],skinStudioRedoStack=[],skinStudioHistoryLastCapture=0,skinStudioHistoryApplying=false,skinSitePublishInProgress=false;
 const defaultSkinSiteConfig=()=>({
   version:8,homeLayoutVersion:2,template:'soft-editorial',accentColor:'#66745f',
@@ -5345,44 +5345,44 @@ function skinPreviewAction(action){
  if(action==='delete'){removeSkinSection(index,true);return;}
 }
 
-let skinClaudeConnectionReady=false;
-function skinClaudeAppendMessage(role,message){
- const root=document.getElementById('skinClaudeMessages');if(!root)return null;
- const item=document.createElement('div');item.className='skin-claude-message '+(role==='user'?'user':'assistant');
- const label=document.createElement('span');label.className='skin-claude-message-label';label.textContent=role==='user'?'YOU':'NUVORA AI';
+let skinAssistantConnectionReady=false;
+function skinAssistantAppendMessage(role,message){
+ const root=document.getElementById('skinAssistantMessages');if(!root)return null;
+ const item=document.createElement('div');item.className='skin-assistant-message '+(role==='user'?'user':'assistant');
+ const label=document.createElement('span');label.className='skin-assistant-message-label';label.textContent=role==='user'?'YOU':'NUVORA AI';
  const body=document.createElement('p');body.textContent=String(message||'');
  item.append(label,body);root.appendChild(item);root.scrollTop=root.scrollHeight;
  return {item,body};
 }
-function openSkinClaudeAssistant(){
- const root=document.getElementById('skinClaudeAssistant');if(!root)return;
- root.hidden=false;root.setAttribute('aria-hidden','false');document.body.classList.add('skin-claude-open');
- void refreshSkinClaudeStatus();
- document.getElementById('skinClaudePrompt')?.focus();
+function openSkinAssistantAssistant(){
+ const root=document.getElementById('skinAssistantAssistant');if(!root)return;
+ root.hidden=false;root.setAttribute('aria-hidden','false');document.body.classList.add('skin-assistant-open');
+ void refreshSkinAssistantStatus();
+ document.getElementById('skinAssistantPrompt')?.focus();
 }
-function closeSkinClaudeAssistant(){
- const root=document.getElementById('skinClaudeAssistant');if(!root)return;
- root.hidden=true;root.setAttribute('aria-hidden','true');document.body.classList.remove('skin-claude-open');
+function closeSkinAssistantAssistant(){
+ const root=document.getElementById('skinAssistantAssistant');if(!root)return;
+ root.hidden=true;root.setAttribute('aria-hidden','true');document.body.classList.remove('skin-assistant-open');
 }
-async function refreshSkinClaudeStatus(){
- const status=document.getElementById('skinClaudeConnectionStatus'),send=document.getElementById('skinClaudeSend');
+async function refreshSkinAssistantStatus(){
+ const status=document.getElementById('skinAssistantConnectionStatus'),send=document.getElementById('skinAssistantSend');
  if(status)status.textContent='Checking…';
  try{
   const health=await api('/api/health');
-  skinClaudeConnectionReady=health?.configured?.workersAI===true;
-  if(status)status.textContent=skinClaudeConnectionReady?'Connected':'Disconnected';
+  skinAssistantConnectionReady=health?.configured?.workersAI===true;
+  if(status)status.textContent=skinAssistantConnectionReady?'Connected':'Disconnected';
  }catch(error){
-  skinClaudeConnectionReady=false;
+  skinAssistantConnectionReady=false;
   if(status)status.textContent='Connection unavailable.';
  }
  if(send)send.disabled=false;
 }
 
-function useSkinClaudePrompt(prompt){
- const field=document.getElementById('skinClaudePrompt');if(!field)return;
+function useSkinAssistantPrompt(prompt){
+ const field=document.getElementById('skinAssistantPrompt');if(!field)return;
  field.value=String(prompt||'');field.focus();
 }
-function skinClaudePageContext(){
+function skinAssistantPageContext(){
  const pageId=skinStudioPageId||'home',sections=skinSectionsFor(pageId);
  const selected=skinStudioSelection?.type==='section'?sections.find(section=>String(section.id)===String(skinStudioSelection.id)):null;
  const cleanSection=section=>({
@@ -5400,9 +5400,9 @@ function skinClaudePageContext(){
   brand:{name:skinBuilderConfig?.brandName||'Nuvora',suffix:skinBuilderConfig?.brandSuffix||'Skin',template:skinBuilderConfig?.template||'soft-editorial',designSettings:skinBuilderConfig?.designSettings||{}}
  };
 }
-function renderSkinClaudeProposals(changes){
- const root=document.getElementById('skinClaudeProposals'),list=document.getElementById('skinClaudeProposalList');
- skinClaudePendingChanges=Array.isArray(changes)?changes.slice(0,20):[];
+function renderSkinAssistantProposals(changes){
+ const root=document.getElementById('skinAssistantProposals'),list=document.getElementById('skinAssistantProposalList');
+ skinAssistantPendingChanges=Array.isArray(changes)?changes.slice(0,20):[];
  if(!root||!list)return;
  list.replaceChildren();
  const labelFor=change=>{
@@ -5410,57 +5410,57 @@ function renderSkinClaudeProposals(changes){
   const field=String(change.field||'').replace(/([A-Z])/g,' $1').toLowerCase();
   return 'Update '+field;
  };
- skinClaudePendingChanges.forEach(change=>{
-  const row=document.createElement('div');row.className='skin-claude-proposal';
+ skinAssistantPendingChanges.forEach(change=>{
+  const row=document.createElement('div');row.className='skin-assistant-proposal';
   const title=document.createElement('b');title.textContent=labelFor(change);
   const detail=document.createElement('span');
   if(change.op==='add_section')detail.textContent=String(change.section?.title||'Untitled section');
   else detail.textContent=String(change.value??'').slice(0,260);
   row.append(title,detail);list.appendChild(row);
  });
- root.hidden=!skinClaudePendingChanges.length;
+ root.hidden=!skinAssistantPendingChanges.length;
 }
-async function sendSkinClaudePrompt(){
- const field=document.getElementById('skinClaudePrompt'),button=document.getElementById('skinClaudeSend');
+async function sendSkinAssistantPrompt(){
+ const field=document.getElementById('skinAssistantPrompt'),button=document.getElementById('skinAssistantSend');
  const prompt=String(field?.value||'').trim();if(!prompt)return;
- if(prompt.length>8000){skinClaudeAppendMessage('assistant','Please keep the request under 8,000 characters.');return;}
+ if(prompt.length>8000){skinAssistantAppendMessage('assistant','Please keep the request under 8,000 characters.');return;}
  if(button?.disabled)return;
- const context=skinClaudePageContext();
- skinClaudeAppendMessage('user',prompt);skinClaudeHistory.push({role:'user',content:prompt});
+ const context=skinAssistantPageContext();
+ skinAssistantAppendMessage('user',prompt);skinAssistantHistory.push({role:'user',content:prompt});
  if(field)field.value='';if(button){button.disabled=true;button.textContent='Working…';}
- const pending=skinClaudeAppendMessage('assistant','Working on your request…');
+ const pending=skinAssistantAppendMessage('assistant','Working on your request…');
  try{
   const response=await api('/api/admin/ai/studio',{method:'POST',body:{
    prompt,pageId:context.pageId,pageTitle:context.pageTitle,
    selectedSection:context.selectedSection,sections:context.sections,brand:context.brand,
-   history:skinClaudeHistory.slice(-8)
+   history:skinAssistantHistory.slice(-8)
   }});
   const reply=String(response?.reply||'Nuvora AI returned no suggestion.');
-  if(pending?.body)pending.body.textContent=reply;else skinClaudeAppendMessage('assistant',reply);
-  skinClaudeHistory.push({role:'assistant',content:reply});
-  renderSkinClaudeProposals(response?.changes||[]);
-  if(!response?.changes?.length)skinClaudeAppendMessage('assistant','No draft changes were proposed. Ask for a specific copy edit or section addition to receive changes you can apply.');
+  if(pending?.body)pending.body.textContent=reply;else skinAssistantAppendMessage('assistant',reply);
+  skinAssistantHistory.push({role:'assistant',content:reply});
+  renderSkinAssistantProposals(response?.changes||[]);
+  if(!response?.changes?.length)skinAssistantAppendMessage('assistant','No draft changes were proposed. Ask for a specific copy edit or section addition to receive changes you can apply.');
  }catch(error){
   const message=String(error?.message||'Nuvora AI could not complete the request.');
-  if(pending?.body)pending.body.textContent=message;else skinClaudeAppendMessage('assistant',message);
+  if(pending?.body)pending.body.textContent=message;else skinAssistantAppendMessage('assistant',message);
   // Preserve the failed request in the composer so it can be retried or edited.
   if(field&&!field.value.trim())field.value=prompt;
   if(/Workers AI|not connected/i.test(message)){
-   skinClaudeConnectionReady=false;
-   const status=document.getElementById('skinClaudeConnectionStatus');if(status)status.textContent='Nuvora AI could not reach the configured Workers AI service. Check the Worker logs for the request error.';
+   skinAssistantConnectionReady=false;
+   const status=document.getElementById('skinAssistantConnectionStatus');if(status)status.textContent='Nuvora AI could not reach the configured Workers AI service. Check the Worker logs for the request error.';
   }
  }finally{
   if(button){button.disabled=false;button.textContent='Ask Nuvora AI ↗';}
   field?.focus();
  }
 }
-function applySkinClaudeChanges(){
- if(!skinClaudePendingChanges.length||!skinBuilderConfig)return;
+function applySkinAssistantChanges(){
+ if(!skinAssistantPendingChanges.length||!skinBuilderConfig)return;
  const allowedFields=new Set(['title','eyebrow','text','buttonLabel','secondaryButtonLabel','buttonHref','secondaryButtonHref','backgroundColor','textAlignment','titleFontSize','bodyFontSize','sectionPadding','columns','productsPerPage','visible']);
  const allowedTypes=new Set(['product-grid','featured-products','category-grid','brand-grid','concern-grid','hero','editorial','journal-grid','text-block','image-block','quiz-banner']);
  let applied=0,lastPage=skinStudioPageId||'home',lastSectionId='';
  skinHistoryCapture();
- for(const change of skinClaudePendingChanges){
+ for(const change of skinAssistantPendingChanges){
   const pageId=String(change.pageId||lastPage),sections=skinSectionsFor(pageId);
   if(!Array.isArray(sections))continue;
   if(change.op==='update_section'){
@@ -5502,7 +5502,7 @@ function applySkinClaudeChanges(){
  }
  if(!applied){skinBuilderMessage('None of the suggested changes could be applied. Check that the selected page and sections still exist, and that locked sections are unlocked.','warning');return;}
  skinStudioPageId=lastPage;skinStudioSelection=lastSectionId?{type:'section',id:lastSectionId}:{type:'none',id:''};
- skinClaudePendingChanges=[];renderSkinClaudeProposals([]);
+ skinAssistantPendingChanges=[];renderSkinAssistantProposals([]);
  skinMarkDirty('Nuvora AI suggestions applied to the private page draft. Review the live canvas before publishing.');
  renderSkinStudioAll();queueSkinStudioPreview();
  void saveSkinStudioChangeImmediately('Nuvora AI suggestions applied and saved to the private page draft. The public storefront has not been changed.');
