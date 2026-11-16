@@ -130,7 +130,7 @@ export default {
         const checks={
           environment:!!cfg.supabase,auth:false,admin:false,products:false,productSchema:false,
           settings:false,settingsSchema:false,social:false,analytics:false,
-          workersAI:!!cfg.workersAI,claude:!!cfg.claude,textAI:!!cfg.claude||!!cfg.workersAI,gemini:!!cfg.gemini,shopifyStorefront:!!cfg.shopifyStorefront,
+          workersAI:!!cfg.workersAI,textAI:!!cfg.workersAI,gemini:!!cfg.gemini,shopifyStorefront:!!cfg.shopifyStorefront,
           shopifyEnvironment:!!cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false
         };
         // Keep all diagnostic state in one declared object. The admin consumes
@@ -143,7 +143,7 @@ export default {
           shopifyMissing:[],
           aiMissing:[]
         };
-        if(!hasNuvoraTextAI(env))diagnosticsState.aiMissing.push('ANTHROPIC_API_KEY or CLAUDE_API_KEY, or Workers AI binding named AI');
+        if(!hasNuvoraTextAI(env))diagnosticsState.aiMissing.push('Cloudflare Workers AI binding named AI');
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))diagnosticsState.shopifyMissing.push('SHOPIFY_SHOP');
         if(!env.SHOPIFY_CLIENT_ID)diagnosticsState.shopifyMissing.push('SHOPIFY_CLIENT_ID');
         if(!env.SHOPIFY_CLIENT_SECRET)diagnosticsState.shopifyMissing.push('SHOPIFY_CLIENT_SECRET');
@@ -304,58 +304,14 @@ async function refreshSkinImportBatch(env,batchId){
   return write.ok;
 }
 
-function getNuvoraClaudeApiKey(env){return String(env?.ANTHROPIC_API_KEY||env?.CLAUDE_API_KEY||'').trim();}
 function hasNuvoraTextAI(env){
-  return !!getNuvoraClaudeApiKey(env)||!!(env?.AI&&typeof env.AI.run==='function');
-}
-async function runNuvoraClaude(env,system,messages,maxTokens=2200){
-  const apiKey=getNuvoraClaudeApiKey(env);
-  if(!apiKey)throw new Error('Claude API key is not configured.');
-  const model=String(env.NUVORA_CLAUDE_MODEL||'claude-sonnet-5-5').trim();
-  const safeMessages=(Array.isArray(messages)?messages:[])
-    .filter(message=>message&&['user','assistant'].includes(message.role)&&message.content!=null)
-    .map(message=>({role:message.role,content:message.content}));
-  if(!safeMessages.length)throw new Error('Claude requires at least one user or assistant message.');
-  const tokenLimit=Math.max(256,Math.min(8192,Math.floor(Number(maxTokens)||2200)));
-  const response=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{
-      'content-type':'application/json',
-      'authorization':'Bearer '+apiKey,
-      'anthropic-version':'2026-10-21'
-    },
-    body:JSON.stringify({
-      model,
-      max_tokens:tokenLimit,
-      system:String(system||''),
-      messages:safeMessages
-    })
-  });
-  const payload=await response.json().catch(()=>({}));
-  if(!response.ok){
-    const message=String(payload?.error?.message||payload?.message||'Claude request failed.');
-    throw new Error('Claude API returned HTTP '+response.status+': '+message.slice(0,180));
-  }
-  const raw=(Array.isArray(payload?.content)?payload.content:[])
-    .filter(block=>block?.type==='text'&&typeof block.text==='string')
-    .map(block=>block.text)
-    .join('\n')
-    .trim();
-  if(!raw)throw new Error('Claude returned an empty text response.');
-  return {model:String(payload.model||model),raw,provider:'anthropic-claude'};
+  return !!(env?.AI&&typeof env.AI.run==='function');
 }
 async function runNuvoraWorkersAI(env,system,messages,maxTokens=2200){
-  let claudeError='';
-  if(getNuvoraClaudeApiKey(env)){
-    try{return await runNuvoraClaude(env,system,messages,maxTokens);}
-    catch(error){claudeError=String(error?.message||error).slice(0,180);}
-  }
   if(!env?.AI||typeof env.AI.run!=='function'){
-    if(claudeError)throw new Error('Claude was unavailable and the Cloudflare Workers AI fallback is not connected: '+claudeError);
     throw new Error("Cloudflare Workers AI is not connected. Check the Worker AI binding named AI.");
   }
   const model=String(env.NUVORA_AI_MODEL||'@cf/google/gemma-4-26b-a4b-it').trim();
-  // Workers AI remains the automatic fallback if Claude is not configured or temporarily unavailable.
   const result=await env.AI.run(model,{
     messages:[{role:'system',content:String(system||'')},...(Array.isArray(messages)?messages:[])],
     max_completion_tokens:maxTokens,
@@ -377,7 +333,7 @@ async function runNuvoraWorkersAI(env,system,messages,maxTokens=2200){
     const detail=String(result?.error?.message||result?.message||'').trim();
     throw new Error(detail?('Cloudflare AI returned no answer: '+detail.slice(0,180)):'Cloudflare AI returned an empty answer. Please retry.');
   }
-  return {model,raw:raw.trim(),provider:claudeError?'cloudflare-workers-ai-fallback':'cloudflare-workers-ai',...(claudeError?{fallbackReason:claudeError}:{})};
+  return {model,raw:raw.trim(),provider:'cloudflare-workers-ai'};
 }
 function parseNuvoraAIJson(raw){
   const cleaned=String(raw||'').replace(/^\uFEFF/,'').replace(/^\s*```(?:json)?\s*/i,'').replace(/\s*```\s*$/,'').trim();
@@ -396,9 +352,7 @@ function configured(env){
     shopifyStorefront:!!shopDomain&&!!e.SHOPIFY_STOREFRONT_ACCESS_TOKEN,
     shopifyAdmin:!!shopDomain&&!!e.SHOPIFY_ADMIN_ACCESS_TOKEN,
     amazon:!!e.AMAZON_CLIENT_ID&&!!e.AMAZON_CLIENT_SECRET&&!!e.AMAZON_PARTNER_TAG,
-    claude:!!getNuvoraClaudeApiKey(e),
-    claudeModel:String(e.NUVORA_CLAUDE_MODEL||'claude-sonnet-5-5').trim(),
-    primaryTextAIProvider:getNuvoraClaudeApiKey(e)?'anthropic-claude':e.AI?'cloudflare-workers-ai':'unavailable',
+    primaryTextAIProvider:e.AI?'cloudflare-workers-ai':'unavailable',
     workersAI:!!e.AI,
     gemini:!!e.GEMINI_API_KEY,
   };
@@ -729,9 +683,6 @@ async function aiPolishAmazonListing(env,listing){
   try{
     const userMessage={role:'user',content:JSON.stringify(facts).slice(0,22000)};
     let raw='';
-    if(String(env?.ANTHROPIC_API_KEY||'').trim()){
-      try{raw=(await runNuvoraClaude(env,system,[userMessage],1200)).raw;}catch(e){}
-    }
     const key=String(env?.OPENAI_API_KEY||'').trim();
     if(!raw&&key){
       const resp=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+key},body:JSON.stringify({model:'gpt-4o-mini',temperature:0,response_format:{type:'json_object'},messages:[{role:'system',content:system},userMessage]})});
@@ -2372,7 +2323,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const aiLimit=rateLimit(request,'nuvora-ai-skin-product',6,60000);
         if(aiLimit)return json({error:'Nuvora AI product research is being used frequently. Try again in a minute.'},429,{'retry-after':String(aiLimit)});
-        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure Claude or the Cloudflare Workers AI binding.'},503);
+        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure the Cloudflare Workers AI binding.'},503);
         const input=await body(request,64*1024);
         const sourceUrl=String(input.url||'').trim();
         let parsed;
@@ -2478,7 +2429,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const limit=rateLimit(request,'nuvora-ai-studio',6,60000);
         if(limit)return json({error:'Nuvora AI is being used frequently. Try again in a minute.'},429,{'retry-after':String(limit)});
-        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure Claude or the Cloudflare Workers AI binding.'},503);
+        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure the Cloudflare Workers AI binding.'},503);
         let input;
         try{input=await body(request,96*1024);}catch(e){return json({error:'The Nuvora AI Studio request was too large or invalid.'},400);}
         const prompt=cleanMultilineText(input.prompt,8000);
@@ -3225,7 +3176,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         if(!admin)return json({error:'Admin authentication required'},401);
         const limited=rateLimit(request,'nuvora-autopilot-prepare',3,60000);
         if(limited)return json({error:'Copy preparation is running too frequently. Try again shortly.'},429,{'retry-after':String(limited)});
-        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure Claude or Cloudflare Workers AI.'},503);
+        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure Cloudflare Workers AI.'},503);
         const input=await body(request,16*1024);
         if(String(input.store||'skin').toLowerCase()!=='skin')return json({error:'Phase one currently supports the Skin Care store only.'},400);
         const productsResponse=await supabaseRest(env,'GET','products',null,'?select=id,name,brand,description,store_description,features,benefits,ingredients,skin_types,skin_concerns,usage_instructions,product_warnings,published&storefront_key=eq.skin&order=created_at.desc&limit=1000');
@@ -3310,7 +3261,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const aiLimit=rateLimit(request,'nuvora-ai-store-product',5,60000);
         if(aiLimit)return json({error:'Nuvora AI product research is being used frequently. Try again in a minute.'},429,{'retry-after':String(aiLimit)});
-        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure Claude or the Cloudflare Workers AI binding.'},503);
+        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure the Cloudflare Workers AI binding.'},503);
         let input;
         try{input=await body(request,64*1024);}catch(e){return json({error:'The product research request was too large or invalid.'},400);}
         const store=String(input.store||'').toLowerCase();
@@ -3383,7 +3334,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const aiLimit=rateLimit(request,'nuvora-ai-copy',10,60000);
         if(aiLimit)return json({error:'Nuvora AI copywriting is being used frequently. Try again in a minute.'},429,{'retry-after':String(aiLimit)});
-        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure Claude or the Cloudflare Workers AI binding.'},503);
+        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure the Cloudflare Workers AI binding.'},503);
         const input=await body(request,64*1024),product=input.product||{};
         const schema={
           type:'object',
