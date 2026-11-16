@@ -123,4 +123,15 @@ assert.ok(admin.includes("settingsJump(id,button)"), "System Settings section na
 assert.ok(admin.includes("id=\"connectionRows\"") && admin.includes("id=\"diagnosticRows\""), "System Settings must preserve connection and diagnostic result regions.");
 assert.ok(admin.includes("settings-savebar[data-tone=\"pending\"]"), "System Settings must visually distinguish unsaved changes.");
 
+
+assert.ok(importWorker.includes("You are Nuvora Skin Care product intelligence"), "AI intake must classify product metadata from source-supported facts.");
+assert.ok(importWorker.includes("classification_confidence") && importWorker.includes("allowedSkinCategories"), "AI category classification must use a fixed taxonomy and explicit confidence.");
+assert.ok(importWorker.includes("delete product.ai_classification_confidence"), "AI-only metadata must not be sent as an unknown database column.");
+assert.ok(importWorker.includes("product.skin_types=intelligence.skinTypes") && importWorker.includes("product.skin_concerns=intelligence.skinConcerns"), "AI intake must retain source-supported skin types and concerns.");
+assert.ok(importWorker.includes("metadata->>store=eq.skin") && importWorker.includes("created_at=gte."), "Store Insights must be date-filtered and isolated to Skin Care events.");
+assert.ok(importWorker.includes("topProducts"), "Store Insights must return product-level engagement aggregates.");
+assert.ok(admin.includes("async function loadAnalytics(days)") && admin.includes("setInsightTrending"), "The admin must show date-filtered product insights and one-click Trending Now controls.");
+assert.ok(admin.includes("async function quickEditProduct(id)") && admin.includes("async function saveQuickEdit()"), "The Product Library must expose a lightweight quick-edit workflow.");
+assert.ok(admin.includes("quickEditImageFile") && admin.includes("store_description:document.getElementById('quickEditShort').value.trim()"), "Quick edit must support image upload and customer-facing descriptions.");
+
 console.log("Nuvora Skin Studio isolation and Autopilot safeguards passed.");
