@@ -70,7 +70,7 @@ runInNewContext(providerSource + "\nglobalThis.__runProvider = runNuvoraWorkersA
 let requestSeen = null;
 runtime.fetch = async (url, options) => {
   requestSeen = { url, options };
-  return { ok: true, status: 200, json: async () => ({ model: "claude-sonnet-5-5", content: [{ type: "text", text: "{\\"source\\":\\"claude\\"}" }] }) };
+  return { ok: true, status: 200, json: async () => ({ model: "claude-sonnet-5-5", content: [{ type: "text", text: '{"source":"claude"}' }] }) };
 };
 const claudeResult = await runtime.__runProvider(
   { ANTHROPIC_API_KEY: "test-only-secret", AI: { run: async () => { throw new Error("Workers AI must not run when Claude succeeds."); } } },
