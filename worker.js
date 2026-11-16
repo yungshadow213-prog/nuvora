@@ -1309,13 +1309,13 @@ async function ingestSourceProduct(sourceUrl,env){
            brand:normalized.brand||current.brand||null,
            name:syncedTitle,
            description:syncedDescription,
-           source_sku:normalized.sku||current.source_sku||asin,
+           source_sku:normalized.sku||listing.sku||current.source_sku||sourceId||asin,
            features:syncedFeatures.length?syncedFeatures.join('\n'):current.features||null,
            amazon_current_price:retailer==='Amazon'?(normalized.current_price??null):null,
               amazon_list_price:retailer==='Amazon'?(normalized.list_price??null):null,amazon_discount_percent:retailer==='Amazon'?(normalized.discount_percent??null):null,
               amazon_deal_text:retailer==='Amazon'?(normalized.deal_text||null):null,amazon_rating:normalized.rating??null,amazon_review_count:normalized.review_count??null,
               amazon_bought_past_month:listing.bought_past_month||null,amazon_shipping_text:listing.shipping_text||null,
-              availability:listing.availability||null,source_sku:listing.sku||sourceId,amazon_tax_text:listing.tax_text||null,
+              availability:listing.availability||null,amazon_tax_text:listing.tax_text||null,
               amazon_variations:Array.isArray(listing.variations)?listing.variations:[],source_related_products:Array.isArray(listing.related_products)?listing.related_products:[],source_image_urls:images,ingredients:listing.ingredients||null,usage_instructions:listing.usage_instructions||null,product_warnings:listing.product_warnings||null,product_size:listing.product_size||null,published:false,amazon_last_synced:new Date().toISOString()
             };
             const slugBase=title.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,120);
