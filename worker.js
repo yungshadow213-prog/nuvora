@@ -1,5 +1,10 @@
 
 export default {
+  async scheduled(controller, env, ctx) {
+    const task = runNuvoraScheduledHealthCheck(env, controller?.scheduledTime || Date.now());
+    if (ctx?.waitUntil) ctx.waitUntil(task);
+    else await task;
+  },
   async fetch(request, env, ctx) {
     try {
       const url = new URL(request.url);
@@ -78,6 +83,18 @@ export default {
           },setupMissing?503:400,corsHeaders);
         }
         return json({ok:true},200,corsHeaders);
+      }
+
+      if(url.pathname==='/api/admin/system/maintenance'&&(request.method==='GET'||request.method==='POST')){
+        const admin=await adminUser(request,env);
+        if(!admin)return json({error:'Admin authentication required'},401);
+        if(request.method==='POST'){
+          const report=await runNuvoraScheduledHealthCheck(env,Date.now(),admin.id);
+          return json({ok:true,report});
+        }
+        const history=await supabaseRest(env,'GET','admin_activity',null,'?select=id,action,entity_type,metadata,created_at&action=eq.nuvora_scheduled_health_check&order=created_at.desc&limit=10');
+        if(!history.ok)return json({error:'Scheduled maintenance history could not be loaded.'},502);
+        return json({ok:true,runs:await history.json()||[]});
       }
 
       if(url.pathname==='/api/admin/diagnostics'&&request.method==='GET'){
@@ -3813,4 +3830,70 @@ async function supabaseRest(env,method,table,payload=null,query=''){
     text:async()=>raw,
     json:async()=>{try{return raw?JSON.parse(raw):null}catch(e){return null;}}
   };
+}
+
+async function runNuvoraScheduledHealthCheck(env,scheduledTime=Date.now(),adminId=null){
+  const runId=crypto.randomUUID();
+  const completedAt=new Date(Number(scheduledTime)||Date.now()).toISOString();
+  const checks={supabase:false,products:false,storeSettings:false,importQueue:false};
+  const warnings=[];
+  const metrics={products:{main:0,skin:0},published:{main:0,skin:0},stores:{skin:false,home:false,clothing:false,games:false},imports:{processing:0,failed:0,ready:0}};
+  if(!env?.SUPABASE_URL||!env?.SUPABASE_SERVICE_ROLE_KEY){
+    warnings.push('Supabase service connection is not configured.');
+  }else{
+    const [productsResponse,settingsResponse,batchesResponse]=await Promise.all([
+      supabaseRest(env,'GET','products',null,'?select=id,published,storefront_key&storefront_key=in.(main,skin)&order=created_at.desc&limit=1000'),
+      supabaseRest(env,'GET','store_settings',null,'?select=id,skin_site_config,skin_site_draft,home_site_config,home_site_draft,home_products,clothing_site_config,clothing_site_draft,clothing_products,games_site_config,games_site_draft,games_products&id=eq.true&limit=1'),
+      supabaseRest(env,'GET','nuvora_product_import_batches',null,'?select=id,status,store_key&order=created_at.desc&limit=200')
+    ]);
+    checks.supabase=productsResponse.ok&&settingsResponse.ok;
+    checks.products=productsResponse.ok;
+    checks.storeSettings=settingsResponse.ok;
+    checks.importQueue=batchesResponse.ok;
+    if(productsResponse.ok){
+      const rows=await productsResponse.json()||[];
+      for(const row of rows){
+        const store=String(row.storefront_key||'main');
+        if(store==='main'||store==='skin'){
+          metrics.products[store]++;
+          if(row.published===true)metrics.published[store]++;
+        }
+      }
+    }else warnings.push('Product catalogue could not be checked.');
+    if(settingsResponse.ok){
+      const row=(await settingsResponse.json()||[])[0]||{};
+      metrics.stores.skin=!!row.skin_site_config;
+      metrics.stores.home=!!row.home_site_config;
+      metrics.stores.clothing=!!row.clothing_site_config;
+      metrics.stores.games=!!row.games_site_config;
+      if(!row.id)warnings.push('The shared store settings row is missing.');
+    }else warnings.push('Storefront configurations could not be checked.');
+    if(batchesResponse.ok){
+      const rows=await batchesResponse.json()||[];
+      for(const row of rows){
+        const status=String(row.status||'').toLowerCase();
+        if(status==='processing')metrics.imports.processing++;
+        if(status==='failed')metrics.imports.failed++;
+        if(status==='ready'||status==='needs_review')metrics.imports.ready++;
+      }
+    }else warnings.push('The product import queue could not be checked.');
+  }
+  const checksPassed=Object.values(checks).filter(Boolean).length;
+  const summary=warnings.length
+    ?'Scheduled Nuvora health check completed with '+warnings.length+' warning(s).'
+    :'Scheduled Nuvora health check completed. All '+Object.keys(checks).length+' checks passed.';
+  const report={runId,completedAt,summary,status:warnings.length?'warning':'healthy',checks,checksPassed,checksTotal:Object.keys(checks).length,metrics,warnings,mutations:0,aiCalls:0};
+  console.log('NUVORA_SCHEDULED_HEALTH_CHECK',JSON.stringify(report));
+  if(env?.SUPABASE_URL&&env?.SUPABASE_SERVICE_ROLE_KEY){
+    const saved=await supabaseRest(env,'POST','admin_activity',{
+      admin_id:adminId||null,
+      action:'nuvora_scheduled_health_check',
+      entity_type:'system',
+      entity_id:runId,
+      metadata:report
+    });
+    if(!saved.ok)console.error('NUVORA_SCHEDULED_HEALTH_HISTORY_SAVE_FAILED',String(await saved.text()).slice(0,300));
+    else report.historySaved=true;
+  }
+  return report;
 }
