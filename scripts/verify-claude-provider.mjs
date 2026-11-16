@@ -13,8 +13,9 @@ function section(source, startToken, endToken) {
   return source.slice(start, end);
 }
 
-const claude = section(worker, "async function runNuvoraClaude(", "async function runNuvoraWorkersAI(");
+const claude = section(worker, "function getNuvoraClaudeApiKey(", "async function runNuvoraWorkersAI(");
 assert.match(claude, /env\?\.ANTHROPIC_API_KEY/);
+assert.match(claude, /env\?\.CLAUDE_API_KEY/);
 assert.match(claude, /https:\/\/api\.anthropic\.com\/v1\/messages/);
 assert.ok(claude.includes("'authorization':'Bearer '+apiKey"), "Claude API key must be sent as a server-side bearer token.");
 assert.match(claude, /anthropic-version':\s*'2026-10-21'/);
@@ -23,8 +24,9 @@ assert.match(claude, /max_tokens:\s*tokenLimit/);
 assert.match(claude, /payload\?\.content/);
 assert.doesNotMatch(claude, /temperature\s*:|top_p\s*:|top_k\s*:/, "Claude request must not send removed sampling parameters.");
 
-const textAIAvailability = section(worker, "function hasNuvoraTextAI(", "async function runNuvoraClaude(");
+const textAIAvailability = section(worker, "function getNuvoraClaudeApiKey(", "async function runNuvoraWorkersAI(");
 assert.match(textAIAvailability, /ANTHROPIC_API_KEY/);
+assert.match(textAIAvailability, /CLAUDE_API_KEY/);
 assert.match(textAIAvailability, /env\?\.AI/);
 assert.equal((worker.match(/if\(!env\.AI\)/g) || []).length, 1, "Only image generation may require the Workers AI binding directly.");
 for (const route of [
@@ -50,7 +52,7 @@ assert.ok(provider.includes("provider:claudeError?'cloudflare-workers-ai-fallbac
 assert.match(provider, /fallbackReason/);
 
 const config = section(worker, "function configured(env){", "function randHex(");
-assert.ok(config.includes("claude:!!String(e.ANTHROPIC_API_KEY||'').trim()"), "Claude key presence must be reported as a boolean.");
+assert.ok(config.includes("claude:!!getNuvoraClaudeApiKey(e)"), "Claude key presence must be reported as a boolean.");
 assert.match(config, /primaryTextAIProvider:/);
 assert.doesNotMatch(config, /ANTHROPIC_API_KEY\s*:/, "Health/config output must expose only key presence, never the secret.");
 
@@ -65,7 +67,7 @@ assert.match(manager, /Workers AI active · Claude not configured/);
 
 // Exercise provider selection with a mocked Anthropic endpoint; no real key or API call is used.
 const runtime = { fetch: async () => ({ ok: true, status: 200, json: async () => ({ model: "claude-sonnet-5-5", content: [{ type: "text", text: '{"source":"claude"}' }] }) }) };
-const providerSource = section(worker, "async function runNuvoraClaude(", "function parseNuvoraAIJson(");
+const providerSource = section(worker, "function getNuvoraClaudeApiKey(", "function parseNuvoraAIJson(");
 runInNewContext(providerSource + "\nglobalThis.__runProvider = runNuvoraWorkersAI;", runtime);
 let requestSeen = null;
 runtime.fetch = async (url, options) => {
@@ -73,7 +75,7 @@ runtime.fetch = async (url, options) => {
   return { ok: true, status: 200, json: async () => ({ model: "claude-sonnet-5-5", content: [{ type: "text", text: '{"source":"claude"}' }] }) };
 };
 const claudeResult = await runtime.__runProvider(
-  { ANTHROPIC_API_KEY: "test-only-secret", AI: { run: async () => { throw new Error("Workers AI must not run when Claude succeeds."); } } },
+  { CLAUDE_API_KEY: "test-only-secret", AI: { run: async () => { throw new Error("Workers AI must not run when Claude succeeds."); } } },
   "Return JSON only.",
   [{ role: "user", content: "Test" }],
   600
@@ -100,7 +102,7 @@ assert.equal(workersResult.provider, "cloudflare-workers-ai");
 // When Claude is configured but errors, Workers AI is used automatically.
 runtime.fetch = async () => ({ ok: false, status: 401, json: async () => ({ error: { message: "Invalid test key" } }) });
 const fallbackResult = await runtime.__runProvider(
-  { ANTHROPIC_API_KEY: "invalid-test-only", AI: { run: async () => ({ response: '{"source":"fallback"}' }) } },
+  { CLAUDE_API_KEY: "invalid-test-only", AI: { run: async () => ({ response: '{"source":"fallback"}' }) } },
   "Return JSON only.",
   [{ role: "user", content: "Test" }],
   600
