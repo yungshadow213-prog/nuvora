@@ -31,6 +31,9 @@ jobs:
           node --check worker.js
           node --check worker-router.js
 
+      - name: Verify maintenance and backup safety contracts
+        run: npm run verify:ops
+
       - name: Check Wrangler production bundle
         run: npx wrangler@4.145.0 deploy --dry-run --outdir /tmp/nuvora-dist
 
