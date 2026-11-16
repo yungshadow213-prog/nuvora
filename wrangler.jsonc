@@ -27,5 +27,10 @@
       "/admin",
       "/admin/*"
     ]
+  },
+  "triggers": {
+    "crons": [
+      "15 8 * * *"
+    ]
   }
 }
