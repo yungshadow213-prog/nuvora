@@ -1985,7 +1985,7 @@ function renderSkinProducts(){
   rows.sort((a,b)=>sort==='name-asc'?String(a.name||'').localeCompare(String(b.name||'')):sort==='name-desc'?String(b.name||'').localeCompare(String(a.name||'')):sort==='oldest'?String(a.created_at||'').localeCompare(String(b.created_at||'')):String(b.created_at||'').localeCompare(String(a.created_at||'')));
   const count=document.getElementById('skinProductCount');if(count)count.textContent=rows.length+' of '+allRows.length+' product'+(allRows.length===1?'':'s');
   const put=(id,value)=>{const node=document.getElementById(id);if(node)node.textContent=String(value);};
-  put('skinTotal',rows.length);put('skinPublished',rows.filter(p=>p.published).length);put('skinDrafts',rows.filter(p=>!p.published).length);put('skinImages',rows.filter(p=>Boolean(p.image_url||p.image||p.imageUrl||(Array.isArray(p.image_urls)&&p.image_urls.some(Boolean))||(Array.isArray(p.images)&&p.images.some(Boolean)))).length);
+  put('skinTotal',allRows.length);put('skinPublished',allRows.filter(p=>p.published).length);put('skinDrafts',allRows.filter(p=>!p.published).length);put('skinImages',allRows.filter(p=>Boolean(p.image_url||p.image||p.imageUrl||(Array.isArray(p.image_urls)&&p.image_urls.some(Boolean))||(Array.isArray(p.images)&&p.images.some(Boolean)))).length);
   const notice=document.getElementById('skinCategoryNotice');
   const cat=categories.find(x=>/^(skin-care|skincare|beauty)$/i.test(String(x.slug||''))||/skin care|skincare/i.test(String(x.name||'')));
   if(notice)notice.textContent=cat?'Skin Care category: '+cat.name:'Create Skin Care category.';
@@ -3373,19 +3373,26 @@ async function loadAnalytics(days){
  root.innerHTML='<div class="muted">Loading store activity…</div>';
  try{
   const data=await api('/api/admin/analytics?days='+range);
-  const counts=data.counts||{},views=Number(counts.product_view||0),referrals=Number(counts.affiliate_click||0),saves=Number(counts.save||counts.product_save||0);
+  const counts=data.counts||{};
+  const views=Number(counts.product_view||0),cardClicks=Number(counts.product_card_click||0),referrals=Number(counts.affiliate_click||0);
+  const saves=Number(counts.product_save||0),comparisons=Number(counts.product_compare_add||0);
   const rows=Array.isArray(data.topProducts)?data.topProducts:[];
   const names=new Map((Array.isArray(adminProducts)?adminProducts:[]).map(p=>[String(p.id),p]));
   const top=rows.map(row=>({row,product:names.get(String(row.product_id))})).filter(x=>x.product);
-  const enough=views>=5||referrals>=3;
-  root.innerHTML='<div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px">'+
+  const categoryRows=Array.isArray(data.topCategories)?data.topCategories:[];
+  const guideRows=Array.isArray(data.topGuides)?data.topGuides:[];
+  const eligible=row=>Number(row.views||0)>=5||Number(row.card_clicks||0)>=5||Number(row.affiliate_clicks||0)>=3||Number(row.saves||0)>=3;
+  root.innerHTML='<div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:12px;margin-bottom:18px">'+
+   '<div class="stat-card"><small>Store visits</small><strong>'+Number(data.uniqueVisits||0).toLocaleString()+'</strong></div>'+
    '<div class="stat-card"><small>Product views</small><strong>'+views.toLocaleString()+'</strong></div>'+
+   '<div class="stat-card"><small>Card clicks</small><strong>'+cardClicks.toLocaleString()+'</strong></div>'+
    '<div class="stat-card"><small>Affiliate referrals</small><strong>'+referrals.toLocaleString()+'</strong></div>'+
-   '<div class="stat-card"><small>Saves</small><strong>'+saves.toLocaleString()+'</strong></div>'+
-   '<div class="stat-card"><small>Recorded events</small><strong>'+Number(data.total||0).toLocaleString()+'</strong></div></div>'+
-   '<div class="muted" style="margin-bottom:12px">Last '+range+' days · Affiliate referrals are outbound clicks, not confirmed purchases. '+(enough?'Engagement sample is large enough to compare products.':'Early data: too few events to label anything as trending.')+'</div>'+
+   '<div class="stat-card"><small>Product saves</small><strong>'+saves.toLocaleString()+'</strong></div>'+
+   '<div class="stat-card"><small>Comparisons</small><strong>'+comparisons.toLocaleString()+'</strong></div></div>'+
+   '<div class="muted" style="margin-bottom:12px">Last '+range+' days · Affiliate referrals are outbound clicks, not confirmed purchases. Trending eligibility is checked per product, not against store-wide totals.'+(data.possiblyTruncated?' The report reached its 10,000-event read cap; narrow the date range for a complete sample.':'')+'</div>'+
    '<h3 style="margin:12px 0">Most engaged products</h3>'+
-   (top.length?top.map(({row,product})=>'<div class="row"><div><b>'+esc(product.name)+'</b><div class="muted">'+Number(row.views||0)+' views · '+Number(row.affiliate_clicks||0)+' retailer referrals · '+Number(row.saves||0)+' saves</div></div><div style="display:flex;gap:8px;align-items:center"><span class="muted">'+(Number(row.views||0)+Number(row.affiliate_clicks||0)+Number(row.saves||0))+' interactions</span>'+(enough?'<button class="btn" type="button" onclick="setInsightTrending(\''+esc(product.id)+'\','+(!product.trending)+')">'+(product.trending?'Remove trending':'Make trending')+'</button>':'')+'</div></div>').join(''):'<div class="muted">No product-level activity has been recorded in this period yet.</div>');
+   (top.length?top.map(({row,product})=>'<div class="row"><div><b>'+esc(product.name)+'</b><div class="muted">'+Number(row.card_clicks||0)+' card clicks · '+Number(row.views||0)+' views · '+Number(row.affiliate_clicks||0)+' retailer referrals · '+Number(row.saves||0)+' saves · '+Number(row.comparisons||0)+' comparisons</div></div><div style="display:flex;gap:8px;align-items:center"><span class="muted">'+(Number(row.views||0)+Number(row.card_clicks||0)+Number(row.affiliate_clicks||0)+Number(row.saves||0)+Number(row.comparisons||0))+' interactions</span>'+(eligible(row)?'<button class="btn" type="button" onclick="setInsightTrending(\''+esc(product.id)+'\','+(!product.trending)+')">'+(product.trending?'Remove trending':'Make trending')+'</button>':'<span class="muted">Early data</span>')+'</div></div>').join(''):'<div class="muted">No product-level activity has been recorded in this period yet.</div>')+
+   '<div class="grid" style="margin-top:20px"><div><h3 style="margin:12px 0">Popular categories</h3>'+(categoryRows.length?categoryRows.map(item=>'<div class="row"><b>'+esc(item.category)+'</b><span class="muted">'+Number(item.count||0)+' interactions</span></div>').join(''):'<div class="muted">Category activity will appear here as visitors browse.</div>')+'</div><div><h3 style="margin:12px 0">Most-read guides</h3>'+(guideRows.length?guideRows.map(item=>'<div class="row"><b>'+esc(item.guide_slug.replace(/-/g,' '))+'</b><span class="muted">'+Number(item.count||0)+' reads</span></div>').join(''):'<div class="muted">Guide activity will appear here as visitors open journal notes.</div>')+'</div></div>';
  }catch(error){root.innerHTML='<div class="muted">Insights could not be loaded: '+esc(error.message)+'</div>';}
 }
 async function setInsightTrending(id,enabled){
@@ -3397,11 +3404,15 @@ async function setInsightTrending(id,enabled){
  }catch(error){setAdminStatus('Trending status could not be changed: '+error.message,'error');}
 }
 let quickEditProductId='';
+let quickEditOriginalImage='';
+let quickEditProductGallery=[];
 async function quickEditProduct(id){
  try{
   const product=await api('/api/admin/products/'+encodeURIComponent(id));
   if(!product)throw new Error('Product not found.');
   quickEditProductId=String(product.id);
+  quickEditOriginalImage=String(product.image_url||'');
+  quickEditProductGallery=[...new Set([...(Array.isArray(product.image_urls)?product.image_urls:[]),...(Array.isArray(product.images)?product.images:[]),quickEditOriginalImage].filter(value=>typeof value==='string'&&value.trim()))];
   document.getElementById('quickEditName').value=product.name||'';
   document.getElementById('quickEditBrand').value=product.brand||'';
   document.getElementById('quickEditShort').value=product.store_description||'';
@@ -3412,7 +3423,7 @@ async function quickEditProduct(id){
   document.getElementById('quickEditModal').hidden=false;
  }catch(error){setAdminStatus(error.message,'error');}
 }
-function closeQuickEdit(){document.getElementById('quickEditModal').hidden=true;quickEditProductId='';}
+function closeQuickEdit(){document.getElementById('quickEditModal').hidden=true;quickEditProductId='';quickEditOriginalImage='';quickEditProductGallery=[];}
 async function uploadQuickEditImage(){
  const input=document.getElementById('quickEditImageFile'),file=input?.files?.[0];
  if(!file)return setQuickEditStatus('Choose an image first.');
@@ -3441,7 +3452,11 @@ async function saveQuickEdit(){
   description:document.getElementById('quickEditDescription').value.trim(),
   image_url:document.getElementById('quickEditImage').value.trim()
  };
- patch.image_urls=patch.image_url?[patch.image_url]:[];
+ const imageChanged=patch.image_url!==quickEditOriginalImage;
+ if(imageChanged){
+  const remainingImages=quickEditProductGallery.filter(value=>value!==quickEditOriginalImage&&value!==patch.image_url);
+  patch.image_urls=patch.image_url?[patch.image_url,...remainingImages]:remainingImages;
+ }
  if(!patch.name)return setQuickEditStatus('Product name is required.');
  if(button){button.disabled=true;button.textContent='Saving…';}
  try{
