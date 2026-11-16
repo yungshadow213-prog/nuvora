@@ -3423,6 +3423,7 @@ async function saveQuickEdit(){
   description:document.getElementById('quickEditDescription').value.trim(),
   image_url:document.getElementById('quickEditImage').value.trim()
  };
+ patch.image_urls=patch.image_url?[patch.image_url]:[];
  if(!patch.name)return setQuickEditStatus('Product name is required.');
  if(button){button.disabled=true;button.textContent='Saving…';}
  try{
