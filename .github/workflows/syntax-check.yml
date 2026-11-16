@@ -75,6 +75,8 @@ jobs:
         run: npm run verify:skin-store
       - name: Verify Experience Studio architecture and storefront filtering
         run: npm run verify:experiences
+      - name: Verify Claude primary provider and Workers AI fallback
+        run: npm run verify:claude
       - name: Verify multi-store editor and publish contracts
         run: node scripts/verify-multistore-audit.mjs
       - name: Audit HTML and JavaScript wiring

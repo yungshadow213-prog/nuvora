@@ -6,7 +6,8 @@
     "deploy": "wrangler deploy",
     "preview": "wrangler dev",
     "verify:skin-store": "node scripts/verify-skin-storefront-isolation.mjs",
-    "verify:experiences": "node scripts/verify-experience-builder.mjs"
+    "verify:experiences": "node scripts/verify-experience-builder.mjs",
+    "verify:claude": "node scripts/verify-claude-provider.mjs"
   },
   "engines": {
     "node": ">=18"
