@@ -131,8 +131,8 @@ jobs:
           public_products_block = worker[public_products_start:public_products_end]
           if "amazon_review_count:isAmazonSource?(source.amazon_review_count??normalized.review_count??null):null" not in public_products_block:
               failures.append("Public product catalog must preserve retailer review counts for Amazon products")
-          if "if(storefront==='beauty')" not in public_products_block or "delete publicProduct[field]" not in public_products_block:
-              failures.append("Skin Care public catalog must omit affiliate product price/deal fields")
+          if "if(isSkinStorefront)" not in public_products_block or "const isSkinStorefront=storefront==='beauty'||storefront==='skin'" not in public_products_block or "delete publicProduct[field]" not in public_products_block:
+              failures.append("Skin Care public catalog must omit affiliate product price/deal fields for both aliases")
           for price_field in ["display_price","amazon_list_price","amazon_discount_percent","amazon_deal_text"]:
               if price_field not in public_products_block:
                   failures.append(f"Skin Care price-free public contract must explicitly remove {price_field}")
