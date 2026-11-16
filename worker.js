@@ -1975,6 +1975,11 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
       }
 
       if(url.pathname==='/api/products'&&request.method==='GET'){
+        // Resolve the requested catalogue once and reuse it for data isolation,
+        // affiliate-only field filtering, and the matching storefront CORS rule.
+        const requestedStorefront=String(url.searchParams.get('storefront')||'main').trim().toLowerCase();
+        const storefront=requestedStorefront==='beauty'?'beauty':requestedStorefront==='skin'?'skin':'main';
+        const isSkinStorefront=storefront==='beauty'||storefront==='skin';
         // Keep the public catalog independent of Supabase relationship embeds.
         // A broken/missing category or collection relationship must not blank the store.
         const [productsRes,categoriesRes,collectionsRes]=await Promise.all([
@@ -2040,7 +2045,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           'cache-control':'no-store, no-cache, must-revalidate, max-age=0',
           'pragma':'no-cache',
           'vary':'Origin',
-          ...(storefront==='beauty'?{'access-control-allow-origin':'https://client-store-platform.rayyung713.workers.dev'}:{})
+          ...(isSkinStorefront?{'access-control-allow-origin':'https://client-store-platform.rayyung713.workers.dev'}:{})
         });
       }
       async function supabaseProductWrite(env,method,product,query=''){
