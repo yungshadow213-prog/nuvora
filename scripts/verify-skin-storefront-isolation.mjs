@@ -132,6 +132,7 @@ assert.ok(importWorker.includes("metadata->>store=eq.skin") && importWorker.incl
 assert.ok(importWorker.includes("topProducts"), "Store Insights must return product-level engagement aggregates.");
 assert.ok(admin.includes("async function loadAnalytics(days)") && admin.includes("setInsightTrending"), "The admin must show date-filtered product insights and one-click Trending Now controls.");
 assert.ok(admin.includes("async function quickEditProduct(id)") && admin.includes("async function saveQuickEdit()"), "The Product Library must expose a lightweight quick-edit workflow.");
+assert.ok(admin.includes("id=\"skinLibrarySearch\"") && admin.includes("id=\"skinLibraryStatus\"") && admin.includes("id=\"skinLibrarySort\""), "The Skin Care Product Library must be searchable, filterable and sortable.");
 assert.ok(admin.includes("quickEditImageFile") && admin.includes("store_description:document.getElementById('quickEditShort').value.trim()"), "Quick edit must support image upload and customer-facing descriptions.");
 
 console.log("Nuvora Skin Studio isolation and Autopilot safeguards passed.");
