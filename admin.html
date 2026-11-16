@@ -3420,8 +3420,7 @@ async function saveQuickEdit(){
  try{
   await api('/api/admin/products/'+encodeURIComponent(quickEditProductId),{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify(patch)});
   const id=quickEditProductId;closeQuickEdit();
-  if(typeof loadProducts==='function')await loadProducts();else if(typeof loadAdminProducts==='function')await loadAdminProducts();
-  if(typeof renderProducts==='function')renderProducts();
+  await liveAdminProducts();
   setAdminStatus('Product details saved. Retailer link and ASIN were left untouched.','success');
  }catch(error){setQuickEditStatus(error.message);}
  finally{if(button){button.disabled=false;button.textContent='Save changes';}}
