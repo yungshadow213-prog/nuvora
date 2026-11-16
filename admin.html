@@ -1755,6 +1755,23 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
 
   <div class="settings-savebar"><div><span class="settings-save-indicator"></span><span id="settingsSaveState" data-tone="saved">Ready to edit</span></div><button class="btn primary" type="button" data-settings-save onclick="saveSettings()">Save changes <span>↗</span></button></div>
 </section>
+<section id="backups" class="view">
+  <div class="panel" style="max-width:980px">
+    <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
+      <div><span class="section-kicker">DATA PROTECTION</span><h2 style="margin-top:8px">Backups & recovery</h2><p class="muted">Download a snapshot of the Nuvora catalogue and storefront settings. Restore only adds missing records and saves storefront settings as private drafts.</p></div>
+      <button class="btn primary" id="downloadNuvoraBackup" type="button" onclick="downloadNuvoraBackup()">Download backup ↗</button>
+    </div>
+    <div class="notice" style="margin-top:16px">The backup includes main and Skin Care products, Home/Clothing/Games product lists, categories, collections, storefront configurations and private drafts. Images are preserved as URLs/references, not embedded files. Orders, customer accounts, payment data and raw analytics events are excluded.</div>
+    <div style="border-top:1px solid var(--line);margin-top:18px;padding-top:18px">
+      <h3 style="margin:0 0 8px">Restore a backup</h3>
+      <p class="muted">Choose a Nuvora JSON backup. Nuvora will preview the merge before changing anything.</p>
+      <div class="field"><label for="nuvoraBackupFile">Backup file</label><input id="nuvoraBackupFile" type="file" accept=".json,application/json"></div>
+      <div class="actions" style="justify-content:flex-start"><button class="btn" id="previewNuvoraRestore" type="button" onclick="previewNuvoraRestore()">Preview restore</button></div>
+      <div id="nuvoraBackupStatus" class="notice" style="margin-top:12px" aria-live="polite">No backup selected.</div>
+      <div id="nuvoraRestorePreview" hidden></div>
+    </div>
+  </div>
+</section>
 </main></div>
 
 <div id="aiStudioModal" class="modal-backdrop" onclick="if(event.target===this)closeAIStudio()">
@@ -1895,7 +1912,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .btn{white-space:nowrap}
 @media(max-width:760px){body.skin-studio-fullpage .studio-layout{display:flex!important;flex-direction:column;min-height:0}body.skin-studio-fullpage .studio-left-panel,body.skin-studio-fullpage .studio-right-panel{min-height:0}body.skin-studio-fullpage .studio-canvas-viewport{min-height:620px}}
 </style>
 <style id="skin-studio-clutter-removal">body.skin-studio-fullpage #skin-care>.skin-studio-hero,body.skin-studio-fullpage #skin-care>.skin-studio-stats,body.skin-studio-fullpage #skin-care>.skin-studio-section-head,body.skin-studio-fullpage #skin-care>.skin-studio-tools{display:none!important}body.skin-studio-fullpage #skin-care>.skin-site-builder{margin-top:0!important}body.skin-studio-fullpage .studio-toolbar .studio-overline{display:none}</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
-const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],bulkReview:['Import Review','Review, edit and publish the products from your latest bulk discovery.'],products:['Products','Manage Shop, Finds, and Learn listings.'],'skin-care':['Skin Care','Manage the dedicated Nuvora Skin skincare and beauty storefront.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['System settings','Your store identity, policies and connected services.']};
+const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],bulkReview:['Import Review','Review, edit and publish the products from your latest bulk discovery.'],products:['Products','Manage Shop, Finds, and Learn listings.'],'skin-care':['Skin Care','Manage the dedicated Nuvora Skin skincare and beauty storefront.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['System settings','Your store identity, policies and connected services.'],backups:['Backups & recovery','Export a safe copy of Nuvora data or restore missing records.']};
 let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[],collections=[],socialPosts=[];
 window.__nuvoraSchemaState=window.__nuvoraSchemaState||{missingProductColumns:[],productSchemaError:''};
 function validURL(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
@@ -3350,6 +3367,73 @@ async function runScheduledMaintenance(){
   setAdminStatus(error.message||'Maintenance check failed.','error');
  }finally{
   if(button){button.disabled=false;button.textContent='Run checks now ↗';}
+ }
+}
+async function downloadNuvoraBackup(){
+ const button=document.getElementById('downloadNuvoraBackup'),status=document.getElementById('nuvoraBackupStatus');
+ if(button){button.disabled=true;button.textContent='Preparing backup…';}
+ try{
+  if(!adminSession?.access_token)throw new Error('Admin session required.');
+  const response=await fetch('/api/admin/backups/export',{headers:{Authorization:'Bearer '+adminSession.access_token},cache:'no-store'});
+  if(!response.ok){let error={};try{error=await response.json();}catch{}throw new Error(error.error||'Backup export failed ('+response.status+').');}
+  const blob=await response.blob();
+  const url=URL.createObjectURL(blob),anchor=document.createElement('a');
+  anchor.href=url;anchor.download='nuvora-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.appendChild(anchor);anchor.click();anchor.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  if(status)status.textContent='Backup downloaded. Keep the file somewhere safe; it contains private catalogue and store configuration data.';
+  setAdminStatus('Nuvora backup downloaded.','success');
+ }catch(error){
+  if(status)status.textContent=error.message||'Backup export failed.';
+  setAdminStatus(error.message||'Backup export failed.','error');
+ }finally{
+  if(button){button.disabled=false;button.textContent='Download backup ↗';}
+ }
+}
+async function previewNuvoraRestore(){
+ const file=document.getElementById('nuvoraBackupFile')?.files?.[0];
+ const status=document.getElementById('nuvoraBackupStatus'),preview=document.getElementById('nuvoraRestorePreview'),button=document.getElementById('previewNuvoraRestore');
+ if(!file){if(status)status.textContent='Choose a Nuvora JSON backup first.';return;}
+ if(button){button.disabled=true;button.textContent='Checking backup…';}
+ if(preview)preview.hidden=true;
+ try{
+  const backup=JSON.parse(await file.text());
+  if(backup?.format!=='nuvora-backup-v1'||!Array.isArray(backup.products)||!Array.isArray(backup.categories)||!Array.isArray(backup.collections))throw new Error('This is not a supported Nuvora backup file.');
+  const result=await api('/api/admin/backups/restore',{method:'POST',body:{backup,dryRun:true}});
+  window.__nuvoraRestoreBackup=backup;
+  const p=result.plan||{},products=p.products||{},categories=p.categories||{},collections=p.collections||{},drafts=p.drafts||{},legacy=p.legacyProducts||{};
+  if(status)status.textContent='Backup checked: '+new Date(backup.createdAt||Date.now()).toLocaleString()+'. No records have been changed.';
+  if(preview){
+   preview.hidden=false;
+   preview.innerHTML='<div class="notice"><b>Restore preview</b><div class="row"><span>Products to recover</span><b>'+Number(products.toAdd||0)+'</b></div><div class="row"><span>Existing products preserved</span><b>'+Number(products.alreadyPresent||0)+'</b></div><div class="row"><span>Categories / collections to recover</span><b>'+Number(categories.toAdd||0)+' / '+Number(collections.toAdd||0)+'</b></div><div class="row"><span>Private drafts to restore</span><b>'+Number(drafts.toRestore||0)+'</b></div><div class="row"><span>Home, Clothing and Games listings to merge</span><b>'+Number(legacy.toAdd||0)+'</b></div><p class="muted">Restore never overwrites existing product records or published storefront layouts. Recovered product and collection records remain unpublished. Existing private drafts are kept.</p><div class="actions"><button class="btn primary" type="button" onclick="restoreNuvoraBackupNow()">Restore missing records</button></div></div>';
+  }
+ }catch(error){
+  window.__nuvoraRestoreBackup=null;
+  if(status)status.textContent=error.message||'Backup preview failed.';
+  if(preview)preview.hidden=true;
+ }finally{
+  if(button){button.disabled=false;button.textContent='Preview restore';}
+ }
+}
+async function restoreNuvoraBackupNow(){
+ const backup=window.__nuvoraRestoreBackup;
+ if(!backup)throw new Error('Preview a backup before restoring it.');
+ const preview=document.getElementById('nuvoraRestorePreview'),status=document.getElementById('nuvoraBackupStatus');
+ const confirmed=confirm('Restore only missing Nuvora records from this backup? Existing products will not be overwritten. Recovered products and collections will remain unpublished. Published storefront layouts will not change.');
+ if(!confirmed)return;
+ const button=preview?.querySelector('button');if(button){button.disabled=true;button.textContent='Restoring…';}
+ try{
+  const result=await api('/api/admin/backups/restore',{method:'POST',body:{backup,dryRun:false,confirm:true}});
+  const outcome=result.results||{};
+  const summary='Restore complete: '+Number(outcome.productsAdded||0)+' products, '+Number(outcome.categoriesAdded||0)+' categories, '+Number(outcome.collectionsAdded||0)+' collections and '+Number(outcome.draftsRestored||0)+' private drafts restored.';
+  if(status)status.textContent=summary+(Array.isArray(outcome.errors)&&outcome.errors.length?' Some items need attention: '+outcome.errors.join(' '):'');
+  setAdminStatus(summary,outcome.errors?.length?'error':'success');
+  window.__nuvoraRestoreBackup=null;
+  if(preview)preview.hidden=true;
+  await liveAdminProducts();
+ }catch(error){
+  if(status)status.textContent=error.message||'Restore failed.';
+  if(button){button.disabled=false;button.textContent='Retry restore';}
  }
 }
 async function loadSettings(){
