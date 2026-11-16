@@ -85,7 +85,7 @@ export default {
         const checks={
           environment:!!cfg.supabase,auth:false,admin:false,products:false,productSchema:false,
           settings:false,settingsSchema:false,social:false,analytics:false,
-          workersAI:!!cfg.workersAI,gemini:!!cfg.gemini,shopifyStorefront:!!cfg.shopifyStorefront,
+          workersAI:!!cfg.workersAI,claude:!!cfg.claude,textAI:!!cfg.claude||!!cfg.workersAI,gemini:!!cfg.gemini,shopifyStorefront:!!cfg.shopifyStorefront,
           shopifyEnvironment:!!cfg.shopifyAdmin,shopifyAuth:false,shopifyProducts:false
         };
         // Keep all diagnostic state in one declared object. The admin consumes
@@ -98,7 +98,7 @@ export default {
           shopifyMissing:[],
           aiMissing:[]
         };
-        if(!env.AI)diagnosticsState.aiMissing.push('Workers AI binding named AI');
+        if(!hasNuvoraTextAI(env))diagnosticsState.aiMissing.push('ANTHROPIC_API_KEY or Workers AI binding named AI');
         if(!(env.SHOPIFY_SHOP||env.SHOPIFY_STORE_DOMAIN))diagnosticsState.shopifyMissing.push('SHOPIFY_SHOP');
         if(!env.SHOPIFY_CLIENT_ID)diagnosticsState.shopifyMissing.push('SHOPIFY_CLIENT_ID');
         if(!env.SHOPIFY_CLIENT_SECRET)diagnosticsState.shopifyMissing.push('SHOPIFY_CLIENT_SECRET');
@@ -259,6 +259,9 @@ async function refreshSkinImportBatch(env,batchId){
   return write.ok;
 }
 
+function hasNuvoraTextAI(env){
+  return !!String(env?.ANTHROPIC_API_KEY||'').trim()||!!(env?.AI&&typeof env.AI.run==='function');
+}
 async function runNuvoraClaude(env,system,messages,maxTokens=2200){
   const apiKey=String(env?.ANTHROPIC_API_KEY||'').trim();
   if(!apiKey)throw new Error('Claude API key is not configured.');
@@ -2323,7 +2326,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const aiLimit=rateLimit(request,'nuvora-ai-skin-product',6,60000);
         if(aiLimit)return json({error:'Nuvora AI product research is being used frequently. Try again in a minute.'},429,{'retry-after':String(aiLimit)});
-        if(!env.AI)return json({error:'Cloudflare Workers AI is not connected. Add the Workers AI binding named AI to the nuvora Worker.'},503);
+        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure Claude or the Cloudflare Workers AI binding.'},503);
         const input=await body(request,64*1024);
         const sourceUrl=String(input.url||'').trim();
         let parsed;
@@ -2429,7 +2432,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const limit=rateLimit(request,'nuvora-ai-studio',6,60000);
         if(limit)return json({error:'Nuvora AI is being used frequently. Try again in a minute.'},429,{'retry-after':String(limit)});
-        if(!env.AI)return json({error:'Cloudflare Workers AI is not connected. Add the Workers AI binding named AI to the nuvora Worker.'},503);
+        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure Claude or the Cloudflare Workers AI binding.'},503);
         let input;
         try{input=await body(request,96*1024);}catch(e){return json({error:'The Nuvora AI Studio request was too large or invalid.'},400);}
         const prompt=cleanMultilineText(input.prompt,8000);
@@ -2523,7 +2526,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const cors={'access-control-allow-origin':'https://client-store-platform.rayyung713.workers.dev','vary':'Origin'};
         const limited=rateLimit(request,'nuvora-skin-assistant',12,60000);
         if(limited)return json({error:'The shopping assistant has reached its short-term request limit. Please try again shortly.'},429,{...cors,'retry-after':String(limited)});
-        if(!env.AI)return json({error:'The Nuvora shopping assistant is not connected yet.'},503,cors);
+        if(!hasNuvoraTextAI(env))return json({error:'The Nuvora shopping assistant has no text AI provider configured.'},503,cors);
         const input=await body(request,24*1024);
         const message=cleanMultilineText(input.message,1000).trim();
         if(!message)return json({error:'Enter a question before sending.'},400,cors);
@@ -2810,7 +2813,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         }
         // Draft customer-facing copy once per batch, using only extracted retailer facts.
         // The source page is untrusted input; the system prompt forbids invented claims.
-        if(env.AI){
+        if(hasNuvoraTextAI(env)){
           const copyCandidates=itemRows.map((row,index)=>({index,row,product:row.proposed_product||{}}))
             .filter(entry=>['ready','needs_review'].includes(entry.row.status)&&
               (String(entry.product.description||'').trim()||String(entry.product.features||'').trim()||String(entry.product.ingredients||'').trim()||String(entry.product.product_type||'').trim()||String(entry.product.name||'').trim()));
@@ -3142,7 +3145,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const metrics={productCount:products.length,publishedCount:published.length,draftCount:drafts.length,issueCount:findings.length,highCount:severity.high,warningCount:severity.warning,infoCount:severity.info,homepageSections:visibleSections.length,draftSections:Array.isArray(draft?.sections)?draft.sections.length:0};
         let summary='Checked '+products.length+' Skin Care product(s), '+visibleSections.length+' visible homepage section(s), and the published/draft storefront settings. Found '+findings.length+' issue group(s).';
         let model=null;
-        if(env.AI&&findings.length){
+        if(hasNuvoraTextAI(env)&&findings.length){
           try{
             const system='You are Nuvora Autopilot, a careful skincare-store operations analyst. Summarise only the supplied audit facts. Do not claim external links, live retailer availability, image content, mobile rendering, conversions or affiliate commissions were tested. Do not invent products, counts or causes. Return JSON only: {"summary":"one concise paragraph"}.';
             const ai=await runNuvoraWorkersAI(env,system,[{role:'user',content:JSON.stringify({store:'Nuvora Skin Care',metrics,findings:findings.map(item=>({code:item.code,severity:item.severity,title:item.title,affectedCount:item.affectedCount,message:item.message,nextStep:item.nextStep}))})}],700);
@@ -3176,7 +3179,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         if(!admin)return json({error:'Admin authentication required'},401);
         const limited=rateLimit(request,'nuvora-autopilot-prepare',3,60000);
         if(limited)return json({error:'Copy preparation is running too frequently. Try again shortly.'},429,{'retry-after':String(limited)});
-        if(!env.AI)return json({error:'Cloudflare Workers AI is not connected.'},503);
+        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure Claude or Cloudflare Workers AI.'},503);
         const input=await body(request,16*1024);
         if(String(input.store||'skin').toLowerCase()!=='skin')return json({error:'Phase one currently supports the Skin Care store only.'},400);
         const productsResponse=await supabaseRest(env,'GET','products',null,'?select=id,name,brand,description,store_description,features,benefits,ingredients,skin_types,skin_concerns,usage_instructions,product_warnings,published&storefront_key=eq.skin&order=created_at.desc&limit=1000');
@@ -3261,7 +3264,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const aiLimit=rateLimit(request,'nuvora-ai-store-product',5,60000);
         if(aiLimit)return json({error:'Nuvora AI product research is being used frequently. Try again in a minute.'},429,{'retry-after':String(aiLimit)});
-        if(!env.AI)return json({error:'Cloudflare Workers AI is not connected. Check the Nuvora Worker AI binding.'},503);
+        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure Claude or the Cloudflare Workers AI binding.'},503);
         let input;
         try{input=await body(request,64*1024);}catch(e){return json({error:'The product research request was too large or invalid.'},400);}
         const store=String(input.store||'').toLowerCase();
@@ -3334,7 +3337,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const aiLimit=rateLimit(request,'nuvora-ai-copy',10,60000);
         if(aiLimit)return json({error:'Nuvora AI copywriting is being used frequently. Try again in a minute.'},429,{'retry-after':String(aiLimit)});
-        if(!env.AI)return json({error:'Cloudflare Workers AI is not connected. Add the Workers AI binding named AI to the nuvora Worker.'},503);
+        if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure Claude or the Cloudflare Workers AI binding.'},503);
         const input=await body(request,64*1024),product=input.product||{};
         const schema={
           type:'object',
