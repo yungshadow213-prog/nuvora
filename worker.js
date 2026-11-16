@@ -259,14 +259,56 @@ async function refreshSkinImportBatch(env,batchId){
   return write.ok;
 }
 
+async function runNuvoraClaude(env,system,messages,maxTokens=2200){
+  const apiKey=String(env?.ANTHROPIC_API_KEY||'').trim();
+  if(!apiKey)throw new Error('Claude API key is not configured.');
+  const model=String(env.NUVORA_CLAUDE_MODEL||'claude-sonnet-5-5').trim();
+  const safeMessages=(Array.isArray(messages)?messages:[])
+    .filter(message=>message&&['user','assistant'].includes(message.role)&&message.content!=null)
+    .map(message=>({role:message.role,content:message.content}));
+  if(!safeMessages.length)throw new Error('Claude requires at least one user or assistant message.');
+  const tokenLimit=Math.max(256,Math.min(8192,Math.floor(Number(maxTokens)||2200)));
+  const response=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'content-type':'application/json',
+      'authorization':'Bearer '+apiKey,
+      'anthropic-version':'2026-10-21'
+    },
+    body:JSON.stringify({
+      model,
+      max_tokens:tokenLimit,
+      system:String(system||''),
+      messages:safeMessages
+    })
+  });
+  const payload=await response.json().catch(()=>({}));
+  if(!response.ok){
+    const message=String(payload?.error?.message||payload?.message||'Claude request failed.');
+    throw new Error('Claude API returned HTTP '+response.status+': '+message.slice(0,180));
+  }
+  const raw=(Array.isArray(payload?.content)?payload.content:[])
+    .filter(block=>block?.type==='text'&&typeof block.text==='string')
+    .map(block=>block.text)
+    .join('\n')
+    .trim();
+  if(!raw)throw new Error('Claude returned an empty text response.');
+  return {model:String(payload.model||model),raw,provider:'anthropic-claude'};
+}
 async function runNuvoraWorkersAI(env,system,messages,maxTokens=2200){
-  if(!env?.AI||typeof env.AI.run!=='function')throw new Error("Cloudflare Workers AI is not connected. Check the Worker AI binding named AI.");
+  let claudeError='';
+  if(String(env?.ANTHROPIC_API_KEY||'').trim()){
+    try{return await runNuvoraClaude(env,system,messages,maxTokens);}
+    catch(error){claudeError=String(error?.message||error).slice(0,180);}
+  }
+  if(!env?.AI||typeof env.AI.run!=='function'){
+    if(claudeError)throw new Error('Claude was unavailable and the Cloudflare Workers AI fallback is not connected: '+claudeError);
+    throw new Error("Cloudflare Workers AI is not connected. Check the Worker AI binding named AI.");
+  }
   const model=String(env.NUVORA_AI_MODEL||'@cf/google/gemma-4-26b-a4b-it').trim();
-  // This model enables reasoning by default. Nuvora's product and editor
-  // endpoints need concise structured output, so disable hidden thinking and
-  // use the current completion-token parameter to leave the budget for answers.
+  // Workers AI remains the automatic fallback if Claude is not configured or temporarily unavailable.
   const result=await env.AI.run(model,{
-    messages:[{role:'system',content:String(system||'')},...messages],
+    messages:[{role:'system',content:String(system||'')},...(Array.isArray(messages)?messages:[])],
     max_completion_tokens:maxTokens,
     temperature:0.2,
     response_format:{type:'json_object'},
@@ -286,7 +328,7 @@ async function runNuvoraWorkersAI(env,system,messages,maxTokens=2200){
     const detail=String(result?.error?.message||result?.message||'').trim();
     throw new Error(detail?('Cloudflare AI returned no answer: '+detail.slice(0,180)):'Cloudflare AI returned an empty answer. Please retry.');
   }
-  return {model,raw:raw.trim()};
+  return {model,raw:raw.trim(),provider:'cloudflare-workers-ai-fallback',...(claudeError?{fallbackReason:claudeError}:{})};
 }
 function parseNuvoraAIJson(raw){
   const cleaned=String(raw||'').replace(/^\uFEFF/,'').replace(/^\s*```(?:json)?\s*/i,'').replace(/\s*```\s*$/,'').trim();
@@ -305,6 +347,9 @@ function configured(env){
     shopifyStorefront:!!shopDomain&&!!e.SHOPIFY_STOREFRONT_ACCESS_TOKEN,
     shopifyAdmin:!!shopDomain&&!!e.SHOPIFY_ADMIN_ACCESS_TOKEN,
     amazon:!!e.AMAZON_CLIENT_ID&&!!e.AMAZON_CLIENT_SECRET&&!!e.AMAZON_PARTNER_TAG,
+    claude:!!String(e.ANTHROPIC_API_KEY||'').trim(),
+    claudeModel:String(e.NUVORA_CLAUDE_MODEL||'claude-sonnet-5-5').trim(),
+    primaryTextAIProvider:String(e.ANTHROPIC_API_KEY||'').trim()?'anthropic-claude':e.AI?'cloudflare-workers-ai':'unavailable',
     workersAI:!!e.AI,
     gemini:!!e.GEMINI_API_KEY,
   };
@@ -633,13 +678,18 @@ async function aiPolishAmazonListing(env,listing){
   const facts={title:listing.title,brand:listing.brand,description:listing.description,features:listing.features,specifications:listing.specifications,current_price:listing.current_price,list_price:listing.list_price,discount_percent:listing.discount_percent,rating:listing.rating,review_count:listing.review_count,availability:listing.availability,shipping_text:listing.shipping_text,category_path:listing.category_path};
   const system='You clean ecommerce source data for Nuvora. Return ONLY valid JSON with title and description. Use ONLY facts present in the supplied data. Do not invent, infer, add specifications, compatibility, materials, sizes, guarantees, certifications, discounts, or performance claims. Preserve important measurements, model numbers, quantities and factual product attributes. Remove retailer boilerplate, keyword spam and broken wording. Make the title natural and specific, maximum 120 characters. Make the description clear, useful and 80-180 words when enough source facts exist. If the source lacks facts, keep the description short rather than inventing.';
   try{
-    const key=String(env?.OPENAI_API_KEY||'').trim();
+    const userMessage={role:'user',content:JSON.stringify(facts).slice(0,22000)};
     let raw='';
-    if(key){
-      const resp=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+key},body:JSON.stringify({model:'gpt-4o-mini',temperature:0,response_format:{type:'json_object'},messages:[{role:'system',content:system},{role:'user',content:JSON.stringify(facts).slice(0,22000)}]})});
+    if(String(env?.ANTHROPIC_API_KEY||'').trim()){
+      try{raw=(await runNuvoraClaude(env,system,[userMessage],1200)).raw;}catch(e){}
+    }
+    const key=String(env?.OPENAI_API_KEY||'').trim();
+    if(!raw&&key){
+      const resp=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+key},body:JSON.stringify({model:'gpt-4o-mini',temperature:0,response_format:{type:'json_object'},messages:[{role:'system',content:system},userMessage]})});
       if(resp.ok){const data=await resp.json();raw=String(data?.choices?.[0]?.message?.content||'').trim();}
-    }else if(env?.AI){
-      const resp=await env.AI.run('@cf/google/gemma-4-26b-a4b-it',{messages:[{role:'system',content:system},{role:'user',content:JSON.stringify(facts).slice(0,18000)}],chat_template_kwargs:{enable_thinking:false}});
+    }
+    if(!raw&&env?.AI){
+      const resp=await env.AI.run('@cf/google/gemma-4-26b-a4b-it',{messages:[{role:'system',content:system},userMessage],chat_template_kwargs:{enable_thinking:false}});
       raw=String(resp?.response||resp?.choices?.[0]?.message?.content||'').trim();
     }
     if(!raw)return listing;
