@@ -2548,7 +2548,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const categoriesResponse=await supabaseRest(env,'GET','categories',null,'?select=id,name,slug&active=eq.true');
           if(categoriesResponse.ok){
             const categories=await categoriesResponse.json()||[];
-            categoryId=categories.find(item=>String(item.slug||'').toLowerCase()==='skin-care'||String(item.name||'').toLowerCase()==='skin care')?.id||null;
+            categoryId=categories.find(item=>['beauty-skincare','skin-care'].includes(String(item.slug||'').toLowerCase())||['skincare','skin care'].includes(String(item.name||'').trim().toLowerCase()))?.id||null;
           }
         }catch(error){}
         const inferSkinCategory=(title,brand,description,features)=>{
