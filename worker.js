@@ -85,6 +85,34 @@ export default {
         return json({ok:true},200,corsHeaders);
       }
 
+      if(url.pathname==='/api/admin/backups/export'&&request.method==='GET'){
+        const admin=await adminUser(request,env);
+        if(!admin)return json({error:'Admin authentication required'},401);
+        const backup=await createNuvoraBackup(env);
+        if(!backup.ok)return json({error:backup.error||'Backup export failed.'},502);
+        return new Response(JSON.stringify(backup.data),{
+          status:200,
+          headers:{
+            'content-type':'application/json; charset=utf-8',
+            'content-disposition':'attachment; filename="nuvora-backup-'+new Date().toISOString().slice(0,10)+'.json"',
+            'cache-control':'private, no-store, max-age=0',
+            'x-content-type-options':'nosniff'
+          }
+        });
+      }
+      if(url.pathname==='/api/admin/backups/restore'&&request.method==='POST'){
+        const admin=await adminUser(request,env);
+        if(!admin)return json({error:'Admin authentication required'},401);
+        let input;
+        try{input=await body(request,12*1024*1024);}catch(error){return json({error:'Backup file is too large or invalid JSON.'},413);}
+        const validation=validateNuvoraBackup(input.backup);
+        if(validation)return json({error:validation},400);
+        const dryRun=input.dryRun===true;
+        if(!dryRun&&input.confirm!==true)return json({error:'Confirm the non-destructive restore before continuing.'},400);
+        const result=await restoreNuvoraBackup(env,input.backup,{dryRun});
+        return json({ok:true,...result});
+      }
+
       if(url.pathname==='/api/admin/system/maintenance'&&(request.method==='GET'||request.method==='POST')){
         const admin=await adminUser(request,env);
         if(!admin)return json({error:'Admin authentication required'},401);
@@ -3896,4 +3924,169 @@ async function runNuvoraScheduledHealthCheck(env,scheduledTime=Date.now(),adminI
     else report.historySaved=true;
   }
   return report;
+}
+
+
+const NUVORA_BACKUP_VERSION='nuvora-backup-v1';
+const NUVORA_BACKUP_STORE_COLUMNS={
+  skin:{config:'skin_site_config',draft:'skin_site_draft',products:null},
+  home:{config:'home_site_config',draft:'home_site_draft',products:'home_products'},
+  clothing:{config:'clothing_site_config',draft:'clothing_site_draft',products:'clothing_products'},
+  games:{config:'games_site_config',draft:'games_site_draft',products:'games_products'}
+};
+function validateNuvoraBackup(backup){
+  if(!backup||typeof backup!=='object'||Array.isArray(backup))return 'Choose a valid Nuvora backup file.';
+  if(backup.format!==NUVORA_BACKUP_VERSION)return 'This backup version is not supported.';
+  if(!Array.isArray(backup.products)||!Array.isArray(backup.categories)||!Array.isArray(backup.collections))return 'The backup is missing its catalogue sections.';
+  if(backup.products.length>10000||backup.categories.length>2000||backup.collections.length>2000)return 'The backup exceeds the supported restore limits.';
+  if(!backup.storeSettings||typeof backup.storeSettings!=='object')return 'The backup is missing its storefront settings.';
+  return '';
+}
+async function createNuvoraBackup(env){
+  const settingsColumns=['store_name','store_description','support_email','currency','timezone','default_region','affiliate_disclosure','shipping_policy','returns_policy','maintenance_mode'];
+  for(const store of Object.values(NUVORA_BACKUP_STORE_COLUMNS)){
+    settingsColumns.push(store.config,store.draft);
+    if(store.products)settingsColumns.push(store.products);
+  }
+  const [settingsResponse,categoriesResponse,collectionsResponse]=await Promise.all([
+    supabaseRest(env,'GET','store_settings',null,'?select='+settingsColumns.join(',')+'&id=eq.true&limit=1'),
+    supabaseRest(env,'GET','categories',null,'?select=*&order=created_at.asc&limit=2000'),
+    supabaseRest(env,'GET','collections',null,'?select=*&order=created_at.asc&limit=2000')
+  ]);
+  if(!settingsResponse.ok)return {ok:false,error:'Store settings could not be included in the backup.'};
+  if(!categoriesResponse.ok)return {ok:false,error:'Product categories could not be included in the backup.'};
+  if(!collectionsResponse.ok)return {ok:false,error:'Collections could not be included in the backup.'};
+  const products=[];
+  for(let offset=0;offset<10000;offset+=1000){
+    const response=await supabaseRest(env,'GET','products',null,'?select=*&storefront_key=in.(main,skin)&order=created_at.asc&limit=1000&offset='+offset);
+    if(!response.ok)return {ok:false,error:'The product catalogue could not be fully exported.'};
+    const rows=await response.json()||[];
+    products.push(...rows);
+    if(rows.length<1000)break;
+  }
+  const row=(await settingsResponse.json()||[])[0]||{};
+  const storefronts={};
+  for(const [key,columns] of Object.entries(NUVORA_BACKUP_STORE_COLUMNS)){
+    storefronts[key]={site_config:row[columns.config]||null,site_draft:row[columns.draft]||null,legacy_products:columns.products?(Array.isArray(row[columns.products])?row[columns.products]:[]):[]};
+  }
+  const data={
+    format:NUVORA_BACKUP_VERSION,
+    createdAt:new Date().toISOString(),
+    scope:'Nuvora catalogue and storefront configuration',
+    notes:['Products from the main and Skin Care products table are included.','Home, Clothing and Games storefront products stored in store_settings are included separately.','Published storefront configurations are preserved in the file, but restore writes only private drafts.','Image files themselves are not embedded; image URLs and stored asset references are preserved.','Orders, customer accounts, payment information and raw analytics events are not included.'],
+    storeSettings:Object.fromEntries(settingsColumns.filter(column=>!Object.values(NUVORA_BACKUP_STORE_COLUMNS).some(store=>store.products===column)).map(column=>[column,row[column]??null])),
+    storefronts,
+    products,
+    categories:await categoriesResponse.json()||[],
+    collections:await collectionsResponse.json()||[],
+    counts:{products:products.length,categories:((await categoriesResponse.json())||[]).length,collections:((await collectionsResponse.json())||[]).length,storefronts:Object.keys(storefronts)}
+  };
+  return {ok:true,data};
+}
+function validNuvoraBackupId(value){return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value||''));}
+async function restoreNuvoraBackup(env,backup,{dryRun=true}={}){
+  const plan={products:{toAdd:0,alreadyPresent:0,invalid:0},categories:{toAdd:0,alreadyPresent:0},collections:{toAdd:0,alreadyPresent:0},drafts:{toRestore:0,preserved:0},legacyProducts:{toAdd:0,alreadyPresent:0}};
+  const existingProducts=new Map();
+  for(let offset=0;offset<10000;offset+=1000){
+    const response=await supabaseRest(env,'GET','products',null,'?select=id,storefront_key&storefront_key=in.(main,skin)&limit=1000&offset='+offset);
+    if(!response.ok)throw new Error('Existing products could not be inspected before restore.');
+    const rows=await response.json()||[];
+    rows.forEach(row=>existingProducts.set(String(row.id),String(row.storefront_key||'main')));
+    if(rows.length<1000)break;
+  }
+  const existingCategory=await supabaseRest(env,'GET','categories',null,'?select=id,slug&limit=2000');
+  const existingCollection=await supabaseRest(env,'GET','collections',null,'?select=id,slug&limit=2000');
+  if(!existingCategory.ok||!existingCollection.ok)throw new Error('Existing category and collection records could not be inspected.');
+  const categoryRows=await existingCategory.json()||[],collectionRows=await existingCollection.json()||[];
+  const categoryIds=new Set(categoryRows.map(row=>String(row.id))),categorySlugs=new Set(categoryRows.map(row=>String(row.slug)));
+  const collectionIds=new Set(collectionRows.map(row=>String(row.id))),collectionSlugs=new Set(collectionRows.map(row=>String(row.slug)));
+  const settingsResponse=await supabaseRest(env,'GET','store_settings',null,'?select=id,skin_site_draft,home_site_draft,clothing_site_draft,games_site_draft,home_products,clothing_products,games_products&id=eq.true&limit=1');
+  if(!settingsResponse.ok)throw new Error('Current storefront drafts could not be inspected.');
+  const currentSettings=(await settingsResponse.json()||[])[0]||{};
+  for(const product of backup.products){
+    const id=String(product?.id||''),store=String(product?.storefront_key||'main');
+    if(!validNuvoraBackupId(id)||!['main','skin'].includes(store)||!product?.name||!product?.slug||!['shop','find','learn'].includes(String(product?.kind||''))){plan.products.invalid++;continue;}
+    const existingStore=existingProducts.get(id);
+    if(existingStore){plan.products.alreadyPresent++;continue;}
+    plan.products.toAdd++;
+  }
+  for(const row of backup.categories){
+    const id=String(row?.id||''),slug=String(row?.slug||'');
+    if(!validNuvoraBackupId(id)||!row?.name||!slug)continue;
+    if(categoryIds.has(id)||categorySlugs.has(slug))plan.categories.alreadyPresent++;
+    else plan.categories.toAdd++;
+  }
+  for(const row of backup.collections){
+    const id=String(row?.id||''),slug=String(row?.slug||'');
+    if(!validNuvoraBackupId(id)||!row?.name||!slug)continue;
+    if(collectionIds.has(id)||collectionSlugs.has(slug))plan.collections.alreadyPresent++;
+    else plan.collections.toAdd++;
+  }
+  for(const [key,columns] of Object.entries(NUVORA_BACKUP_STORE_COLUMNS)){
+    if(backup.storefronts?.[key]?.site_draft){
+      if(currentSettings[columns.draft])plan.drafts.preserved++;
+      else plan.drafts.toRestore++;
+    }
+    if(columns.products){
+      const current=Array.isArray(currentSettings[columns.products])?currentSettings[columns.products]:[];
+      const present=new Set(current.map(item=>String(item?.id||item?.slug||item?.url||item?.name||'')));
+      for(const product of backup.storefronts?.[key]?.legacy_products||[]){
+        const identity=String(product?.id||product?.slug||product?.url||product?.name||'');
+        if(identity&&!present.has(identity))plan.legacyProducts.toAdd++;
+        else plan.legacyProducts.alreadyPresent++;
+      }
+    }
+  }
+  if(dryRun)return {dryRun:true,plan,changed:0,message:'Restore preview only. No records have been changed. Existing records and all published storefront configurations will be preserved.'};
+  const results={productsAdded:0,categoriesAdded:0,collectionsAdded:0,draftsRestored:0,legacyProductsAdded:0,skipped:0,errors:[]};
+  for(const row of backup.categories){
+    const id=String(row?.id||''),slug=String(row?.slug||'');
+    if(!validNuvoraBackupId(id)||!row?.name||!slug||categoryIds.has(id)||categorySlugs.has(slug)){results.skipped++;continue;}
+    const saved=await supabaseRest(env,'POST','categories',{id,name:row.name,slug,sort_order:Number(row.sort_order)||0,active:row.active!==false});
+    if(saved.ok){categoryIds.add(id);categorySlugs.add(slug);results.categoriesAdded++;}
+    else{results.errors.push('Category '+slug+' could not be restored.');}
+  }
+  for(const row of backup.collections){
+    const id=String(row?.id||''),slug=String(row?.slug||'');
+    if(!validNuvoraBackupId(id)||!row?.name||!slug||collectionIds.has(id)||collectionSlugs.has(slug)){results.skipped++;continue;}
+    const saved=await supabaseRest(env,'POST','collections',{id,name:row.name,slug,description:row.description||null,published:false});
+    if(saved.ok){collectionIds.add(id);collectionSlugs.add(slug);results.collectionsAdded++;}
+    else{results.errors.push('Collection '+slug+' could not be restored.');}
+  }
+  // Restore products only when their original IDs are absent. Never reassign a record
+  // already owned by another storefront, and keep all recovered products unpublished.
+  for(const product of backup.products){
+    const id=String(product?.id||''),store=String(product?.storefront_key||'main');
+    if(!validNuvoraBackupId(id)||!['main','skin'].includes(store)||!product?.name||!product?.slug||!['shop','find','learn'].includes(String(product?.kind||''))||existingProducts.has(id)){results.skipped++;continue;}
+    const restored={...product,storefront_key:store,published:false};
+    const saved=await supabaseProductWrite(env,'POST',restored);
+    if(saved.ok){existingProducts.set(id,store);results.productsAdded++;}
+    else{results.errors.push('Product '+String(product.name).slice(0,80)+' could not be restored.');}
+  }
+  const settingsPatch={};
+  for(const [key,columns] of Object.entries(NUVORA_BACKUP_STORE_COLUMNS)){
+    const source=backup.storefronts?.[key]||{};
+    if(source.site_draft&&!currentSettings[columns.draft]){
+      settingsPatch[columns.draft]=source.site_draft;
+      results.draftsRestored++;
+    }
+    if(columns.products&&Array.isArray(source.legacy_products)){
+      const current=Array.isArray(currentSettings[columns.products])?currentSettings[columns.products]:[];
+      const present=new Set(current.map(item=>String(item?.id||item?.slug||item?.url||item?.name||'')));
+      const additions=source.legacy_products.filter(item=>{
+        const identity=String(item?.id||item?.slug||item?.url||item?.name||'');
+        if(!identity||present.has(identity))return false;
+        present.add(identity);return true;
+      });
+      if(additions.length){
+        settingsPatch[columns.products]=[...current,...additions];
+        results.legacyProductsAdded+=additions.length;
+      }
+    }
+  }
+  if(Object.keys(settingsPatch).length){
+    const saved=await supabaseRest(env,'PATCH','store_settings',settingsPatch,'?id=eq.true');
+    if(!saved.ok)results.errors.push('Storefront draft or legacy product records could not all be restored: '+String(await saved.text()).slice(0,180));
+  }
+  return {dryRun:false,plan,results,changed:results.productsAdded+results.categoriesAdded+results.collectionsAdded+results.draftsRestored+results.legacyProductsAdded,message:'Missing records were merged only. Existing product records were not overwritten; recovered products and collections remain unpublished; public storefront configurations were not changed.'};
 }
