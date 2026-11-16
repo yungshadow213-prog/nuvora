@@ -40,13 +40,13 @@ for (const token of [
   "#skinStudioPreview"
 ]) assert.ok(css.includes(token), "Admin layout styling missing: " + token);
 
-assert.ok(!js.includes("ANTHROPIC_API_KEY"), "Layout-only patch must not include or activate Claude secrets");
+assert.ok(!js.includes("ANTHROPIC_API_KEY"), "Admin layout must not include provider secrets");
 
 for (const token of [
-  "openSkinClaudeAssistant",
-  "sendSkinClaudePrompt",
-  "applySkinClaudeChanges",
-  "skinClaudePendingChanges",
+  "openSkinAssistant",
+  "sendSkinAssistantPrompt",
+  "applySkinAssistantChanges",
+  "skinAssistantPendingChanges",
   "nuvora-skin-studio-request-add-section",
   "window.__nuvoraSkinPendingSectionInsert",
   "targetSections.splice(targetIndex>=0?targetIndex+1:targetSections.length,0,section)",
@@ -54,11 +54,11 @@ for (const token of [
 ]) assert.ok(html.includes(token), "Skin Studio visual-editor behavior missing: " + token);
 
 for (const token of [
-  "#skinClaudeAssistant[hidden]",
-  ".skin-claude-dialog",
-  ".skin-claude-proposals",
-  ".skin-claude-composer"
-]) assert.ok(css.includes(token), "Claude assistant styling missing: " + token);
+  "#skinAssistant[hidden]",
+  ".skin-assistant-dialog",
+  ".skin-assistant-proposals",
+  ".skin-assistant-composer"
+]) assert.ok(css.includes(token), "Nuvora assistant styling missing: " + token);
 
 for (const token of [
   "/api/admin/ai/studio",
@@ -83,8 +83,8 @@ for (const token of [
   "aiModalBody.querySelectorAll('.ai-studio')",
 ]) assert.ok(html.includes(token), "AI-assisted Skin Studio product workspace behavior missing: " + token);
 
-assert.ok(!html.includes("sk-ant-api"), "No Anthropic API key may be embedded in the admin HTML");
-assert.ok(!js.includes("ANTHROPIC_API_KEY"), "No Anthropic API key may be embedded in admin layout JavaScript");
+assert.ok(!html.includes("sk-ant-api"), "No provider key may be embedded in the admin HTML");
+assert.ok(!js.includes("ANTHROPIC_API_KEY"), "No provider key may be embedded in admin layout JavaScript");
 
 for (const token of [
   "nuvora-product-workspace-final-fix",

@@ -7,8 +7,8 @@
     "preview": "wrangler dev",
     "verify:skin-store": "node scripts/verify-skin-storefront-isolation.mjs",
     "verify:experiences": "node scripts/verify-experience-builder.mjs",
-    "verify:claude": "node scripts/verify-claude-provider.mjs",
-    "verify:ops": "node scripts/verify-operations-safety.mjs"
+    "verify:ops": "node scripts/verify-operations-safety.mjs",
+    "verify:workers-ai": "node scripts/verify-workers-ai.mjs"
   },
   "engines": {
     "node": ">=18"
