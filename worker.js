@@ -8,6 +8,11 @@ export default {
         if (limited) return json({error:'Too many requests. Please try again shortly.'},429,{'retry-after':String(limited)});
       }
       if(url.pathname==='/api/skin-assistant'&&request.method==='OPTIONS')return new Response(null,{status:204,headers:{'access-control-allow-origin':'https://client-store-platform.rayyung713.workers.dev','access-control-allow-methods':'POST, OPTIONS','access-control-allow-headers':'content-type','access-control-max-age':'86400','vary':'Origin'}});
+      if(url.pathname==='/api/analytics/events'&&request.method==='OPTIONS'){
+        const origin=request.headers.get('Origin')||'';
+        if(origin!=='https://client-store-platform.rayyung713.workers.dev')return new Response(null,{status:403,headers:{'vary':'Origin'}});
+        return new Response(null,{status:204,headers:{'access-control-allow-origin':'https://client-store-platform.rayyung713.workers.dev','access-control-allow-methods':'POST, OPTIONS','access-control-allow-headers':'content-type','access-control-max-age':'86400','vary':'Origin'}});
+      }
       if (request.method === 'OPTIONS') return securityResponse(new Response(null,{status:204}));
       const storefrontStudioRoute=url.pathname.match(/^\/admin\/(home|clothing|games)-studio\/?$/);
       if(storefrontStudioRoute){
@@ -51,12 +56,18 @@ export default {
       if (url.pathname === '/api/config') return json({supabaseUrl:env.SUPABASE_URL||'',supabaseAnonKey:env.SUPABASE_ANON_KEY||''});
 
       if (url.pathname === '/api/analytics/events' && request.method === 'POST') {
+        const origin=request.headers.get('Origin')||'';
+        const analyticsOrigin='https://client-store-platform.rayyung713.workers.dev';
+        if(origin&&origin!==analyticsOrigin)return json({error:'Analytics origin is not allowed.'},403);
+        const corsHeaders=origin===analyticsOrigin?{'access-control-allow-origin':analyticsOrigin,'vary':'Origin'}:{};
         const wait=rateLimit(request,'analytics',180,60000);
-        if(wait) return json({error:'Analytics rate limit reached.'},429,{'retry-after':String(wait)});
+        if(wait) return json({error:'Analytics rate limit reached.'},429,{...corsHeaders,'retry-after':String(wait)});
         const event=await body(request,128*1024);
         const name=String(event.event_name||'').trim().slice(0,80);
-        if(!/^[a-z0-9_.-]+$/.test(name)) return json({error:'Invalid analytics event name.'},400);
-        const row={event_name:name,product_id:event.product_id||null,session_id:String(event.session_id||'').slice(0,80)||null,metadata:event.metadata&&typeof event.metadata==='object'?event.metadata:{}};
+        if(!/^[a-z0-9_.-]+$/.test(name)) return json({error:'Invalid analytics event name.'},400,corsHeaders);
+        const suppliedMetadata=event.metadata&&typeof event.metadata==='object'&&!Array.isArray(event.metadata)?event.metadata:{};
+        const metadata={...suppliedMetadata,store:'skin'};
+        const row={event_name:name,product_id:event.product_id||null,session_id:String(event.session_id||'').slice(0,80)||null,metadata};
         const r=await supabaseRest(env,'POST','analytics_events',row);
         if(!r.ok){
           const raw=await r.text();
@@ -64,9 +75,9 @@ export default {
           return json({
             error:setupMissing?'Analytics database table is not configured yet.':'Analytics event could not be saved.',
             code:setupMissing?'ANALYTICS_NOT_CONFIGURED':'ANALYTICS_WRITE_FAILED'
-          },setupMissing?503:400);
+          },setupMissing?503:400,corsHeaders);
         }
-        return json({ok:true});
+        return json({ok:true},200,corsHeaders);
       }
 
       if(url.pathname==='/api/admin/diagnostics'&&request.method==='GET'){
@@ -1828,20 +1839,32 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         }
         const rows=await r.json();
         const events=Array.isArray(rows)?rows:[];
-        const counts={},products={};
+        const counts={},products={},categories={},guides={},visitors=new Set();
         for(const event of events){
           const name=String(event.event_name||'');
+          const metadata=event.metadata&&typeof event.metadata==='object'?event.metadata:{};
           counts[name]=(counts[name]||0)+1;
+          if(name==='store_visit'&&event.session_id)visitors.add(String(event.session_id));
+          const category=String(metadata.category||'').trim();
+          if(category&&['category_view','product_card_click','product_view'].includes(name))categories[category]=(categories[category]||0)+1;
+          if(name==='guide_view'){
+            const slug=String(metadata.guide_slug||'').trim();
+            if(slug)guides[slug]=(guides[slug]||0)+1;
+          }
           if(event.product_id){
-            const item=products[event.product_id]||(products[event.product_id]={product_id:event.product_id,views:0,affiliate_clicks:0,saves:0,other:0});
+            const item=products[event.product_id]||(products[event.product_id]={product_id:event.product_id,views:0,card_clicks:0,affiliate_clicks:0,saves:0,comparisons:0,other:0});
             if(name==='product_view')item.views++;
+            else if(name==='product_card_click')item.card_clicks++;
             else if(name==='affiliate_click')item.affiliate_clicks++;
-            else if(name==='save'||name==='product_save')item.saves++;
+            else if(name==='product_save')item.saves++;
+            else if(name==='product_compare_add')item.comparisons++;
             else item.other++;
           }
         }
-        const topProducts=Object.values(products).sort((a,b)=>(b.views+b.affiliate_clicks+b.saves)-(a.views+a.affiliate_clicks+a.saves)).slice(0,20);
-        return json({days,since,counts,total:events.length,topProducts,events:events.slice(0,500)});
+        const topProducts=Object.values(products).sort((a,b)=>(b.views+b.card_clicks+b.affiliate_clicks+b.saves+b.comparisons)-(a.views+a.card_clicks+a.affiliate_clicks+a.saves+a.comparisons)).slice(0,20);
+        const topCategories=Object.entries(categories).map(([category,count])=>({category,count})).sort((a,b)=>b.count-a.count).slice(0,10);
+        const topGuides=Object.entries(guides).map(([guide_slug,count])=>({guide_slug,count})).sort((a,b)=>b.count-a.count).slice(0,10);
+        return json({days,since,counts,total:events.length,uniqueVisits:visitors.size,topProducts,topCategories,topGuides,possiblyTruncated:events.length>=10000});
       }
 
       const publicStorefrontMatch=url.pathname.match(/^\/api\/(home|clothing|games)-storefront$/);
