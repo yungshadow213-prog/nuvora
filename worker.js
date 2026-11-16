@@ -3986,12 +3986,12 @@ async function createNuvoraBackup(env){
 function validNuvoraBackupId(value){return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value||''));}
 async function restoreNuvoraBackup(env,backup,{dryRun=true}={}){
   const plan={products:{toAdd:0,alreadyPresent:0,invalid:0},categories:{toAdd:0,alreadyPresent:0},collections:{toAdd:0,alreadyPresent:0},drafts:{toRestore:0,preserved:0},legacyProducts:{toAdd:0,alreadyPresent:0}};
-  const existingProducts=new Map();
+  const existingProducts=new Map(),existingProductSlugs=new Set();
   for(let offset=0;offset<10000;offset+=1000){
-    const response=await supabaseRest(env,'GET','products',null,'?select=id,storefront_key&storefront_key=in.(main,skin)&limit=1000&offset='+offset);
+    const response=await supabaseRest(env,'GET','products',null,'?select=id,storefront_key,slug&storefront_key=in.(main,skin)&limit=1000&offset='+offset);
     if(!response.ok)throw new Error('Existing products could not be inspected before restore.');
     const rows=await response.json()||[];
-    rows.forEach(row=>existingProducts.set(String(row.id),String(row.storefront_key||'main')));
+    rows.forEach(row=>{existingProducts.set(String(row.id),String(row.storefront_key||'main'));existingProductSlugs.add(String(row.slug||''));});
     if(rows.length<1000)break;
   }
   const existingCategory=await supabaseRest(env,'GET','categories',null,'?select=id,slug&limit=2000');
@@ -3999,7 +3999,9 @@ async function restoreNuvoraBackup(env,backup,{dryRun=true}={}){
   if(!existingCategory.ok||!existingCollection.ok)throw new Error('Existing category and collection records could not be inspected.');
   const categoryRows=await existingCategory.json()||[],collectionRows=await existingCollection.json()||[];
   const categoryIds=new Set(categoryRows.map(row=>String(row.id))),categorySlugs=new Set(categoryRows.map(row=>String(row.slug)));
+  const categoryIdMap=new Map(categoryRows.map(row=>[String(row.id),String(row.id)]));
   const collectionIds=new Set(collectionRows.map(row=>String(row.id))),collectionSlugs=new Set(collectionRows.map(row=>String(row.slug)));
+  const collectionIdMap=new Map(collectionRows.map(row=>[String(row.id),String(row.id)]));
   const settingsResponse=await supabaseRest(env,'GET','store_settings',null,'?select=id,skin_site_draft,home_site_draft,clothing_site_draft,games_site_draft,home_products,clothing_products,games_products&id=eq.true&limit=1');
   if(!settingsResponse.ok)throw new Error('Current storefront drafts could not be inspected.');
   const currentSettings=(await settingsResponse.json()||[])[0]||{};
@@ -4007,19 +4009,21 @@ async function restoreNuvoraBackup(env,backup,{dryRun=true}={}){
     const id=String(product?.id||''),store=String(product?.storefront_key||'main');
     if(!validNuvoraBackupId(id)||!['main','skin'].includes(store)||!product?.name||!product?.slug||!['shop','find','learn'].includes(String(product?.kind||''))){plan.products.invalid++;continue;}
     const existingStore=existingProducts.get(id);
-    if(existingStore){plan.products.alreadyPresent++;continue;}
+    if(existingStore||existingProductSlugs.has(String(product.slug||''))){plan.products.alreadyPresent++;continue;}
     plan.products.toAdd++;
   }
   for(const row of backup.categories){
     const id=String(row?.id||''),slug=String(row?.slug||'');
     if(!validNuvoraBackupId(id)||!row?.name||!slug)continue;
-    if(categoryIds.has(id)||categorySlugs.has(slug))plan.categories.alreadyPresent++;
+    const bySlug=categoryRows.find(existing=>String(existing.slug)===slug);
+    if(categoryIds.has(id)||bySlug){plan.categories.alreadyPresent++;if(bySlug)categoryIdMap.set(id,String(bySlug.id));}
     else plan.categories.toAdd++;
   }
   for(const row of backup.collections){
     const id=String(row?.id||''),slug=String(row?.slug||'');
     if(!validNuvoraBackupId(id)||!row?.name||!slug)continue;
-    if(collectionIds.has(id)||collectionSlugs.has(slug))plan.collections.alreadyPresent++;
+    const bySlug=collectionRows.find(existing=>String(existing.slug)===slug);
+    if(collectionIds.has(id)||bySlug){plan.collections.alreadyPresent++;if(bySlug)collectionIdMap.set(id,String(bySlug.id));}
     else plan.collections.toAdd++;
   }
   for(const [key,columns] of Object.entries(NUVORA_BACKUP_STORE_COLUMNS)){
@@ -4043,24 +4047,26 @@ async function restoreNuvoraBackup(env,backup,{dryRun=true}={}){
     const id=String(row?.id||''),slug=String(row?.slug||'');
     if(!validNuvoraBackupId(id)||!row?.name||!slug||categoryIds.has(id)||categorySlugs.has(slug)){results.skipped++;continue;}
     const saved=await supabaseRest(env,'POST','categories',{id,name:row.name,slug,sort_order:Number(row.sort_order)||0,active:row.active!==false});
-    if(saved.ok){categoryIds.add(id);categorySlugs.add(slug);results.categoriesAdded++;}
+    if(saved.ok){categoryIds.add(id);categorySlugs.add(slug);categoryIdMap.set(id,id);results.categoriesAdded++;}
     else{results.errors.push('Category '+slug+' could not be restored.');}
   }
   for(const row of backup.collections){
     const id=String(row?.id||''),slug=String(row?.slug||'');
     if(!validNuvoraBackupId(id)||!row?.name||!slug||collectionIds.has(id)||collectionSlugs.has(slug)){results.skipped++;continue;}
     const saved=await supabaseRest(env,'POST','collections',{id,name:row.name,slug,description:row.description||null,published:false});
-    if(saved.ok){collectionIds.add(id);collectionSlugs.add(slug);results.collectionsAdded++;}
+    if(saved.ok){collectionIds.add(id);collectionSlugs.add(slug);collectionIdMap.set(id,id);results.collectionsAdded++;}
     else{results.errors.push('Collection '+slug+' could not be restored.');}
   }
   // Restore products only when their original IDs are absent. Never reassign a record
   // already owned by another storefront, and keep all recovered products unpublished.
   for(const product of backup.products){
     const id=String(product?.id||''),store=String(product?.storefront_key||'main');
-    if(!validNuvoraBackupId(id)||!['main','skin'].includes(store)||!product?.name||!product?.slug||!['shop','find','learn'].includes(String(product?.kind||''))||existingProducts.has(id)){results.skipped++;continue;}
+    if(!validNuvoraBackupId(id)||!['main','skin'].includes(store)||!product?.name||!product?.slug||!['shop','find','learn'].includes(String(product?.kind||''))||existingProducts.has(id)||existingProductSlugs.has(String(product.slug||''))){results.skipped++;continue;}
     const restored={...product,storefront_key:store,published:false};
+    if(restored.category_id&&categoryIdMap.has(String(restored.category_id)))restored.category_id=categoryIdMap.get(String(restored.category_id));
+    if(restored.collection_id&&collectionIdMap.has(String(restored.collection_id)))restored.collection_id=collectionIdMap.get(String(restored.collection_id));
     const saved=await supabaseProductWrite(env,'POST',restored);
-    if(saved.ok){existingProducts.set(id,store);results.productsAdded++;}
+    if(saved.ok){existingProducts.set(id,store);existingProductSlugs.add(String(product.slug||''));results.productsAdded++;}
     else{results.errors.push('Product '+String(product.name).slice(0,80)+' could not be restored.');}
   }
   const settingsPatch={};
