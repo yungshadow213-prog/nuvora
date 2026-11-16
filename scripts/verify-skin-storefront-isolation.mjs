@@ -15,6 +15,7 @@ const [worker, server, admin, layout, schema, migration] = await Promise.all([
 assert.ok(worker.includes("storefront_key=eq.'+(url.searchParams.get('storefront')==='beauty'||url.searchParams.get('storefront')==='skin'?'skin':'main')"), "Worker public product API must filter by explicit storefront key.");
 assert.ok(worker.includes("const storefront=requestedStorefront==='beauty'?'beauty':requestedStorefront==='skin'?'skin':'main'"), "Worker public product API must declare and normalize its storefront before using it.");
 assert.ok(worker.includes("const isSkinStorefront=storefront==='beauty'||storefront==='skin'"), "Both Skin Care aliases must receive affiliate-only field filtering and storefront CORS.");
+assert.ok(worker.includes("storefront_key=eq.'+(isSkinStorefront?'skin':'main')"), "The normalized storefront must control the database catalogue filter.");
 assert.ok(server.includes("storefront_key=eq.'+(u.searchParams.get('storefront')==='beauty'||u.searchParams.get('storefront')==='skin'?'skin':'main')"), "Node public product API must match Worker storefront filtering.");
 assert.ok(!worker.includes("const titleIsSkincare="), "Worker must not infer Skin catalogue membership from product text.");
 assert.ok(!server.includes("const productText=[p.name,p.brand,p.description,p.features,p.store_description]"), "Node server must not infer Skin catalogue membership from product text.");
