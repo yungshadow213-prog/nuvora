@@ -12,7 +12,7 @@ const [worker, server, admin, layout, schema, migration] = await Promise.all([
   read("backend/migrations/20261115073356_nuvora_skin_catalogue_storefront_key.sql")
 ]);
 
-assert.ok(worker.includes("storefront_key=eq.'+(url.searchParams.get('storefront')==='beauty'||url.searchParams.get('storefront')==='skin'?'skin':'main')"), "Worker public product API must filter by explicit storefront key.");
+assert.ok(worker.includes("storefront_key=eq.'+(isSkinStorefront?'skin':'main')"), "Worker public product API must filter by the normalized explicit storefront key.");
 assert.ok(worker.includes("const storefront=requestedStorefront==='beauty'?'beauty':requestedStorefront==='skin'?'skin':'main'"), "Worker public product API must declare and normalize its storefront before using it.");
 assert.ok(worker.includes("const isSkinStorefront=storefront==='beauty'||storefront==='skin'"), "Both Skin Care aliases must receive affiliate-only field filtering and storefront CORS.");
 assert.ok(worker.includes("storefront_key=eq.'+(isSkinStorefront?'skin':'main')"), "The normalized storefront must control the database catalogue filter.");
