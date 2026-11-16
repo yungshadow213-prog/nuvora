@@ -1650,6 +1650,11 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
 <div class="panel catalog-panel skin-studio-catalog">
     <div class="catalog-panel-head"><div><h2>Skin Care products</h2></div><span id="skinProductCount" class="library-note">0 products</span></div>
     
+    <div style="display:flex;gap:9px;flex-wrap:wrap;margin:14px 0">
+      <input id="skinLibrarySearch" type="search" placeholder="Search products, brands or categories…" oninput="renderSkinProducts()" style="flex:1;min-width:190px">
+      <select id="skinLibraryStatus" onchange="renderSkinProducts()" aria-label="Filter products"><option value="all">All products</option><option value="published">Published</option><option value="drafts">Drafts</option><option value="review">Needs review</option></select>
+      <select id="skinLibrarySort" onchange="renderSkinProducts()" aria-label="Sort products"><option value="newest">Newest first</option><option value="oldest">Oldest first</option><option value="name-asc">Name A–Z</option><option value="name-desc">Name Z–A</option></select>
+    </div>
     <div id="skinProductRows" class="product-library"></div>
   </div>
 </section>
@@ -1965,8 +1970,20 @@ function mainStoreProducts(){
 }
 function renderSkinProducts(){
   const el=document.getElementById('skinProductRows');if(!el)return;
-  const rows=adminProducts.filter(isSkinProduct);
-  const count=document.getElementById('skinProductCount');if(count)count.textContent=rows.length+' product'+(rows.length===1?'':'s');
+  const allRows=adminProducts.filter(isSkinProduct);
+  const query=String(document.getElementById('skinLibrarySearch')?.value||'').trim().toLowerCase();
+  const status=String(document.getElementById('skinLibraryStatus')?.value||'all');
+  const sort=String(document.getElementById('skinLibrarySort')?.value||'newest');
+  let rows=allRows.filter(p=>{
+    const searchable=[p.name,p.brand,p.product_type,p.skin_category_slug,p.category_id,p.slug,p.retailer,p.amazon_asin].filter(Boolean).join(' ').toLowerCase();
+    if(query&&!searchable.includes(query))return false;
+    if(status==='published'&&!p.published)return false;
+    if(status==='drafts'&&p.published)return false;
+    if(status==='review'&&!productReviewFlags(p).length)return false;
+    return true;
+  });
+  rows.sort((a,b)=>sort==='name-asc'?String(a.name||'').localeCompare(String(b.name||'')):sort==='name-desc'?String(b.name||'').localeCompare(String(a.name||'')):sort==='oldest'?String(a.created_at||'').localeCompare(String(b.created_at||'')):String(b.created_at||'').localeCompare(String(a.created_at||'')));
+  const count=document.getElementById('skinProductCount');if(count)count.textContent=rows.length+' of '+allRows.length+' product'+(allRows.length===1?'':'s');
   const put=(id,value)=>{const node=document.getElementById(id);if(node)node.textContent=String(value);};
   put('skinTotal',rows.length);put('skinPublished',rows.filter(p=>p.published).length);put('skinDrafts',rows.filter(p=>!p.published).length);put('skinImages',rows.filter(p=>Boolean(p.image_url||p.image||p.imageUrl||(Array.isArray(p.image_urls)&&p.image_urls.some(Boolean))||(Array.isArray(p.images)&&p.images.some(Boolean)))).length);
   const notice=document.getElementById('skinCategoryNotice');
