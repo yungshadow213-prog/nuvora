@@ -1738,6 +1738,11 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
           <button class="btn primary" type="button" onclick="runDiagnostics()">Run full diagnostics ↗</button>
         </div>
         <div id="diagnosticRows" class="settings-diagnostic-results"></div>
+        <div class="settings-diagnostics" style="margin-top:16px">
+          <div><b>Scheduled maintenance</b><p>Daily, read-only checks of database connectivity, product catalogues, storefront settings and import queues. No products are edited or published.</p></div>
+          <button class="btn primary" id="runMaintenanceNow" type="button" onclick="runScheduledMaintenance()">Run checks now ↗</button>
+        </div>
+        <div id="maintenanceRows" class="settings-diagnostic-results" aria-live="polite"><div class="muted">Loading maintenance history…</div></div>
       </section>
 
       <section class="settings-card settings-account-card" id="settings-account">
@@ -3311,6 +3316,42 @@ function settingsJump(id,button){
  document.querySelectorAll('#settings .settings-rail-link').forEach(link=>link.classList.toggle('active',link===button||link.getAttribute('onclick')?.includes("'"+id+"'")));
  document.querySelectorAll('#settings .settings-shortcuts>button').forEach(link=>link.classList.toggle('active',link===button));
 }
+async function loadScheduledMaintenance(){
+ const box=document.getElementById('maintenanceRows');if(!box)return;
+ box.innerHTML='<div class="muted">Loading scheduled maintenance history…</div>';
+ try{
+  const data=await api('/api/admin/system/maintenance');
+  const runs=Array.isArray(data?.runs)?data.runs:[];
+  if(!runs.length){box.innerHTML='<div class="muted">No scheduled checks recorded yet. The first automatic check runs at 08:15 UTC daily.</div>';return;}
+  box.innerHTML=runs.slice(0,5).map(row=>{
+   const report=row.metadata&&typeof row.metadata==='object'?row.metadata:{};
+   const healthy=report.status==='healthy';
+   const when=row.created_at?new Date(row.created_at).toLocaleString():'Unknown time';
+   const checks=report.checks&&typeof report.checks==='object'?Object.entries(report.checks).map(([key,value])=>key+': '+(value?'OK':'Needs attention')).join(' · '):'';
+   const warning=Array.isArray(report.warnings)?report.warnings:[];
+   return '<div class="row"><span><b>'+esc(when)+'</b><div class="muted">'+esc(report.summary||'Maintenance check')+(checks?' · '+esc(checks):'')+(warning.length?' · '+esc(warning.join(' ')):'')+'</div></span><span class="status"><i class="dot '+(healthy?'':'off')+'"></i>'+(healthy?'Healthy':'Warning')+'</span></div>';
+  }).join('');
+ }catch(error){
+  box.innerHTML='<div class="notice">'+esc(error.message||'Maintenance history is unavailable.')+'</div>';
+ }
+}
+async function runScheduledMaintenance(){
+ const button=document.getElementById('runMaintenanceNow');
+ if(button){button.disabled=true;button.textContent='Checking…';}
+ const box=document.getElementById('maintenanceRows');
+ if(box)box.innerHTML='<div class="muted">Checking system connections and store isolation…</div>';
+ try{
+  const result=await api('/api/admin/system/maintenance',{method:'POST',body:{}});
+  const report=result?.report||{};
+  setAdminStatus(report.summary||'Maintenance check completed.',report.status==='healthy'?'success':'error');
+  await loadScheduledMaintenance();
+ }catch(error){
+  if(box)box.innerHTML='<div class="notice">'+esc(error.message||'Maintenance check failed.')+'</div>';
+  setAdminStatus(error.message||'Maintenance check failed.','error');
+ }finally{
+  if(button){button.disabled=false;button.textContent='Run checks now ↗';}
+ }
+}
 async function loadSettings(){
  const ids={store_name:'setName',support_email:'setEmail',currency:'setCurrency',timezone:'setTimezone',default_region:'setRegion',maintenance_mode:'setMaintenance',store_description:'setDescription',affiliate_disclosure:'setDisclosure',shipping_policy:'setShipping',returns_policy:'setReturns'};
  try{
@@ -3331,6 +3372,7 @@ async function loadSettings(){
   if(email)email.textContent='Signed in as '+(adminSession?.user?.email||adminUser?.email||'Nuvora administrator');
   setSettingsSaveState('Settings loaded','saved');
   healthCheck().catch(()=>{});
+  loadScheduledMaintenance().catch(()=>{});
  }catch(error){
   setSettingsSaveState('Could not load saved settings','error');
   setAdminStatus(error.message||'Settings could not be loaded.');
