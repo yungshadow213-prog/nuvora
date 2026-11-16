@@ -1817,7 +1817,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
         const days=Math.max(1,Math.min(90,Number(url.searchParams.get('days')||30)||30));
         const since=new Date(Date.now()-days*86400000).toISOString();
-        const r=await supabaseRest(env,'GET','analytics_events',undefined,'?select=event_name,product_id,session_id,metadata,created_at&created_at=gte.'+encodeURIComponent(since)+'&order=created_at.desc&limit=10000');
+        const r=await supabaseRest(env,'GET','analytics_events',undefined,'?select=event_name,product_id,session_id,metadata,created_at&metadata->>store=eq.skin&created_at=gte.'+encodeURIComponent(since)+'&order=created_at.desc&limit=10000');
         if(!r.ok){
           const raw=await r.text();
           const setupMissing=/PGRST205|relation .*analytics_events|table .*analytics_events/i.test(raw);
