@@ -21,7 +21,7 @@ assert.match(health, /mutations:0,aiCalls:0/);
 assert.match(health, /productsResponse/);
 assert.match(health, /settingsResponse/);
 assert.match(health, /batchesResponse/);
-assert.doesNotMatch(health, /supabaseProductWrite|published\s*:\s*true|runNuvoraClaude/);
+assert.doesNotMatch(health, /supabaseProductWrite|published\s*:\s*true|runNuvoraWorkersAI/);
 
 // Backups must be authenticated, versioned, bounded, store-scoped and downloadable without caching.
 assert.match(worker, /\/api\/admin\/backups\/export/);
