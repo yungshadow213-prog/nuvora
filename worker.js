@@ -1983,7 +1983,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         // Keep the public catalog independent of Supabase relationship embeds.
         // A broken/missing category or collection relationship must not blank the store.
         const [productsRes,categoriesRes,collectionsRes]=await Promise.all([
-          supabaseRest(env,'GET','products',undefined,'?select=*&published=eq.true&storefront_key=eq.'+(url.searchParams.get('storefront')==='beauty'||url.searchParams.get('storefront')==='skin'?'skin':'main')+'&order=created_at.desc'),
+          supabaseRest(env,'GET','products',undefined,'?select=*&published=eq.true&storefront_key=eq.'+(isSkinStorefront?'skin':'main')+'&order=created_at.desc'),
           supabaseRest(env,'GET','categories',undefined,'?select=id,name'),
           supabaseRest(env,'GET','collections',undefined,'?select=id,name')
         ]);
@@ -2035,7 +2035,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           };
           // Skin Care is affiliate-only: never expose price/deal fields through its
           // public catalog contract, even if an imported retailer row contains them.
-          if(storefront==='beauty'){
+          if(isSkinStorefront){
             for(const field of ['display_price','currency','deal_text','amazon_deal_text','amazon_list_price','amazon_discount_percent','temu_deal_text','temu_list_price','temu_discount_percent']){
               delete publicProduct[field];
             }
