@@ -46,7 +46,7 @@ const provider = section(worker, "async function runNuvoraWorkersAI(", "function
 const claudeAttempt = provider.indexOf("runNuvoraClaude(env,system,messages,maxTokens)");
 const workersFallback = provider.indexOf("env.AI.run(model");
 assert.ok(claudeAttempt >= 0 && workersFallback > claudeAttempt, "Claude must be attempted before Workers AI fallback.");
-assert.match(provider, /provider:'cloudflare-workers-ai-fallback'/);
+assert.ok(provider.includes("provider:claudeError?'cloudflare-workers-ai-fallback':'cloudflare-workers-ai'"), "Provider metadata must distinguish a normal Workers AI response from a fallback.");
 assert.match(provider, /fallbackReason/);
 
 const config = section(worker, "function configured(env){", "function randHex(");
