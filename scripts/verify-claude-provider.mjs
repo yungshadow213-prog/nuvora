@@ -30,7 +30,7 @@ assert.equal((worker.match(/if\(!env\.AI\)/g) || []).length, 1, "Only image gene
 for (const route of [
   "if(url.pathname==='/api/admin/ai/skin-product'",
   "if(url.pathname==='/api/admin/ai/studio'",
-  "if(url.pathname==='/api/skin-assistant'",
+  "if(url.pathname==='/api/skin-assistant'&&request.method==='POST')",
   "if(url.pathname==='/api/admin/ai/manager/prepare'",
   "if(url.pathname==='/api/admin/ai/store-product'",
   "if(url.pathname==='/api/admin/ai/copy'"
@@ -64,9 +64,9 @@ assert.match(manager, /configured\.claude===true/);
 assert.match(manager, /Workers AI active · Claude not configured/);
 
 // Exercise provider selection with a mocked Anthropic endpoint; no real key or API call is used.
-const runtime = { fetch: async () => ({ ok: true, status: 200, json: async () => ({ model: "claude-sonnet-5-5", content: [{ type: "text", text: "{\\"source\\":\\"claude\\"}" }] }) }) };
+const runtime = { fetch: async () => ({ ok: true, status: 200, json: async () => ({ model: "claude-sonnet-5-5", content: [{ type: "text", text: '{"source":"claude"}' }] }) }) };
 const providerSource = section(worker, "async function runNuvoraClaude(", "function parseNuvoraAIJson(");
-runInNewContext(providerSource + "\\nglobalThis.__runProvider = runNuvoraWorkersAI;", runtime);
+runInNewContext(providerSource + "\nglobalThis.__runProvider = runNuvoraWorkersAI;", runtime);
 let requestSeen = null;
 runtime.fetch = async (url, options) => {
   requestSeen = { url, options };
@@ -79,7 +79,7 @@ const claudeResult = await runtime.__runProvider(
   600
 );
 assert.equal(claudeResult.provider, "anthropic-claude");
-assert.equal(claudeResult.raw, "{\\"source\\":\\"claude\\"}");
+assert.equal(claudeResult.raw, '{"source":"claude"}');
 assert.equal(requestSeen.url, "https://api.anthropic.com/v1/messages");
 assert.equal(requestSeen.options.headers.authorization, "Bearer test-only-secret");
 assert.equal(requestSeen.options.headers["anthropic-version"], "2026-10-21");
@@ -90,7 +90,7 @@ assert.equal(requestBody.temperature, undefined);
 
 // With no Claude key, Workers AI is the active provider rather than a fallback.
 const workersResult = await runtime.__runProvider(
-  { AI: { run: async () => ({ response: "{\\"source\\":\\"workers-ai\\"}" }) } },
+  { AI: { run: async () => ({ response: '{"source":"workers-ai"}' }) } },
   "Return JSON only.",
   [{ role: "user", content: "Test" }],
   600
@@ -100,7 +100,7 @@ assert.equal(workersResult.provider, "cloudflare-workers-ai");
 // When Claude is configured but errors, Workers AI is used automatically.
 runtime.fetch = async () => ({ ok: false, status: 401, json: async () => ({ error: { message: "Invalid test key" } }) });
 const fallbackResult = await runtime.__runProvider(
-  { ANTHROPIC_API_KEY: "invalid-test-only", AI: { run: async () => ({ response: "{\\"source\\":\\"fallback\\"}" }) } },
+  { ANTHROPIC_API_KEY: "invalid-test-only", AI: { run: async () => ({ response: '{"source":"fallback"}' }) } },
   "Return JSON only.",
   [{ role: "user", content: "Test" }],
   600
