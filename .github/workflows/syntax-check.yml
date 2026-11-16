@@ -77,6 +77,8 @@ jobs:
         run: npm run verify:experiences
       - name: Verify Claude primary provider and Workers AI fallback
         run: npm run verify:claude
+      - name: Verify maintenance, backup and restore safety
+        run: npm run verify:ops
       - name: Verify multi-store editor and publish contracts
         run: node scripts/verify-multistore-audit.mjs
       - name: Audit HTML and JavaScript wiring
