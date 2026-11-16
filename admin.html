@@ -1404,7 +1404,7 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
         <button class="btn" id="skinStudioRedo" type="button" onclick="redoSkinStudio()" disabled aria-label="Redo editor change" title="Redo (Ctrl/⌘+Shift+Z)">↷ Redo</button>
       </div>
       <div class="studio-save-state"><span class="studio-save-dot"></span><span id="skinStudioSaveLabel">Saved version loaded</span></div>
-      <button class="btn studio-assistant-trigger" type="button" onclick="openSkinAssistantAssistant()">✦ Nuvora AI</button>
+      <button class="btn studio-assistant-trigger" type="button" onclick="openSkinAssistant()">✦ Nuvora AI</button>
       <details class="studio-more-actions">
         <summary class="btn" aria-label="More editor actions">••• More</summary>
         <div class="studio-more-actions-menu">
@@ -1418,12 +1418,12 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
       <button class="btn primary studio-publish-button" type="button" onclick="saveSkinSiteConfig(this)">Publish</button>
     </div>
   </header>
-  <div id="skinAssistantAssistant" class="skin-assistant-overlay" hidden aria-hidden="true">
-    <button class="skin-assistant-backdrop" type="button" aria-label="Close Nuvora AI assistant" onclick="closeSkinAssistantAssistant()"></button>
+  <div id="skinAssistant" class="skin-assistant-overlay" hidden aria-hidden="true">
+    <button class="skin-assistant-backdrop" type="button" aria-label="Close Nuvora AI assistant" onclick="closeSkinAssistant()"></button>
     <section class="skin-assistant-dialog" role="dialog" aria-modal="true" aria-labelledby="skinAssistantTitle">
       <header class="skin-assistant-header">
         <div><span class="skin-assistant-kicker">NUVORA SKIN STUDIO</span><h2 id="skinAssistantTitle">Nuvora AI</h2></div>
-        <button type="button" class="skin-assistant-close" aria-label="Close Nuvora AI assistant" onclick="closeSkinAssistantAssistant()">×</button>
+        <button type="button" class="skin-assistant-close" aria-label="Close Nuvora AI assistant" onclick="closeSkinAssistant()">×</button>
       </header>
       <div class="skin-assistant-status-row"><span class="skin-assistant-status-dot"></span><span id="skinAssistantConnectionStatus">Checking Nuvora AI connection…</span></div>
       <div class="skin-assistant-prompts" aria-label="Suggested prompts">
@@ -5354,14 +5354,14 @@ function skinAssistantAppendMessage(role,message){
  item.append(label,body);root.appendChild(item);root.scrollTop=root.scrollHeight;
  return {item,body};
 }
-function openSkinAssistantAssistant(){
- const root=document.getElementById('skinAssistantAssistant');if(!root)return;
+function openSkinAssistant(){
+ const root=document.getElementById('skinAssistant');if(!root)return;
  root.hidden=false;root.setAttribute('aria-hidden','false');document.body.classList.add('skin-assistant-open');
  void refreshSkinAssistantStatus();
  document.getElementById('skinAssistantPrompt')?.focus();
 }
-function closeSkinAssistantAssistant(){
- const root=document.getElementById('skinAssistantAssistant');if(!root)return;
+function closeSkinAssistant(){
+ const root=document.getElementById('skinAssistant');if(!root)return;
  root.hidden=true;root.setAttribute('aria-hidden','true');document.body.classList.remove('skin-assistant-open');
 }
 async function refreshSkinAssistantStatus(){
