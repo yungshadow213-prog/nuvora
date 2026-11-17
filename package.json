@@ -5,6 +5,7 @@
     "start": "node api/server.js",
     "deploy": "wrangler deploy",
     "preview": "wrangler dev",
+    "verify:guardian": "node scripts/verify-guardian.mjs",
     "verify:skin-store": "node scripts/verify-skin-storefront-isolation.mjs",
     "verify:experiences": "node scripts/verify-experience-builder.mjs",
     "verify:ops": "node scripts/verify-operations-safety.mjs",
