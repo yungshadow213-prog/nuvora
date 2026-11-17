@@ -34,6 +34,9 @@ jobs:
       - name: Verify maintenance and backup safety contracts
         run: npm run verify:ops
 
+      - name: Verify Nuvora Guardian contracts
+        run: npm run verify:guardian
+
       - name: Check Wrangler production bundle
         run: npx wrangler@4.145.0 deploy --dry-run --outdir /tmp/nuvora-dist
 
@@ -44,7 +47,7 @@ jobs:
           from pathlib import Path
           import re, subprocess, sys
           failures=[]
-          for name in ["index.html","admin.html","edit-product.html","beauty.html","multi-store-studio.html"]:
+          for name in ["index.html","admin.html","edit-product.html","beauty.html","multi-store-studio.html","guardian.html"]:
               html=Path(name).read_text(encoding="utf-8")
               scripts=re.findall(r"<script(?:\s[^>]*)?>([\s\S]*?)</script>",html,re.I)
               for i,src in enumerate([x for x in scripts if x.strip()],1):

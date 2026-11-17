@@ -5,6 +5,15 @@ const STORES = {
   home: { config: "home_site_config", products: "home_products" },
   clothing: { config: "clothing_site_config", products: "clothing_products" }
 };
+const guardianShortcut = "<style>.nuvora-guardian-shortcut{position:fixed;right:18px;top:18px;z-index:99999;display:flex;align-items:center;gap:8px;padding:10px 13px;border:1px solid #cbdcc7;border-radius:10px;background:#fff;color:#28543a;text-decoration:none;font:750 11px/1.2 system-ui;box-shadow:0 8px 26px #203d3018}.nuvora-guardian-shortcut:hover{background:#edf4e9}@media(max-width:600px){.nuvora-guardian-shortcut{right:10px;top:10px;padding:9px;font-size:10px}}</style><a class=\"nuvora-guardian-shortcut\" href=\"/admin/guardian\">◈ &nbsp; Guardian ↗</a>";
+async function withGuardianShortcut(response) {
+  if (!(response.headers.get("content-type") || "").includes("text/html")) return response;
+  const html = await response.text();
+  if (html.includes("nuvora-guardian-shortcut")) return new Response(html, {status:response.status,statusText:response.statusText,headers:response.headers});
+  const headers = new Headers(response.headers);
+  headers.delete("content-length");
+  return new Response(html.replace("</body>", guardianShortcut + "</body>"), {status:response.status,statusText:response.statusText,headers});
+}
 const json = (value, status = 200) => new Response(JSON.stringify(value), {
   status,
   headers: {
@@ -44,20 +53,23 @@ export default {
   },
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    if (url.pathname === "/admin/guardian" || url.pathname === "/admin/guardian/") {
+      return worker.fetch(new Request(new URL("/guardian.html", request.url), { method: "GET", headers: request.headers }), env, ctx);
+    }
     // Route all studio aliases to the same maintained builder.
     if (url.pathname === "/admin/experiences" || url.pathname === "/admin/experiences/") {
-      return worker.fetch(new Request(new URL("/experience-studio.html", request.url), { method: "GET", headers: request.headers }), env, ctx);
+      return withGuardianShortcut(await worker.fetch(new Request(new URL("/experience-studio.html", request.url), { method: "GET", headers: request.headers }), env, ctx));
     }
     if (url.pathname === "/admin/ai-manager" || url.pathname === "/admin/ai-manager/") {
-      return worker.fetch(new Request(new URL("/ai-manager.html", request.url), { method: "GET", headers: request.headers }), env, ctx);
+      return withGuardianShortcut(await worker.fetch(new Request(new URL("/ai-manager.html", request.url), { method: "GET", headers: request.headers }), env, ctx));
     }
     const studioRoute = url.pathname.match(/^\/admin\/(gaming|games|home|clothing)-studio\/?$/);
     if (url.pathname === "/admin/studios" || url.pathname === "/admin/studios/") {
-      return worker.fetch(new Request(new URL("/storefront-studio.html?store=all", request.url), { method: "GET", headers: request.headers }), env, ctx);
+      return withGuardianShortcut(await worker.fetch(new Request(new URL("/storefront-studio.html?store=all", request.url), { method: "GET", headers: request.headers }), env, ctx));
     }
     if (studioRoute) {
       const storeKey = studioRoute[1] === "gaming" ? "games" : studioRoute[1];
-      return worker.fetch(new Request(new URL("/storefront-studio.html?store=" + storeKey, request.url), { method: "GET", headers: request.headers }), env, ctx);
+      return withGuardianShortcut(await worker.fetch(new Request(new URL("/storefront-studio.html?store=" + storeKey, request.url), { method: "GET", headers: request.headers }), env, ctx));
     }
     const match = url.pathname.match(/^\/api\/(games|home|clothing)-storefront\/?$/);
     if (request.method === "OPTIONS" && match) return new Response(null, { status: 204, headers: { "access-control-allow-origin": "*", "access-control-allow-methods": "GET, OPTIONS", "access-control-allow-headers": "content-type", "access-control-max-age": "86400" } });
@@ -70,9 +82,11 @@ export default {
       const html = await response.text();
       if (!html.includes("nuvora-multi-studio-launcher")) {
         const launcher = '<style>.nuvora-multi-studio-launcher{position:fixed;right:18px;bottom:18px;z-index:99999;display:flex;align-items:center;gap:8px;padding:11px 14px;border:1px solid #b9cdb8;border-radius:12px;background:#203a2b;color:#fff;text-decoration:none;font:700 11px/1.2 system-ui;box-shadow:0 8px 26px #13271930}.nuvora-multi-studio-launcher:hover{background:#31543c}.skin-studio-fullpage .nuvora-multi-studio-launcher{top:78px;bottom:auto}@media(max-width:600px){.nuvora-multi-studio-launcher{right:10px;bottom:10px;padding:10px;font-size:10px}}</style><a class="nuvora-multi-studio-launcher" href="/admin/studios" aria-label="Open Gaming, Home and Clothing Studios">▦ &nbsp; Gaming · Home · Clothing Studios ↗</a>';
-        const experienceLink = '<style>.nuvora-experience-nav-link{display:flex;align-items:center;gap:10px;padding:10px 11px;margin:6px 0 0;border:1px solid #b8cbb9;border-radius:9px;background:#edf4eb;color:#244a34;text-decoration:none;font:750 11px/1.2 system-ui}.nuvora-experience-nav-link:hover{background:#e1eddf}</style><a class="nuvora-experience-nav-link" href="/admin/experiences">◇ &nbsp; Experience Studio ↗</a>';
+        const guardianNavLink = "<style>.nuvora-guardian-nav-link{display:flex;align-items:center;gap:10px;padding:10px 11px;margin:6px 0 0;border:1px solid #cbdcc7;border-radius:9px;background:#edf4e9;color:#244a34;text-decoration:none;font:750 11px/1.2 system-ui}.nuvora-guardian-nav-link:hover{background:#e1eddf}</style><a class=\"nuvora-guardian-nav-link\" href=\"/admin/guardian\">◈ &nbsp; Nuvora Guardian ↗</a>";
+      const experienceLink = '<style>.nuvora-experience-nav-link{display:flex;align-items:center;gap:10px;padding:10px 11px;margin:6px 0 0;border:1px solid #b8cbb9;border-radius:9px;background:#edf4eb;color:#244a34;text-decoration:none;font:750 11px/1.2 system-ui}.nuvora-experience-nav-link:hover{background:#e1eddf}</style><a class="nuvora-experience-nav-link" href="/admin/experiences">◇ &nbsp; Experience Studio ↗</a>';
       const withExperienceLink = html.includes("nuvora-experience-nav-link") ? html : html.replace("</nav>", experienceLink + "</nav>");
-      const updated = withExperienceLink.replace("</body>", launcher + "</body>");
+      const withGuardianLink = withExperienceLink.includes("nuvora-guardian-nav-link") ? withExperienceLink : withExperienceLink.replace("</nav>", guardianNavLink + "</nav>");
+      const updated = withGuardianLink.replace("</body>", launcher + "</body>");
         const headers = new Headers(response.headers);
         headers.delete("content-length");
         return new Response(updated, { status: response.status, statusText: response.statusText, headers });
