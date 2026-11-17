@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="theme-color" content="#f5f7f3">
+<title>Nuvora Guardian — Store health</title>
+<style>
+:root{color-scheme:light;--bg:#f5f7f3;--paper:#fff;--ink:#20372a;--muted:#718075;--line:#e0e8df;--green:#2f6545;--soft:#edf4e9;--red:#b7443c;--amber:#a56a16;--blue:#456d8a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 Inter,"DM Sans",system-ui,sans-serif}a{color:inherit}.shell{max-width:1500px;margin:auto;padding:28px 34px 60px}.top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding-bottom:22px;border-bottom:1px solid var(--line)}.eyebrow{text-transform:uppercase;letter-spacing:1.6px;font-size:10px;font-weight:800;color:#66866a}.top h1{font-size:clamp(28px,4vw,38px);letter-spacing:-1.5px;margin:5px 0}.top p{color:var(--muted);margin:0}.actions{display:flex;gap:9px;flex-wrap:wrap}.btn{border:1px solid #d8e3d5;background:#fff;color:#31533b;border-radius:10px;padding:11px 15px;font:700 12px inherit;cursor:pointer}.btn.primary{background:var(--green);border-color:var(--green);color:white}.btn:disabled{opacity:.55;cursor:wait}.overview{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin:20px 0}.metric,.card,.panel{background:var(--paper);border:1px solid var(--line);border-radius:15px;box-shadow:0 5px 20px rgba(34,66,43,.035)}.metric{padding:17px}.metric span{display:block;color:var(--muted);font-size:11px;font-weight:650}.metric strong{display:block;font-size:28px;letter-spacing:-1px;margin:4px 0}.metric small{color:var(--muted);font-size:10px}.section-head{display:flex;justify-content:space-between;align-items:end;gap:14px;margin:26px 0 12px}.section-head h2{font-size:17px;margin:0;letter-spacing:-.3px}.section-head p{margin:2px 0 0;color:var(--muted);font-size:11px}.stores{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}.card{padding:16px;min-width:0}.card-head{display:flex;justify-content:space-between;align-items:center;gap:8px}.store-name{font-size:13px;font-weight:800}.store-key{font-size:10px;color:var(--muted)}.score{font-size:26px;font-weight:800;letter-spacing:-1px;margin:14px 0 2px}.score small{font-size:11px;color:var(--muted);font-weight:600}.bar{height:6px;background:#edf1eb;border-radius:9px;overflow:hidden;margin:9px 0 12px}.bar i{display:block;height:100%;background:#5e9666;border-radius:9px}.status{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:4px 8px;background:#edf4e9;color:#3d6b49;font-size:10px;font-weight:800;text-transform:capitalize}.status.critical{background:#fff0ef;color:#ad4039}.status.needs-attention,.status.watch{background:#fff6e8;color:#976014}.card-foot{display:flex;justify-content:space-between;color:var(--muted);font-size:10px;margin-top:10px}.panel{padding:18px;margin-top:14px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}.panel h2{font-size:15px;margin:0}.subtle{font-size:11px;color:var(--muted)}.issues{display:grid;gap:8px}.issue{border:1px solid var(--line);border-radius:11px;padding:12px;display:grid;grid-template-columns:90px minmax(0,1fr) auto;gap:12px;align-items:start}.severity{font-size:10px;font-weight:850;text-transform:uppercase;letter-spacing:.5px}.severity.critical{color:var(--red)}.severity.high{color:#b35a35}.severity.medium{color:var(--amber)}.severity.low{color:var(--blue)}.issue h3{font-size:12px;margin:0 0 3px}.issue p{font-size:11px;color:var(--muted);margin:0;overflow-wrap:anywhere}.issue a{font-size:10px;color:#477653;display:inline-block;margin-top:5px;overflow-wrap:anywhere}.issue button{border:1px solid var(--line);background:#fff;color:#42624a;border-radius:8px;padding:7px 9px;font-size:10px;font-weight:700;cursor:pointer}.empty{padding:26px;text-align:center;color:var(--muted);font-size:12px}.history{width:100%;border-collapse:collapse;font-size:11px}.history th,.history td{text-align:left;padding:10px 8px;border-bottom:1px solid #edf1eb}.history th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.7px}.notice{padding:12px 14px;border:1px solid #dce8d8;background:#f8fbf6;border-radius:11px;color:#536d57;font-size:11px;margin-top:14px}.notice.warning{background:#fff8eb;border-color:#f0dfbd;color:#865d1d}.scan-state{color:var(--muted);font-size:11px;margin-top:8px;min-height:18px}.tabs{display:flex;gap:7px;flex-wrap:wrap}.tab{border:1px solid var(--line);background:#fff;border-radius:99px;padding:7px 11px;color:#526457;font-size:10px;font-weight:750;cursor:pointer}.tab.active{background:var(--soft);border-color:#cbdcc7;color:#315c3c}.hidden{display:none!important}
+@media(max-width:1100px){.stores{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:700px){.shell{padding:18px 12px 40px}.top{display:block}.actions{margin-top:14px}.actions .btn{flex:1}.overview{grid-template-columns:repeat(2,1fr);gap:8px}.metric{padding:13px}.metric strong{font-size:23px}.stores{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.card{padding:12px}.score{font-size:23px}.issue{grid-template-columns:1fr auto;gap:7px}.issue .severity{grid-column:1/-1}.issue button{grid-column:2;grid-row:2}.panel{padding:13px;overflow:auto}.history{min-width:540px}.section-head{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="top">
+  <div><div class="eyebrow">Nuvora Admin / Operations</div><h1>Nuvora Guardian</h1><p>One health view for the admin and all four storefronts.</p></div>
+  <div class="actions"><button class="btn" id="refresh">Refresh history</button><button class="btn primary" id="scan">Run full scan</button></div>
+</header>
+<div class="scan-state" id="scanState" role="status">Sign in to the main Nuvora Admin first if Guardian cannot authenticate.</div>
+<section class="overview" aria-label="Ecosystem summary">
+  <div class="metric"><span>Overall health</span><strong id="overall">—</strong><small id="overallHint">Waiting for first scan</small></div>
+  <div class="metric"><span>Open issues</span><strong id="issueTotal">—</strong><small>Across all monitored properties</small></div>
+  <div class="metric"><span>Critical / high</span><strong id="urgent">—</strong><small>Issues requiring priority attention</small></div>
+  <div class="metric"><span>Last scan</span><strong id="lastScan" style="font-size:17px">—</strong><small id="scanMode">No scan recorded</small></div>
+</section>
+<div class="section-head"><div><h2>Store health</h2><p>Each property is checked independently. Click a store to open its live site.</p></div></div>
+<section class="stores" id="stores">
+  <div class="card"><div class="subtle">Loading store health…</div></div>
+</section>
+<section class="panel">
+  <div class="panel-head"><div><h2>Detected issues</h2><div class="subtle">Prioritised by severity, with the affected store and evidence.</div></div><div class="tabs" id="filters"><button class="tab active" data-filter="all">All</button><button class="tab" data-filter="critical">Critical</button><button class="tab" data-filter="high">High</button><button class="tab" data-filter="medium">Medium</button><button class="tab" data-filter="low">Low</button></div></div>
+  <div class="issues" id="issues"><div class="empty">Run a scan to discover issues.</div></div>
+</section>
+<section class="panel">
+  <div class="panel-head"><div><h2>Scan history</h2><div class="subtle">Recent automatic and manual checks.</div></div><span class="subtle" id="historyCount">—</span></div>
+  <div id="history"><div class="empty">No saved scan history yet.</div></div>
+</section>
+<div class="notice" id="scopeNote">Guardian currently checks live storefront routes, page titles, mobile viewport metadata, same-origin linked resources, security headers and the existing main-admin diagnostics. It does not claim that a checkout or button works unless that interaction is specifically tested.</div>
+</div>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  let currentIssues=[];
+  let currentReport=null;
+  let activeFilter='all';
+  const storeNames={admin:'Main Admin',skin:'Skin Care',clothing:'Clothing',games:'Gaming',home:'Home'};
+  function token(){
+    try{
+      const keys=Object.keys(localStorage).filter(k=>k.startsWith('sb-')&&k.endsWith('-auth-token'));
+      for(const key of keys){const raw=localStorage.getItem(key);if(!raw)continue;const value=JSON.parse(raw);if(value.access_token)return value.access_token;if(value.currentSession&&value.currentSession.access_token)return value.currentSession.access_token;}
+    }catch(e){}
+    return '';
+  }
+  async function api(path,options={}){
+    const access=token();
+    if(!access)throw new Error('Admin session not found. Sign in at /admin, then reopen Guardian.');
+    const response=await fetch(path,{...options,headers:{'content-type':'application/json','authorization':'Bearer '+access,...(options.headers||{})}});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.error||('Request failed: HTTP '+response.status));
+    return data;
+  }
+  function date(value){if(!value)return '—';const d=new Date(value);return Number.isNaN(d.getTime())?'—':d.toLocaleString();}
+  function badge(status){return '<span class="status '+status+'">'+String(status||'unknown').replace(/-/g,' ')+'</span>';}
+  function renderStores(stores){
+    $('stores').innerHTML=(stores||[]).map(store=>'<a class="card" href="'+store.url+'" target="_blank" rel="noopener noreferrer" style="text-decoration:none"><div class="card-head"><div><div class="store-name">'+store.name+'</div><div class="store-key">'+store.key+'</div></div>'+badge(store.status)+'</div><div class="score">'+Number(store.score??0)+'<small> / 100</small></div><div class="bar"><i style="width:'+Math.max(0,Math.min(100,Number(store.score??0)))+'%"></i></div><div class="subtle">'+Number(store.issueCount||0)+' issue(s) · '+Number(store.checks?.length||0)+' checks</div><div class="card-foot"><span>Critical '+Number(store.counts?.critical||0)+'</span><span>High '+Number(store.counts?.high||0)+'</span></div></a>').join('')||'<div class="empty">No store results yet.</div>';
+  }
+  function recommendation(issue){
+    const map={availability:'Check the active Cloudflare deployment, Worker logs and upstream availability. Rerun the scan after the route responds normally.',links:'Open the referenced resource, correct the path or restore the missing asset, then run the scan again.',pages:'Review the page metadata and route configuration. Confirm the page has the expected HTML and title.',mobile:'Add or restore a responsive viewport declaration and verify the page at phone width.',security:'Review the response headers in the Worker or hosting configuration. Add the missing header only after checking compatibility.',integration:'Open the existing admin diagnostics and resolve the failed integration or schema check before publishing changes.'};
+    return map[issue.category]||'Inspect the evidence and affected page, apply a reviewed change, then rerun Guardian to verify it.';
+  }
+  function renderIssues(){
+    const list=currentIssues.filter(x=>activeFilter==='all'||x.severity===activeFilter);
+    $('issues').innerHTML=list.length?list.map(issue=>'<article class="issue"><div class="severity '+issue.severity+'">'+issue.severity+'</div><div><h3>'+escapeHtml(issue.title)+'</h3><p><b>'+escapeHtml(storeNames[issue.store]||issue.store)+'</b> · '+escapeHtml(issue.detail)+'</p><a href="'+escapeAttr(issue.url||'#')+'" target="_blank" rel="noopener noreferrer">'+escapeHtml(issue.url||'Admin diagnostic')+'</a><p style="margin-top:6px">'+escapeHtml(recommendation(issue))+'</p></div><button data-copy="'+escapeAttr(issue.id)+'">Copy fix brief</button></article>').join(''):'<div class="empty">No '+(activeFilter==='all'?'open':activeFilter)+' issues in the latest scan.</div>';
+    $('issues').querySelectorAll('[data-copy]').forEach(button=>button.addEventListener('click',()=>{const issue=currentIssues.find(x=>x.id===button.dataset.copy);if(!issue)return;const brief=[issue.title,storeNames[issue.store]||issue.store,issue.detail,issue.url,recommendation(issue)].join('\n');navigator.clipboard?.writeText(brief).then(()=>{button.textContent='Copied';setTimeout(()=>button.textContent='Copy fix brief',1400)}).catch(()=>{button.textContent='Copy unavailable'})}));
+  }
+  function escapeHtml(value){return String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  function escapeAttr(value){return escapeHtml(value);}
+  function renderReport(report){
+    currentReport=report;currentIssues=Array.isArray(report.issues)?report.issues:[];
+    $('overall').textContent=String(report.score??'—')+(report.score===undefined?'':'/100');
+    $('overallHint').textContent=String(report.status||'Awaiting scan').replace(/-/g,' ');
+    $('issueTotal').textContent=String(currentIssues.length);
+    $('urgent').textContent=String((report.counts?.critical||0)+(report.counts?.high||0));
+    $('lastScan').textContent=date(report.completedAt);
+    $('scanMode').textContent=report.historySaved?'Saved to scan history':'Scan complete';
+    renderStores(report.stores||[]);
+    renderIssues();
+    if(report.limitations?.length)$('scopeNote').textContent=report.limitations.join(' ');
+  }
+  async function loadHistory(){
+    try{
+      const data=await api('/api/admin/guardian/history');
+      const runs=data.runs||[];$('historyCount').textContent=runs.length+' saved run(s)';
+      if(!runs.length){$('history').innerHTML='<div class="empty">No saved scans yet. Run your first scan.</div>';return;}
+      $('history').innerHTML='<table class="history"><thead><tr><th>Completed</th><th>Status</th><th>Score</th><th>Issues</th><th>Run</th></tr></thead><tbody>'+runs.map(row=>{const m=row.metadata||{};return '<tr><td>'+escapeHtml(date(row.created_at||m.completedAt))+'</td><td>'+badge(m.status||'unknown')+'</td><td>'+escapeHtml(m.score??'—')+'/100</td><td>'+escapeHtml((m.issues||[]).length)+'</td><td>'+escapeHtml(row.entity_id||m.runId||'—')+'</td></tr>'}).join('')+'</tbody></table>';
+      if(!currentReport&&runs[0]?.metadata)renderReport(runs[0].metadata);
+    }catch(error){$('history').innerHTML='<div class="empty">'+escapeHtml(error.message)+'</div>';}
+  }
+  async function runScan(){
+    $('scan').disabled=true;$('refresh').disabled=true;$('scanState').textContent='Scanning the admin and four storefronts. This can take a little while…';
+    try{
+      const data=await api('/api/admin/guardian/scan',{method:'POST',body:'{}'});
+      renderReport(data.report);$('scanState').textContent='Scan completed at '+date(data.report.completedAt)+'. '+(data.report.historySaved?'The report was saved.':'The report could not be saved to history.');
+      await loadHistory();
+    }catch(error){$('scanState').textContent=error.message;}
+    finally{$('scan').disabled=false;$('refresh').disabled=false;}
+  }
+  $('scan').addEventListener('click',runScan);
+  $('refresh').addEventListener('click',loadHistory);
+  $('filters').querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{activeFilter=button.dataset.filter;$('filters').querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===button));renderIssues()}));
+  loadHistory();
+})();
+</script>
+</body>
+</html>
