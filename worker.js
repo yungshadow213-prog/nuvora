@@ -4003,6 +4003,7 @@ async function runNuvoraGuardianScan(env, startedAt=Date.now(), adminId=null, au
   const counts={critical:issues.filter(x=>x.severity==='critical').length,high:issues.filter(x=>x.severity==='high').length,medium:issues.filter(x=>x.severity==='medium').length,low:issues.filter(x=>x.severity==='low').length};
   const report={runId,startedAt:started,completedAt:new Date().toISOString(),status:counts.critical?'critical':counts.high?'needs-attention':issues.length?'watch':'healthy',score:Math.max(0,100-counts.critical*25-counts.high*12-counts.medium*5-counts.low*2),stores:storeReports,counts,issues,diagnostics,limitations:['This scan checks live routes, page metadata, same-origin linked resources and the existing admin diagnostics endpoint.','A successful HTTP response does not prove that every button, checkout, payment, form or interactive flow works.','External third-party links are not marked broken from a single scan because providers may rate-limit automated probes.','Automatic code repair is not performed by this scanner; findings include a recommended next action and must be verified after repair.']};
   if(env?.SUPABASE_URL&&env?.SUPABASE_SERVICE_ROLE_KEY){
+    report.historySaved=true;
     const saved=await supabaseRest(env,'POST','admin_activity',{admin_id:adminId||null,action:'nuvora_guardian_scan',entity_type:'nuvora_ecosystem',entity_id:runId,metadata:report});
     report.historySaved=saved.ok;
     if(!saved.ok)console.error('NUVORA_GUARDIAN_HISTORY_SAVE_FAILED',String(await saved.text()).slice(0,300));
