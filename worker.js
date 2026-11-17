@@ -1,7 +1,8 @@
 
 export default {
   async scheduled(controller, env, ctx) {
-    const task = runNuvoraScheduledHealthCheck(env, controller?.scheduledTime || Date.now());
+    const scheduledAt=controller?.scheduledTime || Date.now();
+    const task=Promise.allSettled([runNuvoraScheduledHealthCheck(env,scheduledAt),runNuvoraGuardianScan(env,scheduledAt)]);
     if (ctx?.waitUntil) ctx.waitUntil(task);
     else await task;
   },
@@ -122,6 +123,20 @@ export default {
         }
         const history=await supabaseRest(env,'GET','admin_activity',null,'?select=id,action,entity_type,metadata,created_at&action=eq.nuvora_scheduled_health_check&order=created_at.desc&limit=10');
         if(!history.ok)return json({error:'Scheduled maintenance history could not be loaded.'},502);
+        return json({ok:true,runs:await history.json()||[]});
+      }
+
+      if(url.pathname==='/api/admin/guardian/scan'&&request.method==='POST'){
+        const admin=await adminUser(request,env);
+        if(!admin)return json({error:'Admin authentication required'},401);
+        const report=await runNuvoraGuardianScan(env,Date.now(),admin.id,request.headers.get('authorization')||'');
+        return json({ok:true,report});
+      }
+      if(url.pathname==='/api/admin/guardian/history'&&request.method==='GET'){
+        const admin=await adminUser(request,env);
+        if(!admin)return json({error:'Admin authentication required'},401);
+        const history=await supabaseRest(env,'GET','admin_activity',null,'?select=id,action,entity_type,entity_id,metadata,created_at&action=eq.nuvora_guardian_scan&order=created_at.desc&limit=30');
+        if(!history.ok)return json({error:'Guardian scan history could not be loaded.'},502);
         return json({ok:true,runs:await history.json()||[]});
       }
 
@@ -3878,6 +3893,114 @@ async function runNuvoraScheduledHealthCheck(env,scheduledTime=Date.now(),adminI
   return report;
 }
 
+
+async function runNuvoraGuardianScan(env, startedAt=Date.now(), adminId=null, authorization=''){
+  const started=new Date(startedAt).toISOString();
+  const runId='guardian-'+startedAt.toString(36)+'-'+Math.random().toString(36).slice(2,8);
+  const stores=[
+    {key:'skin',name:'Skin Care',url:'https://client-store-platform.rayyung713.workers.dev',routes:['/','/collections/all']},
+    {key:'clothing',name:'Clothing',url:'https://nuvora-clothing.rayyung713.workers.dev',routes:['/']},
+    {key:'games',name:'Gaming',url:'https://nuvora-games.rayyung713.workers.dev',routes:['/']},
+    {key:'home',name:'Home',url:'https://nuvora-home.rayyung713.workers.dev',routes:['/']}
+  ];
+  const issues=[];
+  const storeReports=[];
+  const addIssue=(store,category,severity,title,detail,url='')=>{
+    const fingerprint=[store,category,url,title].join('|').toLowerCase();
+    issues.push({id:fingerprint.replace(/[^a-z0-9]+/g,'-').slice(0,150),store,category,severity,title,detail,url,detectedAt:new Date().toISOString(),status:'open'});
+  };
+  const probe=async(url,method='HEAD')=>{
+    try{
+      let response=await fetch(url,{method,redirect:'follow',headers:{'user-agent':'Nuvora-Guardian/1.0','accept':'text/html,application/json,*/*'},signal:AbortSignal.timeout(10000)});
+      if(method==='HEAD'&&(response.status===405||response.status===501))response=await fetch(url,{method:'GET',redirect:'follow',headers:{'user-agent':'Nuvora-Guardian/1.0','accept':'*/*','range':'bytes=0-1023'},signal:AbortSignal.timeout(10000)});
+      return response;
+    }catch(error){return {ok:false,status:0,statusText:String(error?.message||error).slice(0,180),headers:new Headers(),url};}
+  };
+  for(const store of stores){
+    const checks=[];
+    const before=issues.length;
+    for(const route of store.routes){
+      const target=new URL(route,store.url).toString();
+      const response=await probe(target,'GET');
+      checks.push({name:route==='/'?'Storefront homepage':'All products route',url:target,status:response.status,ok:response.ok});
+      if(!response.ok){
+        addIssue(store.key,'availability',response.status===0||response.status>=500?'critical':'high',route==='/'?'Storefront is unavailable':'Store route is unavailable',response.status?('The route returned HTTP '+response.status+'.'):('The route could not be reached: '+response.statusText),target);
+        continue;
+      }
+      const type=String(response.headers?.get?.('content-type')||'');
+      if(route==='/'&&type.includes('text/html')){
+        const html=(await response.text()).slice(0,600000);
+        const title=html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.replace(/\s+/g,' ').trim();
+        const viewport=/<meta[^>]+name\s*=\s*["']viewport["']/i.test(html);
+        if(!title)addIssue(store.key,'pages','medium','Homepage has no page title','Search engines and browser tabs may show an empty or generic title.',target);
+        if(!viewport)addIssue(store.key,'mobile','medium','Mobile viewport metadata is missing','The page may render at desktop width on phones.',target);
+        if(!/<html[\s>]/i.test(html))addIssue(store.key,'pages','high','Homepage did not return an HTML document','The response was successful but did not contain a recognizable HTML page.',target);
+        const refs=[];
+        const refPattern=/(?:src|href)\s*=\s*["']([^"'<>]+)["']/gi;
+        let match;
+        while((match=refPattern.exec(html))&&refs.length<80){
+          const raw=match[1].trim();
+          if(!raw||raw.startsWith('#')||/^(?:data:|javascript:|mailto:|tel:)/i.test(raw))continue;
+          try{
+            const asset=new URL(raw,target);
+            if(asset.origin!==new URL(store.url).origin)continue;
+            if(asset.pathname==='/'||asset.pathname.startsWith('/api/'))continue;
+            refs.push(asset.toString());
+          }catch(e){}
+        }
+        const unique=[...new Set(refs)].slice(0,24);
+        const assetResults=await Promise.all(unique.map(async asset=>{
+          const result=await probe(asset,'HEAD');
+          return {url:asset,status:result.status,ok:result.ok};
+        }));
+        for(const asset of assetResults){
+          checks.push({name:'Linked asset or page',...asset});
+          if(!asset.ok)addIssue(store.key,'links',asset.status===0||asset.status>=500?'high':'medium','A linked resource could not be loaded','The homepage references a same-site resource that returned '+(asset.status||'a network error')+'.',asset.url);
+        }
+        for(const header of ['x-content-type-options','referrer-policy','strict-transport-security']){
+          if(!response.headers?.get?.(header))addIssue(store.key,'security','low','Recommended security header is missing','The response does not include '+header+'.',target);
+        }
+      }else if(route==='/'&&!type.includes('text/html')){
+        addIssue(store.key,'pages','high','Homepage did not return HTML','Expected a storefront document but received '+(type||'an unknown content type')+'.',target);
+      }
+    }
+    const found=issues.slice(before);
+    const count={critical:found.filter(x=>x.severity==='critical').length,high:found.filter(x=>x.severity==='high').length,medium:found.filter(x=>x.severity==='medium').length,low:found.filter(x=>x.severity==='low').length};
+    storeReports.push({key:store.key,name:store.name,url:store.url,status:count.critical?'critical':count.high?'needs-attention':found.length?'watch':'healthy',score:Math.max(0,100-count.critical*25-count.high*12-count.medium*5-count.low*2),checks,issueCount:found.length,counts:count});
+  }
+  const adminUrl='https://nuvora.rayyung713.workers.dev';
+  const adminCheck={name:'Nuvora Admin health endpoint',url:adminUrl+'/api/health'};
+  const adminBefore=issues.length;
+  const adminResponse=await probe(adminCheck.url,'GET');
+  adminCheck.status=adminResponse.status;adminCheck.ok=adminResponse.ok;
+  if(!adminResponse.ok)addIssue('admin','availability','critical','Main Nuvora Admin health endpoint is unavailable','The admin health endpoint returned '+(adminResponse.status||adminResponse.statusText)+'.',adminCheck.url);
+  else{
+    try{const payload=await adminResponse.json();if(payload.ok!==true)addIssue('admin','availability','high','Main admin reports an unhealthy state','The /api/health response did not report ok:true.',adminCheck.url);}
+    catch(e){addIssue('admin','availability','high','Main admin health response is invalid','The health endpoint did not return valid JSON.',adminCheck.url);}
+  }
+  const diagnostics={checked:false,ok:null,checks:{}};
+  if(authorization){
+    try{
+      const response=await fetch(adminUrl+'/api/admin/diagnostics',{headers:{authorization,accept:'application/json'},signal:AbortSignal.timeout(12000)});
+      if(response.ok){
+        const payload=await response.json();diagnostics.checked=true;diagnostics.ok=payload.ok===true;diagnostics.checks=payload.checks||{};
+        for(const [key,value] of Object.entries(diagnostics.checks))if(value===false)addIssue('admin','integration',key==='environment'||key==='admin'?'critical':'high','Admin diagnostic failed: '+key,'The existing Nuvora diagnostics endpoint reported this check as false.','/api/admin/diagnostics');
+      }else{diagnostics.checked=true;diagnostics.ok=false;addIssue('admin','integration','high','Admin diagnostics could not complete','The diagnostics endpoint returned HTTP '+response.status+'.','/api/admin/diagnostics');}
+    }catch(error){diagnostics.checked=true;diagnostics.ok=false;addIssue('admin','integration','high','Admin diagnostics could not be reached',String(error?.message||error).slice(0,180),'/api/admin/diagnostics');}
+  }
+  const adminIssues=issues.slice(adminBefore);
+  const adminCounts={critical:adminIssues.filter(x=>x.severity==='critical').length,high:adminIssues.filter(x=>x.severity==='high').length,medium:adminIssues.filter(x=>x.severity==='medium').length,low:adminIssues.filter(x=>x.severity==='low').length};
+  storeReports.unshift({key:'admin',name:'Main Admin',url:adminUrl,status:adminCounts.critical?'critical':adminIssues.length?'needs-attention':'healthy',score:Math.max(0,100-adminCounts.critical*25-adminCounts.high*12-adminCounts.medium*5-adminCounts.low*2),checks:[adminCheck],issueCount:adminIssues.length,counts:adminCounts});
+  const counts={critical:issues.filter(x=>x.severity==='critical').length,high:issues.filter(x=>x.severity==='high').length,medium:issues.filter(x=>x.severity==='medium').length,low:issues.filter(x=>x.severity==='low').length};
+  const report={runId,startedAt:started,completedAt:new Date().toISOString(),status:counts.critical?'critical':counts.high?'needs-attention':issues.length?'watch':'healthy',score:Math.max(0,100-counts.critical*25-counts.high*12-counts.medium*5-counts.low*2),stores:storeReports,counts,issues,diagnostics,limitations:['This scan checks live routes, page metadata, same-origin linked resources and the existing admin diagnostics endpoint.','A successful HTTP response does not prove that every button, checkout, payment, form or interactive flow works.','External third-party links are not marked broken from a single scan because providers may rate-limit automated probes.','Automatic code repair is not performed by this scanner; findings include a recommended next action and must be verified after repair.']};
+  if(env?.SUPABASE_URL&&env?.SUPABASE_SERVICE_ROLE_KEY){
+    const saved=await supabaseRest(env,'POST','admin_activity',{admin_id:adminId||null,action:'nuvora_guardian_scan',entity_type:'nuvora_ecosystem',entity_id:runId,metadata:report});
+    report.historySaved=saved.ok;
+    if(!saved.ok)console.error('NUVORA_GUARDIAN_HISTORY_SAVE_FAILED',String(await saved.text()).slice(0,300));
+  }
+  console.log('NUVORA_GUARDIAN_SCAN',JSON.stringify({runId,status:report.status,counts,historySaved:report.historySaved===true}));
+  return report;
+}
 
 const NUVORA_BACKUP_VERSION='nuvora-backup-v1';
 const NUVORA_BACKUP_STORE_COLUMNS={
