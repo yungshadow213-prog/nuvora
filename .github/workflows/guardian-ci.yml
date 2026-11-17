@@ -1,0 +1,41 @@
+name: Nuvora Guardian validation
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, "feature/nuvora-guardian"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guardian-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Verify Guardian contracts
+        run: npm run verify:guardian
+      - name: Check Worker and router syntax
+        run: |
+          node --check worker.js
+          node --check worker-router.js
+      - name: Check Guardian dashboard JavaScript
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const html = fs.readFileSync('guardian.html', 'utf8');
+          const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match => match[1]).filter(Boolean);
+          if (!scripts.length) throw new Error('Guardian dashboard script was not found.');
+          for (const script of scripts) new Function(script);
+          console.log('Guardian dashboard JavaScript syntax passed.');
+          NODE
