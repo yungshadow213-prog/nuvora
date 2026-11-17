@@ -3970,6 +3970,7 @@ async function runNuvoraGuardianScan(env, startedAt=Date.now(), adminId=null, au
   }
   const adminUrl='https://nuvora.rayyung713.workers.dev';
   const adminCheck={name:'Nuvora Admin health endpoint',url:adminUrl+'/api/health'};
+  const adminChecks=[adminCheck];
   const adminBefore=issues.length;
   const adminResponse=await probe(adminCheck.url,'GET');
   adminCheck.status=adminResponse.status;adminCheck.ok=adminResponse.ok;
@@ -3977,6 +3978,14 @@ async function runNuvoraGuardianScan(env, startedAt=Date.now(), adminId=null, au
   else{
     try{const payload=await adminResponse.json();if(payload.ok!==true)addIssue('admin','availability','high','Main admin reports an unhealthy state','The /api/health response did not report ok:true.',adminCheck.url);}
     catch(e){addIssue('admin','availability','high','Main admin health response is invalid','The health endpoint did not return valid JSON.',adminCheck.url);}
+  }
+  for(const path of ['/admin','/admin/skin-studio','/admin/clothing-studio','/admin/gaming-studio','/admin/home-studio','/admin/guardian']){
+    const target=adminUrl+path;
+    const response=await probe(target,'GET');
+    const check={name:'Admin page '+path,url:target,status:response.status,ok:response.ok};
+    adminChecks.push(check);
+    if(!response.ok)addIssue('admin','pages','high','An admin page is unavailable','The admin route returned HTTP '+(response.status||response.statusText)+'.',target);
+    else if(!String(response.headers?.get?.('content-type')||'').includes('text/html'))addIssue('admin','pages','high','An admin route did not return HTML','The route returned an unexpected content type.',target);
   }
   const diagnostics={checked:false,ok:null,checks:{}};
   if(authorization){
@@ -3990,7 +3999,7 @@ async function runNuvoraGuardianScan(env, startedAt=Date.now(), adminId=null, au
   }
   const adminIssues=issues.slice(adminBefore);
   const adminCounts={critical:adminIssues.filter(x=>x.severity==='critical').length,high:adminIssues.filter(x=>x.severity==='high').length,medium:adminIssues.filter(x=>x.severity==='medium').length,low:adminIssues.filter(x=>x.severity==='low').length};
-  storeReports.unshift({key:'admin',name:'Main Admin',url:adminUrl,status:adminCounts.critical?'critical':adminIssues.length?'needs-attention':'healthy',score:Math.max(0,100-adminCounts.critical*25-adminCounts.high*12-adminCounts.medium*5-adminCounts.low*2),checks:[adminCheck],issueCount:adminIssues.length,counts:adminCounts});
+  storeReports.unshift({key:'admin',name:'Main Admin',url:adminUrl,status:adminCounts.critical?'critical':adminIssues.length?'needs-attention':'healthy',score:Math.max(0,100-adminCounts.critical*25-adminCounts.high*12-adminCounts.medium*5-adminCounts.low*2),checks:adminChecks,issueCount:adminIssues.length,counts:adminCounts});
   const counts={critical:issues.filter(x=>x.severity==='critical').length,high:issues.filter(x=>x.severity==='high').length,medium:issues.filter(x=>x.severity==='medium').length,low:issues.filter(x=>x.severity==='low').length};
   const report={runId,startedAt:started,completedAt:new Date().toISOString(),status:counts.critical?'critical':counts.high?'needs-attention':issues.length?'watch':'healthy',score:Math.max(0,100-counts.critical*25-counts.high*12-counts.medium*5-counts.low*2),stores:storeReports,counts,issues,diagnostics,limitations:['This scan checks live routes, page metadata, same-origin linked resources and the existing admin diagnostics endpoint.','A successful HTTP response does not prove that every button, checkout, payment, form or interactive flow works.','External third-party links are not marked broken from a single scan because providers may rate-limit automated probes.','Automatic code repair is not performed by this scanner; findings include a recommended next action and must be verified after repair.']};
   if(env?.SUPABASE_URL&&env?.SUPABASE_SERVICE_ROLE_KEY){
