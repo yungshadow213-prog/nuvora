@@ -15,6 +15,7 @@ assert.ok(worker.includes("https://client-store-platform.rayyung713.workers.dev"
 assert.ok(worker.includes("https://nuvora-clothing.rayyung713.workers.dev"), "Clothing storefront is not registered.");
 assert.ok(worker.includes("https://nuvora-games.rayyung713.workers.dev"), "Gaming storefront is not registered.");
 assert.ok(worker.includes("https://nuvora-home.rayyung713.workers.dev"), "Home storefront is not registered.");
+for (const route of ["/admin/skin-studio", "/admin/clothing-studio", "/admin/gaming-studio", "/admin/home-studio", "/admin/guardian"]) assert.ok(worker.includes(route), `Guardian scan is missing admin route coverage: ${route}`);
 assert.ok(router.includes("/admin/guardian"), "Guardian admin route is not registered.");
 assert.ok(router.includes("nuvora-guardian-nav-link"), "Guardian is not linked from the main admin navigation.");
 assert.ok(router.includes("withGuardianShortcut"), "Guardian shortcut is not exposed from the companion studios.");
