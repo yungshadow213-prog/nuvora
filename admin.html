@@ -3793,6 +3793,9 @@ function mergeSkinSiteConfig(raw){
   category_id:({cleanse:'cleansers-makeup-removers',treat:'serums-treatments',hydrate:'moisturisers-barrier-care',protect:'sunscreen-spf','body-lips':'body-care'}[String(x.category_id||'')]||String(x.category_id||'')).slice(0,100),
   imageAlignment:['left','center','right'].includes(x.imageAlignment)?x.imageAlignment:'center',
   imageWidth:[20,30,40,50,60,70,80,90,100].includes(Number(x.imageWidth))?Number(x.imageWidth):70,
+  imageHeight:x.imageHeight!==undefined&&x.imageHeight!==null&&Number.isFinite(Number(x.imageHeight))?Math.max(80,Math.min(1200,Number(x.imageHeight))):null,
+  sectionMinHeight:x.sectionMinHeight!==undefined&&x.sectionMinHeight!==null&&Number.isFinite(Number(x.sectionMinHeight))?Math.max(0,Math.min(1600,Number(x.sectionMinHeight))):null,
+  sectionMaxWidth:x.sectionMaxWidth!==undefined&&x.sectionMaxWidth!==null&&Number.isFinite(Number(x.sectionMaxWidth))?Math.max(320,Math.min(1800,Number(x.sectionMaxWidth))):null,
    imageFreePosition:x.imageFreePosition===true,
    imagePositionX:x.imagePositionX!==undefined&&Number.isFinite(Number(x.imagePositionX))?Math.max(0,Math.min(100,Number(x.imagePositionX))):50,
    imagePositionY:x.imagePositionY!==undefined&&Number.isFinite(Number(x.imagePositionY))?Math.max(0,Math.min(100,Number(x.imagePositionY))):50,
@@ -4617,7 +4620,7 @@ function renderSkinSelectedInspector(){
 
   if(['hero','editorial','image-block','quiz-banner'].includes(sec.type))html+=field('Section image URL','image',sec.image||'','url','1600')+'<label class="studio-inspector-field"><span>Upload section image from your device</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'section\','+index+')"><small class="studio-inline-help">JPG, PNG, WebP or GIF · Max 6 MB.</small></label>';
    if(['hero','editorial','image-block','quiz-banner'].includes(sec.type)){
-    html+=numberSelect('Image width','imageWidth',[25,35,45,55,65,75,85,95,100],'%');
+    html+=numberSelect('Image width','imageWidth',[20,30,40,50,60,70,80,90,100],'%');
     html+=numberSelect('Image height','imageHeight',[160,200,240,280,320,380,440,520,600,720]);
    }
    if(['hero','editorial'].includes(sec.type)){
