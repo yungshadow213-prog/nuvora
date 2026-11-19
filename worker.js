@@ -31,6 +31,11 @@ export default {
         target.searchParams.set('store','all');
         return serveAsset(env,new Request(target,{method:'GET',headers:request.headers}));
       }
+      // Keep Guardian reachable even when the outer router is bypassed or an
+      // older Worker entrypoint is still active.
+      if(url.pathname==='/admin/guardian'||url.pathname==='/admin/guardian/'){
+        return serveAsset(env,new Request(new URL('/guardian.html',request.url),{method:'GET',headers:request.headers}));
+      }
       if(url.pathname==='/admin/skin-studio'||url.pathname==='/admin/skin-studio/'){
         return serveAsset(env,new Request(new URL('/admin.html',request.url),{method:'GET',headers:request.headers}));
       }
@@ -3898,7 +3903,7 @@ async function runNuvoraGuardianScan(env, startedAt=Date.now(), adminId=null, au
   const started=new Date(startedAt).toISOString();
   const runId='guardian-'+startedAt.toString(36)+'-'+Math.random().toString(36).slice(2,8);
   const stores=[
-    {key:'skin',name:'Skin Care',url:'https://client-store-platform.rayyung713.workers.dev',routes:['/','/collections/all']},
+    {key:'skin',name:'Skin Care',url:'https://client-store-platform.rayyung713.workers.dev',routes:['/','/shop']},
     {key:'clothing',name:'Clothing',url:'https://nuvora-clothing.rayyung713.workers.dev',routes:['/']},
     {key:'games',name:'Gaming',url:'https://nuvora-games.rayyung713.workers.dev',routes:['/']},
     {key:'home',name:'Home',url:'https://nuvora-home.rayyung713.workers.dev',routes:['/']}
@@ -3922,7 +3927,7 @@ async function runNuvoraGuardianScan(env, startedAt=Date.now(), adminId=null, au
     for(const route of store.routes){
       const target=new URL(route,store.url).toString();
       const response=await probe(target,'GET');
-      checks.push({name:route==='/'?'Storefront homepage':'All products route',url:target,status:response.status,ok:response.ok});
+      checks.push({name:route==='/'?'Storefront homepage':'Shop / product catalogue',url:target,status:response.status,ok:response.ok});
       if(!response.ok){
         addIssue(store.key,'availability',response.status===0||response.status>=500?'critical':'high',route==='/'?'Storefront is unavailable':'Store route is unavailable',response.status?('The route returned HTTP '+response.status+'.'):('The route could not be reached: '+response.statusText),target);
         continue;
