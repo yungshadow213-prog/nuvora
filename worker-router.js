@@ -81,12 +81,11 @@ export default {
     if (request.method === "GET" && ["/admin", "/admin/", "/admin.html", "/admin/skin-studio", "/admin/skin-studio/"].includes(url.pathname) && (response.headers.get("content-type") || "").includes("text/html")) {
       const html = await response.text();
       if (!html.includes("nuvora-multi-studio-launcher")) {
-        const launcher = '<style>.nuvora-multi-studio-launcher{position:fixed;right:18px;bottom:18px;z-index:99999;display:flex;align-items:center;gap:8px;padding:11px 14px;border:1px solid #b9cdb8;border-radius:12px;background:#203a2b;color:#fff;text-decoration:none;font:700 11px/1.2 system-ui;box-shadow:0 8px 26px #13271930}.nuvora-multi-studio-launcher:hover{background:#31543c}.skin-studio-fullpage .nuvora-multi-studio-launcher{top:78px;bottom:auto}@media(max-width:600px){.nuvora-multi-studio-launcher{right:10px;bottom:10px;padding:10px;font-size:10px}}</style><a class="nuvora-multi-studio-launcher" href="/admin/studios" aria-label="Open Gaming, Home and Clothing Studios">▦ &nbsp; Gaming · Home · Clothing Studios ↗</a>';
         const guardianNavLink = "<style>.nuvora-guardian-nav-link{display:flex;align-items:center;gap:10px;padding:10px 11px;margin:6px 0 0;border:1px solid #cbdcc7;border-radius:9px;background:#edf4e9;color:#244a34;text-decoration:none;font:750 11px/1.2 system-ui}.nuvora-guardian-nav-link:hover{background:#e1eddf}</style><a class=\"nuvora-guardian-nav-link\" href=\"/admin/guardian\">◈ &nbsp; Nuvora Guardian ↗</a>";
       const experienceLink = '<style>.nuvora-experience-nav-link{display:flex;align-items:center;gap:10px;padding:10px 11px;margin:6px 0 0;border:1px solid #b8cbb9;border-radius:9px;background:#edf4eb;color:#244a34;text-decoration:none;font:750 11px/1.2 system-ui}.nuvora-experience-nav-link:hover{background:#e1eddf}</style><a class="nuvora-experience-nav-link" href="/admin/experiences">◇ &nbsp; Experience Studio ↗</a>';
       const withExperienceLink = html.includes("nuvora-experience-nav-link") ? html : html.replace("</nav>", experienceLink + "</nav>");
       const withGuardianLink = withExperienceLink.includes("nuvora-guardian-nav-link") ? withExperienceLink : withExperienceLink.replace("</nav>", guardianNavLink + "</nav>");
-      const updated = withGuardianLink.replace("</body>", launcher + "</body>");
+      const updated = withGuardianLink;
         const headers = new Headers(response.headers);
         headers.delete("content-length");
         return new Response(updated, { status: response.status, statusText: response.statusText, headers });
