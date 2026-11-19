@@ -2397,11 +2397,15 @@ function openProductModal(importMode=false){
   document.getElementById('productModalTitle').textContent=importMode?'Import Amazon product':'Add product';
   document.getElementById('productModalSub').textContent=importMode?'Paste your Amazon link, capture the listing, then save it as a draft.':'Create a product manually and save it as a draft.';
   document.getElementById('productModal').classList.add('open');
+  document.getElementById('productModalSub').textContent='Preparing the product workspace…';
   document.getElementById('pfSource').value='amazon';
   document.getElementById('pfRetailer').value='Amazon';
   document.getElementById('amazonUrlInput').placeholder='Paste your Amazon product or affiliate link';
-  prepareProductEntryWorkspace();setProductEntryStep(0);
-  document.getElementById('amazonUrlInput').focus();
+  requestAnimationFrame(()=>{
+    prepareProductEntryWorkspace();setProductEntryStep(0);
+    document.getElementById('productModalSub').textContent=importMode?'Paste your Amazon link, capture the listing, then save it as a draft.':'Create a product manually and save it as a draft.';
+    document.getElementById('amazonUrlInput')?.focus();
+  });
 }
 function closeProductModal(){document.getElementById('productModal').classList.remove('open');document.body.classList.remove('admin-workspace-open','product-workspace-page');document.getElementById('productModal')?.classList.remove('product-entry-redesign');window.skinCareImportMode=false;setSkinAdminFormMode(false);}
 function updateRetailerRatingPreview(){
@@ -3658,6 +3662,14 @@ async function adminBoot(){
       const requestedWorkspace=new URLSearchParams(window.location.search).get('workspace');
       if(['outline','products','pages','categories','media','settings'].includes(requestedWorkspace))switchSkinStudioTab(requestedWorkspace);
     };
+    // Show the requested workspace immediately; the product catalogue can finish loading into it.
+    if(isSkinStudioRoute){
+      openSkinStudioRoute();
+      const productRows=document.getElementById('skinProductRows');
+      if(productRows)productRows.innerHTML='<div class="muted" role="status" aria-live="polite" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">Loading your Skin Care product library…</div>';
+      const productCount=document.getElementById('skinProductCount');
+      if(productCount)productCount.textContent='Loading catalogue…';
+    }
     // Establish the requested workspace before ancillary health checks so a
     // transient diagnostics failure cannot strand the user on the dashboard.
     let skinProductLoadError='';
@@ -3673,7 +3685,6 @@ async function adminBoot(){
       if(!isSkinStudioRoute)throw e;
       skinProductLoadError=msg||'Unknown catalog error';
     }
-    openSkinStudioRoute();
     if(skinProductLoadError)skinBuilderMessage('The skincare product library could not be loaded: '+skinProductLoadError+'. The studio is open; retry the catalog after checking the connection.','error');
     try{
       await healthCheck();
@@ -4593,6 +4604,8 @@ function renderSkinSelectedInspector(){
   html+=numberSelect('Padding bottom','sectionPaddingBottom',[0,16,24,32,40,48,64,80,96]);
   html+=numberSelect('Gap between items','sectionGap',[8,12,16,20,24,32,40]);
   html+=numberSelect('Corner radius','sectionRadius',[0,4,8,12,16,20,24,32]);
+  html+=numberSelect('Section minimum height','sectionMinHeight',[0,220,280,340,400,480,560,640,720,840,960]);
+  html+=numberSelect('Section maximum width','sectionMaxWidth',[720,840,960,1080,1180,1280,1440,1600]);
   html+='<label class="studio-inspector-field"><span>Content width</span><select onchange="updateSkinSection('+index+',\'contentWidth\',this.value)">'+[['theme','Theme default'],['full','Full width'],['page','Page width'],['narrow','Narrow']].map(([v,l])=>'<option value="'+v+'" '+((sec.contentWidth||'theme')===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
   html+='<label class="studio-inspector-field"><span>Section shadow</span><select onchange="updateSkinSection('+index+',\'sectionShadow\',this.value)">'+[['none','None'],['soft','Soft'],['raised','Raised']].map(([v,l])=>'<option value="'+v+'" '+((sec.sectionShadow||'none')===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
   html+=field('Border colour','sectionBorderColor',sec.sectionBorderColor||'#e5e7df','color','7');
@@ -4603,6 +4616,10 @@ function renderSkinSelectedInspector(){
 
 
   if(['hero','editorial','image-block','quiz-banner'].includes(sec.type))html+=field('Section image URL','image',sec.image||'','url','1600')+'<label class="studio-inspector-field"><span>Upload section image from your device</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadSkinStudioImage(this,\'section\','+index+')"><small class="studio-inline-help">JPG, PNG, WebP or GIF · Max 6 MB.</small></label>';
+   if(['hero','editorial','image-block','quiz-banner'].includes(sec.type)){
+    html+=numberSelect('Image width','imageWidth',[25,35,45,55,65,75,85,95,100],'%');
+    html+=numberSelect('Image height','imageHeight',[160,200,240,280,320,380,440,520,600,720]);
+   }
    if(['hero','editorial'].includes(sec.type)){
     html+='';
     html+='<label class="studio-inspector-field"><span>Image focus · horizontal '+Number(sec.imagePositionX??50)+'%</span><input type="range" min="0" max="100" step="1" value="'+Number(sec.imagePositionX??50)+'" onchange="updateSkinSection('+index+',\'imagePositionX\',Number(this.value))"></label>';
@@ -4616,7 +4633,7 @@ function renderSkinSelectedInspector(){
     }else{
      html+='<label class="studio-inspector-field"><span>Image alignment</span><select onchange="updateSkinSection('+index+',\'imageAlignment\',this.value)">'+[['left','Left'],['center','Center'],['right','Right']].map(([v,l])=>'<option value="'+v+'" '+((sec.imageAlignment||'center')===v?'selected':'')+'>'+l+'</option>').join('')+'</select></label>';
     }
-    html+='<label class="studio-inspector-field"><span>Image width</span><select onchange="updateSkinSection('+index+',\'imageWidth\',Number(this.value))">'+[20,30,40,50,60,70,80,90,100].map(n=>'<option value="'+n+'" '+(Number(sec.imageWidth||70)===n?'selected':'')+'>'+n+'%</option>').join('')+'</select></label>';
+
    }
   html+='<div class="studio-inspector-subheading">Section behaviour</div>';
   html+='<label class="studio-inspector-check"><input type="checkbox" '+(sec.visible!==false?'checked':'')+' onchange="updateSkinSection('+index+',\'visible\',this.checked)"> Show this section on the published page</label>';
@@ -5276,9 +5293,9 @@ function sendSkinStudioPreview(){
  // Only explicitly Skin-owned products placed in a visible product grid can enter the draft preview.
  const sections=skinSectionsFor(skinStudioPageId),placedIds=new Set(sections.filter(sec=>sec.visible!==false&&['product-grid','featured-products'].includes(sec.type)&&Array.isArray(sec.product_ids)).flatMap(sec=>sec.product_ids.map(String)));
  const categoryById=new Map((Array.isArray(categories)?categories:[]).map(category=>[String(category.id),category]));
- const previewProducts=Array.isArray(adminProducts)?adminProducts.filter(product=>placedIds.has(String(product.id))&&isSkinProduct(product)).map(product=>{
+ const previewProducts=Array.isArray(adminProducts)?adminProducts.filter(product=>isSkinProduct(product)&&(product.published===true||placedIds.has(String(product.id)))).map(product=>{
   const category=categoryById.get(String(product.category_id||''));
-  return {...product,category_name:category?.name||product.category_name||'',category:category?{id:category.id,name:category.name}:product.category,published:true,__studioDraftPreview:true};
+  return {...product,category_name:category?.name||product.category_name||'',category:category?{id:category.id,name:category.name}:product.category,published:true,__studioDraftPreview:product.published!==true};
  }):[];
  frame.contentWindow.postMessage({type:'nuvora-skin-studio-preview',config:skinBuilderConfig,products:previewProducts,pageId:skinStudioPageId||'home',selection:skinStudioSelection||null},SKIN_CLIENT_ORIGIN);
 }
