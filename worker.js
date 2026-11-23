@@ -2590,7 +2590,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         if(request.method==='GET'){
           const [settingsResponse,productsResponse]=await Promise.all([
             supabaseRest(env,'GET','store_settings',null,'?select=skin_site_config&id=eq.true&limit=1'),
-            supabaseRest(env,'GET','products',null,'?select=id,published,skin_types,skin_concerns,ingredients,product_type,size,description,features,brand&storefront_key=eq.skin&limit=1000')
+            supabaseRest(env,'GET','products',null,'?select=id,published,skin_types,skin_concerns,ingredients,product_type,product_size,description,features,brand&storefront_key=eq.skin&limit=1000')
           ]);
           if(!settingsResponse.ok)return json({error:'Women’s Fashion storefront settings could not be loaded.'},502);
           if(!productsResponse.ok)return json({error:'Women’s Fashion product information could not be loaded.'},502);
