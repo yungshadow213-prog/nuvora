@@ -6,7 +6,7 @@ Nuvora is a multi-storefront platform with a shared admin system, separate store
 
 The former Skin Care Studio has been repurposed as **Nuvora Women's Fashion**. The customer-facing store and its editor are now organised around women's clothing, footwear, bags, jewellery and accessories.
 
-The fashion catalogue starts empty. The original skincare catalogue contained no published or draft products, so there was nothing to remove. Other Nuvora catalogues and their records were left intact.
+The previous shared catalogue held 15 legacy product records. Those records were cleared to give the fashion catalogue a clean start; the customer profiles and analytics history were preserved. No other Nuvora storefront repositories were modified.
 
 ### Fashion categories
 
