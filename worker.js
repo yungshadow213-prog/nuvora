@@ -479,8 +479,8 @@ async function publishProductRecord(env,id,patch={}){
     if(categoryResponse.ok)categoryName=String((await categoryResponse.json())?.[0]?.name||'');
   }
   const retailerIdentity=[merged.retailer,merged.source_type,merged.destination_url,merged.amazon_source_url].filter(Boolean).join(' ');
-  const women's fashionAffiliate=/skin\s*care|women's fashion/i.test(categoryName)&&/amazon/i.test(retailerIdentity);
-  if(women's fashionAffiliate)merged.kind='find';
+  const fashionAffiliate=/skin\s*care|women's fashion/i.test(categoryName)&&/amazon/i.test(retailerIdentity);
+  if(fashionAffiliate)merged.kind='find';
   const validation=validateProduct(merged);
   if(validation)return {ok:false,status:400,error:validation};
   const amazonIdentity=asinFromUrl(merged.destination_url)||asinFromUrl(merged.amazon_source_url)||String(merged.amazon_asin||'').trim();
@@ -2655,43 +2655,32 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const categoriesResponse=await supabaseRest(env,'GET','categories',null,'?select=id,name,slug&active=eq.true');
           if(categoriesResponse.ok){
             const categories=await categoriesResponse.json()||[];
-            categoryId=categories.find(item=>['beauty-women's fashion','skin-care'].includes(String(item.slug||'').toLowerCase())||['women's fashion','skin care'].includes(String(item.name||'').trim().toLowerCase()))?.id||null;
+            categoryId=categories.find(item=>String(item.slug||'').toLowerCase()==='womens-fashion'||String(item.name||'').trim().toLowerCase()==="women's fashion")?.id||null;
           }
         }catch(error){}
         const inferSkinCategory=(title,brand,description,features)=>{
           const hay=[title,brand,description,Array.isArray(features)?features.join(' '):features].filter(Boolean).join(' ').toLowerCase();
           const rules=[
-            [/\\b(?:dress|gown|maxi|midi|slip dress)\\b/,'dresses'],
-            [/\\b(?:blouse|camisole|tank top|crop top|bodysuit)\\b/,'tops-blouses'],
-            [/\\b(?:shirt|button.down|overshirt)\\b/,'shirts'],
-            [/\\b(?:jeans|denim|trousers|pants|leggings|wide.leg)\\b/,'trousers-jeans'],
-            [/\\bskirt\\b/,'skirts'],
-            [/\\b(?:co.ord|two.piece|matching set|outfit set)\\b/,'co-ords-sets'],
-            [/\\b(?:jumpsuit|playsuit|romper)\\b/,'jumpsuits-playsuits'],
-            [/\\b(?:cardigan|sweater|jumper|knitwear|knitted)\\b/,'knitwear'],
-            [/\\b(?:blazer|coat|jacket|trench)\\b/,'jackets-coats'],
-            [/\\b(?:heel|stiletto|pumps)\\b/,'heels'],
-            [/\\b(?:flats|loafer|ballet flat|mule)\\b/,'flats'],
-            [/\\b(?:sneaker|trainer)\\b/,'sneakers'],
-            [/\\bboot\\b/,'boots'],
-            [/\\b(?:sandal|slides)\\b/,'sandals'],
-            [/\\b(?:handbag|purse|satchel)\\b/,'handbags'],
-            [/\\b(?:tote|shopper bag)\\b/,'tote-shopper-bags'],
-            [/\\b(?:crossbody|cross.body|shoulder bag)\\b/,'crossbody-shoulder-bags'],
-            [/\\b(?:clutch|evening bag)\\b/,'clutches-evening-bags'],
-            [/\\b(?:earring|necklace|bracelet|jewellery|jewelry|ring)\\b/,'jewellery'],
-            [/\\b(?:watch|wristwatch)\\b/,'watches'],
-            [/\\b(?:sunglasses|eyewear)\\b/,'sunglasses'],
-            [/\\b(?:belt|scarf|scarves)\\b/,'belts-scarves'],
-            [/\\b(?:hair clip|headband|scrunchie)\\b/,'hair-accessories'],
-            [/\\b(?:sports bra|activewear|gym leggings|yoga pants)\\b/,'activewear'],
-            [/\\b(?:pyjama|pajama|loungewear|sleepwear)\\b/,'loungewear-sleepwear']
+            ['dress|gown|maxi|midi|slip dress','dresses'],
+            ['blouse|camisole|tank top|crop top|bodysuit','tops-blouses'],
+            ['shirt|button.down|overshirt','shirts'],
+            ['jeans|denim|trousers|pants|leggings|wide.leg','trousers-jeans'],
+            ['skirt','skirts'],['co.ord|two.piece|matching set|outfit set','co-ords-sets'],
+            ['jumpsuit|playsuit|romper','jumpsuits-playsuits'],['cardigan|sweater|jumper|knitwear|knitted','knitwear'],
+            ['blazer|coat|jacket|trench','jackets-coats'],['heel|stiletto|pumps','heels'],
+            ['flats|loafer|ballet flat|mule','flats'],['sneaker|trainer','sneakers'],
+            ['boot','boots'],['sandal|slides','sandals'],['handbag|purse|satchel','handbags'],
+            ['tote|shopper bag','tote-shopper-bags'],['crossbody|cross.body|shoulder bag','crossbody-shoulder-bags'],
+            ['clutch|evening bag','clutches-evening-bags'],['earring|necklace|bracelet|jewellery|jewelry|ring','jewellery'],
+            ['watch|wristwatch','watches'],['sunglasses|eyewear','sunglasses'],['belt|scarf|scarves','belts-scarves'],
+            ['hair clip|headband|scrunchie','hair-accessories'],['sports bra|activewear|gym leggings|yoga pants','activewear'],
+            ['pyjama|pajama|loungewear|sleepwear','loungewear-sleepwear']
           ];
-          for(const [pattern,slug] of rules)if(pattern.test(hay))return slug;
-          return /wedding guest|party dress|formal dress|occasionwear/.test(hay)?'occasionwear':'fashion-accessories';
+          for(const [pattern,slug] of rules)if(new RegExp(pattern,'i').test(hay))return slug;
+          return /wedding guest|party dress|formal dress|occasionwear/i.test(hay)?'occasionwear':'fashion-accessories';
         };
         const itemRows=[];
-        const itemRows=[];
+        const seenBatchIdentities=new Map();
         const seenBatchIdentities=new Map();
         for(const sourceUrl of urls){
           const started=Date.now();
