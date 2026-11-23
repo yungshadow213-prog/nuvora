@@ -2970,9 +2970,9 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           'tote-shopper-bags':'Tote & Shopper Bags','crossbody-shoulder-bags':'Crossbody & Shoulder Bags',
           'clutches-evening-bags':'Clutches & Evening Bags',jewellery:'Jewellery',watches:'Watches',sunglasses:'Sunglasses',
           'belts-scarves':'Belts & Scarves','hair-accessories':'Hair Accessories',activewear:'Activewear',
-          'loungewear-sleepwear':'Loungewear & Sleepwear',occasionwear:'Occasionwear','other-fashion-accessories':'Fashion Accessories'
+          'loungewear-sleepwear':'Loungewear & Sleepwear',occasionwear:'Occasionwear','other-fashion-accessories':'Other Fashion Accessories'
         };
-        product.product_type=fashionCategoryLabels[skinCategorySlug]||'Fashion Accessories';
+        product.product_type=fashionCategoryLabels[skinCategorySlug]||'Other Fashion Accessories';
         delete product.skin_category_slug;
         delete product.ai_copy_model;
         delete product.ai_intelligence_model;
