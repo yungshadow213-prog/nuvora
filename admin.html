@@ -3752,7 +3752,7 @@ const defaultSkinSiteConfig=()=>({
   footerNoteBody:'Product details, sizing, prices and availability can change. Check the retailer’s current listing for measurements, fabric, seller and availability before purchasing.',
   footerBottomTagline:'Good finds. Better details. Your kind of style.',
   footerCopyright:"Nuvora Women’s Fashion",
-  shopEyebrow:"THE NUVORA WOMEN'S FASHION EDIT",shopHeadline:'Find your next',shopHeadlineEmphasis:'favourite look.',
+  shopEyebrow:"THE NUVORA WOMEN’S FASHION EDIT",shopHeadline:'Find your next',shopHeadlineEmphasis:'favourite look.',
   shopDescription:'Explore dresses, everyday clothing, shoes, handbags, jewellery and accessories. Browse by category, style, occasion or brand, then check fit and product details before purchasing.',
   journalEyebrow:'THE NUVORA STYLE JOURNAL',journalHeadline:'Notes for',journalHeadlineEmphasis:'better outfits.',
   journalDescription:'Practical style notes, outfit inspiration and useful details on sizing, fit, materials and accessories.',
@@ -4132,7 +4132,7 @@ function migrateSkinHomeLayout(config){
  let sections=original.filter(section=>String(section?.type||'')!=='routine-finder');
  const uniqueSectionId=base=>{let id=base,suffix=2;while(sections.some(section=>String(section.id||'')===id)){id=base+'-'+suffix++;}return id;};
  const addIfMissing=(type,base,section)=>{if(!sections.some(item=>item.type===type))sections.push({id:uniqueSectionId(base),visible:true,...section,type});};
- addIfMissing('hero','home-hero',{title:'Style, without the noise.',eyebrow:'THE NUVORA WOMEN'S FASHION EDIT',text:'Explore clothing, shoes, bags, jewellery and accessories. Review materials, sizing and retailer details before you decide.',image:config.heroImage||'',buttonLabel:config.heroButtonLabel||'Explore products',buttonHref:'/shop'});
+ addIfMissing('hero','home-hero',{title:'Style, without the noise.',eyebrow:'THE NUVORA WOMEN’S FASHION EDIT',text:'Explore clothing, shoes, bags, jewellery and accessories. Review materials, sizing and retailer details before you decide.',image:config.heroImage||'',buttonLabel:config.heroButtonLabel||'Explore products',buttonHref:'/shop'});
  addIfMissing('category-grid','home-categories',{title:'Shop by category',eyebrow:'FIND WHAT YOU NEED',text:'Browse product types and discover the details behind each pick.'});
  if(!sections.some(section=>section.visible!==false&&(section.type==='product-grid'||section.type==='featured-products'))){
   addIfMissing('featured-products','best-sellers',{title:'Best sellers',eyebrow:'THE NUVORA EDIT',text:'Explore published products and open each guide for the full details.',filter:'all',columns:5,productsPerPage:8,product_ids:[]});
@@ -4869,7 +4869,7 @@ function createSkinQuickItem(){
     section('details','text-block','A little more detail','','Add supporting information, links or practical guidance.',{textAlignment:'left'})
    ],
    shop:[
-    section('hero','hero',title,'THE NUVORA WOMEN'S FASHION EDIT','',{}),
+    section('hero','hero',title,'THE NUVORA WOMEN’S FASHION EDIT','',{}),
     section('featured','featured-products','Featured picks','CURATED FOR YOU','A hand-picked selection to start exploring.',{filter:'featured',columns:3}),
     section('products','product-grid','Explore '+title,'THE FULL EDIT','Browse the products selected for this page.',{filter:'all',columns:3,productsPerPage:8})
    ],
