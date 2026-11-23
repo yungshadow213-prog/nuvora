@@ -36,14 +36,19 @@ export default {
       if(url.pathname==='/admin/guardian'||url.pathname==='/admin/guardian/'){
         return serveAsset(env,new Request(new URL('/guardian.html',request.url),{method:'GET',headers:request.headers}));
       }
-      if(url.pathname==='/admin/skin-studio'||url.pathname==='/admin/skin-studio/'){
+      if(url.pathname==='/admin/womens-fashion'||url.pathname==='/admin/womens-fashion/'||url.pathname==='/admin/skin-studio'||url.pathname==='/admin/skin-studio/'){
         return serveAsset(env,new Request(new URL('/admin.html',request.url),{method:'GET',headers:request.headers}));
       }
       if (url.pathname === '/admin' || url.pathname === '/admin/') {
         return serveAsset(env,new Request(new URL('/admin.html',request.url), {method:'GET',headers:request.headers}));
       }
-      if(/^\/beauty(?:\/.*)?$/.test(url.pathname)){
+      if(/^\/fashion(?:\/.*)?$/.test(url.pathname)){
         return serveAsset(env,new Request(new URL('/beauty.html',request.url),{method:'GET',headers:request.headers}));
+      }
+      if(/^\/beauty(?:\/.*)?$/.test(url.pathname)){
+        const legacyUrl=new URL(request.url);
+        legacyUrl.pathname=legacyUrl.pathname.replace(/^\/beauty(?=\/|$)/,'/fashion');
+        return Response.redirect(legacyUrl.toString(),301);
       }
       const editPageMatch=url.pathname.match(/^\/admin\/products\/([^/]+)\/edit\/?$/);
       if(editPageMatch){
@@ -2001,9 +2006,9 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
       }
 
       if(url.pathname==='/api/skin-settings'&&request.method==='GET'){
-        // Only expose the explicit Skin storefront configuration; never return the whole admin settings row.
+        // Only expose the explicit Women's Fashion storefront configuration; never return the whole admin settings row.
         const r=await supabaseRest(env,'GET','store_settings',undefined,'?select=skin_site_config&id=eq.true&limit=1');
-        if(!r.ok)return json({error:'Skin storefront settings could not be loaded.'},502);
+        if(!r.ok)return json({error:'Women's Fashion storefront settings could not be loaded.'},502);
         const row=(await r.json())?.[0]||{};
         const config=row.skin_site_config&&typeof row.skin_site_config==='object'?{...row.skin_site_config}:{};
         const experiences=config.nuvoraExperiences&&typeof config.nuvoraExperiences==='object'?config.nuvoraExperiences:defaultNuvoraExperienceConfig();
@@ -2024,7 +2029,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         }
         if(Object.prototype.hasOwnProperty.call(patch,'skin_site_draft')&&patch.skin_site_draft!==null){
           const draftError=validateSkinSiteConfig(patch.skin_site_draft,{requireProductGrid:false});
-          if(draftError)return json({error:'Skin Studio draft: '+draftError},400);
+          if(draftError)return json({error:'Women's Fashion Studio draft: '+draftError},400);
         }
         patch.updated_at=new Date().toISOString();
         const r=await supabaseRest(env,'PATCH','store_settings',patch,'?id=eq.true'); if(!r.ok)return json({error:await r.text()},400);
@@ -2484,7 +2489,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           template:cleanText(input.brand.template,80),
           designSettings:input.brand.designSettings&&typeof input.brand.designSettings==='object'?Object.fromEntries(Object.entries(input.brand.designSettings).slice(0,24).map(([key,value])=>[cleanText(key,60),cleanText(value,80)])):{}
         }:{};
-        const system='You are Nuvora AI, the creative and merchandising assistant inside Nuvora Skin Studio. Help improve the selected storefront page while respecting the supplied brand and current section structure. Return ONLY valid JSON with exactly this shape: {"reply":"brief helpful explanation","changes":[...]}. Allowed change objects are either {"op":"update_section","pageId":"'+pageId+'","sectionId":"existing-id","field":"allowed-field","value":"..."} or {"op":"add_section","pageId":"'+pageId+'","afterSectionId":"existing-id-or-empty","section":{"type":"allowed-section-type","title":"...","eyebrow":"...","text":"...","buttonLabel":"...","buttonHref":"/internal/path"}}. Allowed fields: title, eyebrow, text, buttonLabel, secondaryButtonLabel, buttonHref, secondaryButtonHref, backgroundColor, textAlignment, titleFontSize, bodyFontSize, sectionPadding, columns, productsPerPage, visible. Allowed section types: product-grid, featured-products, category-grid, brand-grid, concern-grid, hero, editorial, journal-grid, text-block, image-block, quiz-banner. Refer ONLY to section IDs in the supplied page context. Prefer editing existing content; add a section only when useful. Do not invent products, brands, retailer ratings, prices, product availability, materials, certifications, benefits, efficacy or medical claims. Preserve affiliate disclosure and the existing Nuvora product CTA rules. Do not write HTML, CSS, JavaScript, markdown fences, secrets or anything outside the JSON response. Keep reply concise and changes focused. If the user asks for advice only, return an empty changes array.';
+        const system='You are Nuvora AI, the creative and merchandising assistant inside Nuvora Women's Fashion Studio. Help improve the selected storefront page while respecting the supplied brand and current section structure. Return ONLY valid JSON with exactly this shape: {"reply":"brief helpful explanation","changes":[...]}. Allowed change objects are either {"op":"update_section","pageId":"'+pageId+'","sectionId":"existing-id","field":"allowed-field","value":"..."} or {"op":"add_section","pageId":"'+pageId+'","afterSectionId":"existing-id-or-empty","section":{"type":"allowed-section-type","title":"...","eyebrow":"...","text":"...","buttonLabel":"...","buttonHref":"/internal/path"}}. Allowed fields: title, eyebrow, text, buttonLabel, secondaryButtonLabel, buttonHref, secondaryButtonHref, backgroundColor, textAlignment, titleFontSize, bodyFontSize, sectionPadding, columns, productsPerPage, visible. Allowed section types: product-grid, featured-products, category-grid, brand-grid, concern-grid, hero, editorial, journal-grid, text-block, image-block, quiz-banner. Refer ONLY to section IDs in the supplied page context. Prefer editing existing content; add a section only when useful. Do not invent products, brands, retailer ratings, prices, product availability, materials, certifications, benefits, efficacy or medical claims. Preserve affiliate disclosure and the existing Nuvora product CTA rules. Do not write HTML, CSS, JavaScript, markdown fences, secrets or anything outside the JSON response. Keep reply concise and changes focused. If the user asks for advice only, return an empty changes array.';
         const userContext={
           page:{id:pageId,title:pageTitle,sections:[...sectionMap.values()]},
           selectedSection,brand,
@@ -3938,7 +3943,7 @@ async function runNuvoraGuardianScan(env, startedAt=Date.now(), adminId=null, au
     try{const payload=await adminResponse.json();if(payload.ok!==true)addIssue('admin','availability','high','Main admin reports an unhealthy state','The /api/health response did not report ok:true.',adminCheck.url);}
     catch(e){addIssue('admin','availability','high','Main admin health response is invalid','The health endpoint did not return valid JSON.',adminCheck.url);}
   }
-  for(const path of ['/admin','/admin/skin-studio','/admin/clothing-studio','/admin/gaming-studio','/admin/home-studio','/admin/guardian']){
+  for(const path of ['/admin','/admin/womens-fashion','/admin/skin-studio','/admin/clothing-studio','/admin/gaming-studio','/admin/home-studio','/admin/guardian']){
     const target=adminUrl+path;
     const response=await probe(target,'GET');
     const check={name:'Admin page '+path,url:target,status:response.status,ok:response.ok};
