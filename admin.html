@@ -1422,7 +1422,7 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
     <button class="skin-assistant-backdrop" type="button" aria-label="Close Nuvora AI assistant" onclick="closeSkinAssistant()"></button>
     <section class="skin-assistant-dialog" role="dialog" aria-modal="true" aria-labelledby="skinAssistantTitle">
       <header class="skin-assistant-header">
-        <div><span class="skin-assistant-kicker">NUVORA SKIN STUDIO</span><h2 id="skinAssistantTitle">Nuvora AI</h2></div>
+        <div><span class="skin-assistant-kicker">NUVORA WOMEN'S FASHION STUDIO</span><h2 id="skinAssistantTitle">Nuvora AI</h2></div>
         <button type="button" class="skin-assistant-close" aria-label="Close Nuvora AI assistant" onclick="closeSkinAssistant()">×</button>
       </header>
       <div class="skin-assistant-status-row"><span class="skin-assistant-status-dot"></span><span id="skinAssistantConnectionStatus">Checking Nuvora AI connection…</span></div>
@@ -1631,12 +1631,12 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
             <div class="field full"><label for="skinCfgGuideTemplate">Product guide layout</label><select id="skinCfgGuideTemplate"><option value="editorial">Editorial — large image and full guide</option><option value="compact">Compact — balanced image and details</option><option value="minimal">Minimal — concise product facts</option></select></div>
             <div class="field full"><label>Customer-facing guide sections</label>
               <div class="skin-guide-vis">
-                <label><input type="checkbox" id="skinShowBenefits"> Benefits</label>
+                <label><input type="checkbox" id="skinShowBenefits"> Style notes & key details</label>
                 <label><input type="checkbox" id="skinShowSkinTypes"> Style aesthetics / tags</label>
                 <label><input type="checkbox" id="skinShowConcerns"> Occasions / where to wear</label>
                 <label><input type="checkbox" id="skinShowIngredients"> Materials & fabric</label>
-                <label><input type="checkbox" id="skinShowUsage"> How to use</label>
-                <label><input type="checkbox" id="skinShowWarnings"> Warnings / avoid-if notes</label>
+                <label><input type="checkbox" id="skinShowUsage"> Fit & sizing notes</label>
+                <label><input type="checkbox" id="skinShowWarnings"> Care instructions</label>
                 <label><input type="checkbox" id="skinShowRecommendations"> Complete the look with</label>
                 <label><input type="checkbox" id="skinShowSize"> Available size / size range</label>
               </div>
@@ -1696,7 +1696,7 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
       <div class="settings-rail-label">SYSTEM</div>
       <button class="settings-rail-link" type="button" onclick="settingsJump('settings-connections',this)"><span>⌘</span>Connections</button>
       <button class="settings-rail-link" type="button" onclick="settingsJump('settings-account',this)"><span>♙</span>Admin account</button>
-      <div class="settings-rail-note"><span>✦</span><b>Your settings</b><p>Changes here apply to the main Nuvora store configuration. Skin Studio has its own storefront design settings.</p></div>
+      <div class="settings-rail-note"><span>✦</span><b>Your settings</b><p>Changes here apply to the main Nuvora store configuration. Women's Fashion Studio has its own storefront design settings.</p></div>
     </aside>
 
     <div class="settings-content">
@@ -2920,7 +2920,7 @@ async function useAmazonLink(){
       if(a.review_count!=null)captured.push('reviews');
       if(Array.isArray(a.images)&&a.images.length)captured.push(a.images.length+' images');
       const detectedStoreCategory=skinMode?skinStoreCategoryOptions().find(cat=>String(cat.slug)===inferSkinProductCategory({name:document.getElementById('pfName').value,brand:document.getElementById('pfBrand').value,description:document.getElementById('pfDescription').value,features:document.getElementById('pfFeatures').value,source_url:j.destination_url||url})):null;
-      status.textContent=!a.title&&!document.getElementById('pfName').value.trim()?'Amazon link recognized, but the page did not expose a reliable product title. Enter the exact product title manually before saving.':(skinMode?'Amazon skincare link recognized. Women's Fashion category assigned automatically. '+(detectedStoreCategory?'Suggested storefront category: '+detectedStoreCategory.name+'. This is inferred from listing details and can be overridden in Skin Studio. ':'No reliable product type detected yet; it will use Other Beauty Finds until you review the product details. '):'Amazon link recognized. ')+'ASIN '+j.asin+' detected. '+(captured.length?'Automatically captured: '+captured.join(' · ')+'. ':'')+'Review available details and save as a draft.';
+      status.textContent=!a.title&&!document.getElementById('pfName').value.trim()?'Amazon link recognized, but the page did not expose a reliable product title. Enter the exact product title manually before saving.':(skinMode?'Amazon fashion link recognized. Women's Fashion category assigned automatically. '+(detectedStoreCategory?'Suggested storefront category: '+detectedStoreCategory.name+'. This is inferred from listing details and can be overridden in Skin Studio. ':'No reliable product type detected yet; it will use Other Beauty Finds until you review the product details. '):'Amazon link recognized. ')+'ASIN '+j.asin+' detected. '+(captured.length?'Automatically captured: '+captured.join(' · ')+'. ':'')+'Review available details and save as a draft.';
       if(skinMode&&!j.duplicate&&document.getElementById('pfName').value.trim())await generateSkinProductWithGemini(j.destination_url||url,{auto:true});
     }
   }catch(e){
@@ -3717,61 +3717,61 @@ let skinBuilderConfig=null,skinDragSectionIndex=null,skinSiteConfigLoaded=false,
 let skinAssistantHistory=[],skinAssistantPendingChanges=[],skinAssistantLastPrompt='';
 let skinStudioUndoStack=[],skinStudioRedoStack=[],skinStudioHistoryLastCapture=0,skinStudioHistoryApplying=false,skinSitePublishInProgress=false;
 const defaultSkinSiteConfig=()=>({
-  version:8,homeLayoutVersion:2,template:'soft-editorial',accentColor:'#66745f',
-  designSettings:{backgroundColor:'#f7f4ee',surfaceColor:'#fffdf9',textColor:'#342f2b',mutedColor:'#77756c',borderColor:'#e4dfd5',successColor:'#3d7d57',errorColor:'#b24b42',saleColor:'#c77d5b',headingFont:'Playfair Display',bodyFont:'DM Sans',pageMaxWidth:1180,sideGutters:24,sectionSpacing:64,gridGap:22,cornerRadius:14,shadowStyle:'soft',productImageRatio:'4:5',productHoverEffect:'none'},
-  announcement:'THOUGHTFUL FINDS FOR YOUR EVERYDAY ROUTINE · MADE SIMPLE',
-  brandName:'nuvora',brandSuffix:'skin',headerTagline:'YOUR EVERYDAY SKIN EDIT',
-  announcementAside:'A LITTLE MORE CONSIDERED',headerCtaLabel:'Explore the edit',
+  version:10,homeLayoutVersion:4,template:'soft-editorial',accentColor:'#8a4358',
+  designSettings:{backgroundColor:'#f8f4ef',surfaceColor:'#ffffff',textColor:'#292321',mutedColor:'#786d68',borderColor:'#e8ded8',successColor:'#55765d',errorColor:'#a34c53',saleColor:'#bd7d44',headingFont:'Playfair Display',bodyFont:'DM Sans',pageMaxWidth:1200,sideGutters:32,sectionSpacing:76,gridGap:22,cornerRadius:6,shadowStyle:'soft',productImageRatio:'4:5',productHoverEffect:'lift'},
+  announcement:'Fresh outfits, new-season finds and the finishing touches. Explore the Nuvora women’s fashion edit.',
+  brandName:'nuvora',brandSuffix:"women's fashion",headerTagline:"THE WOMEN'S FASHION EDIT",
+  announcementAside:'THE NUVORA STYLE EDIT',headerCtaLabel:'Explore the edit',
   showSearch:true,showSaved:true,showHeaderCta:true,
   navigationItems:[
    {id:'home',label:'Home',url:'/',visible:true},
-   {id:'shop',label:'Shop',url:'/shop',visible:true},
-   {id:'concerns',label:'Skin Concerns',url:'/shop?q=skin+concerns',visible:true},
+   {id:'shop',label:'Shop all',url:'/shop',visible:true},
+   {id:'style',label:'Shop by style',url:'/style-finder',visible:true},
    {id:'brands',label:'Brands',url:'/brands',visible:true},
-   {id:'guides',label:'Guides',url:'/journal',visible:true}
+   {id:'journal',label:'Style journal',url:'/journal',visible:true}
   ],
-  footerIntro:'Skincare feels less complicated when you know what to look for. We collect approachable finds and thoughtful notes to help you browse with more intention.',
-  footerStamp:'A little care, every day.',footerExploreHeading:'Explore',footerReadHeading:'Read',
+  footerIntro:'A women’s fashion destination for outfit inspiration, thoughtful product discovery and standout everyday finds.',
+  footerStamp:'A more considered fashion edit.',footerExploreHeading:'Explore',footerReadHeading:'Read',
   footerExploreLinks:[
-   {id:'shop-skincare',label:'Shop skincare',url:'/shop',visible:true},
-   {id:'sun-care',label:'Sun care',url:'/shop?category=Protect',visible:true},
-   {id:'saved-picks',label:'Saved picks',url:'/saved',visible:true}
+   {id:'shop-fashion',label:"Shop women's fashion",url:'/shop',visible:true},
+   {id:'clothing',label:'Clothing',url:'/shop?category=Clothing',visible:true},
+   {id:'shoes',label:'Shoes',url:'/shop?category=Shoes',visible:true},
+   {id:'bags',label:'Bags & accessories',url:'/shop?category=Accessories',visible:true},
+   {id:'saved-picks',label:'Saved finds',url:'/saved',visible:true}
   ],
   footerReadLinks:[
-   {id:'morning-routine',label:'A simple morning skincare routine',url:'/journal/simple-morning-routine',visible:true},
-   {id:'layering',label:'How to layer skincare without overcomplicating it',url:'/journal/how-to-layer-skincare',visible:true},
-   {id:'moisturizer',label:'Choosing a moisturizer for your routine',url:'/journal/choosing-a-moisturizer',visible:true},
-   {id:'all-notes',label:'All journal notes',url:'/journal',visible:true}
+   {id:'wardrobe',label:'Build a wardrobe that works harder',url:'/journal/build-a-wardrobe-that-works',visible:true},
+   {id:'fit',label:'How to find a fit that feels right',url:'/journal/how-to-find-your-fit',visible:true},
+   {id:'outfit',label:'Style one piece three ways',url:'/journal/style-one-piece-three-ways',visible:true},
+   {id:'all-notes',label:'All style notes',url:'/journal',visible:true}
   ],
   footerNoteHeading:'Our note to you',
-  footerNoteBody:'Product information and prices can change. Always check the retailer’s current listing, ingredients, directions, seller and availability before purchasing.',
-  footerBottomTagline:'Thoughtful finds, no perfect-routine pressure.',
-  footerCopyright:'Nuvora Women',
-  shopEyebrow:'THE NUVORA EDIT',shopHeadline:'Find your next',shopHeadlineEmphasis:'everyday essential.',
-  shopDescription:'A considered starting point for comparing cleansers, serums, moisturizers, SPF and little extras. Product details can change, so always check the live retailer page.',
-  journalEyebrow:'THE NUVORA SKIN JOURNAL',journalHeadline:'Small notes for',journalHeadlineEmphasis:'everyday care.',
-  journalDescription:'Approachable guides to product labels, routine steps, and the details worth checking before you buy.',
+  footerNoteBody:'Product details, sizing, prices and availability can change. Check the retailer’s current listing for measurements, fabric, seller and availability before purchasing.',
+  footerBottomTagline:'Good finds. Better details. Your kind of style.',
+  footerCopyright:"Nuvora Women's Fashion",
+  shopEyebrow:"THE NUVORA WOMEN'S FASHION EDIT",shopHeadline:'Find your next',shopHeadlineEmphasis:'favourite look.',
+  shopDescription:'Explore dresses, everyday clothing, shoes, handbags, jewellery and accessories. Browse by category, style, occasion or brand, then check fit and product details before purchasing.',
+  journalEyebrow:'THE NUVORA STYLE JOURNAL',journalHeadline:'Notes for',journalHeadlineEmphasis:'better outfits.',
+  journalDescription:'Practical style notes, outfit inspiration and useful details on sizing, fit, materials and accessories.',
   savedEyebrow:'YOUR PERSONAL SHORTLIST',savedHeadline:'Good finds,',savedHeadlineEmphasis:'kept close.',
-  savedDescription:'Save a few ideas while you compare. Your shortlist stays in this browser.',
-  heroEyebrow:'The everyday skin edit',heroTitle:'Care that feels like you.',
-  heroDescription:'Skincare and beauty finds, thoughtfully collected for real routines. Explore useful essentials without the overwhelm.',
-  heroImage:'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1800&q=85',
-  heroButtonLabel:'Explore the edit',approachEyebrow:'A gentler way to discover',
-  approachTitle:'Good finds. Clear choices.',
-  approachBody:'Nuvora Women is a focused corner of Nuvora for skincare and beauty discoveries. We aim to make browsing simpler with clear product details and direct links to the retailer. Always check the retailer’s ingredient list, product directions, and suitability for your own skin before buying.',
-  footerNote:'Affiliate disclosure: Some links may be affiliate links. If you buy through them, Nuvora may earn a commission at no extra cost to you. Retailer prices, availability, ingredients, and product claims can change; confirm details on the retailer’s site.',
+  savedDescription:'Keep the pieces you are considering in one place while you compare styles, sizes and retailer details.',
+  heroEyebrow:"NUVORA WOMEN'S FASHION / THE STYLE EDIT",heroTitle:'Style with a point of view.',
+  heroDescription:'Discover clothing, shoes, bags, jewellery and accessories. Explore outfit inspiration and find the pieces that feel like you.',
+  heroImage:'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1800&q=85',
+  heroButtonLabel:'Shop the edit',approachEyebrow:'THE EVERYDAY STYLE EDIT',
+  approachTitle:'A wardrobe that feels like you.',
+  approachBody:'Build your own kind of style with versatile clothing, well-chosen footwear, bags and personal finishing touches. Explore fit, fabric and retailer details before you decide.',
+  footerNote:'Affiliate disclosure: Some links may be affiliate links. If you buy through them, Nuvora may earn a commission at no extra cost to you. Product information, retailer prices, availability and sizing can change; confirm current details on the retailer’s site.',
   productGuideTemplate:'editorial',
-  productGuideFields:{benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true,size:true},
-  customCategories:[],
-  productCategoryMap:{},
-  pages:[],
+  productGuideFields:{overview:true,styleNotes:true,styles:true,occasions:true,materials:true,fit:true,care:true,recommendations:true,size:true,brand:true,retailer:true},
+  customCategories:[],productCategoryMap:{},pages:[],
   sections:[
-    {id:'hero',type:'hero',visible:true,title:'Skincare, without the noise.',eyebrow:'THE NUVORA SKIN EDIT',text:'Explore product details, ingredients, skin guidance and retailer links before you decide.',image:'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?auto=format&fit=crop&w=1800&q=85',buttonLabel:'Explore products',buttonHref:'/shop'},
-    {id:'home-categories',type:'category-grid',visible:true,title:'Shop by category',eyebrow:'FIND WHAT YOU NEED',text:'Browse product types and discover the details behind each pick.'},
-    {id:'best-sellers',type:'featured-products',visible:true,title:'Best sellers',eyebrow:'THE NUVORA EDIT',text:'Explore published products and open each guide for the full details.',filter:'all',columns:5,productsPerPage:8,product_ids:[]},
-    {id:'skin-concerns',type:'concern-grid',visible:true,title:'Explore by concern',eyebrow:'A ROUTINE THAT STARTS WITH YOU',text:'Use these topics to discover relevant product guides.',itemsText:'Acne & Blemishes\\nAnti-Aging\\nDryness & Dehydration\\nRedness & Sensitivity\\nDark Spots & Hyperpigmentation\\nLarge Pores\\nUneven Skin Tone\\nDullness & Glow'},
-    {id:'skin-guide-banner',type:'quiz-banner',visible:true,title:'Explore your skin goals',eyebrow:'NOT SURE WHERE TO START?',text:'Browse helpful guides and product details at your own pace.',image:'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=85',buttonLabel:'Explore concerns',buttonHref:'/shop?q=skin+concerns'},
-    {id:'journal',type:'journal-grid',visible:true,title:'Featured guides',eyebrow:'THE JOURNAL',text:'Useful notes for comparing products and understanding everyday care.',columns:4,product_ids:[]}
+    {id:'hero',type:'hero',visible:true,title:'Style with a point of view.',eyebrow:"NUVORA WOMEN'S FASHION / THE STYLE EDIT",text:'Discover clothing, shoes, bags, jewellery and accessories. Explore outfit inspiration and find the pieces that feel like you.',image:'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1800&q=85',buttonLabel:'Shop the edit',buttonHref:'/shop'},
+    {id:'home-categories',type:'category-grid',visible:true,title:'Find your next favourite.',eyebrow:'THE EDIT, SORTED YOUR WAY',text:'Explore clothing, footwear, bags, jewellery and the finishing touches.'},
+    {id:'best-sellers',type:'featured-products',visible:true,title:'The pieces worth a closer look.',eyebrow:'CURATED FOR THE EVERYDAY',text:'A considered edit of clothes, shoes, bags and accessories.',filter:'all',columns:4,productsPerPage:8,product_ids:[]},
+    {id:'style-moods',type:'concern-grid',visible:true,title:'Find a look for the moment.',eyebrow:'YOUR STYLE, YOUR WAY',text:'From everyday casual to date night and special occasions.',itemsText:'Everyday casual\\nWork & office\\nDate night\\nOccasion & event\\nMinimalist\\nStreetwear\\nElegant\\nOld money'},
+    {id:'style-finder',type:'quiz-banner',visible:true,title:'A better fashion edit starts with you.',eyebrow:'NOT SURE WHERE TO START?',text:'Answer a few quick questions about your style, occasion and fit preferences.',image:'',buttonLabel:'Find your style',buttonHref:'/style-finder'},
+    {id:'style-journal',type:'journal-grid',visible:true,title:'Notes for better outfits.',eyebrow:'THE NUVORA STYLE JOURNAL',text:'Practical style notes, outfit inspiration and useful details worth knowing.',columns:3,product_ids:[]}
   ]
 });
 function mergeSkinSiteConfig(raw){
@@ -3885,7 +3885,7 @@ function mergeSkinSiteConfig(raw){
   image:String(x.image||'').slice(0,1600)
  })):Array.isArray(base.customCategories)?base.customCategories:[];
  const mapping=src.productCategoryMap&&typeof src.productCategoryMap==='object'&&!Array.isArray(src.productCategoryMap)?src.productCategoryMap:{};
- const categoryAliases={cleanse:'cleansers-makeup-removers',treat:'serums-treatments',hydrate:'moisturisers-barrier-care',protect:'sunscreen-spf','body-lips':'body-care'};
+ const categoryAliases={tops:'tops-blouses',bottoms:'trousers-jeans',sets:'co-ords-matching-sets',onepiece:'jumpsuits-playsuits',outerwear:'jackets-coats',bags:'handbags',jewelry:'jewellery',accessories:'fashion-accessories'};
  cfg.productCategoryMap={};
  Object.entries(mapping).slice(0,500).forEach(([id,category])=>{if(id.length<=100&&String(category||'').length<=100){const value=String(category||'');cfg.productCategoryMap[id]=categoryAliases[value]||value;}});
  cfg.version=7;
@@ -3904,7 +3904,7 @@ function mergeSkinSiteConfig(raw){
  cfg.designSettings.shadowStyle=['none','soft','strong'].includes(rawDesign.shadowStyle)?rawDesign.shadowStyle:designDefaults.shadowStyle;
  cfg.designSettings.productImageRatio=['square','4:5','landscape','natural'].includes(rawDesign.productImageRatio)?rawDesign.productImageRatio:designDefaults.productImageRatio;
  cfg.designSettings.productHoverEffect=['none','zoom','second-image'].includes(rawDesign.productHoverEffect)?rawDesign.productHoverEffect:designDefaults.productHoverEffect;
- const guideDefaults={benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true,size:true};
+ const guideDefaults={overview:true,styleNotes:true,styles:true,occasions:true,materials:true,fit:true,care:true,recommendations:true,size:true,brand:true,retailer:true};
  cfg.productGuideFields={...guideDefaults,...(src.productGuideFields&&typeof src.productGuideFields==='object'?src.productGuideFields:{})};
  Object.keys(guideDefaults).forEach(key=>cfg.productGuideFields[key]=cfg.productGuideFields[key]!==false);
  return cfg;
@@ -3971,7 +3971,7 @@ function restoreSkinStudioRecoveryIfAvailable(){
  if(!recovery?.config||typeof recovery.config!=='object')return false;
  if(stableSkinJson(mergeSkinSiteConfig(recovery.config))===stableSkinJson(mergeSkinSiteConfig(skinBuilderConfig))){clearSkinStudioRecovery();return false;}
  const when=recovery.savedAt?new Date(recovery.savedAt).toLocaleString():'an earlier session';
- if(!confirm('Skin Studio found unsaved local recovery edits from '+when+'. Restore them into the private draft? The published storefront will not change.'))return false;
+ if(!confirm('Women's Fashion Studio found unsaved local recovery edits from '+when+'. Restore them into the private draft? The published storefront will not change.'))return false;
  skinBuilderConfig=mergeSkinSiteConfig(recovery.config);
  skinStudioPageId=recovery.pageId||'home';
  skinStudioSelection=recovery.selection||{type:'section',id:skinSectionsFor(recovery.pageId||'home')[0]?.id||''};
@@ -4089,7 +4089,7 @@ function fillSkinConfigFields(){
  const toggles={skinCfgShowSearch:'showSearch',skinCfgShowSaved:'showSaved',skinCfgShowHeaderCta:'showHeaderCta'};
  Object.entries(toggles).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=c[key]!==false;});
  renderSkinSiteLinkEditor('navigationItems');renderSkinSiteLinkEditor('footerExploreLinks');renderSkinSiteLinkEditor('footerReadLinks');
- const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations',skinShowSize:'size'};
+ const guides={skinShowBenefits:'styleNotes',skinShowSkinTypes:'styles',skinShowConcerns:'occasions',skinShowIngredients:'materials',skinShowUsage:'fit',skinShowWarnings:'care',skinShowRecommendations:'recommendations',skinShowSize:'size'};
  Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.checked=c.productGuideFields[key]!==false;});
  const pageExists=skinStudioPageId==='home'||!!skinCurrentPage(skinStudioPageId);
  if(!pageExists)skinStudioPageId='home';
@@ -4112,7 +4112,7 @@ function collectSkinConfigFields(){
  Object.entries(designMap).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig.designSettings[key]=numericDesignKeys.has(key)?Number(el.value):el.value;});
  const toggles={skinCfgShowSearch:'showSearch',skinCfgShowSaved:'showSaved',skinCfgShowHeaderCta:'showHeaderCta'};
  Object.entries(toggles).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig[key]=!!el.checked;});
- const guides={skinShowBenefits:'benefits',skinShowSkinTypes:'skinTypes',skinShowConcerns:'concerns',skinShowIngredients:'ingredients',skinShowUsage:'usage',skinShowWarnings:'warnings',skinShowRecommendations:'recommendations',skinShowSize:'size'};
+ const guides={skinShowBenefits:'styleNotes',skinShowSkinTypes:'styles',skinShowConcerns:'occasions',skinShowIngredients:'materials',skinShowUsage:'fit',skinShowWarnings:'care',skinShowRecommendations:'recommendations',skinShowSize:'size'};
  skinBuilderConfig.productGuideFields=skinBuilderConfig.productGuideFields||{};
  Object.entries(guides).forEach(([id,key])=>{const el=document.getElementById(id);if(el)skinBuilderConfig.productGuideFields[key]=!!el.checked;});
  const hero=skinBuilderConfig.sections.find(x=>x.type==='hero');
@@ -4529,7 +4529,7 @@ function renderSkinLibrary(){
 function renderSkinBuilderSections(){
  const root=document.getElementById('skinBuilderSections');if(!root||!skinBuilderConfig)return;
  const sections=skinSectionsFor();
- const typeLabels={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Best sellers','category-grid':'Category browse', 'concern-grid':'Occasions','quiz-banner':'Editorial banner','journal-grid':'Journal cards','routine-finder':'Skin routine finder','image-block':'Image block','text-block':'Text block','brand-grid':'Brand directory'};
+ const typeLabels={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Best sellers','category-grid':'Category browse', 'concern-grid':'Occasions','quiz-banner':'Editorial banner','journal-grid':'Journal cards','routine-finder':'Outfit planner','image-block':'Image block','text-block':'Text block','brand-grid':'Brand directory'};
  const needle=String(window.skinStudioSectionSearch||'').trim().toLowerCase();
  const headerItems='<button type="button" class="studio-outline-global-item" data-search="announcement bar header" onclick="openSkinStudioGlobalSettings(\'header\')"><span class="studio-outline-global-icon">▤</span><span><b>Announcement bar</b></span><span class="studio-outline-chevron">›</span></button>'+
   '<button type="button" class="studio-outline-global-item" data-search="header logo navigation menu" onclick="openSkinStudioGlobalSettings(\'header\')"><span class="studio-outline-global-icon">☷</span><span><b>Header</b></span><span class="studio-outline-chevron">›</span></button>';
@@ -4593,12 +4593,12 @@ function renderSkinSelectedInspector(){
  if(selection.type==='section'){
   const index=sections.findIndex(s=>String(s.id)===String(selection.id)),sec=sections[index];
   if(!sec){setHead('Select an item','');root.innerHTML='<div class="studio-empty-inspector"><span>↖</span><b>Choose something to edit</b></div>';return;}
-  const types={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Best sellers','category-grid':'Category browse', 'concern-grid':'Occasions','quiz-banner':'Editorial banner','journal-grid':'Journal cards','routine-finder':'Skin routine finder','image-block':'Image block','text-block':'Text block','brand-grid':'Brand directory'};
+  const types={hero:'Hero section','product-grid':'Product grid',editorial:'Image & text','featured-products':'Best sellers','category-grid':'Category browse', 'concern-grid':'Occasions','quiz-banner':'Editorial banner','journal-grid':'Journal cards','routine-finder':'Outfit planner','image-block':'Image block','text-block':'Text block','brand-grid':'Brand directory'};
   const field=(label,key,value,kind='text',max='180')=>'<label class="studio-inspector-field"><span>'+label+'</span>'+(kind==='textarea'?'<textarea maxlength="'+max+'" oninput="updateSkinSection('+index+',\''+key+'\',this.value)">'+esc(value||'')+'</textarea>':'<input type="'+kind+'" maxlength="'+(kind==='color'?'7':max)+'" value="'+esc(value||'')+'" oninput="updateSkinSection('+index+',\''+key+'\',this.value)">')+'</label>';
   let html='<label class="studio-inspector-field"><span>Section type</span><select onchange="updateSkinSection('+index+',\'type\',this.value)">'+Object.entries(types).map(([val,label])=>'<option value="'+val+'" '+(sec.type===val?'selected':'')+'>'+label+'</option>').join('')+'</select></label>';
   html+='<div class="studio-inspector-subheading">Content</div>';
   html+=field('Section title','title',sec.title,'text','180')+field('Small heading / eyebrow','eyebrow',sec.eyebrow,'text','100')+field('Supporting text','text',sec.text,'textarea','3000');
-  if(sec.type==='concern-grid')html+=field('Concern topics · one per line','itemsText',sec.itemsText||'Acne & Blemishes\nAnti-Aging\nDryness & Dehydration\nRedness & Sensitivity\nDark Spots & Hyperpigmentation\nLarge Pores\nUneven Skin Tone\nDullness & Glow','textarea','2000');
+  if(sec.type==='concern-grid')html+=field('Style and occasion labels · one per line','itemsText',sec.itemsText||'Acne & Blemishes\nAnti-Aging\nDryness & Dehydration\nRedness & Sensitivity\nDark Spots & Hyperpigmentation\nLarge Pores\nUneven Skin Tone\nDullness & Glow','textarea','2000');
   if(['hero','editorial','quiz-banner'].includes(sec.type)){
    html+=field('Primary button label','buttonLabel',sec.buttonLabel||'','text','80')+field('Primary button destination · internal path','buttonHref',sec.buttonHref||'','text','1600');
    html+=field('Secondary button label','secondaryButtonLabel',sec.secondaryButtonLabel||'','text','80')+field('Secondary button destination · internal path','secondaryButtonHref',sec.secondaryButtonHref||'','text','1600');
@@ -5234,7 +5234,7 @@ function skinProductsForSection(sec){
    const storeSlugs=new Set(skinStoreCategoryOptions().flatMap(cat=>[String(cat.slug||''),String(cat.id||'')]).filter(Boolean));
    const assigned=mapped||(storeSlugs.has(rawCategory)?rawCategory:'');
    // Explicit Skin Studio category assignment wins. Database taxonomy IDs that are not
-   // Skin Studio slugs do not block the skincare-specific inferred category.
+   // Skin Studio slugs do not block the fashion-category inference.
    return assigned?assigned===custom:inferSkinProductCategory(p)===custom;
   });
  }
@@ -5252,7 +5252,7 @@ function addSkinProductToSection(productId,targetId,pageId){
  for(const preferredId of preferredIds){const candidate=sections.find(s=>String(s.id)===String(preferredId));if(candidate&&candidate.visible!==false&&!candidate.locked&&['product-grid','featured-products'].includes(candidate.type)){sec=candidate;break;}}
  if(!sec)sec=sections.find(s=>s.visible!==false&&!s.locked&&['product-grid','featured-products'].includes(s.type));
  if(!sec){
-  sec={id:'section-'+crypto.randomUUID(),type:'product-grid',visible:true,title:'New skincare picks',eyebrow:'The edit',text:'',filter:'all',columns:3,product_ids:[]};
+  sec={id:'section-'+crypto.randomUUID(),type:'product-grid',visible:true,title:'New fashion finds',eyebrow:'The edit',text:'',filter:'all',columns:3,product_ids:[]};
   const anchorId=preferredIds[0]||preferredIds[1],anchorIndex=sections.findIndex(s=>String(s.id)===String(anchorId));
   const heroIndex=sections.findIndex(s=>s.type==='hero');
   const insertAt=anchorIndex>=0?anchorIndex+1:(heroIndex>=0?heroIndex+1:sections.length);
