@@ -3632,7 +3632,7 @@ async function signInWithGoogle(){
   try{
     document.getElementById('googleSignIn').disabled=true;
     document.getElementById('googleSignIn').textContent='Opening Google…';
-    const redirectPath=/^\/admin\/skin-studio\/?$/.test(window.location.pathname)?window.location.pathname:'/admin.html';
+    const redirectPath=/^\/admin\/(?:skin-studio|womens-fashion)\/?$/.test(window.location.pathname)?window.location.pathname:'/admin.html';
     const redirectTo=new URL(redirectPath,window.location.origin).href;
     const {error}=await adminSB.auth.signInWithOAuth({provider:'google',options:{redirectTo,queryParams:{prompt:'select_account'}}});
     if(error)throw error;
@@ -3643,7 +3643,7 @@ async function signInWithGoogle(){
   }
 }
 async function adminBoot(){
-  const isSkinStudioRoute=/^\/admin\/skin-studio\/?$/.test(location.pathname);
+  const isSkinStudioRoute=/^\/admin\/(?:skin-studio|womens-fashion)\/?$/.test(location.pathname);
   if(isSkinStudioRoute){
     document.body.classList.add('skin-studio-fullpage');
     if(window.matchMedia('(max-width:760px)').matches){
