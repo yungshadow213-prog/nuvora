@@ -1377,7 +1377,7 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
         <button class="btn" onclick="window.location.href='/admin/skin-studio'">Open editor ↗</button>
       </div>
     </div>
-    <div class="skin-studio-mark" aria-hidden="true"><span>NUVORA</span><b>SKIN</b><i>Style, considered.</i></div>
+    <div class="skin-studio-mark" aria-hidden="true"><span>NUVORA</span><b>WOMEN</b><i>Style, considered.</i></div>
   </div>
 
   <div class="skin-studio-stats">
@@ -1391,7 +1391,7 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
   <header class="studio-toolbar">
     <div class="studio-brandline">
       <a class="studio-back" href="/admin" aria-label="Back to Nuvora admin">←</a>
-      <div><span class="studio-overline">NUVORA SKIN</span><div class="studio-page-line">Nuvora Women <span>/</span> <select id="skinStudioPageSelect" aria-label="Choose page to edit" onchange="setSkinStudioPage(this.value)"><option value="home">Home page</option></select></div></div>
+      <div><span class="studio-overline">NUVORA WOMEN'S FASHION</span><div class="studio-page-line">Nuvora Women <span>/</span> <select id="skinStudioPageSelect" aria-label="Choose page to edit" onchange="setSkinStudioPage(this.value)"><option value="home">Home page</option></select></div></div>
     </div>
     <div class="studio-toolbar-actions">
       <div class="studio-view-controls" role="group" aria-label="Preview workspace layout">
@@ -2018,18 +2018,25 @@ function renderSkinProducts(){
   el.innerHTML=rows.map(p=>{const dest=retailerDestination(p),label=retailerLabel(p);return '<div class="row"><div><b>'+esc(p.name)+'</b><div class="muted">'+esc(p.kind)+' · '+(p.published?'Published':'Draft')+' · '+esc(label)+'</div></div><div style="display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end"><span class="tag">'+(p.published?'Published':'Draft')+'</span>'+(dest?'<button class="btn" type="button" onclick="openRetailerLink('+esc(JSON.stringify(dest))+')">Open '+esc(label)+'</button>':'')+'<button class="btn" type="button" onclick="quickEditProduct('+esc(JSON.stringify(String(p.id)))+')">Quick edit</button><button class="btn" type="button" onclick="editSkinProduct('+esc(JSON.stringify(String(p.id)))+')">Full editor</button><button class="btn" type="button" data-product-publish="'+esc(String(p.id))+'" onclick="togglePublish('+esc(JSON.stringify(String(p.id)))+')">'+(p.published?'Unpublish':'Publish')+'</button><button class="btn danger" type="button" onclick="removeProduct('+esc(JSON.stringify(String(p.id)))+')">Delete</button></div></div>';}).join('');
 }
 async function ensureSkinCategory(openForm=false){
-  try{
-    await loadCategories();
-    let cat=categories.find(x=>/^(womens-fashion|skincare|beauty)$/i.test(String(x.slug||''))||/skin care|skincare/i.test(String(x.name||'')));
-    if(!cat){
-      cat=await api('/api/admin/categories',{method:'POST',body:{name:'Women's Fashion',slug:'womens-fashion',description:'Skincare and beauty finds curated for the Nuvora Women storefront.'}});
-      await loadCategories();
-      cat=categories.find(x=>String(x.slug||'')==='womens-fashion')||cat;
-    }
-    setAdminStatus('Women's Fashion category is ready.');
-    if(openForm){openProductModal(false);document.getElementById('pfKind').value='shop';document.getElementById('pfCategory').value=cat.id;document.getElementById('pfSource').value='amazon';document.getElementById('pfRetailer').value='Amazon';document.getElementById('productModalTitle').textContent='Add women's fashion product';document.getElementById('productModalSub').textContent='This product will be routed to the Nuvora Women storefront.';}
-    renderSkinProducts();return cat;
-  }catch(e){setAdminStatus('Could not set up Women's Fashion: '+(e.message||e));throw e;}
+ try{
+  await loadCategories();
+  let cat=categories.find(x=>String(x.slug||'').toLowerCase()==='womens-fashion'||String(x.name||'').toLowerCase()==="women's fashion");
+  if(!cat){
+   cat=await api('/api/admin/categories',{method:'POST',body:{name:"Women's Fashion",slug:'womens-fashion',description:"Women's clothing, footwear, bags and accessories curated for Nuvora Women's Fashion."}});
+   await loadCategories();
+   cat=categories.find(x=>String(x.slug||'')==='womens-fashion')||cat;
+  }
+  setAdminStatus("Women's Fashion category is ready.");
+  if(openForm){
+   openProductModal(false);document.getElementById('pfKind').value='find';
+   document.getElementById('pfCategory').value=cat.id;
+   document.getElementById('pfSource').value='amazon';
+   document.getElementById('pfRetailer').value='Amazon';
+   document.getElementById('productModalTitle').textContent="Add women's fashion product";
+   document.getElementById('productModalSub').textContent="This product will be routed to the Nuvora Women's Fashion storefront.";
+  }
+  renderSkinProducts();return cat;
+ }catch(e){setAdminStatus("Could not set up Women's Fashion: "+(e.message||e));throw e;}
 }
 async function openSkinProduct(){
  try{
@@ -2042,7 +2049,7 @@ async function openSkinProduct(){
   if(document.getElementById('pfProductType'))document.getElementById('pfProductType').value='';
   document.getElementById('productModalTitle').textContent='Import women's fashion product';
   document.getElementById('productModalSub').textContent='';
-  document.getElementById('amazonUrlInput').placeholder='Paste an Amazon women's fashion product or affiliate link';
+  document.getElementById('amazonUrlInput').placeholder='Paste a retailer product URL (Amazon import is supported where configured)';
   const saveButton=document.getElementById('productSaveBtn');if(saveButton)saveButton.textContent='Save fashion draft';
   populateSkinRecommendations();
  }catch(e){
@@ -3007,7 +3014,7 @@ async function saveProductDraft(){
     supplier_cost:document.getElementById('pfSupplierCost').value===''?null:Number(document.getElementById('pfSupplierCost').value),
     published:window.editingProductId?!!adminProducts.find(x=>String(x.id)===String(window.editingProductId))?.published:false
   };
-  if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer='Amazon';product.store_description=normalizeProductText(document.getElementById('pfStoreDescription')?.value)||null;}
+  if(window.skinCareImportMode){product.why_we_picked_it=product.benefits;product.best_for=product.skin_types;product.retailer=document.getElementById('pfRetailer').value.trim()||'Retailer';product.store_description=normalizeProductText(document.getElementById('pfStoreDescription')?.value)||null;}
   try{
     const existingId=window.editingProductId||null;
     const existing=existingId?adminProducts.find(x=>String(x.id)===String(existingId)):null;
@@ -4171,7 +4178,7 @@ async function loadSkinSiteConfig(){
    if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
    void saveSkinStudioChangeImmediately(homeLayoutMigration.removedRoutine?'Routine finder removed and home layout saved as a draft.':'Home layout reorganized and saved as a draft.');
   }else if(!recoveredLocalEdits){
-   skinBuilderMessage(skinSiteDraftExists?'Your saved draft is loaded. It is private and will not affect the live storefront until you publish.':'The published site settings are loaded. Save a draft to keep your work private, or publish when you are ready.','success');
+   skinBuilderMessage(skinSiteDraftExists?'Your saved draft is loaded. It is private and will not affect the live storefront until you publish.':'The published fashion storefront settings are loaded. Save a draft to keep your work private, or publish when you are ready.','success');
    if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
   }else{
    if(document.body.classList.contains('skin-studio-fullpage'))refreshSkinStudioPreview();
@@ -5914,8 +5921,8 @@ function setSkinAdminFormMode(enabled){
  hideIds.forEach(id=>{const el=document.getElementById(id),field=el?.closest('.field');if(field)field.style.display=(enabled||priceIds.includes(id))?'none':'';});
  const discover=document.getElementById('amazonSearchUrlInput')?.closest('.importbar');if(discover)discover.style.display=enabled?'none':'';
  const discoveryStatus=document.getElementById('amazonDiscoveryStatus');if(discoveryStatus)discoveryStatus.style.display=enabled?'none':'';
- const sourceField=document.getElementById('pfSource');if(sourceField&&enabled)sourceField.value='amazon';
- const retailer=document.getElementById('pfRetailer');if(retailer){retailer.readOnly=!!enabled;if(enabled)retailer.value='Amazon';}
+ const sourceField=document.getElementById('pfSource');if(sourceField&&enabled&&!sourceField.value)sourceField.value='amazon';
+ const retailer=document.getElementById('pfRetailer');if(retailer){retailer.readOnly=false;if(enabled&&!retailer.value)retailer.value='Amazon';}
  document.querySelectorAll('.skin-only-field').forEach(el=>el.style.display=enabled?'':'none');
  const publishButton=document.getElementById('skinProductPublishBtn');if(publishButton)publishButton.style.display=enabled?'inline-flex':'none';
  if(enabled)refreshGeminiConfigStatus();
