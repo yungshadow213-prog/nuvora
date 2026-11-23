@@ -1,77 +1,59 @@
-# Nuvora
+# Nuvora Women’s Fashion
 
-Nuvora is a multi-storefront platform with a shared admin system, separate storefront experiences and Supabase-backed catalogue data.
+Nuvora is now a women’s fashion discovery and affiliate storefront. It helps visitors discover clothing, shoes, handbags, jewellery and accessories through curated categories, outfit inspiration, product guides and comparisons.
 
-## Nuvora Women's Fashion
+The storefront is served at **`/fashion`**. The previous **`/beauty`** route redirects to the new fashion route. The fashion editor is available at **`/admin/womens-fashion`** inside the existing Nuvora Admin.
 
-The former Skin Care Studio has been repurposed as **Nuvora Women's Fashion**. The customer-facing store and its editor are now organised around women's clothing, footwear, bags, jewellery and accessories.
+## Current catalogue reset
 
-The previous shared catalogue held 15 legacy product records. Those records were cleared to give the fashion catalogue a clean start; the customer profiles and analytics history were preserved. No other Nuvora storefront repositories were modified.
+The live product catalogue is currently empty and ready for a fresh fashion start. The fashion category taxonomy and existing fashion collections are retained. Admin users, store settings and analytics are not part of the inventory reset.
 
-### Fashion categories
+## Fashion categories
 
-- **Clothing:** dresses, tops and blouses, shirts, trousers and jeans, skirts, co-ords, jumpsuits, knitwear, jackets and coats.
-- **Shoes:** heels, flats, sneakers, boots and sandals.
-- **Bags:** handbags, totes, crossbody and shoulder bags, clutches and evening bags.
-- **Jewellery:** jewellery and watches.
-- **Accessories:** sunglasses, belts, scarves and hair accessories.
-- **More to wear:** activewear, loungewear, sleepwear and occasionwear.
+- **Clothing:** Dresses, Tops & Blouses, Shirts, Trousers & Jeans, Skirts, Co-ords & Matching Sets, Jumpsuits & Playsuits, Knitwear, Jackets & Coats.
+- **Shoes:** Heels, Flats, Sneakers, Boots, Sandals.
+- **Bags:** Handbags, Tote & Shopper Bags, Crossbody & Shoulder Bags, Clutches & Evening Bags.
+- **Accessories:** Jewellery, Watches, Sunglasses, Belts & Scarves, Hair Accessories, Fashion Accessories.
+- **Other fashion:** Activewear, Loungewear & Sleepwear, Occasionwear.
 
-### Product guides and editor
+## Product editor
 
-Fashion product records use the existing catalogue fields for product identity, category, retailer, destination URL, materials, available sizes, fit notes, style tags, occasions, care instructions, product images and curated outfit pairings.
+The Women’s Fashion Studio is the fashion-specific product and storefront workspace within Nuvora Admin. It retains the existing visual page builder, preview, page sections, product placement, image galleries, media uploads, drafts and publish workflow.
 
-The Women's Fashion Studio retains the visual storefront builder, draft/publish workflow, category editor, product image library, product list, analytics and page sections. The full-page editor remains available through the existing admin route `/admin/skin-studio`; its visible title and category system are now Women's Fashion.
+Product records are organised around fashion details:
+- Product type and fashion category
+- Brand and retailer
+- Clothing sizes, colour options and fit
+- Fabric and material composition
+- Fit and sizing notes
+- Style tags and aesthetics
+- Occasions and outfit suggestions
+- Garment care details
+- Images, gallery, retailer destination and affiliate disclosure
 
-The product guide is designed to show product information before sending the customer to the retailer. It does not show an internal product price. The retailer CTA uses the product's exact saved destination URL, when available. Nuvora may earn a commission from qualifying purchases through affiliate links.
+## Retailer sourcing
 
-### Product sourcing and AI
+Product entry is retailer-neutral. Add a product manually or paste a supported retailer product URL for listing extraction and AI-assisted fashion categorisation where the retailer exposes readable product information. Amazon remains available as one retailer; the Amazon bulk queue is an optional Amazon-specific workflow, not a restriction on the whole catalogue.
 
-The editor supports manual product entry, image uploads, CSV drafts and retailer-link research where the retailer page can be read by the configured source importer. Amazon is optional; the fashion catalogue is not restricted to Amazon UK. Retailer links, names and product details should be reviewed before saving or publishing.
+Every imported item remains a draft until reviewed. Confirm product identity, images, retailer, material composition, size chart, garment measurements, fit, colour options, care instructions and the exact affiliate destination against the current retailer listing. Do not invent details that the source does not provide.
 
-Nuvora's text AI uses the Cloudflare Workers AI binding named `AI`. The optional Worker variable `NUVORA_AI_MODEL` selects the model; the code has a default model. No Claude or Anthropic API key is required for the fashion product assistant.
+## Storefront experiences
 
-AI-generated descriptions and classifications are proposals, not verified retailer claims. The editor should leave unsupported material composition, fabric percentages, sizes, measurements, fit claims and care instructions blank. Review product facts before saving or publishing.
+The public storefront supports:
+- Fashion discovery homepage and shop categories
+- Product guides and side-by-side product comparison
+- Style and occasion product finder
+- Style preferences saved locally in the visitor’s browser
+- Outfit builder and saved outfit edits
+- Materials guide
+- Product alternatives and recently viewed products
+- Fashion shopping assistant using published catalogue information
+- Editorial inspiration and wardrobe guides
 
-## Storefront and admin architecture
+These experiences are browsing aids. They do not guarantee a garment’s fit, sizing, quality or suitability. Shoppers should check the retailer’s current listing and measurements before purchasing.
 
-- Admin repository: `yungshadow213-prog/nuvora`
-- Customer storefront repository: `yungshadow213-prog/client-store-platform`
-- Supabase-backed published product catalogues
-- Draft and publish states for products and storefront layouts
-- Retailer links and affiliate handoff
-- Product image URLs and custom uploads through Supabase Storage
-- Bulk CSV import, with imported records kept as drafts pending review
-- Store analytics and activity events
-- SEO metadata and dynamic product title/description updates
-- Separate store experiences managed through the shared admin
+## Data and deployment
 
-The customer storefront is maintained in the separate client repository. Admin editor changes should not be used as a reason to modify that client repository beyond the explicit Nuvora storefront conversion.
+The main project uses the existing Supabase-backed Nuvora Admin and Cloudflare Worker. The worker preserves legacy internal API/database identifiers for compatibility while the user-facing product and editor experience is women’s fashion.
 
-## Supabase
-
-For a fresh database, run `backend/schema.sql`. For a database already on the previous Nuvora schema, review and run the applicable additive migration, including `backend/NUVORA-NEXT-MIGRATION.sql`.
-
-The Women's Fashion Studio reuses the existing store configuration and product fields to avoid a destructive schema replacement. Legacy internal field names and the existing Studio route remain in place for compatibility; the visible editor and customer-facing labels are fashion-oriented.
-
-Published storefront configuration is read from the existing public settings endpoint. Draft layout settings remain private until an administrator publishes them. Do not put the Supabase service-role key in frontend code, GitHub files or chat.
-
-## Amazon is optional
-
-Nuvora does not bypass Amazon Associates/Creators API requirements. If legitimate Amazon API access is not configured, use manual entry, custom image uploads, CSV import or another retailer source supported by the importer. Use only valid affiliate links and comply with each retailer's programme terms.
-
-## Run locally
-
-1. Extract the repository.
-2. Run `START-NUVORA.bat`.
-3. On the first run only, enter the Supabase service-role/secret key when prompted if it is not already saved on this PC.
-4. Nuvora starts and opens automatically.
-5. Do not open `admin.html` directly from the filesystem.
-
-The launcher stores local configuration outside the project folder at `%APPDATA%\\Nuvora\\.env`. Keep that file private. Use `OPEN-ENV.bat` for local service configuration; never commit secrets.
-
-## Experience Studio
-
-The Experience Studio is available in Nuvora Admin at `/admin/experiences`. Its customer-facing modules have been adapted for fashion discovery: product comparison, Style Finder, Fashion Finder, Outfit Planner, Materials Guide, similar finds, outfit pairings, recently viewed, fashion search, style details, saved preferences, Fashion Assistant and saved outfit edits.
-
-The Experience Studio continues to use the existing store configuration namespace internally so that the migration preserves the current admin/API and customer data architecture.
+Run the standard repository checks and confirm the Cloudflare deployment and live smoke checks before treating a GitHub change as live. A successful commit alone does not confirm a deployment.
