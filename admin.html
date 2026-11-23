@@ -1291,7 +1291,7 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
       <div class="import-step"><b>02</b><span><strong>Clean</strong><small>Navigation noise and promotional clutter are removed.</small></span></div>
       <div class="import-step"><b>03</b><span><strong>Organize</strong><small>Category, retailer and product fields are normalized.</small></span></div>
       <div class="import-step"><b>04</b><span><strong>Save</strong><small>Every successful item becomes a private draft.</small></span></div>
-      <div class="import-truth"><b>Truth-first import</b><span>Nuvora keeps product guidance factual and does not invent ingredients, benefits, directions or specifications.</span></div>
+      <div class="import-truth"><b>Truth-first import</b><span>Nuvora keeps product guidance factual and does not invent materials, sizing, fit, care instructions or specifications.</span></div>
     </aside>
   </div>
 
@@ -1634,7 +1634,7 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
                 <label><input type="checkbox" id="skinShowBenefits"> Benefits</label>
                 <label><input type="checkbox" id="skinShowSkinTypes"> Style aesthetics / tags</label>
                 <label><input type="checkbox" id="skinShowConcerns"> Occasions / where to wear</label>
-                <label><input type="checkbox" id="skinShowIngredients"> Ingredients</label>
+                <label><input type="checkbox" id="skinShowIngredients"> Materials & fabric</label>
                 <label><input type="checkbox" id="skinShowUsage"> How to use</label>
                 <label><input type="checkbox" id="skinShowWarnings"> Warnings / avoid-if notes</label>
                 <label><input type="checkbox" id="skinShowRecommendations"> Complete the look with</label>
@@ -1913,7 +1913,7 @@ body.skin-studio-fullpage .studio-toolbar-actions .btn{white-space:nowrap}
 @media(max-width:760px){body.skin-studio-fullpage .studio-layout{display:flex!important;flex-direction:column;min-height:0}body.skin-studio-fullpage .studio-left-panel,body.skin-studio-fullpage .studio-right-panel{min-height:0}body.skin-studio-fullpage .studio-canvas-viewport{min-height:620px}}
 </style>
 <style id="skin-studio-clutter-removal">body.skin-studio-fullpage #womens-fashion>.skin-studio-hero,body.skin-studio-fullpage #womens-fashion>.skin-studio-stats,body.skin-studio-fullpage #womens-fashion>.skin-studio-section-head,body.skin-studio-fullpage #womens-fashion>.skin-studio-tools{display:none!important}body.skin-studio-fullpage #womens-fashion>.skin-site-builder{margin-top:0!important}body.skin-studio-fullpage .studio-toolbar .studio-overline{display:none}</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
-const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],bulkReview:['Import Review','Review, edit and publish the products from your latest bulk discovery.'],products:['Products','Manage Shop, Finds, and Learn listings.'],'womens-fashion':['Women's Fashion','Manage the dedicated Nuvora Women skincare and beauty storefront.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['System settings','Your store identity, policies and connected services.'],backups:['Backups & recovery','Export a safe copy of Nuvora data or restore missing records.']};
+const meta={overview:['Overview','Control the store without exposing the admin to customers.'],import:['Smart Import','Paste Amazon or Temu links here. Nuvora reads, cleans, categorizes and saves drafts automatically.'],bulkReview:['Import Review','Review, edit and publish the products from your latest bulk discovery.'],products:['Products','Manage Shop, Finds, and Learn listings.'],'womens-fashion':['Women's Fashion','Manage the dedicated Nuvora women’s clothing, footwear, bags and accessories storefront.'],categories:['Categories','Organize the customer browse experience.'],collections:['Collections','Build curated groups across Nuvora.'],orders:['Orders','Commerce orders and fulfillment.'],social:['Social','Prepare and publish Nuvora content.'],analytics:['Analytics','Understand discovery and conversion.'],settings:['System settings','Your store identity, policies and connected services.'],backups:['Backups & recovery','Export a safe copy of Nuvora data or restore missing records.']};
 let adminSB=null,adminSession=null,adminUser=null,adminProducts=[],categories=[],collections=[],socialPosts=[];
 window.__nuvoraSchemaState=window.__nuvoraSchemaState||{missingProductColumns:[],productSchemaError:''};
 function validURL(value){try{const u=new URL(String(value||'').trim());return u.protocol==='http:'||u.protocol==='https:';}catch{return false;}}
@@ -2010,7 +2010,7 @@ function renderSkinProducts(){
   const put=(id,value)=>{const node=document.getElementById(id);if(node)node.textContent=String(value);};
   put('skinTotal',allRows.length);put('skinPublished',allRows.filter(p=>p.published).length);put('skinDrafts',allRows.filter(p=>!p.published).length);put('skinImages',allRows.filter(p=>Boolean(p.image_url||p.image||p.imageUrl||(Array.isArray(p.image_urls)&&p.image_urls.some(Boolean))||(Array.isArray(p.images)&&p.images.some(Boolean)))).length);
   const notice=document.getElementById('skinCategoryNotice');
-  const cat=categories.find(x=>/^(womens-fashion|skincare|beauty)$/i.test(String(x.slug||''))||/skin care|skincare/i.test(String(x.name||'')));
+  const cat=categories.find(x=>String(x.slug||'').toLowerCase()==='womens-fashion'||String(x.name||'').trim().toLowerCase()==="women's fashion");
   if(notice)notice.textContent=cat?'Women's Fashion category: '+cat.name:'Create Women's Fashion category.';
   renderSkinBuilderSections();
   if(!allRows.length){el.innerHTML='<div class="muted" style="padding:25px;text-align:center;border:1px dashed var(--line);border-radius:14px">No products yet.</div>';return;}
@@ -2271,10 +2271,11 @@ function closeSourcinBoxImport(){document.getElementById('sourcinBoxModal').clas
 function startSourcinBoxDraft(){closeSourcinBoxImport();resetProductForm();document.body.classList.add('admin-workspace-open');document.getElementById('productModalTitle').textContent='Import SourcinBox product';document.getElementById('productModalSub').textContent='Paste the SourcinBox Marketplace product URL and add the supplier listing details.';document.getElementById('importStatus').textContent='SourcinBox products are supplier/fulfillment listings. Nuvora will keep the supplier reference so automated fulfillment can be added later.';document.getElementById('amazonUrlInput').placeholder='Optional Amazon/Temu link field';document.getElementById('pfSource').value='sourcinbox';document.getElementById('pfKind').value='shop';document.getElementById('pfRetailer').value='SourcinBox';document.getElementById('pfSourcinboxUrl').focus();document.getElementById('productModal').classList.add('open');document.getElementById('productModal').scrollIntoView({behavior:'smooth',block:'start'});}
 function productCategoryGroup(name){
  const value=String(name||'').toLowerCase();
- if(/cleanser|cleanse|moistur|hydrate|serum|treat|toner|essence|mask|exfoliat|sunscreen|spf|skin|eye care|lip care/.test(value))return 'Skincare routine';
- if(/beauty device|tool|nail|manicure|pedicure|makeup|cosmetic|accessor/.test(value))return 'Beauty tools & finishing touches';
- if(/hair|body|bath|shower|fragrance|perfume|oral|shav/.test(value))return 'Hair, body & daily care';
- return 'More to explore';
+ if(/dress|blouse|shirt|trouser|jean|skirt|jumpsuit|knitwear|blazer|coat|co-ord/.test(value))return 'Clothing';
+ if(/heel|flat|sneaker|trainer|boot|sandal/.test(value))return 'Shoes';
+ if(/handbag|tote|crossbody|clutch|shopper/.test(value))return 'Bags';
+ if(/jewellery|jewelry|earring|necklace|bracelet|watch/.test(value))return 'Jewellery';
+ return 'Accessories & finishing touches';
 }
 function prepareProductEntryWorkspace(){
  const modal=document.getElementById('productModal'),body=modal?.querySelector('.modal-body'),grid=body?.querySelector('.formgrid');
@@ -2330,7 +2331,7 @@ function prepareProductEntryWorkspace(){
  });
  grid.remove();
  body.dataset.productEntryPrepared='true';
- const aiFieldMap={pfName:'Product title',pfBrand:'Brand',pfProductType:'Product type',pfSkinStoreCategory:'Fashion category',pfStoreDescription:'Nuvora product overview',pfBenefits:'Style notes / why we picked it',pfSkinTypes:'Style aesthetics / tags',pfSkinConcerns:'Occasions',pfSkinAvoid:'Compatibility cautions',pfIngredients:'Ingredients',pfUsage:'How to use',pfWarnings:'Product warnings',pfProductSize:'Product size',pfRecommendedProducts:'Complete the look with',pfRecommendationReason:'Recommendation reason'};
+ const aiFieldMap={pfName:'Product title',pfBrand:'Brand',pfProductType:'Product type',pfSkinStoreCategory:'Fashion category',pfStoreDescription:'Nuvora product overview',pfBenefits:'Style notes / why we picked it',pfSkinTypes:'Style aesthetics / tags',pfSkinConcerns:'Occasions',pfSkinAvoid:'Garment notes',pfIngredients:'Materials & fabric',pfUsage:'Fit & sizing',pfWarnings:'Care notes',pfProductSize:'Available sizes',pfRecommendedProducts:'Complete the look with',pfRecommendationReason:'Styling rationale'};
  Object.entries(aiFieldMap).forEach(([id,label])=>{const control=document.getElementById(id),field=control?.closest('.field'),fieldLabel=field?.querySelector('label');if(!field||!fieldLabel||field.querySelector('.skin-field-ai-action'))return;const action=document.createElement('button');action.type='button';action.className='skin-field-ai-action';action.textContent='✦ Generate with AI';action.title='Prepare this field from the source listing';action.addEventListener('click',()=>generateSkinFieldWithAI(id,action));fieldLabel.insertAdjacentElement('afterend',action);});
  const queue=document.getElementById('skinBulkQueue');if(queue&&!queue.children.length)addSkinBulkQueueRow();
  const preview=document.createElement('aside');preview.className='product-entry-preview';preview.innerHTML='<div class="product-entry-preview-kicker">LIVE PRODUCT PREVIEW</div><div class="product-entry-preview-image"><img id="productEntryPreviewImage" alt="Product preview" hidden><span id="productEntryPreviewPlaceholder">Your product image will appear here</span></div><div class="product-entry-preview-copy"><span id="productEntryPreviewBrand">YOUR BRAND</span><h3 id="productEntryPreviewName">New product</h3><p id="productEntryPreviewDescription">Add a product overview.</p><div class="product-entry-preview-status"><i></i> Private draft</div></div>';shell.appendChild(preview);body.querySelector('.product-entry-workspace')?.addEventListener('input',updateProductEntryPreview);updateProductEntryPreview();
@@ -2423,28 +2424,8 @@ function updateRetailerRatingPreview(){
  box.innerHTML='<span class="nv-admin-stars">'+stars+'</span> <strong>'+rating.toFixed(1)+'/5</strong> <span>retailer rating preview · not Nuvora reviews</span>';
 }
 function inferSkinProductType(product){
- const text=[product?.name,product?.category?.name,product?.category_name,product?.description,product?.features].filter(Boolean).join(' ').toLowerCase();
- const rules=[
-  [/\b(?:cleanser|cleansing balm|face wash|micellar water)\b/,'Cleanser'],
-  [/\b(?:toner|essence)\b/,'Toner / essence'],
-  [/\b(?:serum|ampoule|concentrate)\b/,'Serum / treatment'],
-  [/\b(?:sunscreen|sunblock|spf\s*\d*)\b/,'Sunscreen'],
-  [/\b(?:moisturizer|moisturiser|moisturizing cream|moisturising cream|face cream|gel cream)\b/,'Moisturizer'],
-  [/\b(?:eye cream|eye serum|under-eye)\b/,'Eye care'],
-  [/\b(?:lip balm|lip mask|lip oil)\b/,'Lip care'],
-  [/\b(?:sheet mask|face mask|sleeping mask|clay mask)\b/,'Face mask'],
-  [/\b(?:exfoliant|exfoliating|face scrub|chemical peel)\b/,'Exfoliant'],
-  [/\b(?:nail clipper|manicure|pedicure|nail file|cuticle|nail drill)\b/,'Nail grooming tool'],
-  [/\b(?:led mask|facial device|beauty device|microcurrent|face roller|gua sha|cleansing brush|skin scrubber)\b/,'Beauty device / tool'],
-  [/\b(?:foundation|concealer|mascara|eyeliner|lipstick|blush|makeup palette)\b/,'Makeup / cosmetics'],
-  [/\b(?:shampoo|conditioner|hair mask|hair serum|hair oil|hair dryer|hair straightener|curling iron)\b/,'Hair care / styling'],
-  [/\b(?:perfume|fragrance|eau de parfum|body mist|cologne)\b/,'Fragrance'],
-  [/\b(?:toothbrush|toothpaste|water flosser|oral care)\b/,'Oral care'],
-  [/\b(?:body lotion|body wash|body cream|body scrub)\b/,'Body care'],
-  [/\b(?:gift set|travel set|skincare set|beauty kit|bundle|5-step)\b/,'Beauty set / kit']
- ];
- for(const [pattern,label] of rules)if(pattern.test(text))return label;
- return '';
+ const category=skinDefaultCategories().find(item=>item.slug===inferSkinProductCategory(product));
+ return category?.name||'Fashion Accessories';
 }
 function setProductForm(p){
   document.getElementById('pfName').value=p.name||'';
@@ -2645,9 +2626,9 @@ async function generateSkinFieldWithAI(fieldId,button){
 async function generateSkinProductWithGemini(sourceUrl,options={}){
  const url=String(sourceUrl||document.getElementById('pfDestination')?.value||document.getElementById('amazonUrlInput')?.value||'').trim();
  const status=document.getElementById('skinGeminiStatus'),button=document.getElementById('skinGeminiFillBtn');
- if(!url){if(status)status.textContent='Paste the exact Amazon product link into Destination / affiliate URL first.';skinBuilderMessage('Paste the Amazon product link before asking Nuvora AI to fill the guide.','error');return;}
+ if(!url){if(status)status.textContent='Paste the exact retailer product link into Destination / affiliate URL first.';skinBuilderMessage('Paste the retailer product link before asking Nuvora AI to fill the guide.','error');return;}
  const original=button?.textContent;if(button){button.disabled=true;button.textContent='Reading listing + structuring fields…';}
- if(status)status.textContent='Reading the Amazon listing, then asking Nuvora AI to organize verified details. This may take a little while.';
+ if(status)status.textContent='Reading the retailer listing, then asking Nuvora AI to organize verified details. This may take a little while.';
  try{
   let response;
   if(window.skinAiDraftCache?.url===url&&window.skinAiDraftCache.product)response={ok:true,product:window.skinAiDraftCache.product};
@@ -2696,7 +2677,7 @@ async function generateSkinProductWithGemini(sourceUrl,options={}){
    const notes=p.confidence_notes.join(' · ');
    if(status)status.textContent='Nuvora AI filled '+count+' fields, including '+(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids.length:0)+' suggested companion product(s). Review every suggestion before saving. Notes: '+notes;
   }else if(status)status.textContent='Nuvora AI filled '+count+' fields, including '+(Array.isArray(p.recommended_product_ids)?p.recommended_product_ids.length:0)+' suggested companion product(s). Review every field; existing values were '+(replace?'replaced where new data was available.':'preserved. Nothing has been saved or published.');
-  productSaveMessage('Nuvora AI prepared the skincare guide. Review the fields and click Save Draft when ready.','success');
+  productSaveMessage('Nuvora AI prepared the fashion product guide. Review the fields and click Save Draft when ready.','success');
   if(options.auto){setProductEntryStep(2);document.getElementById('skinGeminiStatus')?.scrollIntoView({block:'center',behavior:'smooth'});}
  }catch(e){
   const message=e.message||'Nuvora AI could not prepare this product.';
