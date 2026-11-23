@@ -1367,8 +1367,8 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
 <section id="womens-fashion" class="view skin-studio">
   <div class="skin-studio-hero">
     <div class="skin-studio-hero-copy">
-      <span class="eyebrow">Nuvora Women</span>
-      <h2>Nuvora Women <span>Studio</span></h2>
+      <span class="eyebrow">Nuvora Women’s Fashion</span>
+      <h2>Nuvora Women’s Fashion <span>Studio</span></h2>
       
       <div class="skin-studio-actions">
         <button class="btn primary" onclick="openSkinProduct()">+ Add women’s fashion product</button>
@@ -1391,7 +1391,7 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
   <header class="studio-toolbar">
     <div class="studio-brandline">
       <a class="studio-back" href="/admin" aria-label="Back to Nuvora admin">←</a>
-      <div><span class="studio-overline">NUVORA WOMEN'S FASHION</span><div class="studio-page-line">Nuvora Women <span>/</span> <select id="skinStudioPageSelect" aria-label="Choose page to edit" onchange="setSkinStudioPage(this.value)"><option value="home">Home page</option></select></div></div>
+      <div><span class="studio-overline">NUVORA WOMEN'S FASHION</span><div class="studio-page-line">Nuvora Women’s Fashion <span>/</span> <select id="skinStudioPageSelect" aria-label="Choose page to edit" onchange="setSkinStudioPage(this.value)"><option value="home">Home page</option></select></div></div>
     </div>
     <div class="studio-toolbar-actions">
       <div class="studio-view-controls" role="group" aria-label="Preview workspace layout">
@@ -1507,7 +1507,7 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
         <button type="button" class="danger" onclick="skinPreviewAction('delete')" id="skinPreviewDelete" disabled>Delete section</button>
       </div>
       <div id="skinPreviewFrameOuter" class="studio-canvas-viewport" data-device="desktop">
-        <div class="studio-canvas-inner"><div id="skinStudioPreviewNotice" class="studio-preview-notice" role="status" aria-live="polite"><b>Connecting to Nuvora Women…</b><span>Waiting for the storefront preview to respond.</span></div><iframe id="skinStudioPreview" title="Nuvora Women storefront — editable preview" loading="eager" referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen" src="https://client-store-platform.rayyung713.workers.dev/?preview=admin&studioPreview=1&device=desktop"></iframe></div>
+        <div class="studio-canvas-inner"><div id="skinStudioPreviewNotice" class="studio-preview-notice" role="status" aria-live="polite"><b>Connecting to Nuvora Women’s Fashion…</b><span>Waiting for the storefront preview to respond.</span></div><iframe id="skinStudioPreview" title="Nuvora Women’s Fashion storefront — editable preview" loading="eager" referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen" src="https://client-store-platform.rayyung713.workers.dev/?preview=admin&studioPreview=1&device=desktop"></iframe></div>
       </div>
     </section>
     <aside class="studio-right-panel">
@@ -5336,7 +5336,7 @@ function refreshSkinStudioPreview(){
   window.__nuvoraSkinPreviewReady=false;
   if(window.__nuvoraSkinPreviewTimeout){clearTimeout(window.__nuvoraSkinPreviewTimeout);window.__nuvoraSkinPreviewTimeout=null;}
   const notice=document.getElementById('skinStudioPreviewNotice');
-  if(notice){notice.hidden=false;notice.innerHTML='<b>Connecting to Nuvora Women…</b><span>Waiting for the storefront preview to respond.</span>';}
+  if(notice){notice.hidden=false;notice.innerHTML='<b>Connecting to Nuvora Women’s Fashion…</b><span>Waiting for the storefront preview to respond.</span>';}
   frame.src=skinStudioPreviewUrl();
   return;
  }
