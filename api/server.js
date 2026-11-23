@@ -73,17 +73,17 @@ async function shopifyGraphql(query,variables={},admin=false){
 function validUrl(v){if(!v)return true;try{const u=new URL(v);return ['http:','https:'].includes(u.protocol)}catch{return false}}
 
 function validateSkinSiteConfig(value){
-  if(!value||typeof value!=='object'||Array.isArray(value))return 'Women's Fashion site configuration must be an object.';
-  let encoded;try{encoded=JSON.stringify(value);}catch{return 'Women's Fashion site configuration is not valid JSON.';}
-  if(encoded.length>100000)return 'Women's Fashion site configuration is too large (maximum 100 KB).';
-  if(!['soft-editorial','clean-minimal','sage-botanical'].includes(String(value.template||'soft-editorial')))return 'Unknown Women's Fashion Studio template.';
-  if(value.accentColor!==undefined&&!/^#[0-9a-f]{6}$/i.test(String(value.accentColor)))return 'Women's Fashion Studio accent color must be a six-digit hex color.';
-  if(value.heroImage){try{if(new URL(value.heroImage).protocol!=='https:')return 'Women's Fashion Studio hero image must use HTTPS.';}catch{return 'Women's Fashion Studio hero image URL is invalid.';}}
-  if(value.productGuideTemplate!==undefined&&!['editorial','compact','minimal'].includes(String(value.productGuideTemplate)))return 'Women's Fashion Studio product guide layout is invalid.';
+  if(!value||typeof value!=='object'||Array.isArray(value))return 'Women’s Fashion site configuration must be an object.';
+  let encoded;try{encoded=JSON.stringify(value);}catch{return 'Women’s Fashion site configuration is not valid JSON.';}
+  if(encoded.length>100000)return 'Women’s Fashion site configuration is too large (maximum 100 KB).';
+  if(!['soft-editorial','clean-minimal','sage-botanical'].includes(String(value.template||'soft-editorial')))return 'Unknown Women’s Fashion Studio template.';
+  if(value.accentColor!==undefined&&!/^#[0-9a-f]{6}$/i.test(String(value.accentColor)))return 'Women’s Fashion Studio accent color must be a six-digit hex color.';
+  if(value.heroImage){try{if(new URL(value.heroImage).protocol!=='https:')return 'Women’s Fashion Studio hero image must use HTTPS.';}catch{return 'Women’s Fashion Studio hero image URL is invalid.';}}
+  if(value.productGuideTemplate!==undefined&&!['editorial','compact','minimal'].includes(String(value.productGuideTemplate)))return 'Women’s Fashion Studio product guide layout is invalid.';
   if(value.productGuideFields!==undefined){
     const keys=['overview','styleNotes','styles','occasions','materials','fit','care','recommendations','size','brand','retailer','benefits','skinTypes','concerns','ingredients','usage','warnings'];
-    if(!value.productGuideFields||typeof value.productGuideFields!=='object'||Array.isArray(value.productGuideFields))return 'Women's Fashion Studio product guide visibility settings must be an object.';
-    if(keys.some(key=>value.productGuideFields[key]!==undefined&&typeof value.productGuideFields[key]!=='boolean'))return 'Women's Fashion Studio product guide visibility values must be true or false.';
+    if(!value.productGuideFields||typeof value.productGuideFields!=='object'||Array.isArray(value.productGuideFields))return 'Women’s Fashion Studio product guide visibility settings must be an object.';
+    if(keys.some(key=>value.productGuideFields[key]!==undefined&&typeof value.productGuideFields[key]!=='boolean'))return 'Women’s Fashion Studio product guide visibility values must be true or false.';
   }
   if(value.sections!==undefined&&!Array.isArray(value.sections))return 'Skin Studio sections must be an array.';
   const sections=Array.isArray(value.sections)?value.sections:[];
