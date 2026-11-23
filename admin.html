@@ -3885,10 +3885,10 @@ function mergeSkinSiteConfig(raw){
   image:String(x.image||'').slice(0,1600)
  })):Array.isArray(base.customCategories)?base.customCategories:[];
  const mapping=src.productCategoryMap&&typeof src.productCategoryMap==='object'&&!Array.isArray(src.productCategoryMap)?src.productCategoryMap:{};
- const categoryAliases={tops:'tops-blouses',bottoms:'trousers-jeans',sets:'co-ords-matching-sets',onepiece:'jumpsuits-playsuits',outerwear:'jackets-coats',bags:'handbags',jewelry:'jewellery',accessories:'fashion-accessories'};
+ const categoryAliases={tops:'tops-blouses',bottoms:'trousers-jeans',sets:'co-ords-matching-sets',onepiece:'jumpsuits-playsuits',outerwear:'jackets-coats',bags:'handbags',jewelry:'jewellery',accessories:'other-fashion-accessories'};
  cfg.productCategoryMap={};
  Object.entries(mapping).slice(0,500).forEach(([id,category])=>{if(id.length<=100&&String(category||'').length<=100){const value=String(category||'');cfg.productCategoryMap[id]=categoryAliases[value]||value;}});
- cfg.version=7;
+ cfg.version=10;
  cfg.template=['soft-editorial','clean-minimal','sage-botanical'].includes(cfg.template)?cfg.template:'soft-editorial';
  cfg.accentColor=/^#[0-9a-f]{6}$/i.test(String(cfg.accentColor||''))?cfg.accentColor:'#66745f';
  cfg.productGuideTemplate=['editorial','compact','minimal'].includes(cfg.productGuideTemplate)?cfg.productGuideTemplate:'editorial';
@@ -4202,7 +4202,7 @@ function skinDefaultCategories(){
   {id:'shirts',slug:'shirts',name:'Shirts',description:'Classic shirts, relaxed fits and polished wardrobe staples.'},
   {id:'trousers-jeans',slug:'trousers-jeans',name:'Trousers & Jeans',description:'Tailored trousers, denim, wide-leg shapes and everyday bottoms.'},
   {id:'skirts',slug:'skirts',name:'Skirts',description:'Mini, midi and maxi skirts for casual and dressed-up looks.'},
-  {id:'co-ords-sets',slug:'co-ords-sets',name:'Co-ords & Matching Sets',description:'Easy two-piece sets and coordinated outfits.'},
+  {id:'co-ords-matching-sets',slug:'co-ords-matching-sets',name:'Co-ords & Matching Sets',description:'Easy two-piece sets and coordinated outfits.'},
   {id:'jumpsuits-playsuits',slug:'jumpsuits-playsuits',name:'Jumpsuits & Playsuits',description:'One-piece outfits for easy styling.'},
   {id:'knitwear',slug:'knitwear',name:'Knitwear',description:'Cardigans, jumpers, sweaters and soft layers.'},
   {id:'jackets-coats',slug:'jackets-coats',name:'Jackets & Coats',description:'Blazers, jackets, coats and finishing layers.'},
@@ -4223,7 +4223,7 @@ function skinDefaultCategories(){
   {id:'activewear',slug:'activewear',name:'Activewear',description:'Leggings, sports bras and comfortable active pieces.'},
   {id:'loungewear-sleepwear',slug:'loungewear-sleepwear',name:'Loungewear & Sleepwear',description:'Soft sets, pyjamas and relaxed homewear.'},
   {id:'occasionwear',slug:'occasionwear',name:'Occasionwear',description:'Wedding guest, party, formal and celebration looks.'},
-  {id:'fashion-accessories',slug:'fashion-accessories',name:'Fashion Accessories',description:'The finishing touches that bring an outfit together.'}
+  {id:'other-fashion-accessories',slug:'other-fashion-accessories',name:'Other Fashion Accessories',description:'The finishing touches that bring an outfit together.'}
  ];
 }
 function skinStoreCategoryOptions(){
@@ -4237,7 +4237,7 @@ function inferSkinProductCategory(p){
   ['blouse|camisole|tank top|crop top|bodysuit','tops-blouses'],
   ['shirt|button.down|overshirt','shirts'],
   ['jeans|denim|trousers|pants|leggings|wide.leg','trousers-jeans'],
-  ['skirt','skirts'],['co.ord|two.piece|matching set|outfit set','co-ords-sets'],
+  ['skirt','skirts'],['co.ord|two.piece|matching set|outfit set','co-ords-matching-sets'],
   ['jumpsuit|playsuit|romper','jumpsuits-playsuits'],['cardigan|sweater|jumper|knitwear|knitted','knitwear'],
   ['blazer|coat|jacket|trench','jackets-coats'],['heel|stiletto|pumps','heels'],
   ['flats|loafer|ballet flat|mule','flats'],['sneaker|trainer','sneakers'],['boot','boots'],['sandal|slides','sandals'],
@@ -4249,7 +4249,7 @@ function inferSkinProductCategory(p){
   ['pyjama|pajama|loungewear|sleepwear','loungewear-sleepwear']
  ];
  for(const [pattern,slug] of rules){if(new RegExp(pattern).test(text))return slug;}
- return /wedding guest|party dress|formal dress|occasionwear/.test(text)?'occasionwear':'fashion-accessories';
+ return /wedding guest|party dress|formal dress|occasionwear/.test(text)?'occasionwear':'other-fashion-accessories';
 }
 function skinActiveSectionIndex(id){
  return skinSectionsFor().findIndex(s=>String(s.id)===String(id));
@@ -4802,9 +4802,9 @@ function openSkinAdd(type){
  const panel=document.getElementById('skinQuickAddPanel');if(!panel)return;
  panel.hidden=false;
  if(type==='page'){
-  panel.innerHTML='<h4>Create a page</h4><label>Page title<input id="skinQuickTitle" maxlength="120" placeholder="e.g. About Nuvora Women"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="about-nuvora-skin"></label><label>Starting layout<select id="skinQuickTemplate"><option value="basic">Simple content page</option><option value="editorial">Editorial story</option><option value="shop">Shop landing page</option><option value="brands">Brand directory</option></select></label><label>Search description<textarea id="skinQuickDescription" maxlength="1200" placeholder="A short description for this page"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create page</button></div>';
+  panel.innerHTML='<h4>Create a page</h4><label>Page title<input id="skinQuickTitle" maxlength="120" placeholder="e.g. About Nuvora Women"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="about-nuvora-women"></label><label>Starting layout<select id="skinQuickTemplate"><option value="basic">Simple content page</option><option value="editorial">Editorial story</option><option value="shop">Shop landing page</option><option value="brands">Brand directory</option></select></label><label>Search description<textarea id="skinQuickDescription" maxlength="1200" placeholder="A short description for this page"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create page</button></div>';
  }else if(type==='category'){
-  panel.innerHTML='<h4>Create a category</h4><label>Category name<input id="skinQuickTitle" maxlength="100" placeholder="e.g. Serums"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="serums"></label><label>Description<textarea id="skinQuickDescription" maxlength="1000" placeholder="What shoppers will find here"></textarea></label><label>Category image URL (optional)<input id="skinQuickImage" type="url" maxlength="1600" placeholder="https://…"></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create category</button></div>';
+  panel.innerHTML='<h4>Create a category</h4><label>Category name<input id="skinQuickTitle" maxlength="100" placeholder="e.g. Dresses"></label><label>URL slug<input id="skinQuickSlug" maxlength="80" placeholder="serums"></label><label>Description<textarea id="skinQuickDescription" maxlength="1000" placeholder="What shoppers will find here"></textarea></label><label>Category image URL (optional)<input id="skinQuickImage" type="url" maxlength="1600" placeholder="https://…"></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Create category</button></div>';
  }else{
   panel.innerHTML='<h4>Add a section</h4><div class="studio-section-library-tools"><input id="skinSectionLibrarySearch" type="search" placeholder="Search sections…" aria-label="Search section library" oninput="filterSkinSectionLibrary(this.value)"><div class="studio-section-library-categories" role="group" aria-label="Section categories"><button type="button" class="is-active" data-library-category="all" onclick="filterSkinSectionLibraryCategory(&quot;all&quot;,this)">All</button><button type="button" data-library-category="shop" onclick="filterSkinSectionLibraryCategory(&quot;shop&quot;,this)">Shop &amp; products</button><button type="button" data-library-category="content" onclick="filterSkinSectionLibraryCategory(&quot;content&quot;,this)">Editorial &amp; content</button></div><div id="skinSectionLibraryGrid" class="studio-section-library-grid" aria-label="Available sections"></div></div><label>Section type<select id="skinQuickType" onchange="syncSkinSectionLibrarySelection()"><optgroup label="Shop &amp; product display"><option value="product-grid">Product grid</option><option value="featured-products">Featured products</option><option value="category-grid">Category browse</option><option value="brand-grid">Brand directory</option><option value="concern-grid">Occasions</option></optgroup><optgroup label="Editorial &amp; content"><option value="hero">Hero / banner</option><option value="editorial">Image and text</option><option value="journal-grid">Journal cards</option><option value="text-block">Text block</option><option value="image-block">Image block</option><option value="quiz-banner">Editorial banner</option></optgroup></select></label><label>Section title<input id="skinQuickTitle" maxlength="180" placeholder="Section title"></label><label>Small heading<input id="skinQuickEyebrow" maxlength="100" placeholder="Optional eyebrow"></label><label>Supporting text<textarea id="skinQuickDescription" maxlength="3000" placeholder="Optional supporting text"></textarea></label><div class="studio-quick-actions"><button class="btn" type="button" onclick="closeSkinQuickAdd()">Cancel</button><button class="btn primary" type="button" onclick="createSkinQuickItem()">Add section</button></div>';renderSkinSectionLibraryPicker();
  }
@@ -4814,7 +4814,7 @@ const skinSectionLibraryItems=[
  {type:'product-grid',title:'Product grid',category:'shop',icon:'▦',description:'A browsable women's fashion product collection'},
  {type:'featured-products',title:'Best sellers',category:'shop',icon:'✳',description:'Feature published product picks'},
  {type:'category-grid',title:'Category browse',category:'shop',icon:'▧',description:'Browse product categories'},
- {type:'concern-grid',title:'Occasions',category:'shop',icon:'◉',description:'Browse by concern and skin goals'},
+ {type:'concern-grid',title:'Occasions',category:'shop',icon:'◉',description:'Browse by style mood and occasion'},
  {type:'brand-grid',title:'Brand directory',category:'shop',icon:'◈',description:'Browse by product brand'},
  {type:'hero',title:'Hero / banner',category:'content',icon:'▱',description:'Lead with a headline, image and button'},
  {type:'quiz-banner',title:'Editorial banner',category:'content',icon:'▣',description:'Feature a visual callout and destination'},
@@ -4861,7 +4861,7 @@ function createSkinQuickItem(){
     section('intro','text-block','More about '+title,'A NOTE FROM NUVORA','Add the information visitors need on this page.',{textAlignment:'left'})
    ],
    editorial:[
-    section('hero','hero',title,'THE NUVORA SKIN JOURNAL','',{}),
+    section('hero','hero',title,'THE NUVORA STYLE JOURNAL','',{}),
     section('story','editorial','Our approach','THOUGHTFULLY CONSIDERED','Tell your story with an image and supporting copy.',{imageAlignment:'left',imageWidth:55}),
     section('details','text-block','A little more detail','','Add supporting information, links or practical guidance.',{textAlignment:'left'})
    ],
