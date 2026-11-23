@@ -84,8 +84,8 @@ function renderEditor(){
  }else if(f.type==='finder'){
   const options=[['skinTypes','Style aesthetics'],['skinConcerns','Occasions'],['category','Category'],['brand','Brand']];
   html+='<div class="field full"><span class="field-label">Finder filters</span>'+checkboxGroup('finderField',options,s.matchFields||options.map(x=>x[0]))+'</div>';
- }else if(f.type==='materials'||f.type==='materials'){
-  html+='<div class="field full"><div class="toggle-line"><input id="fLinked" type="checkbox" '+(s.showLinkedProducts!==false?'checked':'')+'><div><b>Show products containing this ingredient</b><small>Uses ingredient text already present in published product records.</small></div></div></div>';
+ }else if(f.type==='materials'){
+  html+='<div class="field full"><div class="toggle-line"><input id="fLinked" type="checkbox" '+(s.showLinkedProducts!==false?'checked':'')+'><div><b>Show products with these materials</b><small>Uses material and fabric details already recorded in published fashion product listings.</small></div></div></div>';
  }else if(f.type==='alternatives'){
   html+=field('Maximum suggestions','<select id="fMaxSuggestions">'+[3,4,6,8,10,12].map(n=>'<option value="'+n+'" '+(Number(s.maxSuggestions||6)===n?'selected':'')+'>'+n+'</option>').join('')+'</select>');
  }else if(f.type==='recommendations'){
