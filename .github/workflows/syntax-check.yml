@@ -401,11 +401,11 @@ jobs:
           # The main admin repo now delegates the actual Skin Care storefront to the
           # separate client repo. Do not pretend the wrapper contains the product UI;
           # validate the bridge here and keep detailed UI contracts for legacy/full pages.
-          if 'id="nuvora-skin-store"' in beauty:
+          if 'id="nuvora-fashion-store"' in beauty:
               if "client-store-platform.rayyung713.workers.dev" not in beauty or "event.origin!==CLIENT_ORIGIN" not in beauty:
-                  failures.append("beauty.html: Skin Care storefront wrapper must use the client origin and validate message origin")
-              if "nuvora-skin-store-route" not in beauty or "nuvora-skin-store-navigate" not in beauty:
-                  failures.append("beauty.html: Skin Care wrapper must preserve storefront route synchronization")
+                  failures.append("beauty.html: Women’s Fashion wrapper must use the client origin and validate message origin")
+              if "nuvora-fashion-store-route" not in beauty or "nuvora-fashion-store-navigate" not in beauty:
+                  failures.append("beauty.html: Women’s Fashion wrapper must preserve storefront route synchronization")
           else:
               # Legacy standalone Skin Care markup, if restored in this repo, must
               # preserve the intentionally minimal overview and detailed product guide.
@@ -440,7 +440,7 @@ jobs:
               ("function addSkinProductToSection", "Skin Studio Place on Page handler missing"),
               ("async function saveSkinProductAndPublish(){\n if(window.productSaveInProgress){", "Save & Publish must not leave a stale publish flag during an active save"),
               ("async function openSkinProduct(){\n try{", "Skin Studio Add Product must handle initialization errors visibly"),
-              ("Could not open the skincare product form:", "Skin Studio Add Product failure must provide an actionable status message"),
+              ("Could not open the women’s fashion product form:", "Skin Studio Add Product failure must provide an actionable status message"),
               ("Wait for it to finish, then choose Save & publish again.", "Concurrent product saves must show a clear retry instruction"),
               ("async function uploadSkinStudioImage", "Skin Studio image upload handler missing"),
               ("function sendSkinStudioPreview", "Skin Studio live-preview bridge missing"),
@@ -547,8 +547,8 @@ jobs:
           preview_start = admin.find("function sendSkinStudioPreview")
           preview_end = admin.find("function reloadSkinStudioPreview", preview_start)
           preview_block = admin[preview_start:preview_end] if preview_start >= 0 and preview_end > preview_start else ""
-          if "placedIds.has(String(product.id))&&isSkinProduct(product)" not in preview_block:
-              failures.append("Skin Studio preview must not expose unplaced catalogue products")
+          if "isSkinProduct(product)&&(product.published===true||placedIds.has(String(product.id)))" not in preview_block:
+              failures.append("Fashion Studio preview must preserve storefront ownership and draft-placement filtering")
           if "publishProductRecord" not in worker or "/api/admin/products/" not in worker or "/publish$/" not in worker:
               failures.append("worker.js missing authoritative product publish route")
           if "function discoverAmazonProducts" not in admin:
