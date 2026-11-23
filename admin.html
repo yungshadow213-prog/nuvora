@@ -2425,7 +2425,7 @@ function updateRetailerRatingPreview(){
 }
 function inferSkinProductType(product){
  const category=skinDefaultCategories().find(item=>item.slug===inferSkinProductCategory(product));
- return category?.name||'Fashion Accessories';
+ return category?.name||'Other Fashion Accessories';
 }
 function setProductForm(p){
   document.getElementById('pfName').value=p.name||'';
@@ -3885,7 +3885,7 @@ function mergeSkinSiteConfig(raw){
   image:String(x.image||'').slice(0,1600)
  })):Array.isArray(base.customCategories)?base.customCategories:[];
  const mapping=src.productCategoryMap&&typeof src.productCategoryMap==='object'&&!Array.isArray(src.productCategoryMap)?src.productCategoryMap:{};
- const categoryAliases={tops:'tops-blouses',bottoms:'trousers-jeans',sets:'co-ords-matching-sets',onepiece:'jumpsuits-playsuits',outerwear:'jackets-coats',bags:'handbags',jewelry:'jewellery',accessories:'other-fashion-accessories'};
+ const categoryAliases={tops:'tops-blouses',bottoms:'trousers-jeans',sets:'co-ords-matching-sets',onepiece:'jumpsuits-playsuits',outerwear:'jackets-coats',bags:'handbags',jewelry:'jewellery',accessories:'other-fashion-accessories','fashion-accessories':'other-fashion-accessories','co-ords-sets':'co-ords-matching-sets'};
  cfg.productCategoryMap={};
  Object.entries(mapping).slice(0,500).forEach(([id,category])=>{if(id.length<=100&&String(category||'').length<=100){const value=String(category||'');cfg.productCategoryMap[id]=categoryAliases[value]||value;}});
  cfg.version=10;
