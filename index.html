@@ -625,17 +625,19 @@ button,a,[role="button"],input,select,textarea{pointer-events:auto}
 .nv-routine-copy p{max-width:430px;color:#637164;line-height:1.7;font-size:14px}
 .nv-routine-types{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}
 .nv-routine-types button{border:1px solid #d4e0d2;background:#fff;border-radius:999px;padding:10px 14px;color:#344a37;font-size:12px;font-weight:750;cursor:pointer;transition:background .15s,border-color .15s}
+.nv-routine-types a{display:inline-flex;align-items:center;border:1px solid #d4e0d2;background:#fff;border-radius:999px;padding:10px 14px;color:#344a37;font-size:12px;font-weight:750;text-decoration:none;transition:background .15s,border-color .15s}.nv-routine-types a:hover{background:#2e5739;color:#fff;border-color:#2e5739}
 .nv-routine-types button[aria-pressed="true"],.nv-routine-types button:hover{background:#2e5739;color:#fff;border-color:#2e5739}
 .nv-routine-note{border-left:3px solid #88a58a;padding:10px 13px;background:rgba(255,255,255,.68);border-radius:0 10px 10px 0;color:#526553;font-size:12px;line-height:1.65}
 .nv-routine-results-head{display:flex;align-items:end;justify-content:space-between;gap:14px;margin:0 0 14px}
 .nv-routine-results-head h3{font-size:18px;color:#1f3223;margin:0 0 5px}.nv-routine-results-head p{font-size:12px;color:#718071;margin:0;line-height:1.5}
 .nv-routine-results-head button{background:transparent;border:0;color:#3f6d49;font-weight:800;font-size:12px;cursor:pointer;white-space:nowrap}
+.nv-routine-results-head a{color:#3f6d49;font-weight:800;font-size:12px;text-decoration:none;white-space:nowrap}.nv-routine-results-head a:hover{text-decoration:underline}
 .nv-routine-products{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .nv-routine-products .product{min-width:0;border:1px solid #e1e8de!important;border-radius:15px!important;box-shadow:0 8px 22px rgba(33,54,35,.05)!important}
 .nv-routine-products .thumb{height:150px}.nv-routine-products .prodtext{padding:12px}.nv-routine-products .prodtext h4{font-size:13px;line-height:1.4}
 .nv-routine-empty{grid-column:1/-1;background:#fff;border:1px solid #e1e8de;border-radius:14px;padding:18px;color:#68786a;font-size:13px;line-height:1.6}
 @media(max-width:780px){.nv-routine-wrap{grid-template-columns:1fr;gap:20px}.nv-routine-copy h2{font-size:32px}.nv-routine-products .thumb{height:130px}}
-@media(max-width:430px){.nv-routine-products{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.nv-routine-products .thumb{height:112px}.nv-routine-products .prodtext{padding:9px}.nv-routine-types button{padding:9px 11px}}
+@media(max-width:430px){.nv-routine-products{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.nv-routine-products .thumb{height:112px}.nv-routine-products .prodtext{padding:9px}.nv-routine-types button,.nv-routine-types a{padding:9px 11px}}
 
 /* Nuvora storefront polish: editorial rhythm, resilient product cards and accessible controls */
 :root{--nv-card-radius:22px;--nv-focus:rgba(111,217,255,.72)}
