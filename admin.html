@@ -2732,13 +2732,6 @@ function detectImportRetailer(url){
     return 'Web source';
   }catch(e){return 'Unknown'}
 }
-  try{
-    const h=new URL(url).hostname.toLowerCase().replace(/^www\\./,'');
-    if(h==='amzn.to'||h==='link.amazon'||h.includes('amazon.'))return 'Amazon';
-    if(h==='temu.com'||h.endsWith('.temu.com')||h==='temu.to')return 'Temu';
-    return 'Unknown';
-  }catch(e){return 'Unknown'}
-}
 async function runSmartImport(){
   const box=document.getElementById('smartImportUrls'),btn=document.getElementById('smartImportButton'),progress=document.getElementById('smartImportProgress');
   const urls=normalizeImportUrls(box?.value||'');
