@@ -2341,18 +2341,18 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
 
       if(url.pathname==='/api/admin/ai/skin-product'&&request.method==='POST'){
         const admin=await adminUser(request,env); if(!admin)return json({error:'Admin authentication required'},401);
-        const aiLimit=rateLimit(request,'nuvora-ai-skin-product',6,60000);
+        const aiLimit=rateLimit(request,'nuvora-ai-fashion-product',6,60000);
         if(aiLimit)return json({error:'Nuvora AI product research is being used frequently. Try again in a minute.'},429,{'retry-after':String(aiLimit)});
         if(!hasNuvoraTextAI(env))return json({error:'No text AI provider is configured. Configure the Cloudflare Workers AI binding.'},503);
         const input=await body(request,64*1024);
         const sourceUrl=String(input.url||'').trim();
         let parsed;
-        try{parsed=new URL(sourceUrl);}catch{return json({error:'Paste a valid Amazon product URL first.'},400);}
-        if(!['http:','https:'].includes(parsed.protocol)||!amazonHost(parsed.hostname))return json({error:'Use the exact Amazon product link for this assistant.'},400);
+        try{parsed=new URL(sourceUrl);}catch{return json({error:'Paste a valid retailer product URL first.'},400);}
+        if(!['http:','https:'].includes(parsed.protocol)||!isValidHttpUrl(sourceUrl))return json({error:'Use a valid public HTTP or HTTPS retailer product link.'},400);
         let listing;
-        try{listing=await scrapeAmazonListing(sourceUrl,asinFromUrl(sourceUrl),env);}
-        catch(e){return json({error:'Could not read the Amazon listing: '+String(e?.message||e).slice(0,300)},422);}
-        if(!listing||listing.error)return json({error:String(listing?.error||'Amazon did not return readable product details. Try the direct product URL.')},422);
+        try{listing=await ingestSourceProduct(sourceUrl,env);}
+        catch(e){return json({error:'Could not read the retailer listing: '+String(e?.message||e).slice(0,300)},422);}
+        if(!listing||listing.error)return json({error:String(listing?.error||'The retailer did not return readable product details. Try the direct product URL.')},422);
         const sourceFacts={
           title:cleanText(listing.title,500),
           brand:cleanText(listing.brand,180),
@@ -2963,7 +2963,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           return json({error:'This item now matches an existing fashion product and was not imported.',duplicate:existing},409);
         }
         const product={...proposed};
-        const skinCategorySlug=String(product.skin_category_slug||'other-women's fashion').slice(0,100);
+        const skinCategorySlug=String(product.skin_category_slug||'fashion-accessories').slice(0,100);
         delete product.skin_category_slug;
         delete product.ai_copy_model;
         delete product.ai_intelligence_model;
