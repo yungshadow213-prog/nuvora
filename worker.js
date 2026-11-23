@@ -64,7 +64,7 @@ export default {
         }catch(e){}
         return json({
           ok:true,
-          release:'nuvora-2026-11-16-ops-backups-r66',
+          release:'nuvora-2026-11-23-womens-fashion-r1',
           supabaseProjectRef,
           configured:cfg&&typeof cfg==='object'?cfg:{}
         });
