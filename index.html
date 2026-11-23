@@ -779,7 +779,7 @@ body{background:#f7f6f1;color:#252e27}
   <div class="shell">
     <div class="section-head"><div><span class="eyebrow">ONE NUVORA WORLD</span><h2 id="nuvoraStoresTitle">Explore our stores</h2><p>Different interests, one thoughtful shopping experience.</p></div></div>
     <div class="nv-storefront-grid">
-      <a class="nv-storefront-card" href="https://client-store-platform.rayyung713.workers.dev/"><span class="nv-storefront-mark">S</span><h3>Nuvora Skin Care</h3><p>Skincare, beauty tools, product guides and considered everyday care.</p><span class="nv-storefront-go">Explore Skin Care <span>↗</span></span></a>
+      <a class="nv-storefront-card" href="https://client-store-platform.rayyung713.workers.dev/"><span class="nv-storefront-mark">W</span><h3>Nuvora Women’s Fashion</h3><p>Women’s clothing, shoes, handbags, jewellery and accessories, curated for every kind of day.</p><span class="nv-storefront-go">Explore Women’s Fashion <span>↗</span></span></a>
       <a class="nv-storefront-card" href="https://nuvora-home.rayyung713.workers.dev/"><span class="nv-storefront-mark">H</span><h3>Nuvora Home</h3><p>Thoughtful decor, useful appliances and everyday home essentials.</p><span class="nv-storefront-go">Explore Home <span>↗</span></span></a>
       <a class="nv-storefront-card" href="https://nuvora-clothing.rayyung713.workers.dev/"><span class="nv-storefront-mark">C</span><h3>Nuvora Clothing</h3><p>Wearable essentials, statement pieces, footwear and accessories.</p><span class="nv-storefront-go">Explore Clothing <span>↗</span></span></a>
       <a class="nv-storefront-card" href="https://nuvora-games.rayyung713.workers.dev/"><span class="nv-storefront-mark">G</span><h3>Nuvora Games</h3><p>Gaming hardware, peripherals and upgrades for your setup.</p><span class="nv-storefront-go">Explore Games <span>↗</span></span></a>
@@ -787,28 +787,29 @@ body{background:#f7f6f1;color:#252e27}
   </div>
 </section>
 
-<section class="section nv-routine-finder" id="skinRoutineFinder">
+<section class="section nv-routine-finder" id="fashionStyleFinder">
     <div class="shell nv-routine-wrap">
       <div class="nv-routine-copy">
-        <div class="eyebrow"><i></i> Skin care, made simpler</div>
-        <h2>Find a routine for your skin.</h2>
-        <p>Start with your skin type to explore relevant Nuvora skincare finds. Keep your routine simple, introduce new products gradually, and check each product's label for suitability.</p>
-        <div class="nv-routine-types" role="group" aria-label="Choose your skin type">
-          <button type="button" data-skin-routine="Oily" aria-pressed="false" onclick="selectSkinRoutine('Oily',this)">Oily</button>
-          <button type="button" data-skin-routine="Dry" aria-pressed="false" onclick="selectSkinRoutine('Dry',this)">Dry</button>
-          <button type="button" data-skin-routine="Combination" aria-pressed="false" onclick="selectSkinRoutine('Combination',this)">Combination</button>
-          <button type="button" data-skin-routine="Normal" aria-pressed="false" onclick="selectSkinRoutine('Normal',this)">Normal</button>
-          <button type="button" data-skin-routine="Sensitive" aria-pressed="false" onclick="selectSkinRoutine('Sensitive',this)">Sensitive</button>
+        <div class="eyebrow"><i></i> The Nuvora women’s fashion edit</div>
+        <h2>Find the pieces that feel like you.</h2>
+        <p>Explore clothing, footwear, handbags and accessories. Start with an outfit mood, discover new pieces and build a wardrobe around your own style.</p>
+        <div class="nv-routine-types" role="group" aria-label="Explore an outfit mood">
+          <a href="https://client-store-platform.rayyung713.workers.dev/style-finder">Everyday</a>
+          <a href="https://client-store-platform.rayyung713.workers.dev/style-finder">Work &amp; office</a>
+          <a href="https://client-store-platform.rayyung713.workers.dev/style-finder">Date night</a>
+          <a href="https://client-store-platform.rayyung713.workers.dev/style-finder">Occasion</a>
+          <a href="https://client-store-platform.rayyung713.workers.dev/style-finder">Minimalist</a>
         </div>
-        <div id="skinRoutineGuidance" class="nv-routine-note" aria-live="polite">Choose a skin type to see general routine guidance and relevant products. If you're unsure, start with Normal and review the product details.</div>
+        <div class="nv-routine-note">A considered mix of everyday staples, statement pieces and finishing touches. Explore the edit to find your next favourite.</div>
       </div>
       <div class="nv-routine-results">
-        <div class="nv-routine-results-head"><div><h3 id="skinRoutineResultsTitle">Skincare finds</h3><p id="skinRoutineResultsSub">A small selection from the published catalog.</p></div><button type="button" onclick="browseCategory('Beauty & Personal Care')">Explore beauty →</button></div>
-        <div class="nv-routine-products" id="skinRoutineProducts"><div class="nv-routine-empty">Loading skincare finds…</div></div>
+        <div class="nv-routine-results-head"><div><h3>Clothing, shoes &amp; accessories</h3><p>Discover the full women’s fashion edit.</p></div><a href="https://client-store-platform.rayyung713.workers.dev/">Explore fashion ↗</a></div>
+        <div class="nv-routine-products">
+          <a class="nv-routine-fashion-link" href="https://client-store-platform.rayyung713.workers.dev/"><span>THE WOMEN’S FASHION EDIT</span><b>Clothes, shoes, bags &amp; finishing touches.</b><em>Explore Nuvora Women ↗</em></a>
+        </div>
       </div>
     </div>
   </section>
-
 
   <section class="section">
     <div class="shell">
@@ -966,7 +967,6 @@ function formatStructuredProductText(raw){
 }
 function formatDescription(raw){return formatStructuredProductText(raw)||'<p>Product details are provided by the retailer.</p>';}
 function uniqueProducts(list){const seenName=new Set(),seenImage=new Set();return list.filter(p=>{const n=normalizeSearchName(p.name),img=String(p.image||p.image_urls?.[0]||'').trim();if(n&&seenName.has(n))return false;if(img&&seenImage.has(img))return false;if(n)seenName.add(n);if(img)seenImage.add(img);return true;});}
-let activeSkinRoutine='All';
 function skinRoutineText(type){
  const copy={
   Oily:'Keep the routine lightweight: a gentle cleanser, a non-heavy moisturizer, and broad-spectrum sunscreen in the daytime. Avoid adding several strong actives at once.',
@@ -1365,7 +1365,7 @@ function renderCategoryNavigation(sourceRows=products){
  const home=document.getElementById('homeCategoryChips');
  if(home)home.innerHTML=cats.slice(0,4).map(cat=>'<button type="button" onclick="browseCategory('+htmlEsc(JSON.stringify(cat))+')">'+htmlEsc(cat)+'</button>').join('')+'<button type="button" onclick="showView(\'browse\')">All products</button>';
  const menu=document.getElementById('categoryMenu');
- if(menu)menu.innerHTML=(cats.length?cats.map(cat=>'<button type="button" onclick="browseCategory('+htmlEsc(JSON.stringify(cat))+');closeMenu()">'+htmlEsc(cat)+'</button>').join(''):'<button type="button" onclick="showView(\'browse\');closeMenu()">All products</button>')+'<button type="button" onclick="showView(\'home\');document.getElementById(\'skinRoutineFinder\').scrollIntoView({behavior:\'smooth\',block:\'start\'});closeMenu()">Skin care routines</button>';
+ if(menu)menu.innerHTML=(cats.length?cats.map(cat=>'<button type="button" onclick="browseCategory('+htmlEsc(JSON.stringify(cat))+');closeMenu()">'+htmlEsc(cat)+'</button>').join(''):'<button type="button" onclick="showView(\'browse\');closeMenu()">All products</button>')+'<button type="button" onclick="showView(\'home\');document.getElementById(\'skinRoutineFinder\').scrollIntoView({behavior:\'smooth\',block:\'start\'});closeMenu()">Women's fashion</button>';
 }
 function mapProduct(p){let variants=[];try{variants=Array.isArray(p.shopify_variants)?p.shopify_variants:(typeof p.shopify_variants==='string'?JSON.parse(p.shopify_variants||'[]'):[])}catch(e){variants=[]}const source=String(p.source_type||p.retailer||'').toLowerCase();const retailer=source.includes('temu')?'Temu':(source.includes('amazon')||p.amazon_asin||p.amazon_source_url?'Amazon':(p.retailer||''));return {id:p.id,slug:p.slug||p.id,name:displayProductName(p.name),rawName:p.name,type:(retailer==='Amazon'||retailer==='Temu'||p.kind==='find')?'Find':p.kind==='learn'?'Learn':'Shop',cat:p.category?.name||inferStoreCategory(p),collection:p.collection?.name||'',desc:p.store_description||p.description||'',features:p.features||'',brand:p.brand||'',availability:p.availability||'',sourceSku:p.source_sku||'',recommendedProductIds:Array.isArray(p.recommended_product_ids)?p.recommended_product_ids:[],recommendationReason:p.recommendation_reason||'',ingredients:p.ingredients||'',usageInstructions:p.usage_instructions||'',productWarnings:p.product_warnings||'',skinTypes:p.skin_types||p.best_for||'',skinConcerns:p.skin_concerns||'',benefits:p.benefits||'',price:p.display_price==null?(retailer==='Amazon'?'Check price on Amazon':(retailer==='Temu'?'Check price on Temu':'Price unavailable')):formatPrice(p.display_price,p.currency),rawPrice:p.display_price,currency:p.currency||'',amazonListPrice:p.amazon_list_price,amazonDiscount:p.amazon_discount_percent,amazonDeal:p.amazon_deal_text,amazonRating:p.amazon_rating,amazonReviews:p.amazon_review_count,amazonBought:p.amazon_bought_past_month,retailerRating:retailer==='Amazon'?(p.amazon_rating??p.rating):(retailer==='Temu'?(p.temu_rating??p.rating):p.rating),amazonBadges:Array.isArray(p.amazon_badges)?p.amazon_badges:[],amazonShipping:p.amazon_shipping_text,amazonTax:p.amazon_tax_text,rating:p.temu_rating??p.rating??p.amazon_rating,reviews:p.temu_review_count??p.review_count??p.amazon_review_count,deal:p.temu_deal_text??p.deal_text??p.amazon_deal_text,listPrice:p.temu_list_price??p.list_price??p.amazon_list_price,discount:p.temu_discount_percent??p.discount_percent??p.amazon_discount_percent,icon:'✦',image:p.image_url||(Array.isArray(p.image_urls)?p.image_urls[0]:null),image_urls:Array.isArray(p.image_urls)?p.image_urls:[],variants,options:Array.isArray(p.amazon_variations)?p.amazon_variations:[],trend:p.trending,top:p.top_pick,featured:p.featured,whyPicked:p.why_we_picked_it||'',bestFor:p.best_for||'',skipIf:p.skip_if||'',lastChecked:p.last_checked_at||p.amazon_last_synced||null,destination:p.destination_url,variantId:p.shopify_variant_id,shopifyProductId:p.shopify_product_id,retailer};}
 function storefrontProductNeedsReview(row){
