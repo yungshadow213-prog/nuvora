@@ -1051,8 +1051,7 @@ function autoCategory(title='',description='',brand='',categories=[]){
   const text=(String(title)+' '+String(description)+' '+String(brand)).toLowerCase();
   const aliases={
     electronics:['electronics','electronic','gadget','computer','laptop','tablet','phone','mobile','headphone','earbud','keyboard','mouse','monitor','camera'],
-    fashion:['fashion','clothing','shirt','dress','shoe','sneaker','jacket','hoodie','jeans','baby clothes','women','men','kids'],
-    beauty:['beauty','women's fashion','skin care','makeup','cosmetic','hair','shampoo','serum','lotion'],
+    fashion:['fashion','clothing','apparel','shirt','dress','shoe','sneaker','jacket','hoodie','jeans','women','men'],
     home:['home','kitchen','furniture','decor','storage','organizer','bedding','bathroom'],
     fitness:['fitness','gym','exercise','yoga','workout','sports'],
     toys:['toy','toys','game','kids','children','puzzle'],
@@ -1063,8 +1062,8 @@ function autoCategory(title='',description='',brand='',categories=[]){
     const hay=(String(cat.name||'')+' '+String(cat.slug||'')).toLowerCase().replace(/-/g,' ');
     if(hay&&text.includes(hay))return cat.id||null;
   }
-  const skinCategory=(Array.isArray(categories)?categories:[]).find(cat=>/skin\s*care|women's fashion/i.test(String(cat.name||'')+' '+String(cat.slug||'')));
-  if(skinCategory&&/\b(?:skin|women's fashion|serum|moisturizer|moisturiser|cleanser|sunscreen|spf|toner|essence|retinol|niacinamide|hyaluronic|beauty|glass skin)\b/i.test(text))return skinCategory.id||null;
+  const fashionCategory=(Array.isArray(categories)?categories:[]).find(cat=>String(cat.slug||'').toLowerCase()==='womens-fashion'||String(cat.name||'').trim().toLowerCase()==="women's fashion");
+  if(fashionCategory&&/\b(?:women|dress|blouse|shirt|trouser|jean|skirt|shoe|heel|bag|handbag|jewellery|jewelry|accessory|fashion|apparel)\b/i.test(text))return fashionCategory.id||null;
   for(const [group,words] of Object.entries(aliases)){
     if(words.some(w=>text.includes(w))){
       const cat=(Array.isArray(categories)?categories:[]).find(x=>String(x.name||'').toLowerCase().includes(group)||String(x.slug||'').toLowerCase().includes(group));
@@ -1336,7 +1335,7 @@ async function ingestSourceProduct(sourceUrl,env){
               amazon_deal_text:retailer==='Amazon'?(normalized.deal_text||null):null,amazon_rating:normalized.rating??null,amazon_review_count:normalized.review_count??null,
               amazon_bought_past_month:listing.bought_past_month||null,amazon_shipping_text:listing.shipping_text||null,
               availability:listing.availability||null,amazon_tax_text:listing.tax_text||null,
-              amazon_variations:Array.isArray(listing.variations)?listing.variations:[],source_related_products:Array.isArray(listing.related_products)?listing.related_products:[],source_image_urls:images,materials:listing.materials||null,usage_instructions:listing.usage_instructions||null,product_warnings:listing.product_warnings||null,product_size:listing.product_size||null,published:false,amazon_last_synced:new Date().toISOString()
+              amazon_variations:Array.isArray(listing.variations)?listing.variations:[],source_related_products:Array.isArray(listing.related_products)?listing.related_products:[],source_image_urls:images,ingredients:listing.materials||listing.ingredients||listing.fabric||null,usage_instructions:listing.usage_instructions||null,product_warnings:listing.product_warnings||null,product_size:listing.product_size||null,published:false,amazon_last_synced:new Date().toISOString()
             };
             const slugBase=title.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,120);
             product.slug=(slugBase||'product')+'-'+Date.now().toString(36);
@@ -2120,7 +2119,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
           const publicProduct={
             id:source.id,name:storedName,slug:source.slug,kind:source.kind,brand:cleanText(source.brand,180)||normalized.brand,
             description:publicDescription,store_description:curatedDescription||null,features:publicFeatures,
-            materials:source.materials||null,usage_instructions:source.usage_instructions||null,product_warnings:source.product_warnings||null,product_size:source.product_size||null,
+            materials:source.ingredients||source.materials||null,ingredients:source.ingredients||source.materials||null,usage_instructions:source.usage_instructions||null,product_warnings:source.product_warnings||null,product_size:source.product_size||null,
             benefits:source.benefits||source.why_we_picked_it||null,skin_types:source.skin_types||source.best_for||null,skin_concerns:source.skin_concerns||source.skip_if||null,
             recommended_product_ids:Array.isArray(source.recommended_product_ids)?source.recommended_product_ids:[],recommendation_reason:source.recommendation_reason||null,
             image_url:normalized.image_url,image_urls:normalized.image_urls,display_price:source.display_price??normalized.display_price,currency:source.currency||normalized.currency,
@@ -2736,7 +2735,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
               description:description||null,
               store_description:null,
               features:featureText||null,
-              materials:cleanMultilineText(listing.materials,5000)||null,
+              ingredients:cleanMultilineText(listing.materials||listing.ingredients||listing.fabric||listing.material_composition,5000)||null,
               usage_instructions:cleanMultilineText(listing.usage_instructions,4000)||null,
               product_warnings:cleanMultilineText(listing.product_warnings,3000)||null,
               product_size:cleanText(listing.product_size,180)||null,
@@ -2783,7 +2782,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         if(hasNuvoraTextAI(env)){
           const copyCandidates=itemRows.map((row,index)=>({index,row,product:row.proposed_product||{}}))
             .filter(entry=>['ready','needs_review'].includes(entry.row.status)&&
-              (String(entry.product.description||'').trim()||String(entry.product.features||'').trim()||String(entry.product.ingredients||'').trim()||String(entry.product.product_type||'').trim()||String(entry.product.name||'').trim()));
+              (String(entry.product.description||'').trim()||String(entry.product.features||'').trim()||String(entry.product.ingredients||entry.product.materials||'').trim()||String(entry.product.product_type||'').trim()||String(entry.product.name||'').trim()));
           if(copyCandidates.length){
             try{
               const facts=copyCandidates.map(entry=>({
@@ -2792,7 +2791,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
                 brand:entry.product.brand,
                 description:entry.product.description,
                 features:entry.product.features,
-                materials:entry.product.ingredients,
+                materials:entry.product.ingredients||entry.product.materials,
                 product_size:entry.product.product_size,
                 product_type:entry.product.product_type,
                 usage_instructions:entry.product.usage_instructions,
