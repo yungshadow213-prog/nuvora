@@ -2811,7 +2811,7 @@ function showToastAdmin(msg){
 async function useTemuLink(){
   const input=document.getElementById('amazonUrlInput');
   const url=input.value.trim();
-  if(!url)return setAdminStatus('Paste your Temu product link first.');
+  if(!url)return setAdminStatus('Paste the retailer product link first.');
   const status=document.getElementById('importStatus');
   const btn=document.querySelector('.importbar .btn.primary');
   if(btn){btn.disabled=true;btn.textContent='Reading Temu…';}
@@ -2862,9 +2862,25 @@ async function useAmazonLink(){
   const btn=document.querySelector('.importbar .btn.primary');
   if(btn){btn.disabled=true;btn.textContent='Reading link…';}
   const skinMode=!!window.skinCareImportMode;
-  status.textContent=skinMode?'Reading Amazon skincare listing and assigning Women's Fashion automatically…':'Checking the Amazon link and preparing the product form…';
+  status.textContent=skinMode?'Reading the retailer listing and assigning a fashion category automatically…':'Checking the Amazon link and preparing the product form…';
   try{
     const skinCategory=skinMode?await ensureSkinCategory(false):null;
+    if(skinMode){
+      const root=skinCategory||await ensureSkinCategory(false);
+      let host='Retailer';try{host=new URL(url).hostname.replace(/^www\./i,'');}catch{}
+      const isAmazon=/amazon\./i.test(host);
+      document.getElementById('pfDestination').value=url;
+      document.getElementById('pfRetailer').value=host;
+      document.getElementById('pfSource').value=isAmazon?'amazon':'manual';
+      document.getElementById('pfKind').value='find';
+      document.getElementById('pfAsin').value='';
+      if(root&&document.getElementById('pfCategory'))document.getElementById('pfCategory').value=String(root.id);
+      document.getElementById('productModalTitle').textContent='Review fashion product listing';
+      document.getElementById('productModalSub').textContent='Retailer listing → fashion details and category suggestions → save as draft.';
+      status.textContent='Reading the retailer listing and preparing a fashion product guide…';
+      await generateSkinProductWithGemini(url,{auto:true});
+      return;
+    }
     const j=await api('/api/amazon/prepare',{method:'POST',body:{url}});
     document.getElementById('pfDestination').value=j.destination_url||url;
     document.getElementById('pfRetailer').value=j.retailer||'Amazon';
@@ -2911,7 +2927,7 @@ async function useAmazonLink(){
     status.textContent='Could not prepare this Amazon link.';
     setAdminStatus(e.message||'Amazon link could not be prepared.');
   }finally{
-    if(btn){btn.disabled=false;btn.textContent='Use Amazon link';}
+    if(btn){btn.disabled=false;btn.textContent='Use retailer link';}
   }
 }
 function parseProductVariations(raw){
