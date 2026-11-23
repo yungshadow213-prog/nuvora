@@ -2046,10 +2046,13 @@ async function openSkinProduct(){
   // leaves Add women's fashion product looking clickable but never opens the form.
   openProductModal(true);
   window.skinCareImportMode=true;setSkinAdminFormMode(true);
+  document.getElementById('pfSource').value='web';
+  document.getElementById('pfRetailer').value='';
   if(document.getElementById('pfProductType'))document.getElementById('pfProductType').value='';
-  document.getElementById('productModalTitle').textContent='Import women's fashion product';
-  document.getElementById('productModalSub').textContent='';
-  document.getElementById('amazonUrlInput').placeholder='Paste a retailer product URL (supported retailer import where available)';
+  document.getElementById('productModalTitle').textContent='Add a women's fashion find';
+  document.getElementById('productModalSub').textContent='Paste a product link from any supported retailer, or enter the details manually. The product will be saved as a draft.';
+  document.getElementById('amazonUrlInput').placeholder='Paste a product URL from any supported retailer';
+  const retailerButton=document.querySelector('[onclick="useAmazonLink()"]');if(retailerButton)retailerButton.textContent='Read retailer link';
   const saveButton=document.getElementById('productSaveBtn');if(saveButton)saveButton.textContent='Save fashion draft';
   populateSkinRecommendations();
  }catch(e){
@@ -2771,7 +2774,7 @@ async function runSmartImport(){
 }
 function collectSkinBulkUrls(){return Array.from(document.querySelectorAll('#skinBulkQueue .skin-bulk-queue-input')).map(input=>String(input.value||'').trim()).filter(Boolean).flatMap(value=>normalizeImportUrls(value));}
 function updateSkinBulkQueueCount(){const count=document.querySelectorAll('#skinBulkQueue .skin-bulk-queue-row').length,el=document.getElementById('skinBulkQueueCount');if(el)el.textContent=count+' product'+(count===1?'':'s')+' in queue';const add=document.querySelector('#productModal .skin-bulk-queue-toolbar button');if(add)add.disabled=count>=5;}
-function addSkinBulkQueueRow(value=''){const queue=document.getElementById('skinBulkQueue');if(!queue||queue.children.length>=5)return;const index=queue.children.length+1,row=document.createElement('div');row.className='skin-bulk-queue-row';row.innerHTML='<span class="skin-bulk-queue-index">'+String(index).padStart(2,'0')+'</span><div class="skin-bulk-queue-input-wrap"><label>Amazon product link</label><input class="skin-bulk-queue-input" type="url" placeholder="Paste one Amazon product link" autocomplete="url"></div><span class="skin-bulk-queue-state">Ready to add</span><button type="button" class="skin-bulk-queue-remove" aria-label="Remove product">×</button>';row.querySelector('input').value=value;row.querySelector('input').addEventListener('input',()=>{row.querySelector('.skin-bulk-queue-state').textContent='Link added';updateSkinBulkQueueCount();});row.querySelector('button').addEventListener('click',()=>{row.remove();Array.from(queue.children).forEach((item,i)=>item.querySelector('.skin-bulk-queue-index').textContent=String(i+1).padStart(2,'0'));if(!queue.children.length)addSkinBulkQueueRow();updateSkinBulkQueueCount();});queue.appendChild(row);updateSkinBulkQueueCount();}
+function addSkinBulkQueueRow(value=''){const queue=document.getElementById('skinBulkQueue');if(!queue||queue.children.length>=5)return;const index=queue.children.length+1,row=document.createElement('div');row.className='skin-bulk-queue-row';row.innerHTML='<span class="skin-bulk-queue-index">'+String(index).padStart(2,'0')+'</span><div class="skin-bulk-queue-input-wrap"><label>Amazon bulk import (optional)</label><input class="skin-bulk-queue-input" type="url" placeholder="Paste one Amazon product link" autocomplete="url"></div><span class="skin-bulk-queue-state">Ready to add</span><button type="button" class="skin-bulk-queue-remove" aria-label="Remove product">×</button>';row.querySelector('input').value=value;row.querySelector('input').addEventListener('input',()=>{row.querySelector('.skin-bulk-queue-state').textContent='Link added';updateSkinBulkQueueCount();});row.querySelector('button').addEventListener('click',()=>{row.remove();Array.from(queue.children).forEach((item,i)=>item.querySelector('.skin-bulk-queue-index').textContent=String(i+1).padStart(2,'0'));if(!queue.children.length)addSkinBulkQueueRow();updateSkinBulkQueueCount();});queue.appendChild(row);updateSkinBulkQueueCount();}
 function formatSkinBulkAmazonUrls(){Array.from(document.querySelectorAll('#skinBulkQueue .skin-bulk-queue-input')).forEach(input=>{const urls=normalizeImportUrls(input.value).filter(url=>detectImportRetailer(url)==='Amazon');input.value=urls[0]||'';});}
 async function runSkinBulkAiImport(){ 
  const button=document.getElementById('skinBulkAiImportBtn'),status=document.getElementById('skinBulkAiProgress'),results=document.getElementById('skinBulkAiResults'),urls=collectSkinBulkUrls();
