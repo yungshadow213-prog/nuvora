@@ -1,85 +1,77 @@
-[README.md](https://github.com/user-attachments/files/32604923/README.md)
 # Nuvora
 
-Nuvora is a real storefront + private admin system backed by Supabase. The existing storefront design is preserved; this build focuses on working data, product management, cart behavior, security, import tooling, SEO, and analytics.
+Nuvora is a multi-storefront platform with a shared admin system, separate storefront experiences and Supabase-backed catalogue data.
 
-## Important: you do NOT need to re-enter keys every time
+## Nuvora Women's Fashion
 
-The launcher stores your local Nuvora configuration outside the project folder at:
+The former Skin Care Studio has been repurposed as **Nuvora Women's Fashion**. The customer-facing store and its editor are now organised around women's clothing, footwear, bags, jewellery and accessories.
 
-`%APPDATA%\Nuvora\.env`
+The fashion catalogue starts empty. The original skincare catalogue contained no published or draft products, so there was nothing to remove. Other Nuvora catalogues and their records were left intact.
 
-When you extract a fresh Nuvora ZIP, `START-NUVORA.bat` automatically restores that saved configuration into the new project folder. Your secret key is **not included in the ZIP**.
+### Fashion categories
 
-You only need to enter the Supabase service-role/secret key once on this Windows PC. Never paste that secret into ChatGPT, frontend code, GitHub, or a public file.
+- **Clothing:** dresses, tops and blouses, shirts, trousers and jeans, skirts, co-ords, jumpsuits, knitwear, jackets and coats.
+- **Shoes:** heels, flats, sneakers, boots and sandals.
+- **Bags:** handbags, totes, crossbody and shoulder bags, clutches and evening bags.
+- **Jewellery:** jewellery and watches.
+- **Accessories:** sunglasses, belts, scarves and hair accessories.
+- **More to wear:** activewear, loungewear, sleepwear and occasionwear.
 
-## What is included
+### Product guides and editor
 
-- Supabase-backed published product catalog (no fake catalog data)
-- Admin product workspace: manual product entry and Amazon API workflow when credentials are available
-- Product image URLs + custom image uploads through Supabase Storage
-- Multiple product images with preview/removal
-- Storefront search, category/type filtering, and price/name sorting
-- Guest cart persistence in localStorage
-- Signed-in cart sync/merge with Supabase
-- Shopify checkout handoff when Shopify is configured
-- Truthful checkout-ready confirmation; Nuvora does not claim an order is paid until the retailer confirms it
-- Bulk CSV import (up to 500 rows per batch), always imported as drafts
-- Server-side product validation
-- Basic per-IP API rate limiting
-- Analytics event collection and an Admin analytics view
+Fashion product records use the existing catalogue fields for product identity, category, retailer, destination URL, materials, available sizes, fit notes, style tags, occasions, care instructions, product images and curated outfit pairings.
+
+The Women's Fashion Studio retains the visual storefront builder, draft/publish workflow, category editor, product image library, product list, analytics and page sections. The full-page editor remains available through the existing admin route `/admin/skin-studio`; its visible title and category system are now Women's Fashion.
+
+The product guide is designed to show product information before sending the customer to the retailer. It does not show an internal product price. The retailer CTA uses the product's exact saved destination URL, when available. Nuvora may earn a commission from qualifying purchases through affiliate links.
+
+### Product sourcing and AI
+
+The editor supports manual product entry, image uploads, CSV drafts and retailer-link research where the retailer page can be read by the configured source importer. Amazon is optional; the fashion catalogue is not restricted to Amazon UK. Retailer links, names and product details should be reviewed before saving or publishing.
+
+Nuvora's text AI uses the Cloudflare Workers AI binding named `AI`. The optional Worker variable `NUVORA_AI_MODEL` selects the model; the code has a default model. No Claude or Anthropic API key is required for the fashion product assistant.
+
+AI-generated descriptions and classifications are proposals, not verified retailer claims. The editor should leave unsupported material composition, fabric percentages, sizes, measurements, fit claims and care instructions blank. Review product facts before saving or publishing.
+
+## Storefront and admin architecture
+
+- Admin repository: `yungshadow213-prog/nuvora`
+- Customer storefront repository: `yungshadow213-prog/client-store-platform`
+- Supabase-backed published product catalogues
+- Draft and publish states for products and storefront layouts
+- Retailer links and affiliate handoff
+- Product image URLs and custom uploads through Supabase Storage
+- Bulk CSV import, with imported records kept as drafts pending review
+- Store analytics and activity events
 - SEO metadata and dynamic product title/description updates
-- Existing Admin settings, social drafts, categories, collections, publish/unpublish, and sign-out
+- Separate store experiences managed through the shared admin
 
-## Nuvora Skin Studio
+The customer storefront is maintained in the separate client repository. Admin editor changes should not be used as a reason to modify that client repository beyond the explicit Nuvora storefront conversion.
 
-The **Skin Care Studio** lives inside the main Nuvora Admin. It has a dedicated product editor that assigns skincare products to the Skin Care category automatically, hides standard price controls, and uses the **Check price on Amazon** retailer handoff.
+## Supabase
 
-Its product guides support source-backed benefits, suitable skin types, skin concerns, ingredients, directions, warnings / avoid-if cautions, uploaded product images, manually curated companion products, and an editorial rationale. Do not invent ingredients or manufacturer claims; verify the current retailer listing and product packaging.
+For a fresh database, run `backend/schema.sql`. For a database already on the previous Nuvora schema, review and run the applicable additive migration, including `backend/NUVORA-NEXT-MIGRATION.sql`.
 
-The Skin storefront builder controls the page template, design tokens, announcement bar, hero and editorial copy, images, header/navigation/footer, page introductions, and page sections. Open **Admin → Skin Care Studio → Open full-page drag builder** (or visit `/admin/skin-studio`) for the three-panel visual builder. The storefront canvas is the editing surface: click a section to select it, double-click text or CTA labels to edit them in place, and double-click a supported image to replace it. The canvas toolbar exposes section actions, including inserting a new section immediately after the selected section. Drag handles on the canvas and the outline both reorder sections. Product cards can request a product for their exact section; placing a product is separate from adding it to the catalog. **Save draft** stores the current layout privately in `store_settings.skin_site_draft`; it does not change the public storefront. **Publish changes** writes the selected layout to `skin_site_config` and clears the saved draft. The public `GET /api/skin-settings` endpoint exposes only the published configuration. Product sections support filters, columns, and explicit product placement. Customers can open a product guide before following the retailer link. The public product card does not display an internal price. The exact saved `destination_url` takes priority over source-link fallbacks so the retailer button follows the product URL entered in the editor.
+The Women's Fashion Studio reuses the existing store configuration and product fields to avoid a destructive schema replacement. Legacy internal field names and the existing Studio route remain in place for compatibility; the visible editor and customer-facing labels are fashion-oriented.
 
-### Claude AI assistant
-
-The Skin Studio toolbar includes a Claude assistant for page-specific editorial and layout suggestions. It receives the active page, selected section, and Nuvora design context. Claude can propose allow-listed copy/settings edits or a new section; the admin reviews the proposed changes and explicitly applies them to the private draft. Claude does not publish pages or mutate the product catalogue automatically.
-
-To activate it, configure the Worker secret `ANTHROPIC_API_KEY` in **Cloudflare Dashboard → Workers & Pages → nuvora → Settings → Variables and Secrets**. You can also set it from the repository root with `npx wrangler secret put ANTHROPIC_API_KEY`. Never place the key in frontend code, GitHub files, or chat. The default model is `claude-haiku-5-5`; set the optional Worker variable `CLAUDE_STUDIO_MODEL` to use a different model. A valid Anthropic API key and API billing/credits are required. The API key is not the same thing as a Claude chat login.
-
-### Skin Studio database migration
-
-`backend/NUVORA-SKIN-STUDIO-MIGRATION.sql` is the additive migration for dedicated guide fields and the published JSONB site configuration. `backend/migrations/2026-10-23-nuvora-skin-site-drafts.sql` adds the separate nullable JSONB draft field. Both use `ADD COLUMN IF NOT EXISTS`; neither removes customer or catalog data.
-
-The public `GET /api/skin-settings` endpoint returns only the Skin storefront configuration. Layout updates require an authenticated Nuvora admin through the existing `/api/admin/settings` route. Worker-side and local API validation limit configuration size and validate section types, template, product IDs, and URLs.
-
-### Deployment verification
-
-A successful CI or Wrangler dry run is **not** the same as a live deployment. Confirm the main-branch deploy workflow and its live health/smoke checks before treating a release as live.
+Published storefront configuration is read from the existing public settings endpoint. Draft layout settings remain private until an administrator publishes them. Do not put the Supabase service-role key in frontend code, GitHub files or chat.
 
 ## Amazon is optional
 
-Nuvora does not bypass Amazon Associates/Creators API requirements. If Amazon credentials are not configured, use manual entry, custom uploads, CSV import, or another authorized retailer integration. The Amazon importer becomes available after legitimate API access is configured.
+Nuvora does not bypass Amazon Associates/Creators API requirements. If legitimate Amazon API access is not configured, use manual entry, custom image uploads, CSV import or another retailer source supported by the importer. Use only valid affiliate links and comply with each retailer's programme terms.
 
-## Supabase migration
+## Run locally
 
-If you already ran the previous Nuvora migration, run:
-
-`backend/NUVORA-NEXT-MIGRATION.sql`
-
-For a fresh database, run `backend/schema.sql` instead.
-
-## Run
-
-1. Extract the ZIP anywhere on your PC.
+1. Extract the repository.
 2. Run `START-NUVORA.bat`.
-3. On the first run only, enter your Supabase service-role/secret key when prompted if it is not already saved on this PC.
+3. On the first run only, enter the Supabase service-role/secret key when prompted if it is not already saved on this PC.
 4. Nuvora starts and opens automatically.
-5. Future fresh ZIP extractions reuse `%APPDATA%\Nuvora\.env` automatically.
-6. Do not open `admin.html` directly from the filesystem.
+5. Do not open `admin.html` directly from the filesystem.
 
-Use `OPEN-ENV.bat` if you later need to configure Shopify or legitimate Amazon credentials. Changes made to a populated local `.env` are retained in the normal project folder; keep that folder private.
+The launcher stores local configuration outside the project folder at `%APPDATA%\\Nuvora\\.env`. Keep that file private. Use `OPEN-ENV.bat` for local service configuration; never commit secrets.
 
-If a secret was exposed previously, rotate it in Supabase and use the new secret locally.
+## Experience Studio
 
-## Nuvora Experience Studio
+The Experience Studio is available in Nuvora Admin at `/admin/experiences`. Its customer-facing modules have been adapted for fashion discovery: product comparison, Style Finder, Fashion Finder, Outfit Planner, Materials Guide, similar finds, outfit pairings, recently viewed, fashion search, style details, saved preferences, Fashion Assistant and saved outfit edits.
 
-The Experience Studio is available in Nuvora Admin at `/admin/experiences`. It manages the Skin Care customer experiences (Compare, the existing Skin Quiz, Product Finder, Routine Builder, Ingredient Guide, Product Alternatives, Recommendations, Recently Viewed and Smart Search) through one configuration workspace. Settings are stored additively under `store_settings.skin_site_config.nuvoraExperiences`, preserving existing Skin Studio pages, products, category maps, design tokens and storefront sections. Draft or disabled experiences are filtered from the public `/api/skin-settings` response. The admin API uses the existing administrator profile check and reads product data scoped to `storefront_key=skin`.
+The Experience Studio continues to use the existing store configuration namespace internally so that the migration preserves the current admin/API and customer data architecture.
