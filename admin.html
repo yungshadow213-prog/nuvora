@@ -2726,6 +2726,16 @@ function detectImportRetailer(url){
     const h=new URL(url).hostname.toLowerCase().replace(/^www\\./,'');
     if(h==='amzn.to'||h==='link.amazon'||h.includes('amazon.'))return 'Amazon';
     if(h==='temu.com'||h.endsWith('.temu.com')||h==='temu.to')return 'Temu';
+    if(h==='app.sourcinbox.com'||h.endsWith('.sourcinbox.com'))return 'Source Box';
+    if(h.includes('aliexpress.'))return 'AliExpress';
+    if(h.includes('shopify.'))return 'Shopify';
+    return 'Web source';
+  }catch(e){return 'Unknown'}
+}
+  try{
+    const h=new URL(url).hostname.toLowerCase().replace(/^www\\./,'');
+    if(h==='amzn.to'||h==='link.amazon'||h.includes('amazon.'))return 'Amazon';
+    if(h==='temu.com'||h.endsWith('.temu.com')||h==='temu.to')return 'Temu';
     return 'Unknown';
   }catch(e){return 'Unknown'}
 }
@@ -2778,8 +2788,7 @@ function addSkinBulkQueueRow(value=''){const queue=document.getElementById('skin
 function formatSkinBulkAmazonUrls(){Array.from(document.querySelectorAll('#skinBulkQueue .skin-bulk-queue-input')).forEach(input=>{const urls=normalizeImportUrls(input.value).filter(url=>detectImportRetailer(url)==='Amazon');input.value=urls[0]||'';});}
 async function runSkinBulkAiImport(){ 
  const button=document.getElementById('skinBulkAiImportBtn'),status=document.getElementById('skinBulkAiProgress'),results=document.getElementById('skinBulkAiResults'),urls=collectSkinBulkUrls();
- if(!urls.length){if(status)status.textContent='Add at least one Amazon product link to the queue.';return;}
- if(urls.some(url=>detectImportRetailer(url)!=='Amazon')){if(status)status.textContent='Every queue item must be an Amazon product link.';return;}
+ if(!urls.length){if(status)status.textContent='Add at least one retailer product link to the queue.';return;}
  if(urls.length>5){if(status)status.textContent='Run up to five products at a time.';return;}
  if(button){button.disabled=true;button.textContent='Importing queue…';}if(results)results.replaceChildren();
  const report=message=>{if(status)status.textContent=message;};
