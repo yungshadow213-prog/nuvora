@@ -170,7 +170,7 @@ jobs:
                   raise SystemExit(0)
               raise SystemExit("Production deployment verification failed: "+last_error+". No claim of live fix should be made until Cloudflare's Active Deployment matches the current main release.")
 
-          for path in ["/api/config","/api/products","/api/settings","/api/games-storefront","/api/home-storefront","/api/clothing-storefront","/","/beauty","/admin/studios","/admin/gaming-studio","/admin/home-studio","/admin/clothing-studio"]:
+          for path in ["/api/config","/api/products","/api/settings","/api/games-storefront","/api/home-storefront","/api/clothing-storefront","/","/fashion","/beauty","/admin/womens-fashion","/admin/studios","/admin/gaming-studio","/admin/home-studio","/admin/clothing-studio"]:
               headers={
                   "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36",
                   "Accept":"application/json,text/html,application/xhtml+xml,*/*;q=0.8",
@@ -198,8 +198,10 @@ jobs:
                           payload=json.loads(body)
                           if not isinstance(payload,dict):
                               raise SystemExit("/api/settings returned a non-object payload")
-                      if path=="/beauty" and "Nuvora Skin" not in body:
-                          raise SystemExit("/beauty did not serve the dedicated Nuvora Skin storefront")
+                      if path in ("/fashion","/beauty") and "Nuvora Women" not in body:
+                          raise SystemExit(f"{path} did not serve the Nuvora Women’s Fashion storefront")
+                      if path=="/admin/womens-fashion" and "Women’s Fashion Studio" not in body:
+                          raise SystemExit("/admin/womens-fashion did not serve the Women’s Fashion Studio")
                       print(f"{path}: {response.status}")
               except urllib.error.HTTPError as e:
                   if path=="/" and e.code==403:
