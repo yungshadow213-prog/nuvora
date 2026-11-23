@@ -21,10 +21,10 @@
 <div class="app"><aside class="side">
 <a class="brand" href="/admin">NUVORA<span>.</span><small>store operations</small></a>
 <div><div class="side-label">Workspace</div><nav class="nav">
-<a href="/admin">⌂ &nbsp; Admin overview</a><a href="/admin/skin-studio">▧ &nbsp; Women's Fashion Studio</a><a href="/admin/ai-manager">✦ &nbsp; AI Manager</a><a class="active" href="/admin/experiences">◇ &nbsp; Experience Studio</a><a href="/admin/studios">▦ &nbsp; Other stores</a>
-</nav></div><div class="side-foot">NUVORA WOMEN'S FASHION<br>SHARED CUSTOMER EXPERIENCE BUILDER<br>Store scope · skin</div></aside>
+<a href="/admin">⌂ &nbsp; Admin overview</a><a href="/admin/womens-fashion">▧ &nbsp; Women's Fashion Studio</a><a href="/admin/ai-manager">✦ &nbsp; AI Manager</a><a class="active" href="/admin/experiences">◇ &nbsp; Experience Studio</a><a href="/admin/studios">▦ &nbsp; Other stores</a>
+</nav></div><div class="side-foot">NUVORA WOMEN'S FASHION<br>SHARED CUSTOMER EXPERIENCE BUILDER<br>Store scope · women’s fashion</div></aside>
 <main class="main">
-<div class="top"><div class="crumb">NUVORA / WOMEN'S FASHION / EXPERIENCE STUDIO</div><div class="top-actions"><a href="/admin/skin-studio">Open Women's Fashion Studio ↗</a><span class="user" id="userEmail">Checking session…</span></div></div>
+<div class="top"><div class="crumb">NUVORA / WOMEN'S FASHION / EXPERIENCE STUDIO</div><div class="top-actions"><a href="/admin/womens-fashion">Open Women's Fashion Studio ↗</a><span class="user" id="userEmail">Checking session…</span></div></div>
 <section class="hero"><div><span class="eyebrow">CUSTOMER EXPERIENCE WORKSPACE</span><h1>Build the shopping journey.</h1><p>Manage the experiences customers use to discover, understand and compare products. Product records, guides and page layouts stay in their existing workspaces.</p></div><div class="hero-actions"><button class="btn" id="reload">Refresh data</button></div></section>
 <div class="notice" id="notice" role="status" aria-live="polite"></div>
 <section class="metrics"><article class="metric"><label>Fashion products</label><strong id="metricProducts">—</strong><small>Scoped to Women's Fashion only</small></article><article class="metric"><label>Published products</label><strong id="metricPublished">—</strong><small>Customer-visible catalogue</small></article><article class="metric"><label>Live experiences</label><strong id="metricLive">—</strong><small>Enabled and published</small></article><article class="metric"><label>Materials & fabric data</label><strong id="metricMaterials">—</strong><small>Products with recorded material details</small></article></section>
@@ -56,7 +56,7 @@ function checkboxGroup(name,items,selected){return '<div class="chips">'+items.m
 function renderEditor(){
  const f=currentFeature();if(!f)return;const s=f.settings||{};
  $('editorType').textContent=(f.type||'EXPERIENCE').replace(/-/g,' ').toUpperCase();$('editorTitle').textContent=f.label||f.title;$('editorDescription').textContent=f.description||'Configure this customer experience.';
- $('preview').innerHTML='<span class="preview-kicker">NUVORA WOMEN'S FASHION / '+escapeHtml(f.label||f.title)+'</span><h3>'+escapeHtml(f.title||'Your next good find.')+'</h3><p>'+escapeHtml(f.description||'A more considered way to explore products.')+'</p><span class="preview-option">'+(f.enabled?'Enabled':'Disabled')+'</span><span class="preview-option">'+escapeHtml(f.status)+'</span>';
+ $('preview').innerHTML='<span class="preview-kicker">NUVORA WOMEN’S FASHION / '+escapeHtml(f.label||f.title)+'</span><h3>'+escapeHtml(f.title||'Your next good find.')+'</h3><p>'+escapeHtml(f.description||'A more considered way to explore products.')+'</p><span class="preview-option">'+(f.enabled?'Enabled':'Disabled')+'</span><span class="preview-option">'+escapeHtml(f.status)+'</span>';
  $('previewLink').href=STORE_URL+(PREVIEW_PATHS[f.type]||'/');$('previewState').textContent=f.enabled&&f.status==='published'?'Published experience':'Not visible to customers';
  let html='<div class="form-grid">';
  html+=field('Customer label','<input id="fLabel" maxlength="60" value="'+escapeHtml(f.label)+'">');
