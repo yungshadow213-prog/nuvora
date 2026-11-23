@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#f5f6f2">
-<title>Nuvora AI Manager · Skin Care</title>
+<title>Nuvora AI Manager · Women’s Fashion</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#19271f;background:#f5f6f2;--ink:#19271f;--muted:#758178;--line:#e5e9e3;--green:#214b35;--soft:#edf4ed;--amber:#98651e;--red:#a34539;--blue:#58738f}
@@ -25,26 +25,26 @@
 <a class="active" href="/admin/ai-manager"><i>✦</i>AI Manager</a>
 <a href="/admin/experiences"><i>◇</i>Experience Studio</a>
 <a href="/admin"><i>⌂</i>Admin overview</a>
-<a href="/admin/skin-studio"><i>▧</i>Skin Studio</a>
-<a href="/beauty" target="_blank" rel="noreferrer"><i>↗</i>Live storefront</a>
+<a href="/admin/womens-fashion"><i>▧</i>Women’s Fashion Studio</a>
+<a href="/fashion" target="_blank" rel="noreferrer"><i>↗</i>Live storefront</a>
 </nav></div>
-<div class="side-foot">NUVORA SKIN CARE<br>REFERENCE STORE<br><span style="color:#8ea995">Scope · skin</span></div>
+<div class="side-foot">NUVORA SKIN CARE<br>REFERENCE STORE<br><span style="color:#8ea995">Scope · women’s fashion</span></div>
 </aside>
 <main class="main">
-<div class="top"><div class="crumb">NUVORA / SKIN CARE / AI MANAGER</div><div class="top-right"><a href="/admin/skin-studio">Open Skin Studio ↗</a><span class="user" id="userEmail">Checking session…</span></div></div>
+<div class="top"><div class="crumb">NUVORA / WOMEN’S FASHION / AI MANAGER</div><div class="top-right"><a href="/admin/womens-fashion">Open Women’s Fashion Studio ↗</a><span class="user" id="userEmail">Checking session…</span></div></div>
 <section class="hero">
-<div><div class="kicker">Nuvora Autopilot · Phase One</div><h1>Store operations, under control.</h1><p>Inspect the Skin Care catalogue and storefront, prepare evidence-based fixes, then approve each change before it touches the live store.</p></div>
+<div><div class="kicker">Nuvora Autopilot · Phase One</div><h1>Store operations, under control.</h1><p>Inspect the Women’s Fashion catalogue and storefront, prepare evidence-based fixes, then approve each change before it touches the live store.</p></div>
 <div class="hero-actions"><span class="pill">Assisted mode · approval required</span><span class="pill warn" id="aiProviderPill" role="status" aria-live="polite">Checking AI provider…</span><button class="btn primary" id="runAudit">Run store audit ↗</button></div>
 </section>
 <div class="notice" id="notice" role="status" aria-live="polite"></div>
 <section class="metrics">
-<article class="metric"><label>Skin Care products</label><strong id="productCount">—</strong><small>Main-store products excluded</small></article>
-<article class="metric"><label>Published listings</label><strong id="publishedCount">—</strong><small>In the Skin Care catalogue</small></article>
+<article class="metric"><label>Women’s Fashion products</label><strong id="productCount">—</strong><small>Main-store products excluded</small></article>
+<article class="metric"><label>Published listings</label><strong id="publishedCount">—</strong><small>In the Women’s Fashion catalogue</small></article>
 <article class="metric"><label>Issue groups</label><strong id="issueCount">—</strong><small>From the latest audit</small></article>
 <article class="metric"><label>Pending approvals</label><strong id="pendingCount">—</strong><small>Nothing applies without approval</small></article>
 </section>
 <section class="grid">
-<article class="card"><div class="card-head"><div><h2>Store health report</h2><p id="auditStamp">Run an audit to inspect Skin Care.</p></div><span class="pill" id="healthState">Not scanned</span></div><div class="card-body"><div class="health"><span class="dot" id="healthDot"></span><strong id="healthHeadline">Waiting for first audit</strong></div><p class="summary" id="summary">Nuvora checks the Skin Care catalogue and published storefront configuration. Main-store products are excluded.</p></div></article>
+<article class="card"><div class="card-head"><div><h2>Store health report</h2><p id="auditStamp">Run an audit to inspect Women’s Fashion.</p></div><span class="pill" id="healthState">Not scanned</span></div><div class="card-body"><div class="health"><span class="dot" id="healthDot"></span><strong id="healthHeadline">Waiting for first audit</strong></div><p class="summary" id="summary">Nuvora checks the Women’s Fashion catalogue and published storefront configuration. Main-store products are excluded.</p></div></article>
 <article class="card"><div class="card-head"><div><h2>AI actions</h2><p>Drafts are staged for review.</p></div></div><div class="card-body"><button class="btn primary" id="prepareCopy" style="width:100%">Prepare missing product copy</button><div class="note">Only products with existing source facts are eligible. Generated descriptions are queued for review and are not applied automatically.</div></div></article>
 </section>
 <div class="section-head"><div><h2>Bulk product intake</h2><p>Paste retailer product links and stage them for review.</p></div></div>
@@ -52,16 +52,16 @@
   <div class="card-body">
     <textarea id="importUrls" class="import-textarea" rows="5" placeholder="Paste product links here — one per line\nhttps://www.amazon.com/dp/...\nhttps://www.temu.com/..." aria-label="Product source links"></textarea>
     <div class="import-actions"><span id="importInputCount">0 links detected · up to 10 per batch</span><button class="btn primary" id="prepareImports" type="button">Extract product details</button></div>
-    <div class="note">Nuvora reads the source and prepares a product draft. It does not add anything to the catalogue until you approve it below. Every import stays in Skin Care.</div>
+    <div class="note">Nuvora reads the source and prepares a product draft. It does not add anything to the catalogue until you approve it below. Every import stays in Women’s Fashion.</div>
   </div>
 </section>
 <div class="section-head"><div><h2>Product intake review</h2><p id="importQueueSummary">Prepared links appear here for review.</p></div><button class="btn" id="refreshImportQueue" type="button">Refresh queue</button></div>
 <section class="card"><div class="card-body"><div class="queue" id="importQueue"><div class="empty">No prepared product links yet.</div></div></div></section>
 <div class="section-head"><div><h2>Recommended improvements</h2><p id="findingSub">Findings are grouped by issue type.</p></div></div>
 <section class="card"><div class="card-body"><div class="findings" id="findings"><div class="empty">No audit has been run yet.</div></div></div></section>
-<div class="section-head"><div><h2>Approval queue</h2><p>Review each change before applying it to a Skin Care product.</p></div></div>
+<div class="section-head"><div><h2>Approval queue</h2><p>Review each change before applying it to a Women’s Fashion product.</p></div></div>
 <section class="card"><div class="card-body"><div class="queue" id="operations"><div class="empty">No pending proposals.</div></div></div></section>
-<div class="section-head"><div><h2>Activity history</h2><p>Recent audit runs and AI changes for Skin Care.</p></div></div>
+<div class="section-head"><div><h2>Activity history</h2><p>Recent audit runs and AI changes for Women’s Fashion.</p></div></div>
 <section class="card"><div class="card-body"><div class="history" id="history"><div class="empty">Activity appears here after the first audit.</div></div></div></section>
 <div class="note">Audit limits: retailer links and image URLs are syntax-checked only. Live retailer responses, visual image quality, mobile rendering, affiliate commissions and conversions are not yet tested.</div>
 </main>
@@ -142,7 +142,7 @@ function renderHistory(items){
   items.forEach(item=>{
     const row=document.createElement('div');row.className='history-row';
     const title=document.createElement('strong');
-    const actionLabel=item.action==='nuvora_ai_fix_applied'?'AI description applied':item.action==='nuvora_ai_fix_rolled_back'?'AI description rolled back':'Skin Care audit completed';
+    const actionLabel=item.action==='nuvora_ai_fix_applied'?'AI description applied':item.action==='nuvora_ai_fix_rolled_back'?'AI description rolled back':'Women’s Fashion audit completed';
     title.textContent=(item.metadata&&item.metadata.summary)||actionLabel;
     const date=document.createElement('span');date.textContent=item.created_at?new Date(item.created_at).toLocaleString():'';
     row.append(title,date);root.append(row);
@@ -155,7 +155,7 @@ function applyReport(report,createdAt){
   el('issueCount').textContent=String(metrics.issueCount||0);
   el('healthState').textContent=metrics.highCount?'Needs attention':metrics.warningCount?'Review suggested':'Looks healthy';
   el('healthDot').className='dot '+(metrics.highCount||metrics.warningCount?'warn':'');
-  el('healthHeadline').textContent=metrics.productCount===0?'No Skin Care products found':metrics.highCount?'Priority issues found':metrics.warningCount?'A few improvements are available':'No issues found in the checks that ran';
+  el('healthHeadline').textContent=metrics.productCount===0?'No Women’s Fashion products found':metrics.highCount?'Priority issues found':metrics.warningCount?'A few improvements are available':'No issues found in the checks that ran';
   el('summary').textContent=report.summary||'Audit completed.';
   el('auditStamp').textContent='Last checked '+(createdAt?new Date(createdAt).toLocaleString():'just now');
   renderFindings(report.findings||[]);
@@ -170,7 +170,7 @@ async function runAudit(){
   try{
     const report=await api('/api/admin/ai/manager/audit','POST',{store:'skin'});
     applyReport(report,new Date().toISOString());
-    notice(report.historySaved===false?'Audit finished, but activity logging failed.':'Skin Care audit completed. Main-store products were excluded.',report.historySaved===false?'error':'success');
+    notice(report.historySaved===false?'Audit finished, but activity logging failed.':'Women’s Fashion audit completed. Main-store products were excluded.',report.historySaved===false?'error':'success');
     await loadHistory();
   }catch(error){notice(error.message||'Audit failed.','error');}
   finally{button.disabled=false;button.textContent='Run store audit ↗';}
@@ -185,7 +185,7 @@ async function prepareCopy(){
   finally{button.disabled=false;button.textContent='Prepare missing product copy';}
 }
 async function operate(id,action){
-  if(action==='approve'&&!confirm('Apply this description to the Skin Care product? A published product will update on the live storefront.'))return;
+  if(action==='approve'&&!confirm('Apply this description to the Women’s Fashion product? A published product will update on the live storefront.'))return;
   if(action==='rollback'&&!confirm('Undo this AI description? The system will protect any newer manual edit.'))return;
   try{
     await api('/api/admin/ai/manager/operations/'+encodeURIComponent(id),'POST',{action});
@@ -208,25 +208,33 @@ function renderImportQueue(items){
   el('importQueueSummary').textContent=items.length+' recent item(s) · '+pending+' awaiting approval';
   if(!items.length){root.innerHTML='<div class="empty">No prepared product links yet. Paste a few links above to begin.</div>';return;}
   const categoryChoices=[
-    ['cleansers-makeup-removers','Cleansers & makeup removers'],
-    ['toners-essences','Toners & essences'],
-    ['serums-treatments','Serums & treatments'],
-    ['moisturisers-barrier-care','Moisturisers & barrier care'],
-    ['sunscreen-spf','Sunscreen & SPF'],
-    ['exfoliants-masks','Exfoliants & masks'],
-    ['eye-lip-care','Eye & lip care'],
-    ['body-care','Body care'],
-    ['hair-care-styling','Hair care & styling'],
-    ['makeup-cosmetics','Makeup & cosmetics'],
-    ['beauty-tools-devices','Beauty tools & devices'],
-    ['nails-grooming','Nails & grooming'],
-    ['bath-shower','Bath & shower'],
-    ['shaving-hair-removal','Shaving & hair removal'],
-    ['fragrance','Fragrance'],
-    ['oral-care-smile','Oral care'],
-    ['beauty-accessories-storage','Beauty accessories & storage'],
-    ['sets-kits','Sets & kits'],
-    ['other-skincare','Other']
+    ['dresses','Dresses'],
+    ['tops-blouses','Tops & Blouses'],
+    ['shirts','Shirts'],
+    ['trousers-jeans','Trousers & Jeans'],
+    ['skirts','Skirts'],
+    ['co-ords-sets','Co-ords & Matching Sets'],
+    ['jumpsuits-playsuits','Jumpsuits & Playsuits'],
+    ['knitwear','Knitwear'],
+    ['jackets-coats','Jackets & Coats'],
+    ['heels','Heels'],
+    ['flats','Flats'],
+    ['sneakers','Sneakers'],
+    ['boots','Boots'],
+    ['sandals','Sandals'],
+    ['handbags','Handbags'],
+    ['tote-shopper-bags','Tote & Shopper Bags'],
+    ['crossbody-shoulder-bags','Crossbody & Shoulder Bags'],
+    ['clutches-evening-bags','Clutches & Evening Bags'],
+    ['jewellery','Jewellery'],
+    ['watches','Watches'],
+    ['sunglasses','Sunglasses'],
+    ['belts-scarves','Belts & Scarves'],
+    ['hair-accessories','Hair Accessories'],
+    ['activewear','Activewear'],
+    ['loungewear-sleepwear','Loungewear & Sleepwear'],
+    ['occasionwear','Occasionwear'],
+    ['fashion-accessories','Fashion Accessories']
   ];
   items.forEach(item=>{
     const product=item.proposed_product||{};
@@ -244,7 +252,7 @@ function renderImportQueue(items){
     copy.append(title,meta,source);
     if(product.store_description){const description=document.createElement('p');description.className='import-store-copy';description.textContent='Nuvora copy: '+String(product.store_description);copy.append(description);}
     if(product.description){const description=document.createElement('p');description.className='import-meta';description.textContent='Source description: '+String(product.description).slice(0,210)+(String(product.description).length>210?'…':'');copy.append(description);}
-    if(item.duplicate_name){const duplicate=document.createElement('p');duplicate.className='import-flags';duplicate.textContent='Already in Skin Care: '+item.duplicate_name;copy.append(duplicate);}
+    if(item.duplicate_name){const duplicate=document.createElement('p');duplicate.className='import-flags';duplicate.textContent='Already in Women’s Fashion: '+item.duplicate_name;copy.append(duplicate);}
     const flags=Array.isArray(item.quality_flags)?item.quality_flags:[];
     if(item.error&&['failed','duplicate'].includes(item.status)){const error=document.createElement('p');error.className='import-flags';error.textContent=item.error;copy.append(error);}
     if(flags.length){const flag=document.createElement('p');flag.className='import-flags';flag.textContent=flags.join(' ');copy.append(flag);}
@@ -269,10 +277,10 @@ function renderImportQueue(items){
       const type=document.createElement('input');type.type='text';type.maxLength=100;type.value=product.product_type||'';
       const category=document.createElement('select');
       categoryChoices.forEach(([value,label])=>{const option=document.createElement('option');option.value=value;option.textContent=label;category.append(option);});
-      category.value=categoryChoices.some(([value])=>value===product.skin_category_slug)?product.skin_category_slug:'other-skincare';
+      category.value=categoryChoices.some(([value])=>value===product.skin_category_slug)?product.skin_category_slug:'fashion-accessories';
       const description=document.createElement('textarea');description.rows=4;description.maxLength=1800;description.value=product.store_description||'';
       const imageUrl=document.createElement('input');imageUrl.type='url';imageUrl.placeholder='https://…';imageUrl.value=product.image_url||'';
-      addField('Product name',name);addField('Brand',brand);addField('Product type',type);addField('Skin Studio category',category);
+      addField('Product name',name);addField('Brand',brand);addField('Product type',type);addField('Women’s Fashion Studio category',category);
       addField('Customer-facing description',description,true);addField('Primary image URL',imageUrl,true);
       const preview=document.createElement('img');preview.className='import-edit-preview';preview.alt='Image preview';preview.hidden=!imageUrl.value; if(imageUrl.value)preview.src=imageUrl.value;
       preview.onerror=()=>{preview.hidden=true;};
@@ -314,11 +322,11 @@ async function prepareImports(){
   finally{button.disabled=false;button.textContent='Extract product details';}
 }
 async function reviewImportItem(id,action,edits){
-  if(action==='approve'&&!confirm('Add this product to the Nuvora Skin Care catalogue as an unpublished draft? It will not be published to the live storefront.'))return;
+  if(action==='approve'&&!confirm('Add this product to the Nuvora Women’s Fashion catalogue as an unpublished draft? It will not be published to the live storefront.'))return;
   try{
     const result=await api('/api/admin/ai/import/items/'+encodeURIComponent(id),'POST',{action,...(edits?{edits}:{})});
     if(action==='approve'){
-      notice(result.warning||'Product saved as an unpublished Skin Care draft.','success');
+      notice(result.warning||'Product saved as an unpublished Women’s Fashion draft.','success');
       await loadImportQueue();await runAudit();
     }else if(action==='edit'){
       notice(result.message||'Draft details saved for review.','success');await loadImportQueue();
