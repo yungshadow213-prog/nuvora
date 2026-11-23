@@ -78,7 +78,7 @@ export default {
       catch (error) { return json({ error: "Could not load the requested storefront.", detail: String(error?.message || error).slice(0, 240) }, 502); }
     }
     const response = await worker.fetch(request, env, ctx);
-    if (request.method === "GET" && ["/admin", "/admin/", "/admin.html", "/admin/skin-studio", "/admin/skin-studio/"].includes(url.pathname) && (response.headers.get("content-type") || "").includes("text/html")) {
+    if (request.method === "GET" && ["/admin", "/admin/", "/admin.html", "/admin/womens-fashion", "/admin/womens-fashion/", "/admin/skin-studio", "/admin/skin-studio/"].includes(url.pathname) && (response.headers.get("content-type") || "").includes("text/html")) {
       const html = await response.text();
       if (!html.includes("nuvora-multi-studio-launcher")) {
         const guardianNavLink = "<style>.nuvora-guardian-nav-link{display:flex;align-items:center;gap:10px;padding:10px 11px;margin:6px 0 0;border:1px solid #cbdcc7;border-radius:9px;background:#edf4e9;color:#244a34;text-decoration:none;font:750 11px/1.2 system-ui}.nuvora-guardian-nav-link:hover{background:#e1eddf}</style><a class=\"nuvora-guardian-nav-link\" href=\"/admin/guardian\">◈ &nbsp; Nuvora Guardian ↗</a>";
