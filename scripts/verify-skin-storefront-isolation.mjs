@@ -23,9 +23,9 @@ assert.ok(worker.includes("storefront_key=eq.'+(isSkinStorefront?'skin':'main')"
 assert.ok(server.includes("storefront_key=eq.'+(u.searchParams.get('storefront')==='beauty'||u.searchParams.get('storefront')==='skin'?'skin':'main')"), "Node API catalogue requests must use the same explicit storefront ownership.");
 assert.ok(!worker.includes("const titleIsSkincare="), "Catalogue ownership must not be inferred from product titles.");
 
-assert.ok(worker.includes("url.pathname==='/fashion'") || worker.includes("url.pathname)){$"), "Worker must route the women's-fashion storefront.");
+assert.ok(worker.includes("if(/^") && worker.includes("/fashion") && worker.includes("new URL('/beauty.html',request.url)"), "Worker must route the women’s-fashion storefront.");
 assert.ok(worker.includes("url.pathname==='/admin/womens-fashion'"), "Worker must route the Women's Fashion Studio.");
-assert.ok(worker.includes("legacyUrl.pathname=legacyUrl.pathname.replace(/^\\/beauty(?=\\/|$)/,'/fashion')"), "The old /beauty route must redirect to /fashion.");
+assert.ok(worker.includes("legacyUrl.pathname=legacyUrl.pathname.replace") && worker.includes("'/fashion'"), "The old /beauty route must redirect to /fashion.");
 assert.ok(worker.includes("You are the Nuvora Women’s Fashion shopping assistant."), "The customer assistant must use fashion-specific guidance.");
 assert.ok(worker.includes("Prepare structured fields for a women’s fashion product editor."), "AI product preparation must use a fashion-specific prompt.");
 assert.ok(worker.includes("const allowedSkinCategories=['dresses','tops-blouses','shirts','trousers-jeans'"), "AI classification must use the new fashion taxonomy.");
