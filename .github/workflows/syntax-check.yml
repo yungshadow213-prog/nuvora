@@ -213,7 +213,7 @@ jobs:
               'class="nav-group nav-group-system"',
               'Your storefronts',
               'Import products',
-              'id="nuvora-skin-care-redesign-2026"',
+              'id="nuvora-womens-fashion-redesign-2026"',
               'id="nuvora-admin-structure-redesign"',
               'id="nuvora-admin-modal-catalog-polish"',
               'id="nuvora-admin-contrast-pass"',
@@ -244,10 +244,10 @@ jobs:
               'function filterSkinSectionOutline(value)',
               'onclick="saveSkinSiteDraft(this)"',
               'onclick="saveSkinSiteConfig(this)"',
-              'version:8,homeLayoutVersion:2',
+              'version:10,homeLayoutVersion:4',
               "secondaryButtonLabel:String(x.secondaryButtonLabel||'').slice(0,80)",
               "secondaryButtonHref:String(x.secondaryButtonHref||'').slice(0,1600)",
-              "productGuideFields:{benefits:true,skinTypes:true,concerns:true,ingredients:true,usage:true,warnings:true,recommendations:true,size:true}",
+              "productGuideFields:{overview:true,styleNotes:true,styles:true,occasions:true,materials:true,fit:true,care:true,recommendations:true,size:true,brand:true,retailer:true}",
               "type:['hero','product-grid','editorial','featured-products','category-grid','journal-grid','routine-finder','image-block','text-block','brand-grid','concern-grid','quiz-banner']",
               "itemsText:String(x.itemsText||'').replace(",
               "secondaryButtonLabel:String(x.secondaryButtonLabel||'').slice(0,80)",
@@ -258,7 +258,7 @@ jobs:
               "<span>Columns</span>",
               "type:'concern-grid'",
               "type:'quiz-banner'",
-              "buttonHref:type==='quiz-banner'?'/shop?q=skin+concerns':''"
+              "buttonHref:type==='quiz-banner'?'/style-finder':''"
           ]
           for ui_token in skin_studio_builder_tokens:
               if ui_token not in admin_html:
