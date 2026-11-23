@@ -2717,7 +2717,7 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
             const description=cleanMultilineText(listing.description,12000);
             const featureText=Array.isArray(listing.features)?listing.features.map(value=>cleanMultilineText(value,1000)).filter(Boolean).slice(0,20).join('\n'):cleanMultilineText(listing.features,12000);
             const productType=inferType(title,description,featureText);
-        const skinCategorySlug=String(product.skin_category_slug||'fashion-accessories').slice(0,100);
+        const skinCategorySlug=inferSkinCategory(title,listing.brand,description,featureText);
             const flags=[];
             if(!images.length)flags.push('No verified product image was captured.');
             if(!description&& !featureText)flags.push('No usable product description or feature text was captured.');
@@ -2963,6 +2963,16 @@ function cleanShopifyDescription(raw){return String(raw||'').replace(/<img\b[^>]
         }
         const product={...proposed};
         const skinCategorySlug=String(product.skin_category_slug||'fashion-accessories').slice(0,100);
+        const fashionCategoryLabels={
+          dresses:'Dresses','tops-blouses':'Tops & Blouses',shirts:'Shirts','trousers-jeans':'Trousers & Jeans',skirts:'Skirts',
+          'co-ords-sets':'Co-ords & Matching Sets','jumpsuits-playsuits':'Jumpsuits & Playsuits',knitwear:'Knitwear','jackets-coats':'Jackets & Coats',
+          heels:'Heels',flats:'Flats',sneakers:'Sneakers',boots:'Boots',sandals:'Sandals',handbags:'Handbags',
+          'tote-shopper-bags':'Tote & Shopper Bags','crossbody-shoulder-bags':'Crossbody & Shoulder Bags',
+          'clutches-evening-bags':'Clutches & Evening Bags',jewellery:'Jewellery',watches:'Watches',sunglasses:'Sunglasses',
+          'belts-scarves':'Belts & Scarves','hair-accessories':'Hair Accessories',activewear:'Activewear',
+          'loungewear-sleepwear':'Loungewear & Sleepwear',occasionwear:'Occasionwear','fashion-accessories':'Fashion Accessories'
+        };
+        product.product_type=fashionCategoryLabels[skinCategorySlug]||'Fashion Accessories';
         delete product.skin_category_slug;
         delete product.ai_copy_model;
         delete product.ai_intelligence_model;
