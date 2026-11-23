@@ -1789,10 +1789,10 @@ body.skin-studio-fullpage #skinSiteBuilder #skinStudioPreview{
           <div class="field"><label>Creative style</label><select id="aiStyle"><option value="premium ecommerce">Premium ecommerce</option><option value="clean studio">Clean studio</option><option value="luxury editorial">Luxury editorial</option><option value="modern lifestyle">Modern lifestyle</option><option value="social media ad">Social media ad</option><option value="minimal catalog">Minimal catalog</option></select></div>
           <div class="field"><label>Format</label><select id="aiSize"><option value="1024x1024">Square · 1:1</option><option value="1536x1024">Landscape · 3:2</option><option value="1024x1536">Portrait · 2:3</option></select></div>
           <div class="field full"><label>Reference image <span class="muted">(optional)</span></label><input id="aiReference" type="file" accept="image/*"><div class="muted">Optional · Max 6 MB.</div></div>
-          <div class="field"><label>Colour grading</label><select id="aiColorGrade"><option value="natural, accurate skincare colour with soft neutral whites">Natural &amp; true-to-product</option><option value="warm ivory highlights, soft honey warmth and gentle beige shadows">Warm ivory luxury</option><option value="cool clean whites, crisp soft-blue highlights and neutral shadows">Cool clean studio</option><option value="muted sage greens, warm botanical neutrals and earthy shadows">Botanical sage</option><option value="soft blush, muted rose undertones and creamy highlights">Soft blush editorial</option><option value="deep charcoal shadows, rich contrast and restrained champagne highlights">Dark luxury</option><option value="bright vibrant colour with controlled saturation and clean highlights">Bold vibrant</option><option value="soft pastel tones, low contrast and airy highlights">Soft pastel</option></select></div>
+          <div class="field"><label>Colour grading</label><select id="aiColorGrade"><option value="natural, accurate garment colours and fabric textures with soft neutral whites">Natural &amp; true-to-product</option><option value="warm ivory highlights, soft honey warmth and gentle beige shadows">Warm ivory luxury</option><option value="cool clean whites, crisp soft-blue highlights and neutral shadows">Cool clean studio</option><option value="muted sage greens, warm botanical neutrals and earthy shadows">Botanical sage</option><option value="soft blush, muted rose undertones and creamy highlights">Soft blush editorial</option><option value="deep charcoal shadows, rich contrast and restrained champagne highlights">Dark luxury</option><option value="bright vibrant colour with controlled saturation and clean highlights">Bold vibrant</option><option value="soft pastel tones, low contrast and airy highlights">Soft pastel</option></select></div>
           <div class="field"><label>Custom colour notes <span class="muted">(optional)</span></label><input id="aiColorGradeCustom" type="text" placeholder="e.g. muted olive shadows with warm honey highlights"></div>
           <div class="field full"><label>Image direction</label><textarea id="aiPrompt" placeholder="Describe the scene you want: background, surface, lighting, composition, props and mood…"></textarea></div>
-          <div class="field full"><label>Quick direction ideas</label><div class="ai-prompt-suggestions" role="group" aria-label="Image direction suggestions"><button type="button" onclick="setAIImageSuggestion('Create a premium skincare campaign on warm ivory stone with soft window light, gentle shadows and plenty of negative space.')">Ivory studio</button><button type="button" onclick="setAIImageSuggestion('Create a botanical skincare scene with subtle sage leaves, natural stone, diffused daylight and a calm editorial composition.')">Botanical</button><button type="button" onclick="setAIImageSuggestion('Create a luxury beauty editorial with sculptural lighting, deep neutral shadows and a refined champagne-toned background.')">Luxury editorial</button><button type="button" onclick="setAIImageSuggestion('Create a clean dermatologist-inspired studio scene with bright neutral lighting, a crisp white background and minimal props.')">Clinical clean</button><button type="button" onclick="setAIImageSuggestion('Create a soft blush beauty campaign with creamy textures, delicate highlights and an elegant minimal composition.')">Soft blush</button></div></div>
+          <div class="field full"><label>Quick direction ideas</label><div class="ai-prompt-suggestions" role="group" aria-label="Image direction suggestions"><button type="button" onclick="setAIImageSuggestion('Create a refined women's fashion product campaign on warm ivory stone with soft window light, gentle shadows and plenty of negative space. Preserve the garment shape, fabric texture and true colour.')">Ivory studio</button><button type="button" onclick="setAIImageSuggestion('Create a fashion editorial still life with subtle sage foliage, natural stone, diffused daylight and a calm editorial composition. Keep the clothing or accessory as the clear focus.')">Botanical</button><button type="button" onclick="setAIImageSuggestion('Create a luxury women's fashion editorial with sculptural lighting, deep neutral shadows and a refined champagne-toned background.')">Luxury editorial</button><button type="button" onclick="setAIImageSuggestion('Create a clean fashion ecommerce studio scene with bright neutral lighting, a crisp warm-white background and minimal props.')">Clinical clean</button><button type="button" onclick="setAIImageSuggestion('Create a soft blush fashion campaign with elegant fabric draping, delicate highlights and a minimal editorial composition.')">Soft blush</button></div></div>
         </div>
         <div class="ai-actions"><button class="btn primary" id="aiGenerateBtn" onclick="generateAIProductImage()">Generate advertising image</button></div>
         <div id="aiImageStatus" class="ai-status"></div>
@@ -2574,11 +2574,11 @@ async function generateAIProductImage(){
   const style=document.getElementById('aiStyle')?.value||'premium ecommerce';
   const size=document.getElementById('aiSize')?.value||'1024x1024';
   const custom=document.getElementById('aiPrompt')?.value.trim()||'';
-  const grade=document.getElementById('aiColorGrade')?.value||'natural, accurate skincare colour with soft neutral whites';
+  const grade=document.getElementById('aiColorGrade')?.value||'natural, accurate garment colours and fabric textures with soft neutral whites';
   const customGrade=document.getElementById('aiColorGradeCustom')?.value.trim()||'';
   if(file)fd.append('image',file);else fd.append('image_url',sourceUrl);
   fd.append('size',size);
-  fd.append('prompt',`Create a professional ecommerce advertising image for the exact product shown in the reference image. Preserve the product identity, packaging, silhouette, proportions, materials, label, brand marks and original product colours. Do not redesign, rename, distort or replace the product. Style: ${style}. Colour grading: ${grade}. ${customGrade?'Additional colour grading direction: '+customGrade+'.':''} Product name: ${p.name}. Brand: ${p.brand||'unknown'}. Creative direction: ${custom||'Create a polished, uncluttered commercial skincare composition with soft directional light and a refined background.'} Keep the product clearly visible, sharp and realistically proportioned. Any props must remain secondary. No fake logos, misleading claims, random text, extra packaging or watermark.`);
+  fd.append('prompt',`Create a professional ecommerce advertising image for the exact product shown in the reference image. Preserve the product identity, packaging, silhouette, proportions, materials, label, brand marks and original product colours. Do not redesign, rename, distort or replace the product. Style: ${style}. Colour grading: ${grade}. ${customGrade?'Additional colour grading direction: '+customGrade+'.':''} Product name: ${p.name}. Brand: ${p.brand||'unknown'}. Creative direction: ${custom||'Create a polished, uncluttered women's fashion ecommerce composition with soft directional light and a refined background.'} Keep the product clearly visible, sharp and realistically proportioned. Any props must remain secondary. No fake logos, misleading claims, random text, extra packaging or watermark.`);
   const result=await api('/api/admin/ai/image',{method:'POST',body:fd});
   if(!result?.image)throw new Error('Nuvora AI did not return an image. Please try again.');
   window.lastAIImage=result.image;
@@ -2857,7 +2857,7 @@ async function useAmazonLink(){
   if(window.temuImportMode)return useTemuLink();
   const input=document.getElementById('amazonUrlInput');
   const url=input.value.trim();
-  if(!url)return setAdminStatus('Paste your Amazon affiliate link first.');
+  if(!url)return setAdminStatus('Paste the retailer product link first.');
   const status=document.getElementById('importStatus');
   const btn=document.querySelector('.importbar .btn.primary');
   if(btn){btn.disabled=true;btn.textContent='Reading link…';}
@@ -2907,8 +2907,8 @@ async function useAmazonLink(){
     if(Array.isArray(a.images)&&a.images.length)document.getElementById('pfImages').value=a.images.join('\\n');
     if(a.features)document.getElementById('pfFeatures').value=Array.isArray(a.features)?a.features.join('\n'):a.features;
     renderProductImages();
-    document.getElementById('productModalTitle').textContent=skinMode?'Review Amazon skincare listing':'Review Amazon product';
-    document.getElementById('productModalSub').textContent=skinMode?'Skincare listing detected → Women's Fashion category assigned automatically → save as draft.':'Link recognized → review details → save as draft → publish when ready.';
+    document.getElementById('productModalTitle').textContent=skinMode?'Review fashion product listing':'Review Amazon product';
+    document.getElementById('productModalSub').textContent=skinMode?'Fashion listing detected → fashion category suggested automatically → save as draft.':'Link recognized → review details → save as draft → publish when ready.';
     if(j.duplicate){
       status.innerHTML='<strong>⚠️ This ASIN is already in Nuvora.</strong> '+esc(j.duplicate.name||'Existing product')+' — you can close this form and edit the existing product instead.';
     }else{
@@ -3041,7 +3041,7 @@ async function saveProductDraft(){
     else window.editingProductId=savedId;
     if(skinStudioPendingProductTarget){const target=skinStudioPendingProductTarget;skinStudioPendingProductTarget=null;addSkinProductToSection(savedId,target.sectionId,target.pageId);}
     if(!publishAfterSave)releaseSave();
-    productSaveMessage(wasEditing?'Product changes were saved by the server. Refreshing the product library…':(skinCategory?'Skincare product was saved as a private draft. Refreshing the product library…':'Product was saved as a private draft. Refreshing the product library…'),'success');
+    productSaveMessage(wasEditing?'Product changes were saved by the server. Refreshing the product library…':(skinCategory?'Fashion product was saved as a private draft. Refreshing the product library…':'Product was saved as a private draft. Refreshing the product library…'),'success');
     let refreshProblem='';
     try{
       await liveAdminProducts();
@@ -3188,7 +3188,7 @@ function renderDiscoveredProducts(){
     const dataBits=[
       p.description?'Description ready':'Description needs review',
       p.benefits?'Benefits captured':'Benefits need review',
-      p.ingredients?'Ingredients captured':'Ingredients not captured',
+      p.ingredients?'Materials & fabric captured':'Materials & fabric not captured',
       p.usage_instructions?'Usage guidance captured':'Usage guidance not captured',
       p.skin_types?'Styles captured':'Styles not captured',
       vars?esc(String(vars))+' variants':'No variants'
@@ -4129,13 +4129,13 @@ function migrateSkinHomeLayout(config){
  let sections=original.filter(section=>String(section?.type||'')!=='routine-finder');
  const uniqueSectionId=base=>{let id=base,suffix=2;while(sections.some(section=>String(section.id||'')===id)){id=base+'-'+suffix++;}return id;};
  const addIfMissing=(type,base,section)=>{if(!sections.some(item=>item.type===type))sections.push({id:uniqueSectionId(base),visible:true,...section,type});};
- addIfMissing('hero','home-hero',{title:'Skincare, without the noise.',eyebrow:'THE NUVORA SKIN EDIT',text:'Explore product details, ingredients, skin guidance and retailer links before you decide.',image:config.heroImage||'',buttonLabel:config.heroButtonLabel||'Explore products',buttonHref:'/shop'});
+ addIfMissing('hero','home-hero',{title:'Style, without the noise.',eyebrow:'THE NUVORA WOMEN'S FASHION EDIT',text:'Explore clothing, shoes, bags, jewellery and accessories. Review materials, sizing and retailer details before you decide.',image:config.heroImage||'',buttonLabel:config.heroButtonLabel||'Explore products',buttonHref:'/shop'});
  addIfMissing('category-grid','home-categories',{title:'Shop by category',eyebrow:'FIND WHAT YOU NEED',text:'Browse product types and discover the details behind each pick.'});
  if(!sections.some(section=>section.visible!==false&&(section.type==='product-grid'||section.type==='featured-products'))){
   addIfMissing('featured-products','best-sellers',{title:'Best sellers',eyebrow:'THE NUVORA EDIT',text:'Explore published products and open each guide for the full details.',filter:'all',columns:5,productsPerPage:8,product_ids:[]});
  }
- addIfMissing('concern-grid','skin-concerns',{title:'Explore by concern',eyebrow:'A ROUTINE THAT STARTS WITH YOU',text:'Use these topics to discover relevant product guides.',itemsText:'Acne & Blemishes\nAnti-Aging\nDryness & Dehydration\nRedness & Sensitivity\nDark Spots & Hyperpigmentation\nLarge Pores\nUneven Skin Tone\nDullness & Glow'});
- addIfMissing('quiz-banner','skin-guide-banner',{title:'Explore your skin goals',eyebrow:'NOT SURE WHERE TO START?',text:'Browse helpful guides and product details at your own pace.',image:'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=85',buttonLabel:'Explore concerns',buttonHref:'/shop?q=skin+concerns'});
+ addIfMissing('concern-grid','skin-concerns',{title:'Explore by occasion',eyebrow:'A STYLE THAT STARTS WITH YOU',text:'Use these style and occasion ideas to discover relevant fashion finds.',itemsText:'Everyday casual\nWork & office\nDate night\nParty & going out\nWedding guest\nHoliday\nWeekend\nSpecial occasion'});
+ addIfMissing('quiz-banner','skin-guide-banner',{title:'Explore your style',eyebrow:'NOT SURE WHERE TO START?',text:'Browse helpful guides and product details at your own pace.',image:'https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=85',buttonLabel:'Explore styles',buttonHref:'/style-finder'});
  addIfMissing('journal-grid','home-journal',{title:'Featured guides',eyebrow:'THE JOURNAL',text:'Useful notes for comparing products and understanding everyday care.',columns:4});
  const rank=type=>({'hero':0,'category-grid':10,'featured-products':20,'product-grid':21,'concern-grid':30,'quiz-banner':40,'brand-grid':45,'editorial':50,'text-block':52,'image-block':54,'journal-grid':60}[type]??38);
  sections=sections.map((section,index)=>({section,index})).sort((a,b)=>rank(a.section.type)-rank(b.section.type)||a.index-b.index).map(item=>item.section);
@@ -4146,7 +4146,7 @@ function migrateSkinHomeLayout(config){
   config.navigationItems=[
    {id:'home',label:'Home',url:'/',visible:true},
    {id:'shop',label:'Shop',url:'/shop',visible:true},
-   {id:'concerns',label:'Skin Concerns',url:'/shop?q=skin+concerns',visible:true},
+   {id:'concerns',label:'Occasions',url:'/style-finder',visible:true},
    {id:'brands',label:'Brands',url:'/brands',visible:true},
    {id:'guides',label:'Guides',url:'/journal',visible:true}
   ];
@@ -4598,7 +4598,7 @@ function renderSkinSelectedInspector(){
   let html='<label class="studio-inspector-field"><span>Section type</span><select onchange="updateSkinSection('+index+',\'type\',this.value)">'+Object.entries(types).map(([val,label])=>'<option value="'+val+'" '+(sec.type===val?'selected':'')+'>'+label+'</option>').join('')+'</select></label>';
   html+='<div class="studio-inspector-subheading">Content</div>';
   html+=field('Section title','title',sec.title,'text','180')+field('Small heading / eyebrow','eyebrow',sec.eyebrow,'text','100')+field('Supporting text','text',sec.text,'textarea','3000');
-  if(sec.type==='concern-grid')html+=field('Style and occasion labels · one per line','itemsText',sec.itemsText||'Acne & Blemishes\nAnti-Aging\nDryness & Dehydration\nRedness & Sensitivity\nDark Spots & Hyperpigmentation\nLarge Pores\nUneven Skin Tone\nDullness & Glow','textarea','2000');
+  if(sec.type==='concern-grid')html+=field('Style and occasion labels · one per line','itemsText',sec.itemsText||'Everyday casual\nWork & office\nDate night\nParty & going out\nWedding guest\nHoliday\nWeekend\nSpecial occasion','textarea','2000');
   if(['hero','editorial','quiz-banner'].includes(sec.type)){
    html+=field('Primary button label','buttonLabel',sec.buttonLabel||'','text','80')+field('Primary button destination · internal path','buttonHref',sec.buttonHref||'','text','1600');
    html+=field('Secondary button label','secondaryButtonLabel',sec.secondaryButtonLabel||'','text','80')+field('Secondary button destination · internal path','secondaryButtonHref',sec.secondaryButtonHref||'','text','1600');
@@ -4675,7 +4675,7 @@ function renderSkinSelectedInspector(){
   const id=String(p.id),image=skinImageOf(p),current=skinCategoryOfProduct(id),detectedCategory=skinDefaultCategories().find(cat=>cat.slug===inferSkinProductCategory(p));
   const dest=retailerDestination(p);
   const cats=skinStoreCategoryOptions();
-  setHead('Product settings',String(p.name||'Skincare product'));
+  setHead('Product settings',String(p.name||'Fashion product'));
   root.innerHTML=(image?'<img src="'+esc(image)+'" alt="" style="display:block;width:100%;max-height:190px;object-fit:cover;border:1px solid #e3e9e1;border-radius:10px;margin-bottom:12px">':'')+
    ''+
    '<label class="studio-inspector-field"><span>Fashion category</span><select onchange="assignSkinProductCategory('+esc(JSON.stringify(id))+',this.value)"><option value="">Automatic product type'+(detectedCategory?' · detected: '+esc(detectedCategory.name):' · review details')+'</option>'+cats.map(cat=>'<option value="'+esc(cat.slug)+'" '+(current===String(cat.slug)||current===String(cat.id)?'selected':'')+'>'+esc(cat.name)+'</option>').join('')+'</select></label>'+
@@ -4819,7 +4819,7 @@ const skinSectionLibraryItems=[
  {type:'hero',title:'Hero / banner',category:'content',icon:'▱',description:'Lead with a headline, image and button'},
  {type:'quiz-banner',title:'Editorial banner',category:'content',icon:'▣',description:'Feature a visual callout and destination'},
  {type:'editorial',title:'Image and text',category:'content',icon:'▥',description:'Pair editorial copy with imagery'},
- {type:'journal-grid',title:'Journal cards',category:'content',icon:'▤',description:'Feature skincare articles'},
+ {type:'journal-grid',title:'Journal cards',category:'content',icon:'▤',description:'Feature fashion and style articles'},
  {type:'text-block',title:'Text block',category:'content',icon:'¶',description:'Introduce a topic with copy'},
  {type:'image-block',title:'Image block',category:'content',icon:'▣',description:'Add a standalone visual'}
 ];
@@ -4866,13 +4866,13 @@ function createSkinQuickItem(){
     section('details','text-block','A little more detail','','Add supporting information, links or practical guidance.',{textAlignment:'left'})
    ],
    shop:[
-    section('hero','hero',title,'THE NUVORA SKIN EDIT','',{}),
+    section('hero','hero',title,'THE NUVORA WOMEN'S FASHION EDIT','',{}),
     section('featured','featured-products','Featured picks','CURATED FOR YOU','A hand-picked selection to start exploring.',{filter:'featured',columns:3}),
     section('products','product-grid','Explore '+title,'THE FULL EDIT','Browse the products selected for this page.',{filter:'all',columns:3,productsPerPage:8})
    ],
    brands:[
     section('hero','hero',title,'DISCOVER THE BRANDS','',{}),
-    section('brands','brand-grid','Explore by brand','THE BRANDS WE FEATURE','Browse skincare by brand.',{columns:4}),
+    section('brands','brand-grid','Explore by brand','THE BRANDS WE FEATURE','Browse women's fashion by brand.',{columns:4}),
     section('categories','category-grid','Browse categories','FIND YOUR NEXT STEP','Explore the Women's Fashion categories.',{columns:3})
    ]
   };
@@ -4895,7 +4895,7 @@ function createSkinQuickItem(){
  if(skinQuickAddType==='section'){
   const type=document.getElementById('skinQuickType')?.value||'product-grid';
   const id='section-'+Date.now().toString(36);
-  const section={id,type,visible:true,title,eyebrow:String(document.getElementById('skinQuickEyebrow')?.value||''),text:String(document.getElementById('skinQuickDescription')?.value||''),image:'',buttonLabel:type==='quiz-banner'?'Explore concerns':'',buttonHref:type==='quiz-banner'?'/shop?q=skin+concerns':'',itemsText:type==='concern-grid'?'Acne & Blemishes\nAnti-Aging\nDryness & Dehydration\nRedness & Sensitivity\nDark Spots & Hyperpigmentation\nLarge Pores\nUneven Skin Tone\nDullness & Glow':'',imageAlignment:'center',imageWidth:70,backgroundColor:'',textAlignment:'left',filter:type==='featured-products'?'featured':'all',columns:type==='featured-products'?5:3,productsPerPage:type==='featured-products'?8:8,product_ids:[],category_id:''};
+  const section={id,type,visible:true,title,eyebrow:String(document.getElementById('skinQuickEyebrow')?.value||''),text:String(document.getElementById('skinQuickDescription')?.value||''),image:'',buttonLabel:type==='quiz-banner'?'Explore styles':'',buttonHref:type==='quiz-banner'?'/style-finder':'',itemsText:type==='concern-grid'?'Everyday casual\nWork & office\nDate night\nParty & going out\nWedding guest\nHoliday\nWeekend\nSpecial occasion':'',imageAlignment:'center',imageWidth:70,backgroundColor:'',textAlignment:'left',filter:type==='featured-products'?'featured':'all',columns:type==='featured-products'?5:3,productsPerPage:type==='featured-products'?8:8,product_ids:[],category_id:''};
   const pendingInsert=window.__nuvoraSkinPendingSectionInsert||null;
   const targetPageId=pendingInsert?.pageId||skinStudioPageId||'home';
   const targetSections=skinSectionsFor(targetPageId);
