@@ -38,6 +38,7 @@ assert.ok(admin.includes("document.getElementById('pfSource').value='web'"), "Ne
 assert.ok(admin.includes("document.getElementById('pfRetailer').value=''"), "New fashion products must not be forced to Amazon.");
 assert.ok(admin.includes("Paste a product URL from any supported retailer"), "Product intake must accept product links from supported retailers.");
 assert.ok(admin.includes("Could not open the women’s fashion product form:"), "Fashion Studio must show a useful Add Product error.");
+assert.ok(admin.includes("isSkinStudioRoute=/^\\/admin\\/(?:skin-studio|womens-fashion)\\/?$/.test(location.pathname)"), "The new Fashion Studio route must open the full-page editor.");
 assert.ok(admin.includes("filter(product=>isSkinProduct(product)&&(product.published===true||placedIds.has(String(product.id))))"), "Fashion Studio preview must preserve storefront ownership and draft placement rules.");
 
 for (const label of [
